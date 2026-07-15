@@ -1,0 +1,26 @@
+name = "speaker-badges"
+main = "src/worker.js"
+compatibility_date = "2024-11-06"
+compatibility_flags = ["nodejs_compat"]
+
+# Public origin used to build absolute URLs (badge links, og:image, certUrl).
+# Override per-environment; must match the custom domain attached in the dashboard.
+[vars]
+PUBLIC_ORIGIN = "https://badges.scottishsummit.com"
+# Cloudflare Turnstile site key (public). Secret goes in `wrangler secret put TURNSTILE_SECRET`.
+TURNSTILE_SITE_KEY = ""
+
+[[kv_namespaces]]
+binding = "BADGES"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "speaker-badge-images"
+
+# Secrets (set via `wrangler secret put <NAME>`), not stored here:
+#   ACCESS_AUD            - Cloudflare Access application audience (AUD) tag
+#   ACCESS_TEAM_DOMAIN    - yourteam.cloudflareaccess.com
+#   EMAIL_API_KEY         - Resend/Postmark API key (optional; unset = email no-op)
+#   EMAIL_FROM            - e.g. badges@scottishsummit.com
+#   TURNSTILE_SECRET      - Turnstile secret key
