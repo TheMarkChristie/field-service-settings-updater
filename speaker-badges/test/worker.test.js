@@ -56,6 +56,26 @@ describe("verify / badge page", () => {
   });
 });
 
+describe("brand logo", () => {
+  it("serves the real logo PNG from /brand/logo.png with a long cache", async () => {
+    const env = makeEnv();
+    const r = await worker.fetch(new Request(`${BASE}/brand/logo.png`), env, makeCtx());
+    expect(r.status).toBe(200);
+    expect(r.headers.get("content-type")).toBe("image/png");
+    expect(r.headers.get("cache-control")).toContain("immutable");
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    expect(bytes.length).toBeGreaterThan(1000);
+    // PNG magic number
+    expect([...bytes.slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47]);
+  });
+
+  it("the header references the cached logo route", async () => {
+    const env = makeEnv();
+    const r = await worker.fetch(new Request(`${BASE}/request`), env, makeCtx());
+    expect(await r.text()).toContain('src="/brand/logo.png"');
+  });
+});
+
 describe("R2 artwork", () => {
   const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
 

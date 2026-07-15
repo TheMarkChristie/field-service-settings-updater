@@ -4,7 +4,7 @@
 import { esc } from "./lib.js";
 import { themeCss } from "./theme.js";
 import { roleLabel, awardLinks, imageUrl } from "./badges.js";
-import { siteLogoSvg } from "./brand.js";
+import { siteLogoMarkup } from "./brand.js";
 
 const NAV = [
   ["Home", "https://scottishsummit.com/"],
@@ -35,7 +35,7 @@ function header(current) {
   const badgesCurrent = current === "badges" ? ' aria-current="page"' : "";
   return `<header class="site-header on-dark">
   <div class="bar">
-    <a class="logo" href="https://scottishsummit.com/">${siteLogoSvg()}${wordmark()}</a>
+    <a class="logo" href="https://scottishsummit.com/">${siteLogoMarkup()}${wordmark()}</a>
     <button class="navtoggle" aria-expanded="false" aria-controls="nav" onclick="var n=document.getElementById('nav');var o=n.classList.toggle('open');this.setAttribute('aria-expanded',o)">Menu</button>
     <nav class="site-nav" id="nav" aria-label="Primary">
       ${nav}

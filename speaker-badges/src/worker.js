@@ -9,6 +9,7 @@ import { json, html, badRequest } from "./lib.js";
 import { getAward, upsertEvent } from "./badges.js";
 import { requireAccess } from "./access.js";
 import { badgePage, requestPage, notFoundPage } from "./render.js";
+import { siteLogoBytes } from "./brand.js";
 import { adminPage } from "./admin.js";
 import { handleUpload, serveImage } from "./images.js";
 import { issueRoster, bulkImport, recomputeMilestones, emailUnsent } from "./roster.js";
@@ -43,6 +44,15 @@ export default {
         const token = decodeURIComponent(pathname.slice(3));
         const award = token ? await getAward(env, token) : null;
         return award ? html(badgePage(award, origin)) : html(notFoundPage(), 404);
+      }
+
+      if (method === "GET" && pathname === "/brand/logo.png") {
+        return new Response(siteLogoBytes(), {
+          headers: {
+            "content-type": "image/png",
+            "cache-control": "public, max-age=31536000, immutable",
+          },
+        });
       }
 
       if (method === "GET" && pathname.startsWith("/img/")) {
