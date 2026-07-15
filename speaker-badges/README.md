@@ -169,6 +169,13 @@ and 320px reflow. The brand button pink is minimally deepened from the accent pi
 `theme.js` and the contrast test. Colours, the tartan background, the dashed-border
 buttons and the "Scottish (white) Summit (pink)" wordmark all live in `theme.js`.
 
+**Logo — placeholder.** The header uses a hand-drawn approximation of the hexagonal
+Scottish Summit badge, isolated in `src/brand.js`. To install the real logo, paste
+the site's `logo.*.svg` markup into `SITE_LOGO_SVG` there (one place), or upload it
+to R2 and point the header at `/img/logo/site.svg`. The genuine asset couldn't be
+fetched during the build (outbound access to scottishsummit.com is restricted), so
+it must be dropped in by hand.
+
 ## Phase 2 (optional)
 
 A composed OG card (artwork + recipient name + event) generated with `workers-og`

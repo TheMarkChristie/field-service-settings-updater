@@ -4,6 +4,7 @@
 import { esc } from "./lib.js";
 import { themeCss } from "./theme.js";
 import { roleLabel, awardLinks, imageUrl } from "./badges.js";
+import { siteLogoSvg } from "./brand.js";
 
 const NAV = [
   ["Home", "https://scottishsummit.com/"],
@@ -23,16 +24,6 @@ const SOCIALS = [
   ["Instagram", "https://www.instagram.com/scottishsummit"],
 ];
 
-// Hexagonal badge logo (indigo hexagon, pink border, angled wordmark, sash).
-function hexLogo() {
-  return `<svg class="hex" viewBox="0 0 40 44" role="img" aria-label="Scottish Summit logo">
-  <polygon points="20,1 38,11 38,33 20,43 2,33 2,11" fill="#29235c" stroke="#EC1878" stroke-width="2"/>
-  <path d="M4 24 L36 20" stroke="#fff" stroke-width="4" opacity=".92"/>
-  <text x="20" y="16" text-anchor="middle" font-size="6" fill="#fff" font-family="Poppins,Arial" font-weight="700">SCOT</text>
-  <text x="20" y="34" text-anchor="middle" font-size="6" fill="#EC1878" font-family="Poppins,Arial" font-weight="700">SUMMIT</text>
-</svg>`;
-}
-
 export function wordmark(a = "Scottish", b = "Summit") {
   return `<span class="wordmark"><span class="wm-a">${esc(a)}</span> <span class="wm-b">${esc(b)}</span></span>`;
 }
@@ -44,7 +35,7 @@ function header(current) {
   const badgesCurrent = current === "badges" ? ' aria-current="page"' : "";
   return `<header class="site-header on-dark">
   <div class="bar">
-    <a class="logo" href="https://scottishsummit.com/">${hexLogo()}${wordmark()}</a>
+    <a class="logo" href="https://scottishsummit.com/">${siteLogoSvg()}${wordmark()}</a>
     <button class="navtoggle" aria-expanded="false" aria-controls="nav" onclick="var n=document.getElementById('nav');var o=n.classList.toggle('open');this.setAttribute('aria-expanded',o)">Menu</button>
     <nav class="site-nav" id="nav" aria-label="Primary">
       ${nav}
