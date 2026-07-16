@@ -191,6 +191,15 @@ class C365_Profile {
 				<td><input type="url" class="regular-text" id="c365-cover-url" name="c365_cover_url" value="<?php echo esc_attr( $cover_url ); ?>"></td>
 			</tr>
 			<tr>
+				<th><?php esc_html_e( 'Emails', 'c365-syndicator' ); ?></th>
+				<td>
+					<label>
+						<input type="checkbox" name="c365_digest" value="1" <?php checked( '0' !== (string) get_user_meta( $user->ID, 'c365_digest', true ) ); ?>>
+						<?php esc_html_e( 'Send me the weekly community digest email', 'c365-syndicator' ); ?>
+					</label>
+				</td>
+			</tr>
+			<tr>
 				<th><?php esc_html_e( 'Sections to show', 'c365-syndicator' ); ?></th>
 				<td>
 					<fieldset>
@@ -268,6 +277,7 @@ class C365_Profile {
 		foreach ( array_keys( self::section_toggles() ) as $key ) {
 			update_user_meta( $user_id, $key, empty( $_POST[ $key ] ) ? 0 : 1 );
 		}
+		update_user_meta( $user_id, 'c365_digest', empty( $_POST['c365_digest'] ) ? 0 : 1 );
 
 		// Marks the member as verified on the Dashboard's unverified list.
 		update_user_meta( $user_id, 'c365_profile_updated', time() );

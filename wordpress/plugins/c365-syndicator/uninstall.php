@@ -20,6 +20,7 @@ delete_option( 'c365_syndicator_settings' );
 delete_option( 'c365_social_settings' );
 delete_option( 'c365_share_queue' );
 delete_option( 'c365_templates' );
+delete_option( 'c365_email_settings' );
 delete_option( 'c365_rotation_pointer' );
 
 $meta_keys = array(
@@ -34,6 +35,8 @@ $meta_keys = array(
 	'c365_last_result',
 	'c365_last_login',
 	'c365_profile_updated',
+	'c365_welcomed',
+	'c365_digest',
 	// Profile / author-page fields.
 	'c365_avatar_url',
 	'c365_cover_url',

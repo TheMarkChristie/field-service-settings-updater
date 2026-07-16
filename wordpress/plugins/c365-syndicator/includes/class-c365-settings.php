@@ -111,6 +111,7 @@ class C365_Settings {
 		register_setting( 'c365_syndicator', self::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize' ) ) );
 		register_setting( 'c365_social', C365_Social::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_social' ) ) );
 		register_setting( 'c365_templates', self::TEMPLATES_OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_templates' ) ) );
+		register_setting( 'c365_emails', C365_Emails::OPTION, array( 'sanitize_callback' => array( 'C365_Emails', 'sanitize' ) ) );
 	}
 
 	/**
@@ -276,6 +277,7 @@ class C365_Settings {
 					'settings'  => __( 'Settings', 'c365-syndicator' ),
 					'templates' => __( 'Templates', 'c365-syndicator' ),
 					'social'    => __( 'Social sharing', 'c365-syndicator' ),
+					'emails'    => __( 'Emails', 'c365-syndicator' ),
 				);
 				foreach ( $tabs as $key => $label ) {
 					printf(
@@ -295,6 +297,8 @@ class C365_Settings {
 				self::render_templates_tab();
 			} elseif ( 'social' === $tab ) {
 				self::render_social_tab();
+			} elseif ( 'emails' === $tab ) {
+				self::render_emails_tab();
 			} else {
 				self::render_dashboard_tab();
 			}
@@ -586,6 +590,71 @@ class C365_Settings {
 					</tr>
 				</table>
 			<?php endforeach; ?>
+
+			<?php submit_button(); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Emails tab: welcome email and weekly digest.
+	 */
+	protected static function render_emails_tab() {
+		$s      = wp_parse_args( (array) get_option( C365_Emails::OPTION, array() ), C365_Emails::defaults() );
+		$option = C365_Emails::OPTION;
+		$next   = wp_next_scheduled( C365_Emails::CRON_HOOK );
+		?>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'c365_emails' ); ?>
+
+			<h2><?php esc_html_e( 'Welcome email', 'c365-syndicator' ); ?></h2>
+			<p class="description"><?php esc_html_e( 'Sent to a member once, when their first piece of content goes live on the site. Placeholders: {name} {title} {link} {profile_url} {site_name}.', 'c365-syndicator' ); ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><?php esc_html_e( 'Enabled', 'c365-syndicator' ); ?></th>
+					<td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[welcome_enabled]" value="1" <?php checked( $s['welcome_enabled'] ); ?>> <?php esc_html_e( 'Send the welcome email', 'c365-syndicator' ); ?></label></td>
+				</tr>
+				<tr>
+					<th><label for="c365-welcome-subject"><?php esc_html_e( 'Subject', 'c365-syndicator' ); ?></label></th>
+					<td><input type="text" class="large-text" id="c365-welcome-subject" name="<?php echo esc_attr( $option ); ?>[welcome_subject]" value="<?php echo esc_attr( $s['welcome_subject'] ); ?>"></td>
+				</tr>
+				<tr>
+					<th><label for="c365-welcome-body"><?php esc_html_e( 'Body', 'c365-syndicator' ); ?></label></th>
+					<td><textarea class="large-text" rows="12" id="c365-welcome-body" name="<?php echo esc_attr( $option ); ?>[welcome_body]"><?php echo esc_textarea( $s['welcome_body'] ); ?></textarea></td>
+				</tr>
+			</table>
+
+			<h2><?php esc_html_e( 'Weekly digest', 'c365-syndicator' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'The week’s top 10 blog posts (by views, newest first as a tiebreak), emailed weekly to everyone who hasn’t opted out on their profile.', 'c365-syndicator' ); ?>
+				<?php
+				if ( $next ) {
+					echo ' ';
+					printf(
+						/* translators: %s: human-readable time difference. */
+						esc_html__( 'Next send: in %s.', 'c365-syndicator' ),
+						esc_html( human_time_diff( time(), $next ) )
+					);
+				}
+				?>
+			</p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><?php esc_html_e( 'Enabled', 'c365-syndicator' ); ?></th>
+					<td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[digest_enabled]" value="1" <?php checked( $s['digest_enabled'] ); ?>> <?php esc_html_e( 'Send the weekly digest', 'c365-syndicator' ); ?></label></td>
+				</tr>
+				<tr>
+					<th><label for="c365-digest-subject"><?php esc_html_e( 'Subject', 'c365-syndicator' ); ?></label></th>
+					<td><input type="text" class="large-text" id="c365-digest-subject" name="<?php echo esc_attr( $option ); ?>[digest_subject]" value="<?php echo esc_attr( $s['digest_subject'] ); ?>"></td>
+				</tr>
+				<tr>
+					<th><label for="c365-digest-intro"><?php esc_html_e( 'Intro text', 'c365-syndicator' ); ?></label></th>
+					<td>
+						<textarea class="large-text" rows="3" id="c365-digest-intro" name="<?php echo esc_attr( $option ); ?>[digest_intro]"><?php echo esc_textarea( $s['digest_intro'] ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'The numbered top-10 list is appended automatically below this text.', 'c365-syndicator' ); ?></p>
+					</td>
+				</tr>
+			</table>
 
 			<?php submit_button(); ?>
 		</form>
