@@ -1,16 +1,14 @@
 <?php
 /**
- * The rotation engine.
+ * The rotation engine and the shared import pipeline.
  *
  * Every cron tick (5 minutes by default) this picks the NEXT member in the
- * rotation and checks all of their active feed records. New items are
- * imported with the original title, image, and text, assigned to the member
- * as post author, filed under the feed record's categories, and stamped with
- * source metadata so the front end can link back to the original.
- *
- * De-duplication is two-stage: feed GUID first, then a title match against
- * existing content (protecting the ~6 years of pre-plugin imports); title
- * matches are back-stamped with the GUID so future checks are fast.
+ * rotation and checks all of their active feed records. WHERE items come
+ * from is delegated to a source strategy per record type (C365_Source_Rss,
+ * C365_Source_Scrape); everything else — backfill handling, social
+ * suppression, de-duplication (GUID + title with legacy back-stamping),
+ * template application, inserting, type meta, featured images with category
+ * fallback, result recording, and failure alerts — lives here, once.
  *
  * @package C365_Syndicator
  */
@@ -38,6 +36,19 @@ class C365_Fetcher {
 		add_action( 'admin_post_c365_backfill_feed', array( __CLASS__, 'handle_backfill_feed' ) );
 		add_action( 'admin_post_c365_backfill_all', array( __CLASS__, 'handle_backfill_all' ) );
 		add_action( 'c365_feed_result_recorded', array( __CLASS__, 'maybe_alert_admin' ), 10, 3 );
+	}
+
+	/**
+	 * The source strategy for a feed type.
+	 *
+	 * @param string $type Feed type.
+	 * @return object With fetch( $row, $max ) and enrich( $item, $row ).
+	 */
+	public static function source_for( $type ) {
+		if ( 'scrape' === $type ) {
+			return new C365_Source_Scrape();
+		}
+		return new C365_Source_Rss();
 	}
 
 	/* -----------------------------------------------------------------------
@@ -93,7 +104,7 @@ class C365_Fetcher {
 	}
 
 	/* -----------------------------------------------------------------------
-	 * Fetching
+	 * Fetch orchestration (shared by all source types)
 	 * -------------------------------------------------------------------- */
 
 	/**
@@ -109,7 +120,6 @@ class C365_Fetcher {
 				$imported += self::fetch_feed_record( $row );
 			}
 		}
-
 		return $imported;
 	}
 
@@ -125,34 +135,18 @@ class C365_Fetcher {
 			return 0;
 		}
 
-		// Web-page sources have no RSS: discover and scrape articles instead.
-		if ( 'scrape' === $row->type ) {
-			return self::fetch_scrape_record( $row, $user );
-		}
-
-		if ( ! function_exists( 'fetch_feed' ) ) {
-			require_once ABSPATH . WPINC . '/feed.php';
-		}
-
-		// Keep the feed cache shorter than the 5-minute rotation.
-		$shorten = function () {
-			return 4 * MINUTE_IN_SECONDS;
-		};
-		add_filter( 'wp_feed_cache_transient_lifetime', $shorten );
-		$feed = fetch_feed( C365_Feeds::resolved_url( $row ) );
-		remove_filter( 'wp_feed_cache_transient_lifetime', $shorten );
-
-		if ( is_wp_error( $feed ) ) {
-			C365_Feeds::record_result( $row->id, $feed->get_error_message(), true );
-			return 0;
-		}
-
-		// First fetch of a feed backfills everything it exposes (FR-3.10);
-		// after that, the normal per-fetch cap applies. Backfilled content is
-		// historic, so social sharing is suppressed for the whole run.
+		// First fetch backfills everything the source exposes; after that,
+		// the per-fetch cap applies. Backfilled content is historic, so
+		// social sharing is suppressed for the whole run.
 		$backfill = ! (int) $row->backfilled;
 		$max      = $backfill ? 0 : (int) C365_Settings::get( 'max_items' );
-		$items    = $feed->get_items( 0, $max );
+
+		$source = self::source_for( $row->type );
+		$items  = $source->fetch( $row, $max );
+		if ( is_wp_error( $items ) ) {
+			C365_Feeds::record_result( $row->id, $items->get_error_message(), true );
+			return 0;
+		}
 
 		$post_type  = C365_Feeds::post_type_for( $row->type );
 		$categories = C365_Feeds::parse_categories( $row->categories );
@@ -164,7 +158,7 @@ class C365_Fetcher {
 		}
 
 		foreach ( $items as $item ) {
-			if ( self::import_item( $user, $item, $post_type, $feed, $categories, (int) $row->id, ! empty( $row->full_content ) ) ) {
+			if ( self::import_item( $user, $row, $source, $item, $post_type, $categories ) ) {
 				$imported++;
 			}
 		}
@@ -187,75 +181,55 @@ class C365_Fetcher {
 		return $imported;
 	}
 
+	/* -----------------------------------------------------------------------
+	 * The shared import pipeline
+	 * -------------------------------------------------------------------- */
+
 	/**
-	 * Import a single feed item, unless it already exists.
+	 * Import one normalized item, unless it already exists.
 	 *
-	 * @param WP_User        $user       Member.
-	 * @param SimplePie_Item $item       Feed item.
-	 * @param string         $post_type  Target post type.
-	 * @param SimplePie      $feed       Parent feed.
-	 * @param int[]          $categories Category IDs from the feed record.
-	 * @param int            $feed_id    Feed record ID.
-	 * @param bool           $fetch_full Scrape the source page for the full article text.
+	 * Pipeline: GUID dedup → title dedup (when the title is known before
+	 * enrichment) → enrich (may skip: Shorts, unreadable pages) → title
+	 * dedup (when the title only arrived with enrichment) → template →
+	 * insert → type meta → featured image.
+	 *
+	 * @param WP_User $user       Member.
+	 * @param object  $row        Feed record.
+	 * @param object  $source     Source strategy.
+	 * @param array   $item       Normalized item.
+	 * @param string  $post_type  Target post type.
+	 * @param int[]   $categories Category IDs from the feed record.
 	 * @return bool Whether a post was created.
 	 */
-	protected static function import_item( $user, $item, $post_type, $feed, $categories, $feed_id, $fetch_full = false ) {
-		$guid = $item->get_id();
-		if ( ! $guid ) {
-			$guid = $item->get_permalink();
-		}
-		if ( ! $guid || self::guid_exists( $guid ) ) {
+	protected static function import_item( $user, $row, $source, $item, $post_type, $categories ) {
+		if ( empty( $item['guid'] ) || self::guid_exists( $item['guid'] ) ) {
 			return false;
 		}
 
-		$title = wp_strip_all_tags( (string) $item->get_title() );
-		$title = trim( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) );
-		if ( '' === $title ) {
+		$had_title = '' !== $item['title'];
+		if ( $had_title && self::title_matches_existing( $item['title'], $post_type, $item['guid'] ) ) {
 			return false;
 		}
 
-		// Title match against pre-existing content (legacy imports without a
-		// GUID): stamp the GUID onto the match instead of duplicating it.
-		$existing = self::find_by_title( $title, $post_type );
-		if ( $existing ) {
-			if ( ! get_post_meta( $existing, '_c365_guid', true ) ) {
-				update_post_meta( $existing, '_c365_guid', $guid );
-			}
+		$item = $source->enrich( $item, $row );
+		if ( ! $item || '' === $item['title'] ) {
 			return false;
 		}
-
-		// Skip YouTube Shorts (FR-3.9).
-		if ( 'c365_video' === $post_type && self::is_short( $item ) ) {
+		if ( ! $had_title && self::title_matches_existing( $item['title'], $post_type, $item['guid'] ) ) {
 			return false;
-		}
-
-		$content = (string) $item->get_content();
-		if ( '' === trim( $content ) ) {
-			$content = (string) $item->get_description();
-		}
-		$content = wp_kses_post( $content );
-
-		// Full-content scrape: fetch the actual article page for feeds that
-		// only publish summaries. The scraped text is used when it is clearly
-		// more complete than what the feed provided; otherwise fall back.
-		if ( $fetch_full ) {
-			$scraped = self::scrape_full_content( (string) $item->get_permalink() );
-			if ( $scraped && strlen( $scraped ) > max( 300, (int) ( strlen( $content ) * 1.2 ) ) ) {
-				$content = $scraped;
-			}
 		}
 
 		// Apply the per-type post body template (Syndication → Templates).
 		$content = self::apply_post_template(
 			$post_type,
 			array(
-				'{content}'     => $content,
-				'{title}'       => $title,
+				'{content}'     => $item['content'],
+				'{title}'       => $item['title'],
 				'{author}'      => $user->display_name,
-				'{excerpt}'     => wp_trim_words( wp_strip_all_tags( (string) $item->get_description() ), 40 ),
-				'{source_name}' => wp_strip_all_tags( (string) $feed->get_title() ),
-				'{source_url}'  => esc_url_raw( (string) $item->get_permalink() ),
-				'{date}'        => (string) $item->get_date( 'j F Y' ),
+				'{excerpt}'     => $item['excerpt'],
+				'{source_name}' => $item['source_name'],
+				'{source_url}'  => $item['source_url'],
+				'{date}'        => $item['timestamp'] ? gmdate( 'j F Y', $item['timestamp'] ) : '',
 			)
 		);
 
@@ -263,35 +237,30 @@ class C365_Fetcher {
 			'post_type'    => $post_type,
 			'post_status'  => C365_Settings::get( 'post_status' ),
 			'post_author'  => $user->ID,
-			'post_title'   => $title,
+			'post_title'   => $item['title'],
 			'post_content' => $content,
-			'post_excerpt' => wp_trim_words( wp_strip_all_tags( (string) $item->get_description() ), 40 ),
+			'post_excerpt' => $item['excerpt'],
 			'meta_input'   => array(
-				'_c365_guid'        => $guid,
-				'_c365_feed_id'     => $feed_id,
-				'_c365_source_url'  => esc_url_raw( (string) $item->get_permalink() ),
-				'_c365_source_name' => wp_strip_all_tags( (string) $feed->get_title() ),
+				'_c365_guid'        => $item['guid'],
+				'_c365_feed_id'     => (int) $row->id,
+				'_c365_source_url'  => $item['source_url'],
+				'_c365_source_name' => $item['source_name'],
 			),
 		);
 
 		// Keep the original publish date.
-		if ( C365_Settings::get( 'use_original_date' ) ) {
-			$timestamp = $item->get_date( 'U' );
-			if ( $timestamp ) {
-				$postarr['post_date_gmt'] = gmdate( 'Y-m-d H:i:s', (int) $timestamp );
-				$postarr['post_date']     = get_date_from_gmt( $postarr['post_date_gmt'] );
-			}
+		if ( $item['timestamp'] && C365_Settings::get( 'use_original_date' ) ) {
+			$postarr['post_date_gmt'] = gmdate( 'Y-m-d H:i:s', $item['timestamp'] );
+			$postarr['post_date']     = get_date_from_gmt( $postarr['post_date_gmt'] );
 		}
 
-		// Categories: the feed record's mapping, optionally plus the item's own.
+		// Categories: the record's mapping, optionally plus the item's own.
 		$assign = $categories;
-		if ( 'post' === $post_type && C365_Settings::get( 'import_categories' ) ) {
-			$assign = array_merge( $assign, self::map_item_categories( $item ) );
+		if ( 'post' === $post_type && C365_Settings::get( 'import_categories' ) && ! empty( $item['category_names'] ) ) {
+			$assign = array_merge( $assign, self::map_category_names( $item['category_names'] ) );
 		}
-		if ( 'post' === $post_type ) {
-			if ( $assign ) {
-				$postarr['post_category'] = array_unique( $assign );
-			}
+		if ( 'post' === $post_type && $assign ) {
+			$postarr['post_category'] = array_unique( $assign );
 		}
 
 		$post_id = wp_insert_post( wp_slash( $postarr ), true );
@@ -304,462 +273,27 @@ class C365_Fetcher {
 			wp_set_post_categories( $post_id, array_unique( $assign ) );
 		}
 
-		// Type-specific extras.
-		if ( 'c365_podcast' === $post_type ) {
-			self::attach_podcast_meta( $post_id, $item );
-		} elseif ( 'c365_video' === $post_type ) {
-			self::attach_video_meta( $post_id, $item );
-		} elseif ( 'c365_event' === $post_type ) {
-			self::attach_event_meta( $post_id, $item );
+		// Type extras from the normalized item.
+		$extra_meta = array(
+			'_c365_audio_url'      => 'audio_url',
+			'_c365_duration'       => 'duration',
+			'_c365_video_id'       => 'video_id',
+			'_c365_event_start'    => 'event_start',
+			'_c365_event_end'      => 'event_end',
+			'_c365_event_location' => 'event_location',
+			'_c365_event_url'      => 'event_url',
+		);
+		foreach ( $extra_meta as $meta_key => $item_key ) {
+			if ( ! empty( $item[ $item_key ] ) ) {
+				update_post_meta( $post_id, $meta_key, $item[ $item_key ] );
+			}
 		}
 
-		// Featured image: enclosure/media image, else first image in content.
 		if ( C365_Settings::get( 'set_featured_image' ) ) {
-			self::attach_featured_image( $post_id, $item, $content );
+			self::attach_featured_image( $post_id, $item['image_url'], $item['content'] );
 		}
 
 		return true;
-	}
-
-	/* -----------------------------------------------------------------------
-	 * Web-page sources (no RSS)
-	 * -------------------------------------------------------------------- */
-
-	/**
-	 * Fetch a plain web page, discover its article links, and import the
-	 * new ones. Backfill (first run) imports every discovered article with
-	 * social sharing suppressed; later runs respect the per-fetch cap.
-	 *
-	 * @param object  $row  Feed record (type 'scrape').
-	 * @param WP_User $user Owning member.
-	 * @return int Imported count.
-	 */
-	public static function fetch_scrape_record( $row, $user ) {
-		$response = wp_remote_get(
-			$row->feed_url,
-			array(
-				'timeout'    => 15,
-				'user-agent' => 'Mozilla/5.0 (compatible; C365Syndicator/1.0; +https://365community.online)',
-			)
-		);
-		if ( is_wp_error( $response ) ) {
-			C365_Feeds::record_result( $row->id, $response->get_error_message(), true );
-			return 0;
-		}
-		$code = (int) wp_remote_retrieve_response_code( $response );
-		if ( 200 !== $code ) {
-			C365_Feeds::record_result( $row->id, 'HTTP ' . $code, true );
-			return 0;
-		}
-
-		$links = self::discover_article_links( wp_remote_retrieve_body( $response ), $row->feed_url );
-		if ( ! $links ) {
-			C365_Feeds::record_result( $row->id, __( 'No article links found on the page', 'c365-syndicator' ), true );
-			return 0;
-		}
-
-		// Backfill imports every article the page exposes (bounded naturally
-		// by the listing page itself); later fetches respect the cap.
-		$backfill = ! (int) $row->backfilled;
-		if ( ! $backfill ) {
-			$links = array_slice( $links, 0, (int) C365_Settings::get( 'max_items' ) );
-		}
-
-		$was_suppressed = class_exists( 'C365_Social' ) ? C365_Social::$suppressed : false;
-		if ( $backfill && class_exists( 'C365_Social' ) ) {
-			C365_Social::$suppressed = true;
-		}
-
-		$categories = C365_Feeds::parse_categories( $row->categories );
-		$imported   = 0;
-		foreach ( $links as $link ) {
-			if ( self::import_scraped_article( $user, $link, $categories, (int) $row->id ) ) {
-				$imported++;
-			}
-		}
-
-		if ( class_exists( 'C365_Social' ) ) {
-			C365_Social::$suppressed = $was_suppressed;
-		}
-
-		C365_Feeds::record_result(
-			$row->id,
-			sprintf(
-				/* translators: %d: imported count. */
-				$backfill ? __( 'Backfill complete — %d article(s) imported', 'c365-syndicator' ) : __( '%d new article(s) imported', 'c365-syndicator' ),
-				$imported
-			),
-			false,
-			$backfill
-		);
-
-		return $imported;
-	}
-
-	/**
-	 * Find likely article URLs on a listing page: links inside <article>
-	 * elements, heading links, and entry-title links — same host only,
-	 * archive/nav URLs filtered out, document order preserved.
-	 *
-	 * @param string $html Listing page HTML.
-	 * @param string $base Listing page URL (for resolving relative links).
-	 * @return string[] Absolute URLs.
-	 */
-	public static function discover_article_links( $html, $base ) {
-		if ( ! class_exists( 'DOMDocument' ) || '' === trim( (string) $html ) ) {
-			return array();
-		}
-
-		$doc = new DOMDocument();
-		libxml_use_internal_errors( true );
-		$loaded = $doc->loadHTML( '<?xml encoding="utf-8"?>' . $html, defined( 'LIBXML_NOWARNING' ) ? LIBXML_NOWARNING | LIBXML_NOERROR : 0 );
-		libxml_clear_errors();
-		if ( ! $loaded ) {
-			return array();
-		}
-
-		$xpath   = new DOMXPath( $doc );
-		$queries = array(
-			'//article//a[@href]',
-			'//h2//a[@href] | //h3//a[@href]',
-			'//a[contains(concat(" ", normalize-space(@class), " "), " entry-title ")][@href]',
-			'//*[contains(concat(" ", normalize-space(@class), " "), " entry-title ")]//a[@href]',
-		);
-
-		$host = wp_parse_url( $base, PHP_URL_HOST );
-		$seen = array();
-		$urls = array();
-
-		foreach ( $queries as $query ) {
-			$nodes = $xpath->query( $query );
-			if ( ! $nodes ) {
-				continue;
-			}
-			foreach ( $nodes as $node ) {
-				$href = trim( (string) $node->getAttribute( 'href' ) );
-				$url  = self::resolve_url( $href, $base );
-				if ( ! $url || isset( $seen[ $url ] ) ) {
-					continue;
-				}
-				$seen[ $url ] = true;
-
-				$link_host = wp_parse_url( $url, PHP_URL_HOST );
-				if ( ! $link_host || strcasecmp( $link_host, (string) $host ) !== 0 ) {
-					continue; // Off-site link.
-				}
-				if ( preg_match( '~/(category|tag|author|page|feed|wp-login|wp-admin|shop|cart|search)([/?]|$)|[?&]s=|#|\.(jpg|jpeg|png|gif|pdf|zip)$~i', $url ) ) {
-					continue; // Archive/nav/asset link.
-				}
-				if ( untrailingslashit( $url ) === untrailingslashit( $base ) ) {
-					continue; // The listing page itself.
-				}
-				$urls[] = $url;
-			}
-		}
-
-		return $urls;
-	}
-
-	/**
-	 * Resolve a possibly-relative href against a base URL.
-	 *
-	 * @param string $href Href value.
-	 * @param string $base Base URL.
-	 * @return string Absolute URL or ''.
-	 */
-	protected static function resolve_url( $href, $base ) {
-		if ( '' === $href || '#' === $href[0] || 0 === strpos( $href, 'mailto:' ) || 0 === strpos( $href, 'javascript:' ) ) {
-			return '';
-		}
-		if ( preg_match( '~^https?://~i', $href ) ) {
-			return esc_url_raw( $href );
-		}
-
-		// Core's resolver handles ports, ../ segments, and scheme-relative
-		// URLs correctly — don't reimplement it.
-		if ( ! class_exists( 'WP_Http' ) ) {
-			require_once ABSPATH . WPINC . '/class-http.php';
-		}
-		if ( class_exists( 'WP_Http' ) && method_exists( 'WP_Http', 'make_absolute_url' ) ) {
-			return esc_url_raw( WP_Http::make_absolute_url( $href, $base ) );
-		}
-
-		// Minimal fallback (should not be reached on real WordPress).
-		$parts = wp_parse_url( $base );
-		if ( empty( $parts['host'] ) ) {
-			return '';
-		}
-		$origin = ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . '://' . $parts['host'] . ( isset( $parts['port'] ) ? ':' . $parts['port'] : '' );
-		if ( 0 === strpos( $href, '//' ) ) {
-			return esc_url_raw( ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . ':' . $href );
-		}
-		if ( 0 === strpos( $href, '/' ) ) {
-			return esc_url_raw( $origin . $href );
-		}
-		$path = isset( $parts['path'] ) ? preg_replace( '~/[^/]*$~', '/', $parts['path'] ) : '/';
-		return esc_url_raw( $origin . $path . $href );
-	}
-
-	/**
-	 * Import one scraped article page, unless it already exists.
-	 *
-	 * @param WP_User $user       Member.
-	 * @param string  $url        Article URL (doubles as the GUID).
-	 * @param int[]   $categories Category IDs from the feed record.
-	 * @param int     $feed_id    Feed record ID.
-	 * @return bool Whether a post was created.
-	 */
-	public static function import_scraped_article( $user, $url, $categories, $feed_id ) {
-		if ( self::guid_exists( $url ) ) {
-			return false;
-		}
-
-		$response = wp_remote_get(
-			$url,
-			array(
-				'timeout'    => 15,
-				'user-agent' => 'Mozilla/5.0 (compatible; C365Syndicator/1.0; +https://365community.online)',
-			)
-		);
-		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
-			return false;
-		}
-		$html = wp_remote_retrieve_body( $response );
-
-		$meta    = self::parse_article_meta( $html, $url );
-		$content = self::extract_article_html( $html );
-		if ( '' === $meta['title'] || '' === $content ) {
-			return false;
-		}
-
-		// Title match against existing content (legacy protection).
-		$existing = self::find_by_title( $meta['title'], 'post' );
-		if ( $existing ) {
-			if ( ! get_post_meta( $existing, '_c365_guid', true ) ) {
-				update_post_meta( $existing, '_c365_guid', $url );
-			}
-			return false;
-		}
-
-		$content = self::apply_post_template(
-			'post',
-			array(
-				'{content}'     => $content,
-				'{title}'       => $meta['title'],
-				'{author}'      => $user->display_name,
-				'{excerpt}'     => wp_trim_words( wp_strip_all_tags( $content ), 40 ),
-				'{source_name}' => $meta['site_name'],
-				'{source_url}'  => $url,
-				'{date}'        => $meta['timestamp'] ? gmdate( 'j F Y', $meta['timestamp'] ) : '',
-			)
-		);
-
-		$postarr = array(
-			'post_type'    => 'post',
-			'post_status'  => C365_Settings::get( 'post_status' ),
-			'post_author'  => $user->ID,
-			'post_title'   => $meta['title'],
-			'post_content' => $content,
-			'post_excerpt' => wp_trim_words( wp_strip_all_tags( $content ), 40 ),
-			'meta_input'   => array(
-				'_c365_guid'        => $url,
-				'_c365_feed_id'     => $feed_id,
-				'_c365_source_url'  => esc_url_raw( $url ),
-				'_c365_source_name' => $meta['site_name'],
-			),
-		);
-
-		if ( $meta['timestamp'] && C365_Settings::get( 'use_original_date' ) ) {
-			$postarr['post_date_gmt'] = gmdate( 'Y-m-d H:i:s', $meta['timestamp'] );
-			$postarr['post_date']     = get_date_from_gmt( $postarr['post_date_gmt'] );
-		}
-		if ( $categories ) {
-			$postarr['post_category'] = array_unique( $categories );
-		}
-
-		$post_id = wp_insert_post( wp_slash( $postarr ), true );
-		if ( is_wp_error( $post_id ) || ! $post_id ) {
-			return false;
-		}
-
-		// Featured image: og:image, else first image in the article, else the
-		// category's fallback image.
-		if ( C365_Settings::get( 'set_featured_image' ) ) {
-			$done      = false;
-			$image_url = $meta['image'];
-			if ( ! $image_url && preg_match( '/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m ) ) {
-				$image_url = $m[1];
-			}
-			if ( $image_url && 0 === strpos( $image_url, 'http' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/media.php';
-				require_once ABSPATH . 'wp-admin/includes/file.php';
-				require_once ABSPATH . 'wp-admin/includes/image.php';
-				$attachment_id = media_sideload_image( esc_url_raw( $image_url ), $post_id, $meta['title'], 'id' );
-				if ( ! is_wp_error( $attachment_id ) ) {
-					set_post_thumbnail( $post_id, $attachment_id );
-					$done = true;
-				}
-			}
-			if ( ! $done ) {
-				self::set_category_fallback_image( $post_id );
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * Pull title / date / image / site name out of an article page's markup
-	 * (Open Graph and standard meta first, visible elements as fallback).
-	 *
-	 * @param string $html Article page HTML.
-	 * @param string $url  Article URL (host used as last-resort site name).
-	 * @return array { title, timestamp, image, site_name }
-	 */
-	public static function parse_article_meta( $html, $url ) {
-		$meta = array(
-			'title'     => '',
-			'timestamp' => 0,
-			'image'     => '',
-			'site_name' => (string) wp_parse_url( $url, PHP_URL_HOST ),
-		);
-
-		$grab = function ( $pattern ) use ( $html ) {
-			return preg_match( $pattern, $html, $m ) ? html_entity_decode( trim( $m[1] ), ENT_QUOTES, 'UTF-8' ) : '';
-		};
-
-		$meta['title'] = $grab( '/<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']/i' );
-		if ( ! $meta['title'] ) {
-			$meta['title'] = $grab( '/<h1[^>]*>(.*?)<\/h1>/is' );
-			$meta['title'] = wp_strip_all_tags( $meta['title'] );
-		}
-		if ( ! $meta['title'] ) {
-			$meta['title'] = $grab( '/<title[^>]*>(.*?)<\/title>/is' );
-		}
-		$meta['title'] = wp_strip_all_tags( $meta['title'] );
-
-		$published = $grab( '/<meta[^>]+property=["\']article:published_time["\'][^>]+content=["\']([^"\']+)["\']/i' );
-		if ( ! $published ) {
-			$published = $grab( '/<time[^>]+datetime=["\']([^"\']+)["\']/i' );
-		}
-		if ( $published ) {
-			$timestamp = strtotime( $published );
-			if ( $timestamp ) {
-				$meta['timestamp'] = $timestamp;
-			}
-		}
-
-		$meta['image'] = $grab( '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/i' );
-
-		$site_name = $grab( '/<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\']([^"\']+)["\']/i' );
-		if ( $site_name ) {
-			$meta['site_name'] = $site_name;
-		}
-
-		return $meta;
-	}
-
-	/**
-	 * Fetch an article page and extract its main content ("Advance Scrap").
-	 *
-	 * @param string $url Article URL.
-	 * @return string Sanitised article HTML, or '' when unavailable.
-	 */
-	public static function scrape_full_content( $url ) {
-		if ( ! $url || 0 !== strpos( $url, 'http' ) ) {
-			return '';
-		}
-
-		$response = wp_remote_get(
-			$url,
-			array(
-				'timeout'    => 15,
-				'user-agent' => 'Mozilla/5.0 (compatible; C365Syndicator/1.0; +https://365community.online)',
-			)
-		);
-		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
-			return '';
-		}
-
-		return self::extract_article_html( wp_remote_retrieve_body( $response ) );
-	}
-
-	/**
-	 * Pull the main article body out of a full HTML page: tries <article>,
-	 * common content containers, then <main>, picking the candidate with the
-	 * most text, and strips navigation/script/share clutter from it.
-	 *
-	 * @param string $html Full page HTML.
-	 * @return string Sanitised article HTML, or '' when nothing usable found.
-	 */
-	public static function extract_article_html( $html ) {
-		if ( ! class_exists( 'DOMDocument' ) || '' === trim( (string) $html ) ) {
-			return '';
-		}
-
-		$doc = new DOMDocument();
-		libxml_use_internal_errors( true );
-		$loaded = $doc->loadHTML( '<?xml encoding="utf-8"?>' . $html, defined( 'LIBXML_NOWARNING' ) ? LIBXML_NOWARNING | LIBXML_NOERROR : 0 );
-		libxml_clear_errors();
-		if ( ! $loaded ) {
-			return '';
-		}
-
-		$xpath   = new DOMXPath( $doc );
-		$queries = array(
-			'//*[@itemprop="articleBody"]',
-			'//article',
-			'//div[contains(concat(" ", normalize-space(@class), " "), " entry-content ")]',
-			'//div[contains(concat(" ", normalize-space(@class), " "), " post-content ")]',
-			'//div[contains(concat(" ", normalize-space(@class), " "), " article-content ")]',
-			'//div[contains(concat(" ", normalize-space(@class), " "), " content-area ")]',
-			'//main',
-		);
-
-		$best      = null;
-		$best_size = 0;
-		foreach ( $queries as $query ) {
-			$nodes = $xpath->query( $query );
-			if ( ! $nodes ) {
-				continue;
-			}
-			foreach ( $nodes as $node ) {
-				$size = strlen( trim( $node->textContent ) );
-				if ( $size > $best_size ) {
-					$best      = $node;
-					$best_size = $size;
-				}
-			}
-			// A named article container beats falling through to <main>.
-			if ( $best && $best_size > 500 ) {
-				break;
-			}
-		}
-
-		if ( ! $best || $best_size < 200 ) {
-			return '';
-		}
-
-		// Strip non-content elements from the chosen container.
-		$junk = $xpath->query( './/script | .//style | .//nav | .//aside | .//form | .//footer | .//header | .//iframe', $best );
-		if ( $junk ) {
-			$remove = array();
-			foreach ( $junk as $node ) {
-				$remove[] = $node;
-			}
-			foreach ( $remove as $node ) {
-				if ( $node->parentNode ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName
-					$node->parentNode->removeChild( $node ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName
-				}
-			}
-		}
-
-		$inner = '';
-		foreach ( $best->childNodes as $child ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName
-			$inner .= $doc->saveHTML( $child );
-		}
-
-		return wp_kses_post( trim( $inner ) );
 	}
 
 	/**
@@ -777,6 +311,10 @@ class C365_Fetcher {
 		}
 		return wp_kses_post( strtr( $template, $vars ) );
 	}
+
+	/* -----------------------------------------------------------------------
+	 * De-duplication
+	 * -------------------------------------------------------------------- */
 
 	/**
 	 * Whether an item with this GUID was already imported.
@@ -802,89 +340,42 @@ class C365_Fetcher {
 	}
 
 	/**
-	 * Find an existing post of the same type with (effectively) the same
-	 * title. Case-insensitivity comes from the DB collation.
+	 * Title match against pre-existing content (legacy imports without a
+	 * GUID): when found, stamp the GUID onto the match so future fetches
+	 * take the fast GUID path, and report the item as a duplicate.
 	 *
 	 * @param string $title     Normalised title.
 	 * @param string $post_type Target post type.
-	 * @return int Post ID or 0.
+	 * @param string $guid      Item GUID to back-stamp.
+	 * @return bool Whether an existing post matched.
 	 */
-	protected static function find_by_title( $title, $post_type ) {
+	protected static function title_matches_existing( $title, $post_type, $guid ) {
 		global $wpdb;
-		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$existing = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
 				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status NOT IN ('auto-draft') AND post_title = %s LIMIT 1",
 				$post_type,
 				$title
 			)
 		);
+		if ( ! $existing ) {
+			return false;
+		}
+		if ( ! get_post_meta( $existing, '_c365_guid', true ) ) {
+			update_post_meta( $existing, '_c365_guid', $guid );
+		}
+		return true;
 	}
 
 	/**
-	 * Whether a YouTube feed item is a Short.
+	 * Map feed category names onto WP categories, creating as needed.
 	 *
-	 * Checks the item link first; when ambiguous (YouTube links Shorts as
-	 * ordinary watch URLs in feeds), asks youtube.com/shorts/<id> — HTTP 200
-	 * means it is a Short, a redirect means it is a normal video. On any
-	 * request failure the item is treated as a normal video.
-	 *
-	 * @param SimplePie_Item $item Feed item.
-	 * @return bool
-	 */
-	protected static function is_short( $item ) {
-		$link = (string) $item->get_permalink();
-		if ( false !== strpos( $link, '/shorts/' ) ) {
-			return true;
-		}
-
-		$video_id = self::video_id_from_item( $item );
-		if ( ! $video_id ) {
-			return false;
-		}
-
-		// Cache the verdict so an interrupted backfill never re-asks for the
-		// same video, and keep the timeout short — a slow response is treated
-		// as "not a Short" rather than stalling the whole cron tick.
-		$cache_key = 'c365_short_' . $video_id;
-		$cached    = get_transient( $cache_key );
-		if ( false !== $cached ) {
-			return 'yes' === $cached;
-		}
-
-		$response = wp_remote_head(
-			'https://www.youtube.com/shorts/' . rawurlencode( $video_id ),
-			array(
-				'redirection' => 0,
-				'timeout'     => 3,
-			)
-		);
-		if ( is_wp_error( $response ) ) {
-			return false;
-		}
-
-		$is_short = 200 === (int) wp_remote_retrieve_response_code( $response );
-		set_transient( $cache_key, $is_short ? 'yes' : 'no', WEEK_IN_SECONDS );
-
-		return $is_short;
-	}
-
-	/**
-	 * Map a feed item's categories onto WP categories, creating as needed.
-	 *
-	 * @param SimplePie_Item $item Feed item.
+	 * @param string[] $names Category labels from the feed item.
 	 * @return int[] Category IDs.
 	 */
-	protected static function map_item_categories( $item ) {
-		$ids        = array();
-		$categories = $item->get_categories();
-		if ( ! $categories ) {
-			return $ids;
-		}
-		foreach ( array_slice( $categories, 0, 5 ) as $category ) {
-			$label = wp_strip_all_tags( (string) $category->get_label() );
-			if ( '' === $label ) {
-				continue;
-			}
+	protected static function map_category_names( $names ) {
+		$ids = array();
+		foreach ( array_slice( $names, 0, 5 ) as $label ) {
 			$term = get_term_by( 'name', $label, 'category' );
 			if ( ! $term ) {
 				$new = wp_insert_term( $label, 'category' );
@@ -899,168 +390,51 @@ class C365_Fetcher {
 		return $ids;
 	}
 
-	/**
-	 * Store the audio enclosure and duration for a podcast episode.
-	 *
-	 * @param int            $post_id Post ID.
-	 * @param SimplePie_Item $item    Feed item.
-	 */
-	protected static function attach_podcast_meta( $post_id, $item ) {
-		$enclosure = $item->get_enclosure();
-		if ( $enclosure && $enclosure->get_link() ) {
-			$type = (string) $enclosure->get_type();
-			if ( '' === $type || 0 === strpos( $type, 'audio' ) ) {
-				update_post_meta( $post_id, '_c365_audio_url', esc_url_raw( $enclosure->get_link() ) );
-			}
-			$duration = $enclosure->get_duration( true );
-			if ( $duration ) {
-				update_post_meta( $post_id, '_c365_duration', sanitize_text_field( $duration ) );
-			}
-		}
-	}
+	/* -----------------------------------------------------------------------
+	 * Featured images
+	 * -------------------------------------------------------------------- */
 
 	/**
-	 * Extract the YouTube video ID from a feed item.
+	 * Set the featured image: the item's preferred image, else the first
+	 * image in the content, else the category's fallback image.
 	 *
-	 * @param SimplePie_Item $item Feed item.
-	 * @return string
+	 * @param int    $post_id   Post ID.
+	 * @param string $preferred Preferred image URL (may be '').
+	 * @param string $content   Sanitised item content.
 	 */
-	protected static function video_id_from_item( $item ) {
-		// YouTube feed GUIDs look like "yt:video:VIDEOID".
-		$guid = (string) $item->get_id();
-		if ( preg_match( '/^yt:video:([A-Za-z0-9_-]{6,})$/', $guid, $m ) ) {
-			return $m[1];
-		}
+	protected static function attach_featured_image( $post_id, $preferred, $content ) {
+		$image_url = $preferred;
 
-		$link  = (string) $item->get_permalink();
-		$query = wp_parse_url( $link, PHP_URL_QUERY );
-		if ( $query ) {
-			parse_str( $query, $params );
-			if ( ! empty( $params['v'] ) ) {
-				return preg_replace( '/[^A-Za-z0-9_-]/', '', $params['v'] );
-			}
-		}
-		return '';
-	}
-
-	/**
-	 * Store the YouTube video ID for a video item.
-	 *
-	 * @param int            $post_id Post ID.
-	 * @param SimplePie_Item $item    Feed item.
-	 */
-	protected static function attach_video_meta( $post_id, $item ) {
-		$video_id = self::video_id_from_item( $item );
-		if ( $video_id ) {
-			update_post_meta( $post_id, '_c365_video_id', $video_id );
-		}
-	}
-
-	/**
-	 * Extract event details from a feed item where the feed provides them
-	 * (RSS event/xCal modules), so imported events carry a start date,
-	 * location, and link like manually added ones. Feeds without event
-	 * markup import with the description only.
-	 *
-	 * @param int            $post_id Post ID.
-	 * @param SimplePie_Item $item    Feed item.
-	 */
-	protected static function attach_event_meta( $post_id, $item ) {
-		$namespaces = array(
-			'http://purl.org/rss/1.0/modules/event/' => array(
-				'start'    => 'startdate',
-				'end'      => 'enddate',
-				'location' => 'location',
-			),
-			'urn:ietf:params:xml:ns:xcal'             => array(
-				'start'    => 'dtstart',
-				'end'      => 'dtend',
-				'location' => 'location',
-			),
-		);
-
-		$get_tag = function ( $ns, $tag ) use ( $item ) {
-			$tags = $item->get_item_tags( $ns, $tag );
-			return isset( $tags[0]['data'] ) ? trim( (string) $tags[0]['data'] ) : '';
-		};
-
-		foreach ( $namespaces as $ns => $tags ) {
-			$start = $get_tag( $ns, $tags['start'] );
-			if ( ! $start ) {
-				continue;
-			}
-			$start_ts = strtotime( $start );
-			if ( $start_ts ) {
-				update_post_meta( $post_id, '_c365_event_start', gmdate( 'Y-m-d\TH:i', $start_ts ) );
-			}
-			$end    = $get_tag( $ns, $tags['end'] );
-			$end_ts = $end ? strtotime( $end ) : 0;
-			if ( $end_ts ) {
-				update_post_meta( $post_id, '_c365_event_end', gmdate( 'Y-m-d\TH:i', $end_ts ) );
-			}
-			$location = $get_tag( $ns, $tags['location'] );
-			if ( $location ) {
-				update_post_meta( $post_id, '_c365_event_location', sanitize_text_field( $location ) );
-			}
-			break;
-		}
-
-		// The original page is the natural "more info" link for the event.
-		$link = (string) $item->get_permalink();
-		if ( $link ) {
-			update_post_meta( $post_id, '_c365_event_url', esc_url_raw( $link ) );
-		}
-	}
-
-	/**
-	 * Sideload the item's image and set it as the featured image.
-	 *
-	 * @param int            $post_id Post ID.
-	 * @param SimplePie_Item $item    Feed item.
-	 * @param string         $content Sanitised item content.
-	 */
-	protected static function attach_featured_image( $post_id, $item, $content ) {
-		$image_url = '';
-
-		// 1. YouTube: use the video thumbnail.
-		$video_id = get_post_meta( $post_id, '_c365_video_id', true );
-		if ( $video_id ) {
-			$image_url = 'https://i.ytimg.com/vi/' . rawurlencode( $video_id ) . '/hqdefault.jpg';
-		}
-
-		// 2. Enclosure / media:content image or thumbnail.
-		if ( ! $image_url ) {
-			$enclosure = $item->get_enclosure();
-			if ( $enclosure ) {
-				$thumb = $enclosure->get_thumbnail();
-				if ( $thumb ) {
-					$image_url = $thumb;
-				} elseif ( $enclosure->get_link() && 0 === strpos( (string) $enclosure->get_type(), 'image' ) ) {
-					$image_url = $enclosure->get_link();
-				}
-			}
-		}
-
-		// 3. First <img> in the content.
 		if ( ! $image_url && preg_match( '/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m ) ) {
 			$image_url = $m[1];
 		}
 
-		if ( ! $image_url || 0 !== strpos( $image_url, 'http' ) ) {
-			self::set_category_fallback_image( $post_id );
-			return;
+		if ( $image_url && 0 === strpos( $image_url, 'http' ) ) {
+			$attachment_id = self::sideload_image( $image_url, $post_id, get_the_title( $post_id ) );
+			if ( $attachment_id ) {
+				set_post_thumbnail( $post_id, $attachment_id );
+				return;
+			}
 		}
 
+		self::set_category_fallback_image( $post_id );
+	}
+
+	/**
+	 * Download an image into the Media Library.
+	 *
+	 * @param string $url     Image URL.
+	 * @param int    $post_id Parent post (0 for unattached).
+	 * @param string $desc    Description.
+	 * @return int Attachment ID, or 0 on failure.
+	 */
+	public static function sideload_image( $url, $post_id = 0, $desc = null ) {
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
-		$attachment_id = media_sideload_image( esc_url_raw( $image_url ), $post_id, get_the_title( $post_id ), 'id' );
-		if ( ! is_wp_error( $attachment_id ) ) {
-			set_post_thumbnail( $post_id, $attachment_id );
-		} else {
-			self::set_category_fallback_image( $post_id );
-		}
+		$attachment_id = media_sideload_image( esc_url_raw( $url ), $post_id, $desc, 'id' );
+		return is_wp_error( $attachment_id ) ? 0 : (int) $attachment_id;
 	}
 
 	/**

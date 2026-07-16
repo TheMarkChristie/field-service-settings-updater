@@ -104,17 +104,13 @@ class C365_Types {
 			return 0;
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/media.php';
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/image.php';
-
-		$attachment_id = media_sideload_image( esc_url_raw( $url ), 0, null, 'id' );
-		if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
+		$attachment_id = C365_Fetcher::sideload_image( $url );
+		if ( ! $attachment_id ) {
 			return 0;
 		}
 
-		update_term_meta( $term_id, 'c365_category_image_id', (int) $attachment_id );
-		return (int) $attachment_id;
+		update_term_meta( $term_id, 'c365_category_image_id', $attachment_id );
+		return $attachment_id;
 	}
 
 	/**
