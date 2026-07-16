@@ -1,6 +1,7 @@
 <?php
 /**
- * Single Video layout.
+ * Single Video layout: title, embedded video, description. Nothing else
+ * between the reader and the content — just a slim byline underneath.
  *
  * @package Community365
  */
@@ -10,15 +11,11 @@ get_header();
 while ( have_posts() ) :
 	the_post();
 	$video_id = get_post_meta( get_the_ID(), '_synpro_video_id', true );
+	$source   = community365_get_source();
 	?>
 	<div class="c365-container">
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article c365-article-video' ); ?>>
-			<span class="c365-type-badge c365-type-video"><?php esc_html_e( 'Video', 'community365' ); ?></span>
 			<h1 class="entry-title"><?php the_title(); ?></h1>
-			<div class="c365-entry-meta">
-				<?php community365_entry_meta(); ?>
-				<?php community365_source_badge(); ?>
-			</div>
 
 			<?php if ( $video_id ) : ?>
 				<div class="c365-video-embed">
@@ -35,7 +32,14 @@ while ( have_posts() ) :
 
 			<div class="entry-content"><?php the_content(); ?></div>
 
-			<?php community365_attribution_box(); ?>
+			<p class="c365-slim-byline">
+				<?php esc_html_e( 'By', 'community365' ); ?> <?php the_author_posts_link(); ?>
+				<span aria-hidden="true">&middot;</span> <?php echo esc_html( get_the_date() ); ?>
+				<?php if ( $source && $source['url'] ) : ?>
+					<span aria-hidden="true">&middot;</span>
+					<a href="<?php echo esc_url( $source['url'] ); ?>" rel="external noopener" target="_blank"><?php esc_html_e( 'Watch on YouTube', 'community365' ); ?></a>
+				<?php endif; ?>
+			</p>
 		</article>
 	</div>
 	<?php

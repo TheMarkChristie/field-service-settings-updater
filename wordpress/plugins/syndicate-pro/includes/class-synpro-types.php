@@ -222,6 +222,8 @@ class Synpro_Types {
 		$end      = get_post_meta( $post->ID, '_synpro_event_end', true );
 		$location = get_post_meta( $post->ID, '_synpro_event_location', true );
 		$url      = get_post_meta( $post->ID, '_synpro_event_url', true );
+		$tickets  = get_post_meta( $post->ID, '_synpro_event_tickets', true );
+		$cfs      = get_post_meta( $post->ID, '_synpro_event_cfs', true );
 		?>
 		<p>
 			<label for="synpro-event-start"><strong><?php esc_html_e( 'Starts', 'syndicate-pro' ); ?></strong></label><br>
@@ -236,8 +238,16 @@ class Synpro_Types {
 			<input type="text" id="synpro-event-location" name="synpro_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%" placeholder="<?php esc_attr_e( 'Online / venue name', 'syndicate-pro' ); ?>">
 		</p>
 		<p>
-			<label for="synpro-event-url"><strong><?php esc_html_e( 'Registration / info URL', 'syndicate-pro' ); ?></strong></label><br>
+			<label for="synpro-event-url"><strong><?php esc_html_e( 'Website URL', 'syndicate-pro' ); ?></strong></label><br>
 			<input type="url" id="synpro-event-url" name="synpro_event_url" value="<?php echo esc_attr( $url ); ?>" style="width:100%">
+		</p>
+		<p>
+			<label for="synpro-event-tickets"><strong><?php esc_html_e( 'Tickets URL', 'syndicate-pro' ); ?></strong></label><br>
+			<input type="url" id="synpro-event-tickets" name="synpro_event_tickets" value="<?php echo esc_attr( $tickets ); ?>" style="width:100%">
+		</p>
+		<p>
+			<label for="synpro-event-cfs"><strong><?php esc_html_e( 'Call for speakers URL', 'syndicate-pro' ); ?></strong></label><br>
+			<input type="url" id="synpro-event-cfs" name="synpro_event_cfs" value="<?php echo esc_attr( $cfs ); ?>" style="width:100%" placeholder="https://sessionize.com/...">
 		</p>
 		<?php
 	}
@@ -301,6 +311,8 @@ class Synpro_Types {
 			'synpro_event_end'      => array( '_synpro_event_end', 'sanitize_text_field' ),
 			'synpro_event_location' => array( '_synpro_event_location', 'sanitize_text_field' ),
 			'synpro_event_url'      => array( '_synpro_event_url', 'esc_url_raw' ),
+			'synpro_event_tickets'  => array( '_synpro_event_tickets', 'esc_url_raw' ),
+			'synpro_event_cfs'      => array( '_synpro_event_cfs', 'esc_url_raw' ),
 			'synpro_audio_url'      => array( '_synpro_audio_url', 'esc_url_raw' ),
 			'synpro_duration'       => array( '_synpro_duration', 'sanitize_text_field' ),
 			'synpro_video_id'       => array( '_synpro_video_id', 'sanitize_text_field' ),
