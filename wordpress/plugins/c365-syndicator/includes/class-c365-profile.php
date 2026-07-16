@@ -2,8 +2,8 @@
 /**
  * Member profile fields.
  *
- * Every website user can manage their own syndication feeds, images, links,
- * and how their author page is displayed — all from their own profile screen
+ * Members (Contributor role and above) manage their own feed records,
+ * images, links, and author-page display from their profile screen
  * (Users → Profile). Administrators can edit any member's fields.
  *
  * @package C365_Syndicator
@@ -26,6 +26,16 @@ class C365_Profile {
 
 		// Use the member's chosen profile image as their avatar everywhere.
 		add_filter( 'get_avatar_url', array( __CLASS__, 'filter_avatar_url' ), 10, 2 );
+	}
+
+	/**
+	 * Whether a user is eligible for syndication (Contributor+, FR-1.5).
+	 *
+	 * @param int $user_id User ID.
+	 * @return bool
+	 */
+	public static function is_member( $user_id ) {
+		return user_can( $user_id, 'edit_posts' );
 	}
 
 	/**
@@ -68,63 +78,97 @@ class C365_Profile {
 	 * @param WP_User $user User being edited.
 	 */
 	public static function render_fields( $user ) {
-		$blog_feed    = get_user_meta( $user->ID, 'c365_blog_feed', true );
-		$blog_cat     = (int) get_user_meta( $user->ID, 'c365_blog_category', true );
-		$podcast_feed = get_user_meta( $user->ID, 'c365_podcast_feed', true );
-		$yt_channel   = get_user_meta( $user->ID, 'c365_youtube_channel', true );
-		$events_feed  = get_user_meta( $user->ID, 'c365_events_feed', true );
-		$avatar_url   = get_user_meta( $user->ID, 'c365_avatar_url', true );
-		$cover_url    = get_user_meta( $user->ID, 'c365_cover_url', true );
-		$tagline      = get_user_meta( $user->ID, 'c365_tagline', true );
+		if ( ! self::is_member( $user->ID ) ) {
+			return;
+		}
 
 		wp_nonce_field( 'c365_profile', 'c365_profile_nonce' );
+
+		self::render_feeds_section( $user );
+		self::render_author_page_section( $user );
+	}
+
+	/**
+	 * Feed records manager.
+	 *
+	 * @param WP_User $user User being edited.
+	 */
+	protected static function render_feeds_section( $user ) {
+		$rows       = C365_Feeds::for_user( $user->ID );
+		$types      = C365_Feeds::types();
+		$categories = get_categories( array( 'hide_empty' => false ) );
+
+		$category_select = function ( $name, $selected ) use ( $categories ) {
+			$html = '<select name="' . esc_attr( $name ) . '[]" multiple size="3" style="min-width:180px;">';
+			foreach ( $categories as $category ) {
+				$html .= sprintf(
+					'<option value="%d" %s>%s</option>',
+					(int) $category->term_id,
+					in_array( (int) $category->term_id, $selected, true ) ? 'selected' : '',
+					esc_html( $category->name )
+				);
+			}
+			return $html . '</select>';
+		};
+
+		$type_select = function ( $name, $selected ) use ( $types ) {
+			$html = '<select name="' . esc_attr( $name ) . '">';
+			foreach ( $types as $value => $label ) {
+				$html .= sprintf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $selected, $value, false ), esc_html( $label ) );
+			}
+			return $html . '</select>';
+		};
 		?>
 		<h2><?php esc_html_e( 'Syndication feeds', 'c365-syndicator' ); ?></h2>
-		<p class="description"><?php esc_html_e( 'The site checks these automatically and republishes new items under your name, with a link back to the original and a note that it is shared with your permission.', 'c365-syndicator' ); ?></p>
-		<table class="form-table" role="presentation">
-			<tr>
-				<th><label for="c365-blog-feed"><?php esc_html_e( 'Blog RSS feed URL', 'c365-syndicator' ); ?></label></th>
-				<td>
-					<input type="url" class="regular-text" id="c365-blog-feed" name="c365_blog_feed" value="<?php echo esc_attr( $blog_feed ); ?>" placeholder="https://myblog.com/feed/">
-				</td>
-			</tr>
-			<tr>
-				<th><label for="c365-blog-cat"><?php esc_html_e( 'Post my blogs into category', 'c365-syndicator' ); ?></label></th>
-				<td>
-					<?php
-					wp_dropdown_categories(
-						array(
-							'name'              => 'c365_blog_category',
-							'id'                => 'c365-blog-cat',
-							'selected'          => $blog_cat,
-							'show_option_none'  => __( '— Default category —', 'c365-syndicator' ),
-							'option_none_value' => 0,
-							'hide_empty'        => false,
-							'hierarchical'      => true,
-						)
-					);
-					?>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="c365-podcast-feed"><?php esc_html_e( 'Podcast RSS feed URL', 'c365-syndicator' ); ?></label></th>
-				<td><input type="url" class="regular-text" id="c365-podcast-feed" name="c365_podcast_feed" value="<?php echo esc_attr( $podcast_feed ); ?>" placeholder="https://feeds.example.com/mypodcast"></td>
-			</tr>
-			<tr>
-				<th><label for="c365-yt-channel"><?php esc_html_e( 'YouTube channel ID', 'c365-syndicator' ); ?></label></th>
-				<td>
-					<input type="text" class="regular-text" id="c365-yt-channel" name="c365_youtube_channel" value="<?php echo esc_attr( $yt_channel ); ?>" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx">
-					<p class="description"><?php esc_html_e( 'Starts with “UC”. Found under YouTube Studio → Settings → Channel → Advanced settings.', 'c365-syndicator' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="c365-events-feed"><?php esc_html_e( 'Events feed URL (optional)', 'c365-syndicator' ); ?></label></th>
-				<td><input type="url" class="regular-text" id="c365-events-feed" name="c365_events_feed" value="<?php echo esc_attr( $events_feed ); ?>"></td>
-			</tr>
+		<p class="description">
+			<?php esc_html_e( 'The site checks these automatically and republishes new items under your name, with a link back to the original and a note that it is shared with your permission. You can add several feeds and point each at its own category. For YouTube, enter your channel ID (starts with “UC”).', 'c365-syndicator' ); ?>
+		</p>
+		<table class="widefat striped" style="max-width:900px;">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Type', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Feed URL / channel ID', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Post into category(ies)', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Active', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Delete', 'c365-syndicator' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $rows as $row ) : ?>
+					<?php $prefix = 'c365_feed_rows[' . (int) $row->id . ']'; ?>
+					<tr>
+						<td><?php echo $type_select( $prefix . '[type]', $row->type ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+						<td><input type="text" name="<?php echo esc_attr( $prefix ); ?>[feed_url]" value="<?php echo esc_attr( $row->feed_url ); ?>" class="regular-text"></td>
+						<td><?php echo $category_select( $prefix . '[categories]', C365_Feeds::parse_categories( $row->categories ) ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+						<td><input type="checkbox" name="<?php echo esc_attr( $prefix ); ?>[active]" value="1" <?php checked( (int) $row->active ); ?>></td>
+						<td><input type="checkbox" name="<?php echo esc_attr( $prefix ); ?>[delete]" value="1"></td>
+					</tr>
+				<?php endforeach; ?>
+				<tr>
+					<td><?php echo $type_select( 'c365_feed_rows[new][type]', 'blog' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+					<td><input type="text" name="c365_feed_rows[new][feed_url]" value="" class="regular-text" placeholder="https://myblog.com/feed/"></td>
+					<td><?php echo $category_select( 'c365_feed_rows[new][categories]', array() ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+					<td><input type="checkbox" name="c365_feed_rows[new][active]" value="1" checked></td>
+					<td>—</td>
+				</tr>
+			</tbody>
 		</table>
+		<p class="description"><?php esc_html_e( 'Fill in the last row to add a feed; it is saved when you update the profile. The first fetch of a new feed imports its full history (existing posts on this site are detected and never duplicated).', 'c365-syndicator' ); ?></p>
+		<?php
+	}
 
+	/**
+	 * Author page presentation fields.
+	 *
+	 * @param WP_User $user User being edited.
+	 */
+	protected static function render_author_page_section( $user ) {
+		$avatar_url = get_user_meta( $user->ID, 'c365_avatar_url', true );
+		$cover_url  = get_user_meta( $user->ID, 'c365_cover_url', true );
+		$tagline    = get_user_meta( $user->ID, 'c365_tagline', true );
+		?>
 		<h2><?php esc_html_e( 'Author page', 'c365-syndicator' ); ?></h2>
-		<p class="description"><?php esc_html_e( 'Control how your public author page looks and what it shows.', 'c365-syndicator' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Control how your public author page looks and what it shows. Your social links are also used to credit you by @handle when the site shares your posts to its social accounts.', 'c365-syndicator' ); ?></p>
 		<table class="form-table" role="presentation">
 			<tr>
 				<th><label for="c365-tagline"><?php esc_html_e( 'Tagline', 'c365-syndicator' ); ?></label></th>
@@ -134,7 +178,7 @@ class C365_Profile {
 				<th><label for="c365-avatar-url"><?php esc_html_e( 'Profile photo URL', 'c365-syndicator' ); ?></label></th>
 				<td>
 					<input type="url" class="regular-text" id="c365-avatar-url" name="c365_avatar_url" value="<?php echo esc_attr( $avatar_url ); ?>">
-					<p class="description"><?php esc_html_e( 'Used instead of your Gravatar across the site. Paste an image URL (upload one via Media Library first if needed).', 'c365-syndicator' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Used instead of your Gravatar across the site. Paste an image URL (upload one via the Media Library first if needed).', 'c365-syndicator' ); ?></p>
 				</td>
 			</tr>
 			<tr>
@@ -190,12 +234,14 @@ class C365_Profile {
 		if ( ! isset( $_POST['c365_profile_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['c365_profile_nonce'] ), 'c365_profile' ) ) {
 			return;
 		}
-		if ( ! current_user_can( 'edit_user', $user_id ) ) {
+		if ( ! current_user_can( 'edit_user', $user_id ) || ! self::is_member( $user_id ) ) {
 			return;
 		}
 
+		self::save_feed_rows( $user_id );
+
 		$url_fields = array_merge(
-			array( 'c365_blog_feed', 'c365_podcast_feed', 'c365_events_feed', 'c365_avatar_url', 'c365_cover_url' ),
+			array( 'c365_avatar_url', 'c365_cover_url' ),
 			array_keys( self::link_fields() )
 		);
 		foreach ( $url_fields as $field ) {
@@ -209,27 +255,53 @@ class C365_Profile {
 			}
 		}
 
-		if ( isset( $_POST['c365_youtube_channel'] ) ) {
-			$channel = sanitize_text_field( wp_unslash( $_POST['c365_youtube_channel'] ) );
-			$channel = preg_replace( '/[^A-Za-z0-9_-]/', '', $channel );
-			if ( '' === $channel ) {
-				delete_user_meta( $user_id, 'c365_youtube_channel' );
-			} else {
-				update_user_meta( $user_id, 'c365_youtube_channel', $channel );
-			}
-		}
-
 		if ( isset( $_POST['c365_tagline'] ) ) {
 			update_user_meta( $user_id, 'c365_tagline', sanitize_text_field( wp_unslash( $_POST['c365_tagline'] ) ) );
-		}
-
-		if ( isset( $_POST['c365_blog_category'] ) ) {
-			update_user_meta( $user_id, 'c365_blog_category', absint( $_POST['c365_blog_category'] ) );
 		}
 
 		// Checkboxes: unchecked boxes are absent from the POST, so store 0 explicitly.
 		foreach ( array_keys( self::section_toggles() ) as $key ) {
 			update_user_meta( $user_id, $key, empty( $_POST[ $key ] ) ? 0 : 1 );
+		}
+	}
+
+	/**
+	 * Persist the feed-records table edits.
+	 *
+	 * @param int $user_id User being saved.
+	 */
+	protected static function save_feed_rows( $user_id ) {
+		if ( ! isset( $_POST['c365_feed_rows'] ) || ! is_array( $_POST['c365_feed_rows'] ) ) {
+			return;
+		}
+		$rows = wp_unslash( $_POST['c365_feed_rows'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- fields sanitised below.
+
+		foreach ( $rows as $id => $row ) {
+			$data = array(
+				'type'       => isset( $row['type'] ) ? sanitize_key( $row['type'] ) : 'blog',
+				'feed_url'   => isset( $row['feed_url'] ) ? trim( (string) $row['feed_url'] ) : '',
+				'categories' => isset( $row['categories'] ) ? array_map( 'absint', (array) $row['categories'] ) : array(),
+				'active'     => ! empty( $row['active'] ),
+			);
+
+			if ( 'new' === $id ) {
+				if ( '' !== $data['feed_url'] ) {
+					$data['user_id'] = $user_id;
+					C365_Feeds::add( $data );
+				}
+				continue;
+			}
+
+			$existing = C365_Feeds::get( (int) $id );
+			if ( ! $existing || (int) $existing->user_id !== (int) $user_id ) {
+				continue; // Not this member's feed.
+			}
+
+			if ( ! empty( $row['delete'] ) || '' === $data['feed_url'] ) {
+				C365_Feeds::delete( (int) $id );
+			} else {
+				C365_Feeds::update( (int) $id, $data );
+			}
 		}
 	}
 

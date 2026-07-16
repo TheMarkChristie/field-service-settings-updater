@@ -2,8 +2,8 @@
 /**
  * Plugin Name: 365 Community Syndicator
  * Plugin URI:  https://365community.online
- * Description: Community content engine. Every 5 minutes it rotates to the next community member and checks their feeds — blog RSS, podcast RSS, and YouTube channel — creating posts, podcasts, and videos with the original title, image, and text, credited to that member with a link to the original source and a "shared with permission" note. Also provides an Events content type, and lets members manage their own author-page profile (images, links, and which sections are shown). Built entirely on WordPress core — no other plugins required.
- * Version:     1.0.0
+ * Description: Community content engine. Every 5 minutes it rotates to the next member and checks their feed records — blog RSS, podcast RSS, YouTube channels, events feeds — creating posts, podcasts, videos, and events with the original title, image, and text, credited to that member with a link to the original source and a "republished with permission" note. New content is auto-shared to the community's LinkedIn, Bluesky, Mastodon, and X accounts. Members manage their own feeds and author-page profile. Built entirely on WordPress core — no other plugins required.
+ * Version:     1.2.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author:      365 Community
@@ -19,11 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'C365_SYN_VERSION', '1.0.0' );
+define( 'C365_SYN_VERSION', '1.2.0' );
 define( 'C365_SYN_FILE', __FILE__ );
 define( 'C365_SYN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'C365_SYN_CRON_HOOK', 'c365_syndicator_rotate' );
 
+require_once C365_SYN_DIR . 'includes/class-c365-feeds.php';
+require_once C365_SYN_DIR . 'includes/class-c365-social.php';
 require_once C365_SYN_DIR . 'includes/class-c365-settings.php';
 require_once C365_SYN_DIR . 'includes/class-c365-types.php';
 require_once C365_SYN_DIR . 'includes/class-c365-profile.php';
@@ -35,11 +37,17 @@ C365_Types::init();
 C365_Profile::init();
 C365_Fetcher::init();
 C365_Frontend::init();
+C365_Social::init();
+
+// Create/upgrade the feeds table on updates too (not just activation).
+add_action( 'init', array( 'C365_Feeds', 'install' ), 5 );
 
 /**
- * On activation: register content types and schedule the 5-minute rotation.
+ * On activation: create the feeds table (migrating any v1.0.0 profile-field
+ * feeds), register content types, and schedule the 5-minute rotation.
  */
 function c365_syn_activate() {
+	C365_Feeds::install();
 	C365_Types::register();
 	flush_rewrite_rules();
 
@@ -50,10 +58,11 @@ function c365_syn_activate() {
 register_activation_hook( __FILE__, 'c365_syn_activate' );
 
 /**
- * On deactivation: clear the rotation schedule.
+ * On deactivation: clear the schedules.
  */
 function c365_syn_deactivate() {
 	wp_clear_scheduled_hook( C365_SYN_CRON_HOOK );
+	wp_clear_scheduled_hook( 'c365_process_share_queue' );
 	flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'c365_syn_deactivate' );

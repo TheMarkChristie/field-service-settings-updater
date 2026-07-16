@@ -1,6 +1,7 @@
 <?php
 /**
- * Site-wide settings, the Syndication admin menu, and the status dashboard.
+ * Site-wide settings, the Syndication admin menu, the feeds dashboard,
+ * and the Social sharing tab.
  *
  * @package C365_Syndicator
  */
@@ -30,14 +31,14 @@ class C365_Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'interval'           => 'c365_5min',  // Rotate to the next member every 5 minutes.
-			'post_status'        => 'publish',    // Status for imported content.
-			'max_items'          => 10,           // Per feed per fetch.
-			'set_featured_image' => 1,            // Sideload the item image as featured image.
-			'import_categories'  => 0,            // Also map feed item categories to WP categories.
-			'use_original_date'  => 1,            // Keep the original publish date.
-			'attribution'        => 1,            // Append source link + permission note to content.
-			'canonical'          => 1,            // Point rel=canonical at the original article.
+			'interval'           => 'c365_5min', // Rotate to the next member every 5 minutes.
+			'post_status'        => 'publish',   // Q2: publish immediately.
+			'max_items'          => 5,           // Q16: 5 items per feed per fetch (backfill exempt).
+			'set_featured_image' => 1,           // Q5: download to Media Library.
+			'import_categories'  => 0,           // Optionally also map the item's own categories.
+			'use_original_date'  => 1,           // Keep the original publish date.
+			'attribution'        => 1,           // Source link + permission note below content.
+			'canonical'          => 1,           // Q3: rel=canonical to the original.
 		);
 	}
 
@@ -101,18 +102,15 @@ class C365_Settings {
 	}
 
 	/**
-	 * Register the setting with sanitisation.
+	 * Register the settings.
 	 */
 	public static function register() {
-		register_setting(
-			'c365_syndicator',
-			self::OPTION,
-			array( 'sanitize_callback' => array( __CLASS__, 'sanitize' ) )
-		);
+		register_setting( 'c365_syndicator', self::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize' ) ) );
+		register_setting( 'c365_social', C365_Social::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_social' ) ) );
 	}
 
 	/**
-	 * Sanitise submitted settings.
+	 * Sanitise submitted core settings.
 	 *
 	 * @param array $input Raw input.
 	 * @return array
@@ -136,194 +134,464 @@ class C365_Settings {
 	}
 
 	/**
-	 * Render the Syndication dashboard: rotation status, member table, settings.
+	 * Sanitise submitted social settings. Empty credential fields keep the
+	 * stored value so saving the form never wipes masked secrets.
+	 *
+	 * @param array $input Raw input.
+	 * @return array
+	 */
+	public static function sanitize_social( $input ) {
+		$input  = (array) $input;
+		$stored = C365_Social::settings();
+
+		$secrets = array(
+			'mastodon_token',
+			'bluesky_app_password',
+			'twitter_api_key',
+			'twitter_api_secret',
+			'twitter_access_token',
+			'twitter_access_secret',
+			'linkedin_token',
+		);
+		$clean = array();
+		foreach ( $secrets as $key ) {
+			$value = isset( $input[ $key ] ) ? trim( (string) $input[ $key ] ) : '';
+			$clean[ $key ] = '' === $value ? $stored[ $key ] : sanitize_text_field( $value );
+		}
+
+		$clean['mastodon_instance'] = isset( $input['mastodon_instance'] ) ? esc_url_raw( trim( (string) $input['mastodon_instance'] ) ) : '';
+		$clean['bluesky_handle']    = isset( $input['bluesky_handle'] ) ? sanitize_text_field( $input['bluesky_handle'] ) : '';
+		$clean['linkedin_org_urn']  = isset( $input['linkedin_org_urn'] ) ? sanitize_text_field( $input['linkedin_org_urn'] ) : '';
+
+		$clean['enabled'] = array();
+		foreach ( array_keys( C365_Social::networks() ) as $network ) {
+			foreach ( C365_Social::SHAREABLE as $post_type ) {
+				$key = $network . ':' . $post_type;
+				$clean['enabled'][ $key ] = empty( $input['enabled'][ $key ] ) ? 0 : 1;
+			}
+		}
+
+		$clean['templates'] = array();
+		if ( ! empty( $input['templates'] ) && is_array( $input['templates'] ) ) {
+			foreach ( $input['templates'] as $key => $template ) {
+				$template = trim( sanitize_textarea_field( $template ) );
+				if ( $template && preg_match( '/^[a-z]+:[a-z0-9_]+$/', $key ) ) {
+					$clean['templates'][ $key ] = $template;
+				}
+			}
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Render the Syndication page (Dashboard / Settings / Social tabs).
 	 */
 	public static function render_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
-		$s       = wp_parse_args( (array) get_option( self::OPTION, array() ), self::defaults() );
-		$next    = wp_next_scheduled( C365_SYN_CRON_HOOK );
-		$members = C365_Fetcher::get_members();
-		$pointer = (int) get_option( 'c365_rotation_pointer', 0 );
-		$next_up = C365_Fetcher::next_member_id( $members, $pointer );
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Syndication', 'c365-syndicator' ); ?></h1>
 
-			<?php if ( isset( $_GET['c365_fetched'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-				<div class="notice notice-success is-dismissible">
-					<p>
-						<?php
-						printf(
-							/* translators: %d: number of imported items. */
-							esc_html__( 'Fetch complete — %d new item(s) imported.', 'c365-syndicator' ),
-							absint( $_GET['c365_fetched'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-						);
-						?>
-					</p>
-				</div>
-			<?php endif; ?>
+			<?php self::render_notices(); ?>
 
-			<h2><?php esc_html_e( 'Rotation', 'c365-syndicator' ); ?></h2>
-			<p>
+			<nav class="nav-tab-wrapper">
 				<?php
-				if ( $next ) {
-					printf(
-						/* translators: %s: human-readable time difference. */
-						esc_html__( 'Next rotation tick: in %s.', 'c365-syndicator' ),
-						esc_html( human_time_diff( time(), $next ) )
-					);
-				} else {
-					esc_html_e( 'No rotation is scheduled — save the settings below to schedule one.', 'c365-syndicator' );
-				}
-				echo ' ';
-				printf(
-					/* translators: %d: number of members with feeds. */
-					esc_html__( '%d member(s) in the rotation.', 'c365-syndicator' ),
-					count( $members )
+				$tabs = array(
+					'dashboard' => __( 'Dashboard', 'c365-syndicator' ),
+					'settings'  => __( 'Settings', 'c365-syndicator' ),
+					'social'    => __( 'Social sharing', 'c365-syndicator' ),
 				);
+				foreach ( $tabs as $key => $label ) {
+					printf(
+						'<a class="nav-tab %s" href="%s">%s</a>',
+						$tab === $key ? 'nav-tab-active' : '',
+						esc_url( admin_url( 'admin.php?page=c365-syndication&tab=' . $key ) ),
+						esc_html( $label )
+					);
+				}
 				?>
-				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c365_fetch_all' ), 'c365_fetch_all' ) ); ?>">
-					<?php esc_html_e( 'Fetch all members now', 'c365-syndicator' ); ?>
-				</a>
-			</p>
-			<p class="description">
-				<?php esc_html_e( 'WP-Cron only runs when the site gets visits. For a reliable 5-minute rotation, add a real cron job that requests wp-cron.php every 5 minutes (see the plugin readme).', 'c365-syndicator' ); ?>
-			</p>
+			</nav>
 
-			<h2><?php esc_html_e( 'Members in rotation', 'c365-syndicator' ); ?></h2>
-			<table class="widefat striped">
+			<?php
+			if ( 'settings' === $tab ) {
+				self::render_settings_tab();
+			} elseif ( 'social' === $tab ) {
+				self::render_social_tab();
+			} else {
+				self::render_dashboard_tab();
+			}
+			?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Admin notices for fetch/test results.
+	 */
+	protected static function render_notices() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['c365_fetched'] ) ) {
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+				esc_html( sprintf( /* translators: %d: imported count. */ __( 'Fetch complete — %d new item(s) imported.', 'c365-syndicator' ), absint( $_GET['c365_fetched'] ) ) )
+			);
+		}
+		if ( isset( $_GET['c365_test_ok'] ) ) {
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+				esc_html( sprintf( /* translators: %s: network name. */ __( 'Test post sent successfully via %s.', 'c365-syndicator' ), sanitize_key( $_GET['c365_test_ok'] ) ) )
+			);
+		}
+		if ( isset( $_GET['c365_test_error'] ) ) {
+			printf(
+				'<div class="notice notice-error is-dismissible"><p>%s %s</p></div>',
+				esc_html__( 'Test post failed:', 'c365-syndicator' ),
+				esc_html( rawurldecode( sanitize_text_field( wp_unslash( $_GET['c365_test_error'] ) ) ) )
+			);
+		}
+		// phpcs:enable
+	}
+
+	/**
+	 * Dashboard tab: rotation status + feed records table.
+	 */
+	protected static function render_dashboard_tab() {
+		$next    = wp_next_scheduled( C365_SYN_CRON_HOOK );
+		$members = C365_Fetcher::get_member_ids();
+		$pointer = (int) get_option( 'c365_rotation_pointer', 0 );
+		$next_up = C365_Fetcher::next_member_id( $members, $pointer );
+		$feeds   = C365_Feeds::all();
+		?>
+		<h2><?php esc_html_e( 'Rotation', 'c365-syndicator' ); ?></h2>
+		<p>
+			<?php
+			if ( $next ) {
+				printf(
+					/* translators: %s: human-readable time difference. */
+					esc_html__( 'Next rotation tick: in %s.', 'c365-syndicator' ),
+					esc_html( human_time_diff( time(), $next ) )
+				);
+			} else {
+				esc_html_e( 'No rotation is scheduled — save the Settings tab to schedule one.', 'c365-syndicator' );
+			}
+			echo ' ';
+			printf(
+				/* translators: %d: number of members. */
+				esc_html__( '%d member(s) in the rotation.', 'c365-syndicator' ),
+				count( $members )
+			);
+			?>
+			<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c365_fetch_all' ), 'c365_fetch_all' ) ); ?>">
+				<?php esc_html_e( 'Fetch all members now', 'c365-syndicator' ); ?>
+			</a>
+		</p>
+		<p class="description">
+			<?php esc_html_e( 'WP-Cron only runs when the site gets visits. For a reliable 5-minute rotation, add a hosting cron job requesting wp-cron.php every 5 minutes.', 'c365-syndicator' ); ?>
+		</p>
+
+		<h2><?php esc_html_e( 'Feeds', 'c365-syndicator' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Feeds are added on each member’s profile screen (Users → Profile).', 'c365-syndicator' ); ?></p>
+		<table class="widefat striped">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Member', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Type', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Feed', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Categories', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Last checked', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Last result', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Fails', 'c365-syndicator' ); ?></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php if ( empty( $feeds ) ) : ?>
+					<tr><td colspan="8"><?php esc_html_e( 'No feeds configured yet.', 'c365-syndicator' ); ?></td></tr>
+				<?php else : ?>
+					<?php foreach ( $feeds as $row ) : ?>
+						<?php
+						$user  = get_user_by( 'id', (int) $row->user_id );
+						$types = C365_Feeds::types();
+						$cats  = array();
+						foreach ( C365_Feeds::parse_categories( $row->categories ) as $cat_id ) {
+							$term = get_term( $cat_id, 'category' );
+							if ( $term && ! is_wp_error( $term ) ) {
+								$cats[] = $term->name;
+							}
+						}
+						$fetch_url = wp_nonce_url(
+							admin_url( 'admin-post.php?action=c365_fetch_feed&feed_id=' . (int) $row->id ),
+							'c365_fetch_feed_' . (int) $row->id
+						);
+						$last = $row->last_fetch ? human_time_diff( strtotime( $row->last_fetch . ' UTC' ), time() ) . ' ' . __( 'ago', 'c365-syndicator' ) : '—';
+						?>
+						<tr>
+							<td>
+								<?php if ( $user ) : ?>
+									<a href="<?php echo esc_url( get_edit_user_link( $user->ID ) ); ?>"><strong><?php echo esc_html( $user->display_name ); ?></strong></a>
+									<?php if ( (int) $user->ID === (int) $next_up ) : ?>
+										<span class="dashicons dashicons-controls-play" title="<?php esc_attr_e( 'Next in rotation', 'c365-syndicator' ); ?>"></span>
+									<?php endif; ?>
+								<?php else : ?>
+									#<?php echo (int) $row->user_id; ?>
+								<?php endif; ?>
+							</td>
+							<td><?php echo esc_html( isset( $types[ $row->type ] ) ? $types[ $row->type ] : $row->type ); ?></td>
+							<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+								<?php echo esc_html( $row->feed_url ); ?>
+								<?php if ( ! (int) $row->active ) : ?>
+									<em>(<?php esc_html_e( 'inactive', 'c365-syndicator' ); ?>)</em>
+								<?php endif; ?>
+							</td>
+							<td><?php echo esc_html( implode( ', ', $cats ) ); ?></td>
+							<td><?php echo esc_html( $last ); ?></td>
+							<td><?php echo esc_html( $row->last_result ? $row->last_result : '—' ); ?></td>
+							<td><?php echo (int) $row->fail_count; ?></td>
+							<td><a class="button button-small" href="<?php echo esc_url( $fetch_url ); ?>"><?php esc_html_e( 'Fetch now', 'c365-syndicator' ); ?></a></td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Settings tab.
+	 */
+	protected static function render_settings_tab() {
+		$s = wp_parse_args( (array) get_option( self::OPTION, array() ), self::defaults() );
+		?>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'c365_syndicator' ); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="c365-interval"><?php esc_html_e( 'Rotation interval', 'c365-syndicator' ); ?></label></th>
+					<td>
+						<select id="c365-interval" name="<?php echo esc_attr( self::OPTION ); ?>[interval]">
+							<?php
+							$options = array(
+								'c365_5min'  => __( 'Every 5 minutes (one member per tick)', 'c365-syndicator' ),
+								'c365_15min' => __( 'Every 15 minutes', 'c365-syndicator' ),
+								'hourly'     => __( 'Hourly', 'c365-syndicator' ),
+								'twicedaily' => __( 'Twice daily', 'c365-syndicator' ),
+								'daily'      => __( 'Daily', 'c365-syndicator' ),
+							);
+							foreach ( $options as $value => $label ) {
+								printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $s['interval'], $value, false ), esc_html( $label ) );
+							}
+							?>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="c365-status"><?php esc_html_e( 'Imported content status', 'c365-syndicator' ); ?></label></th>
+					<td>
+						<select id="c365-status" name="<?php echo esc_attr( self::OPTION ); ?>[post_status]">
+							<?php
+							$statuses = array(
+								'publish' => __( 'Published', 'c365-syndicator' ),
+								'draft'   => __( 'Draft', 'c365-syndicator' ),
+								'pending' => __( 'Pending review', 'c365-syndicator' ),
+								'private' => __( 'Private', 'c365-syndicator' ),
+							);
+							foreach ( $statuses as $value => $label ) {
+								printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $s['post_status'], $value, false ), esc_html( $label ) );
+							}
+							?>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="c365-max"><?php esc_html_e( 'Max items per feed per fetch', 'c365-syndicator' ); ?></label></th>
+					<td>
+						<input id="c365-max" type="number" min="1" max="50" name="<?php echo esc_attr( self::OPTION ); ?>[max_items]" value="<?php echo esc_attr( $s['max_items'] ); ?>">
+						<p class="description"><?php esc_html_e( 'The first fetch of a new feed ignores this cap and imports the feed’s full history (duplicates are detected by GUID and title).', 'c365-syndicator' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Options', 'c365-syndicator' ); ?></th>
+					<td>
+						<fieldset>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[set_featured_image]" value="1" <?php checked( $s['set_featured_image'] ); ?>>
+								<?php esc_html_e( 'Import the item image as the featured image', 'c365-syndicator' ); ?>
+							</label><br>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[import_categories]" value="1" <?php checked( $s['import_categories'] ); ?>>
+								<?php esc_html_e( 'Also create/assign categories from the feed item’s own categories (blog posts only)', 'c365-syndicator' ); ?>
+							</label><br>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[use_original_date]" value="1" <?php checked( $s['use_original_date'] ); ?>>
+								<?php esc_html_e( 'Use the original publish date on imported content', 'c365-syndicator' ); ?>
+							</label><br>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[attribution]" value="1" <?php checked( $s['attribution'] ); ?>>
+								<?php esc_html_e( 'Append the source link and “shared with permission” note below the content (skipped automatically when the active theme renders its own)', 'c365-syndicator' ); ?>
+							</label><br>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[canonical]" value="1" <?php checked( $s['canonical'] ); ?>>
+								<?php esc_html_e( 'Point rel="canonical" at the original article (recommended for SEO on syndicated content)', 'c365-syndicator' ); ?>
+							</label>
+						</fieldset>
+					</td>
+				</tr>
+			</table>
+			<?php submit_button(); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Social sharing tab.
+	 */
+	protected static function render_social_tab() {
+		$s          = C365_Social::settings();
+		$networks   = C365_Social::networks();
+		$post_types = array(
+			'post'         => __( 'Blog posts', 'c365-syndicator' ),
+			'c365_event'   => __( 'Events', 'c365-syndicator' ),
+			'c365_podcast' => __( 'Podcasts', 'c365-syndicator' ),
+			'c365_video'   => __( 'Videos', 'c365-syndicator' ),
+		);
+		$option = C365_Social::OPTION;
+
+		$secret_field = function ( $name, $has_value, $placeholder = '' ) use ( $option ) {
+			printf(
+				'<input type="password" class="regular-text" name="%s[%s]" value="" placeholder="%s" autocomplete="new-password">',
+				esc_attr( $option ),
+				esc_attr( $name ),
+				esc_attr( $has_value ? __( '•••••• (saved — leave blank to keep)', 'c365-syndicator' ) : $placeholder )
+			);
+		};
+		?>
+		<p class="description" style="max-width:720px;">
+			<?php esc_html_e( 'When new content is published, it is announced on the community’s own accounts below, e.g. “New Post: {title} by {author}” with a one-sentence excerpt, the link, category hashtags, and the featured image. Members are credited by their @handle when their profile links provide one. Credentials are stored server-side and never shown in full.', 'c365-syndicator' ); ?>
+		</p>
+
+		<form method="post" action="options.php">
+			<?php settings_fields( 'c365_social' ); ?>
+
+			<h2>Mastodon</h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><label><?php esc_html_e( 'Instance URL', 'c365-syndicator' ); ?></label></th>
+					<td><input type="url" class="regular-text" name="<?php echo esc_attr( $option ); ?>[mastodon_instance]" value="<?php echo esc_attr( $s['mastodon_instance'] ); ?>" placeholder="https://mastodon.social"></td>
+				</tr>
+				<tr>
+					<th><label><?php esc_html_e( 'Access token', 'c365-syndicator' ); ?></label></th>
+					<td><?php $secret_field( 'mastodon_token', (bool) $s['mastodon_token'] ); ?>
+					<p class="description"><?php esc_html_e( 'Mastodon → Preferences → Development → New application (write:statuses, write:media).', 'c365-syndicator' ); ?></p></td>
+				</tr>
+			</table>
+
+			<h2>Bluesky</h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><label><?php esc_html_e( 'Handle', 'c365-syndicator' ); ?></label></th>
+					<td><input type="text" class="regular-text" name="<?php echo esc_attr( $option ); ?>[bluesky_handle]" value="<?php echo esc_attr( $s['bluesky_handle'] ); ?>" placeholder="365community.bsky.social"></td>
+				</tr>
+				<tr>
+					<th><label><?php esc_html_e( 'App password', 'c365-syndicator' ); ?></label></th>
+					<td><?php $secret_field( 'bluesky_app_password', (bool) $s['bluesky_app_password'] ); ?>
+					<p class="description"><?php esc_html_e( 'Bluesky → Settings → Privacy and security → App passwords.', 'c365-syndicator' ); ?></p></td>
+				</tr>
+			</table>
+
+			<h2>X / Twitter</h2>
+			<table class="form-table" role="presentation">
+				<tr><th><label><?php esc_html_e( 'API key', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_api_key', (bool) $s['twitter_api_key'] ); ?></td></tr>
+				<tr><th><label><?php esc_html_e( 'API secret', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_api_secret', (bool) $s['twitter_api_secret'] ); ?></td></tr>
+				<tr><th><label><?php esc_html_e( 'Access token', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_access_token', (bool) $s['twitter_access_token'] ); ?></td></tr>
+				<tr><th><label><?php esc_html_e( 'Access token secret', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_access_secret', (bool) $s['twitter_access_secret'] ); ?>
+				<p class="description"><?php esc_html_e( 'From an app at developer.x.com with Read and Write permissions. Note: the free API tier has low monthly posting caps.', 'c365-syndicator' ); ?></p></td></tr>
+			</table>
+
+			<h2>LinkedIn</h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><label><?php esc_html_e( 'Organisation URN', 'c365-syndicator' ); ?></label></th>
+					<td><input type="text" class="regular-text" name="<?php echo esc_attr( $option ); ?>[linkedin_org_urn]" value="<?php echo esc_attr( $s['linkedin_org_urn'] ); ?>" placeholder="urn:li:organization:12345678"></td>
+				</tr>
+				<tr>
+					<th><label><?php esc_html_e( 'Access token', 'c365-syndicator' ); ?></label></th>
+					<td><?php $secret_field( 'linkedin_token', (bool) $s['linkedin_token'] ); ?>
+					<p class="description"><?php esc_html_e( 'OAuth token with the w_organization_social scope for your company page; LinkedIn tokens expire and need periodic renewal.', 'c365-syndicator' ); ?></p></td>
+				</tr>
+			</table>
+
+			<h2><?php esc_html_e( 'What gets shared where', 'c365-syndicator' ); ?></h2>
+			<table class="widefat striped" style="max-width:640px;">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Member', 'c365-syndicator' ); ?></th>
-						<th><?php esc_html_e( 'Feeds', 'c365-syndicator' ); ?></th>
-						<th><?php esc_html_e( 'Last checked', 'c365-syndicator' ); ?></th>
-						<th><?php esc_html_e( 'Last result', 'c365-syndicator' ); ?></th>
-						<th></th>
+						<th><?php esc_html_e( 'Content type', 'c365-syndicator' ); ?></th>
+						<?php foreach ( $networks as $network_label ) : ?>
+							<th><?php echo esc_html( $network_label ); ?></th>
+						<?php endforeach; ?>
 					</tr>
 				</thead>
 				<tbody>
-					<?php if ( empty( $members ) ) : ?>
-						<tr><td colspan="5"><?php esc_html_e( 'No members have feeds configured yet. Feeds are set on each user’s profile screen.', 'c365-syndicator' ); ?></td></tr>
-					<?php else : ?>
-						<?php foreach ( $members as $member ) : ?>
-							<?php
-							$feeds = array();
-							if ( get_user_meta( $member->ID, 'c365_blog_feed', true ) ) {
-								$feeds[] = __( 'Blog', 'c365-syndicator' );
-							}
-							if ( get_user_meta( $member->ID, 'c365_podcast_feed', true ) ) {
-								$feeds[] = __( 'Podcast', 'c365-syndicator' );
-							}
-							if ( get_user_meta( $member->ID, 'c365_youtube_channel', true ) ) {
-								$feeds[] = __( 'YouTube', 'c365-syndicator' );
-							}
-							if ( get_user_meta( $member->ID, 'c365_events_feed', true ) ) {
-								$feeds[] = __( 'Events', 'c365-syndicator' );
-							}
-							$last_time   = (int) get_user_meta( $member->ID, 'c365_last_fetch', true );
-							$last_result = get_user_meta( $member->ID, 'c365_last_result', true );
-							$fetch_url   = wp_nonce_url(
-								admin_url( 'admin-post.php?action=c365_fetch_user&user_id=' . $member->ID ),
-								'c365_fetch_user_' . $member->ID
-							);
-							?>
-							<tr>
-								<td>
-									<a href="<?php echo esc_url( get_edit_user_link( $member->ID ) ); ?>"><strong><?php echo esc_html( $member->display_name ); ?></strong></a>
-									<?php if ( $member->ID === $next_up ) : ?>
-										<span class="dashicons dashicons-controls-play" title="<?php esc_attr_e( 'Next in rotation', 'c365-syndicator' ); ?>"></span>
-									<?php endif; ?>
-								</td>
-								<td><?php echo esc_html( implode( ', ', $feeds ) ); ?></td>
-								<td><?php echo $last_time ? esc_html( human_time_diff( $last_time, time() ) . ' ' . __( 'ago', 'c365-syndicator' ) ) : '—'; ?></td>
-								<td><?php echo $last_result ? esc_html( $last_result ) : '—'; ?></td>
-								<td><a class="button button-small" href="<?php echo esc_url( $fetch_url ); ?>"><?php esc_html_e( 'Fetch now', 'c365-syndicator' ); ?></a></td>
-							</tr>
-						<?php endforeach; ?>
-					<?php endif; ?>
+					<?php foreach ( $post_types as $post_type => $type_label ) : ?>
+						<tr>
+							<td><?php echo esc_html( $type_label ); ?></td>
+							<?php foreach ( array_keys( $networks ) as $network ) : ?>
+								<?php
+								$key     = $network . ':' . $post_type;
+								$checked = ! isset( $s['enabled'][ $key ] ) || (int) $s['enabled'][ $key ];
+								?>
+								<td><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[enabled][<?php echo esc_attr( $key ); ?>]" value="1" <?php checked( $checked ); ?>></td>
+							<?php endforeach; ?>
+						</tr>
+					<?php endforeach; ?>
 				</tbody>
 			</table>
 
-			<h2><?php esc_html_e( 'Settings', 'c365-syndicator' ); ?></h2>
-			<form method="post" action="options.php">
-				<?php settings_fields( 'c365_syndicator' ); ?>
-				<table class="form-table" role="presentation">
+			<h2><?php esc_html_e( 'Message templates', 'c365-syndicator' ); ?></h2>
+			<p class="description"><?php esc_html_e( 'One template per content type (applied to every network, then truncated to each network’s limit). Placeholders: {title} {author} {excerpt} {link} {hashtags}. Leave blank for the default.', 'c365-syndicator' ); ?></p>
+			<table class="form-table" role="presentation">
+				<?php foreach ( $post_types as $post_type => $type_label ) : ?>
+					<?php
+					// One template per type: stored under the "all:" pseudo-network key
+					// wins; per-network keys remain supported for developers.
+					$key   = 'all:' . $post_type;
+					$value = isset( $s['templates'][ $key ] ) ? $s['templates'][ $key ] : '';
+					?>
 					<tr>
-						<th scope="row"><label for="c365-interval"><?php esc_html_e( 'Rotation interval', 'c365-syndicator' ); ?></label></th>
+						<th><label><?php echo esc_html( $type_label ); ?></label></th>
 						<td>
-							<select id="c365-interval" name="<?php echo esc_attr( self::OPTION ); ?>[interval]">
-								<?php
-								$options = array(
-									'c365_5min'  => __( 'Every 5 minutes (one member per tick)', 'c365-syndicator' ),
-									'c365_15min' => __( 'Every 15 minutes', 'c365-syndicator' ),
-									'hourly'     => __( 'Hourly', 'c365-syndicator' ),
-									'twicedaily' => __( 'Twice daily', 'c365-syndicator' ),
-									'daily'      => __( 'Daily', 'c365-syndicator' ),
-								);
-								foreach ( $options as $value => $label ) {
-									printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $s['interval'], $value, false ), esc_html( $label ) );
-								}
-								?>
-							</select>
-							<p class="description"><?php esc_html_e( 'Each tick checks the next member in the rotation, then moves the pointer on.', 'c365-syndicator' ); ?></p>
+							<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option ); ?>[templates][<?php echo esc_attr( $key ); ?>]" placeholder="<?php echo esc_attr( C365_Social::default_template( $post_type ) ); ?>"><?php echo esc_textarea( $value ); ?></textarea>
 						</td>
 					</tr>
-					<tr>
-						<th scope="row"><label for="c365-status"><?php esc_html_e( 'Imported content status', 'c365-syndicator' ); ?></label></th>
-						<td>
-							<select id="c365-status" name="<?php echo esc_attr( self::OPTION ); ?>[post_status]">
-								<?php
-								$statuses = array(
-									'publish' => __( 'Published', 'c365-syndicator' ),
-									'draft'   => __( 'Draft', 'c365-syndicator' ),
-									'pending' => __( 'Pending review', 'c365-syndicator' ),
-									'private' => __( 'Private', 'c365-syndicator' ),
-								);
-								foreach ( $statuses as $value => $label ) {
-									printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $s['post_status'], $value, false ), esc_html( $label ) );
-								}
-								?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="c365-max"><?php esc_html_e( 'Max items per feed per fetch', 'c365-syndicator' ); ?></label></th>
-						<td><input id="c365-max" type="number" min="1" max="50" name="<?php echo esc_attr( self::OPTION ); ?>[max_items]" value="<?php echo esc_attr( $s['max_items'] ); ?>"></td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Options', 'c365-syndicator' ); ?></th>
-						<td>
-							<fieldset>
-								<label>
-									<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[set_featured_image]" value="1" <?php checked( $s['set_featured_image'] ); ?>>
-									<?php esc_html_e( 'Import the item image as the featured image', 'c365-syndicator' ); ?>
-								</label><br>
-								<label>
-									<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[import_categories]" value="1" <?php checked( $s['import_categories'] ); ?>>
-									<?php esc_html_e( 'Also create/assign categories from the feed item’s own categories (blog posts only)', 'c365-syndicator' ); ?>
-								</label><br>
-								<label>
-									<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[use_original_date]" value="1" <?php checked( $s['use_original_date'] ); ?>>
-									<?php esc_html_e( 'Use the original publish date on imported content', 'c365-syndicator' ); ?>
-								</label><br>
-								<label>
-									<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[attribution]" value="1" <?php checked( $s['attribution'] ); ?>>
-									<?php esc_html_e( 'Append the source link and “shared with permission” note below the content (skipped automatically when the active theme renders its own)', 'c365-syndicator' ); ?>
-								</label><br>
-								<label>
-									<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[canonical]" value="1" <?php checked( $s['canonical'] ); ?>>
-									<?php esc_html_e( 'Point rel="canonical" at the original article (recommended for SEO on syndicated content)', 'c365-syndicator' ); ?>
-								</label>
-							</fieldset>
-						</td>
-					</tr>
-				</table>
-				<?php submit_button(); ?>
-			</form>
-		</div>
+				<?php endforeach; ?>
+			</table>
+
+			<?php submit_button(); ?>
+		</form>
+
+		<h2><?php esc_html_e( 'Test connections', 'c365-syndicator' ); ?></h2>
+		<p>
+			<?php foreach ( $networks as $network => $network_label ) : ?>
+				<?php if ( C365_Social::is_connected( $network ) ) : ?>
+					<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c365_social_test&network=' . $network ), 'c365_social_test_' . $network ) ); ?>">
+						<?php
+						printf(
+							/* translators: %s: network name. */
+							esc_html__( 'Send test post to %s', 'c365-syndicator' ),
+							esc_html( $network_label )
+						);
+						?>
+					</a>
+				<?php endif; ?>
+			<?php endforeach; ?>
+			<?php if ( ! array_filter( array_map( array( 'C365_Social', 'is_connected' ), array_keys( $networks ) ) ) ) : ?>
+				<em><?php esc_html_e( 'Save credentials above to enable test buttons.', 'c365-syndicator' ); ?></em>
+			<?php endif; ?>
+		</p>
 		<?php
 	}
 }

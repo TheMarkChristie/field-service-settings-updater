@@ -6,83 +6,109 @@ required:
 
 | Package | Folder | What it does |
 |---|---|---|
-| **Community 365** (theme) | `themes/community365` | Card-based magazine theme with dedicated layouts for blog posts, events, podcasts, and videos, plus member author pages. |
-| **365 Community Syndicator** (plugin) | `plugins/c365-syndicator` | Rotates through your members every 5 minutes, checks their feeds, and auto-creates content credited to them with a link to the original source. |
+| **365 Community Syndicator** (plugin, v1.2.0) | `plugins/c365-syndicator` | The whole back end: member feed records, the 5-minute rotation, importing with de-duplication, Events/Podcasts/Videos content types, member profiles, social auto-sharing, admin dashboard. |
+| **Community 365** (theme, v1.0.0) | `themes/community365` | Presentation: card-based magazine design with a distinct layout per content type, member author pages, source badges, dark mode. |
+
+The full requirements are in [`docs/full-specification.md`](docs/full-specification.md).
 
 ## Installing
 
-1. Zip each folder (or use the zips attached to the delivery), then in wp-admin:
+1. Zip each folder (or use the delivered zips), then in wp-admin:
    - **Plugins → Add New Plugin → Upload Plugin** → `c365-syndicator.zip` → Activate.
    - **Appearance → Themes → Add New Theme → Upload Theme** → `community365.zip` → Activate.
-2. Deactivate WP Automatic and any other aggregation plugins once you're happy —
-   nothing here depends on them. Existing WP Automatic posts stay untouched; only
-   items imported by this plugin carry the new source metadata, so old posts simply
-   won't show a source badge.
-3. Go to **Settings → Permalinks** and click *Save Changes* once (refreshes the
+2. Go to **Settings → Permalinks** and click *Save Changes* once (registers the
    `/events/`, `/podcasts/`, `/videos/` URLs).
+3. Add a hosting cron job for a reliable 5-minute rotation:
+   `*/5 * * * * curl -s https://365community.online/wp-cron.php?doing_wp_cron > /dev/null`
+   and optionally `define( 'DISABLE_WP_CRON', true );` in `wp-config.php`.
+4. Once verified, deactivate WP Automatic and the other legacy plugins. Existing
+   posts stay untouched — and the importer matches new feed items against them
+   **by title** as well as feed GUID, so your 6 years of existing content is
+   never duplicated.
 
 ## How the syndication works
 
-- Each **website user** gets feed fields on their own profile screen
-  (**Users → Profile**): blog RSS URL + target category, podcast RSS URL,
-  YouTube **channel ID**, and an optional events feed.
-- A WP-Cron event runs **every 5 minutes** and rotates to the **next user** with
-  feeds configured (round-robin), then checks all of that user's feeds.
-- New items are imported with the **same title, image, and text**, assigned to
-  that user as the post author, into their chosen category (blog posts), or into
-  the Events / Podcasts / Videos content types.
-- Every imported item ends with a **link to the original source** and a note that
-  it is **republished with the permission of the author**. `rel="canonical"`
-  points at the original article so Google credits the source (toggleable).
-- Duplicates are skipped by feed GUID, so re-fetching never double-posts.
+- **Feed records**: each member (Contributor role and above) manages their own
+  feeds on their profile screen (**Users → Profile**) — any number of feeds,
+  each with a type (Blog RSS / Podcast RSS / YouTube channel / Events feed) and
+  its own target category(ies). Admins see and manage everything under
+  **Syndication** in wp-admin.
+- A cron tick runs **every 5 minutes** and rotates to the **next member**
+  (round-robin), checking all of that member's feeds.
+- **First fetch of a new feed backfills its full history**; after that, up to
+  5 new items per feed per fetch (configurable).
+- Imports keep the **original title, image (sideloaded to the Media Library),
+  full text, and publish date**, are authored by the member, and land in the
+  feed record's categories. **YouTube Shorts are skipped.**
+- Every syndicated item ends with a link to the **original source** and a note
+  that it is **republished with the member's permission**; `rel="canonical"`
+  points at the original.
+- Duplicates are impossible: items are matched by feed GUID *and* by title
+  (legacy posts get the GUID stamped on for fast future checks).
+- If a feed fails 5 fetches in a row, the **site admin gets an email**; other
+  feeds are unaffected.
 
-Admin dashboard: **Syndication** in the wp-admin menu — rotation status, who's
-next, per-member "Fetch now" buttons, and site-wide settings (interval, imported
-post status, max items per fetch, featured images, original dates, attribution,
-canonical).
+## Social auto-sharing
 
-> **Reliable 5-minute ticks:** WP-Cron only fires when the site gets a visit. Add
-> a real cron job in your hosting panel:
-> `*/5 * * * * curl -s https://365community.online/wp-cron.php?doing_wp_cron > /dev/null`
-> and optionally set `define( 'DISABLE_WP_CRON', true );` in `wp-config.php`.
+When new content is published (imported or manual), the plugin announces it on
+the community's own accounts — **LinkedIn, Bluesky, Mastodon, X** — as:
+
+```
+New Post: {title} by {@handle or WordPress name}
+{one-sentence excerpt}
+{link}
+{#category hashtags}
+```
+
+…with the **featured image attached**, using a different template per content
+type (New Post / New Event / New Episode / New Video — editable under
+**Syndication → Social sharing**, per-network toggles per type). Members are
+credited by their @handle when their profile links provide one. Shares are
+queued with retries; each post is shared exactly once per network.
+
+Connect accounts under **Syndication → Social sharing** (each has a
+"Send test post" button):
+
+- **Mastodon** — instance URL + access token (Preferences → Development).
+- **Bluesky** — handle + app password (Settings → App passwords).
+- **X/Twitter** — developer app keys from developer.x.com (free tier has low
+  monthly posting caps; heavy volume may need a paid tier).
+- **LinkedIn** — organisation URN + OAuth token with `w_organization_social`
+  (tokens expire and need renewing).
 
 ## Content types & layouts
 
-- **Blog posts** — standard posts; theme shows a source badge on cards and an
-  attribution box under the article.
+- **Blog posts** — standard posts; source badge on cards, attribution box below.
 - **Events** (`/events/`) — manual entry via **Events → Add New** (start/end,
-  location, registration URL) or imported from a member's events feed. Published
-  events appear immediately with an event-details layout.
-- **Podcasts** (`/podcasts/`) — imported from podcast RSS (audio enclosure +
-  duration) with a built-in audio player layout; can also be added manually.
-- **Videos** (`/videos/`) — imported from `https://www.youtube.com/feeds/videos.xml?channel_id=…`
-  with a privacy-friendly `youtube-nocookie.com` embed layout and the YouTube
-  thumbnail as featured image.
+  location, registration URL) or from a member's events feed; the archive lists
+  **upcoming events first**, past ones below.
+- **Podcasts** (`/podcasts/`) — audio streams from the member's host (built-in
+  player layout); duration shown.
+- **Videos** (`/videos/`) — privacy-friendly `youtube-nocookie.com` embeds with
+  the YouTube thumbnail as featured image.
 
 ## Member author pages
 
-Members manage everything themselves from **Users → Profile**:
-
-- Profile photo URL (replaces Gravatar site-wide), cover image URL, tagline, bio.
-- Links: website, blog, LinkedIn, X/Twitter, Bluesky, GitHub, YouTube, Mastodon.
-- Section toggles for their public author page: blog posts, podcasts, videos,
-  events, links, bio.
-
-The author page (`/author/username/`) shows their cover, photo, tagline, bio,
-link chips, then each enabled section as a card grid.
+Members manage everything from **Users → Profile**: feed records; profile photo
+URL (replaces Gravatar site-wide); cover image; tagline; bio; links (website,
+blog, LinkedIn, X, Bluesky, GitHub, YouTube, Mastodon); and toggles for which
+sections show on their public author page (blogs / podcasts / videos / events /
+links / bio).
 
 ## Theme options
 
 **Appearance → Customize → Community 365 Options**: accent colour, hero
 heading/intro, show/hide hero, show/hide source badges, footer credit text.
-Dark mode follows the visitor's OS preference automatically.
+Dark mode follows the visitor's OS.
 
 ## For developers
 
-- Imported content is stamped with post meta: `_c365_guid` (dedup),
-  `_c365_source_url`, `_c365_source_name`; podcasts add `_c365_audio_url` /
-  `_c365_duration`; videos add `_c365_video_id`; events use `_c365_event_start`,
-  `_c365_event_end`, `_c365_event_location`, `_c365_event_url`.
-- Reword the permission note with the `c365_attribution_html` filter.
+- Feed records: `{prefix}c365_feeds` table, managed via the `C365_Feeds` class.
+- Imported content meta: `_c365_guid`, `_c365_feed_id`, `_c365_source_url`,
+  `_c365_source_name`; plus `_c365_audio_url`/`_c365_duration` (podcasts),
+  `_c365_video_id` (videos), `_c365_event_*` (events); `_c365_shared_<network>`
+  marks completed social shares.
+- Filters: `c365_attribution_html` (attribution wording),
+  `c365_alert_threshold` (failure alert threshold).
 - Any theme can declare `add_theme_support( 'c365-attribution' )` to take over
-  rendering the attribution box (the plugin then stops appending its own).
+  rendering the attribution box.

@@ -22,6 +22,32 @@ class C365_Types {
 		add_action( 'init', array( __CLASS__, 'register' ) );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
 		add_action( 'save_post', array( __CLASS__, 'save_meta' ), 10, 2 );
+		add_filter( 'posts_clauses', array( __CLASS__, 'events_archive_order' ), 10, 2 );
+	}
+
+	/**
+	 * Order the /events/ archive: upcoming events first (soonest first),
+	 * past events below (most recent first). Events without a start date
+	 * sort with past events by publish date. Works under any theme.
+	 *
+	 * @param array    $clauses SQL clauses.
+	 * @param WP_Query $query   Query.
+	 * @return array
+	 */
+	public static function events_archive_order( $clauses, $query ) {
+		if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'c365_event' ) ) {
+			return $clauses;
+		}
+
+		global $wpdb;
+		$now = esc_sql( current_time( 'Y-m-d\TH:i' ) );
+
+		$clauses['join']   .= " LEFT JOIN {$wpdb->postmeta} c365_start ON c365_start.post_id = {$wpdb->posts}.ID AND c365_start.meta_key = '_c365_event_start'";
+		$clauses['orderby'] = "(c365_start.meta_value >= '{$now}') DESC, " .
+			"CASE WHEN c365_start.meta_value >= '{$now}' THEN c365_start.meta_value END ASC, " .
+			"COALESCE(c365_start.meta_value, {$wpdb->posts}.post_date) DESC";
+
+		return $clauses;
 	}
 
 	/**
