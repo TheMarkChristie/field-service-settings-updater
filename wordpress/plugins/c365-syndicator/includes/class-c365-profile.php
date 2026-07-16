@@ -265,6 +265,9 @@ class C365_Profile {
 		foreach ( array_keys( self::section_toggles() ) as $key ) {
 			update_user_meta( $user_id, $key, empty( $_POST[ $key ] ) ? 0 : 1 );
 		}
+
+		// Marks the member as verified on the Dashboard's unverified list.
+		update_user_meta( $user_id, 'c365_profile_updated', time() );
 	}
 
 	/**

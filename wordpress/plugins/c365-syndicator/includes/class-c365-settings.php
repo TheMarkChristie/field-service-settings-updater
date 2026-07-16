@@ -291,6 +291,10 @@ class C365_Settings {
 			<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c365_fetch_all' ), 'c365_fetch_all' ) ); ?>">
 				<?php esc_html_e( 'Fetch all members now', 'c365-syndicator' ); ?>
 			</a>
+			<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c365_backfill_all' ), 'c365_backfill_all' ) ); ?>"
+				onclick="return confirm('<?php echo esc_js( __( 'Re-import the full history of every feed? Nothing will be posted to social media, and existing posts are never duplicated.', 'c365-syndicator' ) ); ?>');">
+				<?php esc_html_e( 'Run all historic (no social posting)', 'c365-syndicator' ); ?>
+			</a>
 		</p>
 		<p class="description">
 			<?php esc_html_e( 'WP-Cron only runs when the site gets visits. For a reliable 5-minute rotation, add a hosting cron job requesting wp-cron.php every 5 minutes.', 'c365-syndicator' ); ?>
@@ -330,6 +334,10 @@ class C365_Settings {
 							admin_url( 'admin-post.php?action=c365_fetch_feed&feed_id=' . (int) $row->id ),
 							'c365_fetch_feed_' . (int) $row->id
 						);
+						$backfill_url = wp_nonce_url(
+							admin_url( 'admin-post.php?action=c365_backfill_feed&feed_id=' . (int) $row->id ),
+							'c365_backfill_feed_' . (int) $row->id
+						);
 						$last = $row->last_fetch ? human_time_diff( strtotime( $row->last_fetch . ' UTC' ), time() ) . ' ' . __( 'ago', 'c365-syndicator' ) : '—';
 						?>
 						<tr>
@@ -354,7 +362,10 @@ class C365_Settings {
 							<td><?php echo esc_html( $last ); ?></td>
 							<td><?php echo esc_html( $row->last_result ? $row->last_result : '—' ); ?></td>
 							<td><?php echo (int) $row->fail_count; ?></td>
-							<td><a class="button button-small" href="<?php echo esc_url( $fetch_url ); ?>"><?php esc_html_e( 'Fetch now', 'c365-syndicator' ); ?></a></td>
+							<td>
+								<a class="button button-small" href="<?php echo esc_url( $fetch_url ); ?>"><?php esc_html_e( 'Fetch now', 'c365-syndicator' ); ?></a>
+								<a class="button button-small" href="<?php echo esc_url( $backfill_url ); ?>" title="<?php esc_attr_e( 'Re-import this feed’s full history. No social posts are sent; existing posts are never duplicated.', 'c365-syndicator' ); ?>"><?php esc_html_e( 'Run historic', 'c365-syndicator' ); ?></a>
+							</td>
 						</tr>
 					<?php endforeach; ?>
 				<?php endif; ?>

@@ -31,6 +31,8 @@ $meta_keys = array(
 	// Diagnostics.
 	'c365_last_fetch',
 	'c365_last_result',
+	'c365_last_login',
+	'c365_profile_updated',
 );
 
 foreach ( $meta_keys as $key ) {

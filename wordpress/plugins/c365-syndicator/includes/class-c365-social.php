@@ -40,6 +40,14 @@ class C365_Social {
 	const SHAREABLE = array( 'post', 'c365_event', 'c365_podcast', 'c365_video' );
 
 	/**
+	 * When true, publishing does not queue social shares. The fetcher sets
+	 * this during historic backfills so old content is never announced.
+	 *
+	 * @var bool
+	 */
+	public static $suppressed = false;
+
+	/**
 	 * Hook everything up.
 	 */
 	public static function init() {
@@ -170,6 +178,9 @@ class C365_Social {
 	 * @param WP_Post $post       Post.
 	 */
 	public static function on_publish( $new_status, $old_status, $post ) {
+		if ( self::$suppressed ) {
+			return; // Historic backfill in progress — never announce old content.
+		}
 		if ( 'publish' !== $new_status || 'publish' === $old_status ) {
 			return;
 		}

@@ -380,6 +380,17 @@ class C365_Feeds {
 	}
 
 	/**
+	 * Clear a feed's backfilled flag so its next fetch re-imports history.
+	 *
+	 * @param int $id Row ID.
+	 * @return bool
+	 */
+	public static function reset_backfill( $id ) {
+		global $wpdb;
+		return false !== $wpdb->update( self::table(), array( 'backfilled' => 0 ), array( 'id' => (int) $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
+
+	/**
 	 * Drop the table (uninstall).
 	 */
 	public static function drop() {

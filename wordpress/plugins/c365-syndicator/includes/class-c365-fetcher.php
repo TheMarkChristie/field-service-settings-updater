@@ -36,6 +36,8 @@ class C365_Fetcher {
 		add_action( 'admin_post_c365_fetch_user', array( __CLASS__, 'handle_fetch_user' ) );
 		add_action( 'admin_post_c365_fetch_feed', array( __CLASS__, 'handle_fetch_feed' ) );
 		add_action( 'admin_post_c365_fetch_all', array( __CLASS__, 'handle_fetch_all' ) );
+		add_action( 'admin_post_c365_backfill_feed', array( __CLASS__, 'handle_backfill_feed' ) );
+		add_action( 'admin_post_c365_backfill_all', array( __CLASS__, 'handle_backfill_all' ) );
 		add_action( 'c365_feed_result_recorded', array( __CLASS__, 'maybe_alert_admin' ), 10, 2 );
 	}
 
@@ -149,7 +151,8 @@ class C365_Fetcher {
 		}
 
 		// First fetch of a feed backfills everything it exposes (FR-3.10);
-		// after that, the normal per-fetch cap applies.
+		// after that, the normal per-fetch cap applies. Backfilled content is
+		// historic, so social sharing is suppressed for the whole run.
 		$backfill = ! (int) $row->backfilled;
 		$max      = $backfill ? 0 : (int) C365_Settings::get( 'max_items' );
 		$items    = $feed->get_items( 0, $max );
@@ -158,10 +161,19 @@ class C365_Fetcher {
 		$categories = C365_Feeds::parse_categories( $row->categories );
 		$imported   = 0;
 
+		$was_suppressed = class_exists( 'C365_Social' ) ? C365_Social::$suppressed : false;
+		if ( $backfill && class_exists( 'C365_Social' ) ) {
+			C365_Social::$suppressed = true;
+		}
+
 		foreach ( $items as $item ) {
 			if ( self::import_item( $user, $item, $post_type, $feed, $categories, (int) $row->id ) ) {
 				$imported++;
 			}
+		}
+
+		if ( class_exists( 'C365_Social' ) ) {
+			C365_Social::$suppressed = $was_suppressed;
 		}
 
 		C365_Feeds::record_result(
@@ -573,6 +585,49 @@ class C365_Fetcher {
 
 		$row   = C365_Feeds::get( $feed_id );
 		$count = $row ? self::fetch_feed_record( $row ) : 0;
+		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
+		exit;
+	}
+
+	/**
+	 * "Run historic" for a single feed: re-import everything the feed
+	 * exposes, with social posting suppressed.
+	 */
+	public static function handle_backfill_feed() {
+		$feed_id = isset( $_GET['feed_id'] ) ? absint( $_GET['feed_id'] ) : 0;
+		if ( ! current_user_can( 'manage_options' ) || ! $feed_id ) {
+			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
+		}
+		check_admin_referer( 'c365_backfill_feed_' . $feed_id );
+
+		$count = 0;
+		if ( C365_Feeds::reset_backfill( $feed_id ) ) {
+			$row   = C365_Feeds::get( $feed_id );
+			$count = $row ? self::fetch_feed_record( $row ) : 0;
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
+		exit;
+	}
+
+	/**
+	 * "Run all historic": re-import every feed's full history, with social
+	 * posting suppressed.
+	 */
+	public static function handle_backfill_all() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
+		}
+		check_admin_referer( 'c365_backfill_all' );
+
+		$count = 0;
+		foreach ( C365_Feeds::all() as $row ) {
+			if ( ! (int) $row->active ) {
+				continue;
+			}
+			C365_Feeds::reset_backfill( (int) $row->id );
+			$row->backfilled = 0;
+			$count          += self::fetch_feed_record( $row );
+		}
 		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
 		exit;
 	}
