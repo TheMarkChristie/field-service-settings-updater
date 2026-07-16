@@ -65,11 +65,11 @@ class C365_Settings {
 	public static function cron_schedules( $schedules ) {
 		$schedules['c365_5min'] = array(
 			'interval' => 5 * MINUTE_IN_SECONDS,
-			'display'  => __( 'Every 5 minutes', 'c365-syndicator' ),
+			'display'  => __( 'Every 5 minutes', 'syndicate-pro' ),
 		);
 		$schedules['c365_15min'] = array(
 			'interval' => 15 * MINUTE_IN_SECONDS,
-			'display'  => __( 'Every 15 minutes', 'c365-syndicator' ),
+			'display'  => __( 'Every 15 minutes', 'syndicate-pro' ),
 		);
 		return $schedules;
 	}
@@ -94,8 +94,8 @@ class C365_Settings {
 	 */
 	public static function add_menu() {
 		add_menu_page(
-			__( 'Syndication', 'c365-syndicator' ),
-			__( 'Syndication', 'c365-syndicator' ),
+			__( 'Syndicate Pro', 'syndicate-pro' ),
+			__( 'Syndicate Pro', 'syndicate-pro' ),
 			'manage_options',
 			'c365-syndication',
 			array( __CLASS__, 'render_page' ),
@@ -121,10 +121,10 @@ class C365_Settings {
 	 */
 	public static function template_types() {
 		return array(
-			'post'         => __( 'Blog posts', 'c365-syndicator' ),
-			'c365_event'   => __( 'Events', 'c365-syndicator' ),
-			'c365_podcast' => __( 'Podcast episodes', 'c365-syndicator' ),
-			'c365_video'   => __( 'Videos', 'c365-syndicator' ),
+			'post'         => __( 'Blog posts', 'syndicate-pro' ),
+			'c365_event'   => __( 'Events', 'syndicate-pro' ),
+			'c365_podcast' => __( 'Podcast episodes', 'syndicate-pro' ),
+			'c365_video'   => __( 'Videos', 'syndicate-pro' ),
 		);
 	}
 
@@ -266,18 +266,18 @@ class C365_Settings {
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Syndication', 'c365-syndicator' ); ?></h1>
+			<h1><?php esc_html_e( 'Syndicate Pro', 'syndicate-pro' ); ?></h1>
 
 			<?php self::render_notices(); ?>
 
 			<nav class="nav-tab-wrapper">
 				<?php
 				$tabs = array(
-					'dashboard' => __( 'Dashboard', 'c365-syndicator' ),
-					'settings'  => __( 'Settings', 'c365-syndicator' ),
-					'templates' => __( 'Templates', 'c365-syndicator' ),
-					'social'    => __( 'Social sharing', 'c365-syndicator' ),
-					'emails'    => __( 'Emails', 'c365-syndicator' ),
+					'dashboard' => __( 'Dashboard', 'syndicate-pro' ),
+					'settings'  => __( 'Settings', 'syndicate-pro' ),
+					'templates' => __( 'Templates', 'syndicate-pro' ),
+					'social'    => __( 'Social sharing', 'syndicate-pro' ),
+					'emails'    => __( 'Emails', 'syndicate-pro' ),
 				);
 				foreach ( $tabs as $key => $label ) {
 					printf(
@@ -315,19 +315,19 @@ class C365_Settings {
 		if ( isset( $_GET['c365_fetched'] ) ) {
 			printf(
 				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
-				esc_html( sprintf( /* translators: %d: imported count. */ __( 'Fetch complete — %d new item(s) imported.', 'c365-syndicator' ), absint( $_GET['c365_fetched'] ) ) )
+				esc_html( sprintf( /* translators: %d: imported count. */ __( 'Fetch complete — %d new item(s) imported.', 'syndicate-pro' ), absint( $_GET['c365_fetched'] ) ) )
 			);
 		}
 		if ( isset( $_GET['c365_test_ok'] ) ) {
 			printf(
 				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
-				esc_html( sprintf( /* translators: %s: network name. */ __( 'Test post sent successfully via %s.', 'c365-syndicator' ), sanitize_key( $_GET['c365_test_ok'] ) ) )
+				esc_html( sprintf( /* translators: %s: network name. */ __( 'Test post sent successfully via %s.', 'syndicate-pro' ), sanitize_key( $_GET['c365_test_ok'] ) ) )
 			);
 		}
 		if ( isset( $_GET['c365_test_error'] ) ) {
 			printf(
 				'<div class="notice notice-error is-dismissible"><p>%s %s</p></div>',
-				esc_html__( 'Test post failed:', 'c365-syndicator' ),
+				esc_html__( 'Test post failed:', 'syndicate-pro' ),
 				esc_html( rawurldecode( sanitize_text_field( wp_unslash( $_GET['c365_test_error'] ) ) ) )
 			);
 		}
@@ -344,55 +344,55 @@ class C365_Settings {
 		$next_up = C365_Fetcher::next_member_id( $members, $pointer );
 		$feeds   = C365_Feeds::all();
 		?>
-		<h2><?php esc_html_e( 'Rotation', 'c365-syndicator' ); ?></h2>
+		<h2><?php esc_html_e( 'Rotation', 'syndicate-pro' ); ?></h2>
 		<p>
 			<?php
 			if ( $next ) {
 				printf(
 					/* translators: %s: human-readable time difference. */
-					esc_html__( 'Next rotation tick: in %s.', 'c365-syndicator' ),
+					esc_html__( 'Next rotation tick: in %s.', 'syndicate-pro' ),
 					esc_html( human_time_diff( time(), $next ) )
 				);
 			} else {
-				esc_html_e( 'No rotation is scheduled — save the Settings tab to schedule one.', 'c365-syndicator' );
+				esc_html_e( 'No rotation is scheduled — save the Settings tab to schedule one.', 'syndicate-pro' );
 			}
 			echo ' ';
 			printf(
 				/* translators: %d: number of members. */
-				esc_html__( '%d member(s) in the rotation.', 'c365-syndicator' ),
+				esc_html__( '%d member(s) in the rotation.', 'syndicate-pro' ),
 				count( $members )
 			);
 			?>
 			<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c365_fetch_all' ), 'c365_fetch_all' ) ); ?>">
-				<?php esc_html_e( 'Fetch all members now', 'c365-syndicator' ); ?>
+				<?php esc_html_e( 'Fetch all members now', 'syndicate-pro' ); ?>
 			</a>
 			<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=c365_backfill_all' ), 'c365_backfill_all' ) ); ?>"
-				onclick="return confirm('<?php echo esc_js( __( 'Re-import the full history of every feed? Nothing will be posted to social media, and existing posts are never duplicated.', 'c365-syndicator' ) ); ?>');">
-				<?php esc_html_e( 'Run all historic (no social posting)', 'c365-syndicator' ); ?>
+				onclick="return confirm('<?php echo esc_js( __( 'Re-import the full history of every feed? Nothing will be posted to social media, and existing posts are never duplicated.', 'syndicate-pro' ) ); ?>');">
+				<?php esc_html_e( 'Run all historic (no social posting)', 'syndicate-pro' ); ?>
 			</a>
 		</p>
 		<p class="description">
-			<?php esc_html_e( 'WP-Cron only runs when the site gets visits. For a reliable 5-minute rotation, add a hosting cron job requesting wp-cron.php every 5 minutes.', 'c365-syndicator' ); ?>
+			<?php esc_html_e( 'WP-Cron only runs when the site gets visits. For a reliable 5-minute rotation, add a hosting cron job requesting wp-cron.php every 5 minutes.', 'syndicate-pro' ); ?>
 		</p>
 
-		<h2><?php esc_html_e( 'Feeds', 'c365-syndicator' ); ?></h2>
-		<p class="description"><?php esc_html_e( 'Feeds are added on each member’s profile screen (Users → Profile).', 'c365-syndicator' ); ?></p>
+		<h2><?php esc_html_e( 'Feeds', 'syndicate-pro' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Feeds are added on each member’s profile screen (Users → Profile).', 'syndicate-pro' ); ?></p>
 		<table class="widefat striped">
 			<thead>
 				<tr>
-					<th><?php esc_html_e( 'Member', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Type', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Feed', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Categories', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Last checked', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Last result', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Fails', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Member', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Type', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Feed', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Categories', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Last checked', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Last result', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Fails', 'syndicate-pro' ); ?></th>
 					<th></th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php if ( empty( $feeds ) ) : ?>
-					<tr><td colspan="8"><?php esc_html_e( 'No feeds configured yet.', 'c365-syndicator' ); ?></td></tr>
+					<tr><td colspan="8"><?php esc_html_e( 'No feeds configured yet.', 'syndicate-pro' ); ?></td></tr>
 				<?php else : ?>
 					<?php foreach ( $feeds as $row ) : ?>
 						<?php
@@ -413,14 +413,14 @@ class C365_Settings {
 							admin_url( 'admin-post.php?action=c365_backfill_feed&feed_id=' . (int) $row->id ),
 							'c365_backfill_feed_' . (int) $row->id
 						);
-						$last = $row->last_fetch ? human_time_diff( strtotime( $row->last_fetch . ' UTC' ), time() ) . ' ' . __( 'ago', 'c365-syndicator' ) : '—';
+						$last = $row->last_fetch ? human_time_diff( strtotime( $row->last_fetch . ' UTC' ), time() ) . ' ' . __( 'ago', 'syndicate-pro' ) : '—';
 						?>
 						<tr>
 							<td>
 								<?php if ( $user ) : ?>
 									<a href="<?php echo esc_url( get_edit_user_link( $user->ID ) ); ?>"><strong><?php echo esc_html( $user->display_name ); ?></strong></a>
 									<?php if ( (int) $user->ID === (int) $next_up ) : ?>
-										<span class="dashicons dashicons-controls-play" title="<?php esc_attr_e( 'Next in rotation', 'c365-syndicator' ); ?>"></span>
+										<span class="dashicons dashicons-controls-play" title="<?php esc_attr_e( 'Next in rotation', 'syndicate-pro' ); ?>"></span>
 									<?php endif; ?>
 								<?php else : ?>
 									#<?php echo (int) $row->user_id; ?>
@@ -430,10 +430,10 @@ class C365_Settings {
 							<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
 								<?php echo esc_html( $row->feed_url ); ?>
 								<?php if ( ! empty( $row->full_content ) ) : ?>
-									<em title="<?php esc_attr_e( 'Fetches the full article text from the source page', 'c365-syndicator' ); ?>">(<?php esc_html_e( 'full text', 'c365-syndicator' ); ?>)</em>
+									<em title="<?php esc_attr_e( 'Fetches the full article text from the source page', 'syndicate-pro' ); ?>">(<?php esc_html_e( 'full text', 'syndicate-pro' ); ?>)</em>
 								<?php endif; ?>
 								<?php if ( ! (int) $row->active ) : ?>
-									<em>(<?php esc_html_e( 'inactive', 'c365-syndicator' ); ?>)</em>
+									<em>(<?php esc_html_e( 'inactive', 'syndicate-pro' ); ?>)</em>
 								<?php endif; ?>
 							</td>
 							<td><?php echo esc_html( implode( ', ', $cats ) ); ?></td>
@@ -441,8 +441,8 @@ class C365_Settings {
 							<td><?php echo esc_html( $row->last_result ? $row->last_result : '—' ); ?></td>
 							<td><?php echo (int) $row->fail_count; ?></td>
 							<td>
-								<a class="button button-small" href="<?php echo esc_url( $fetch_url ); ?>"><?php esc_html_e( 'Fetch now', 'c365-syndicator' ); ?></a>
-								<a class="button button-small" href="<?php echo esc_url( $backfill_url ); ?>" title="<?php esc_attr_e( 'Re-import this feed’s full history. No social posts are sent; existing posts are never duplicated.', 'c365-syndicator' ); ?>"><?php esc_html_e( 'Run historic', 'c365-syndicator' ); ?></a>
+								<a class="button button-small" href="<?php echo esc_url( $fetch_url ); ?>"><?php esc_html_e( 'Fetch now', 'syndicate-pro' ); ?></a>
+								<a class="button button-small" href="<?php echo esc_url( $backfill_url ); ?>" title="<?php esc_attr_e( 'Re-import this feed’s full history. No social posts are sent; existing posts are never duplicated.', 'syndicate-pro' ); ?>"><?php esc_html_e( 'Run historic', 'syndicate-pro' ); ?></a>
 							</td>
 						</tr>
 					<?php endforeach; ?>
@@ -462,16 +462,16 @@ class C365_Settings {
 			<?php settings_fields( 'c365_syndicator' ); ?>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="c365-interval"><?php esc_html_e( 'Rotation interval', 'c365-syndicator' ); ?></label></th>
+					<th scope="row"><label for="c365-interval"><?php esc_html_e( 'Rotation interval', 'syndicate-pro' ); ?></label></th>
 					<td>
 						<select id="c365-interval" name="<?php echo esc_attr( self::OPTION ); ?>[interval]">
 							<?php
 							$options = array(
-								'c365_5min'  => __( 'Every 5 minutes (one member per tick)', 'c365-syndicator' ),
-								'c365_15min' => __( 'Every 15 minutes', 'c365-syndicator' ),
-								'hourly'     => __( 'Hourly', 'c365-syndicator' ),
-								'twicedaily' => __( 'Twice daily', 'c365-syndicator' ),
-								'daily'      => __( 'Daily', 'c365-syndicator' ),
+								'c365_5min'  => __( 'Every 5 minutes (one member per tick)', 'syndicate-pro' ),
+								'c365_15min' => __( 'Every 15 minutes', 'syndicate-pro' ),
+								'hourly'     => __( 'Hourly', 'syndicate-pro' ),
+								'twicedaily' => __( 'Twice daily', 'syndicate-pro' ),
+								'daily'      => __( 'Daily', 'syndicate-pro' ),
 							);
 							foreach ( $options as $value => $label ) {
 								printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $s['interval'], $value, false ), esc_html( $label ) );
@@ -481,15 +481,15 @@ class C365_Settings {
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="c365-status"><?php esc_html_e( 'Imported content status', 'c365-syndicator' ); ?></label></th>
+					<th scope="row"><label for="c365-status"><?php esc_html_e( 'Imported content status', 'syndicate-pro' ); ?></label></th>
 					<td>
 						<select id="c365-status" name="<?php echo esc_attr( self::OPTION ); ?>[post_status]">
 							<?php
 							$statuses = array(
-								'publish' => __( 'Published', 'c365-syndicator' ),
-								'draft'   => __( 'Draft', 'c365-syndicator' ),
-								'pending' => __( 'Pending review', 'c365-syndicator' ),
-								'private' => __( 'Private', 'c365-syndicator' ),
+								'publish' => __( 'Published', 'syndicate-pro' ),
+								'draft'   => __( 'Draft', 'syndicate-pro' ),
+								'pending' => __( 'Pending review', 'syndicate-pro' ),
+								'private' => __( 'Private', 'syndicate-pro' ),
 							);
 							foreach ( $statuses as $value => $label ) {
 								printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $s['post_status'], $value, false ), esc_html( $label ) );
@@ -499,35 +499,35 @@ class C365_Settings {
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="c365-max"><?php esc_html_e( 'Max items per feed per fetch', 'c365-syndicator' ); ?></label></th>
+					<th scope="row"><label for="c365-max"><?php esc_html_e( 'Max items per feed per fetch', 'syndicate-pro' ); ?></label></th>
 					<td>
 						<input id="c365-max" type="number" min="1" max="50" name="<?php echo esc_attr( self::OPTION ); ?>[max_items]" value="<?php echo esc_attr( $s['max_items'] ); ?>">
-						<p class="description"><?php esc_html_e( 'The first fetch of a new feed ignores this cap and imports the feed’s full history (duplicates are detected by GUID and title).', 'c365-syndicator' ); ?></p>
+						<p class="description"><?php esc_html_e( 'The first fetch of a new feed ignores this cap and imports the feed’s full history (duplicates are detected by GUID and title).', 'syndicate-pro' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Options', 'c365-syndicator' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Options', 'syndicate-pro' ); ?></th>
 					<td>
 						<fieldset>
 							<label>
 								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[set_featured_image]" value="1" <?php checked( $s['set_featured_image'] ); ?>>
-								<?php esc_html_e( 'Import the item image as the featured image', 'c365-syndicator' ); ?>
+								<?php esc_html_e( 'Import the item image as the featured image', 'syndicate-pro' ); ?>
 							</label><br>
 							<label>
 								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[import_categories]" value="1" <?php checked( $s['import_categories'] ); ?>>
-								<?php esc_html_e( 'Also create/assign categories from the feed item’s own categories (blog posts only)', 'c365-syndicator' ); ?>
+								<?php esc_html_e( 'Also create/assign categories from the feed item’s own categories (blog posts only)', 'syndicate-pro' ); ?>
 							</label><br>
 							<label>
 								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[use_original_date]" value="1" <?php checked( $s['use_original_date'] ); ?>>
-								<?php esc_html_e( 'Use the original publish date on imported content', 'c365-syndicator' ); ?>
+								<?php esc_html_e( 'Use the original publish date on imported content', 'syndicate-pro' ); ?>
 							</label><br>
 							<label>
 								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[attribution]" value="1" <?php checked( $s['attribution'] ); ?>>
-								<?php esc_html_e( 'Append the source link and “shared with permission” note below the content (skipped automatically when the active theme renders its own)', 'c365-syndicator' ); ?>
+								<?php esc_html_e( 'Append the source link and “shared with permission” note below the content (skipped automatically when the active theme renders its own)', 'syndicate-pro' ); ?>
 							</label><br>
 							<label>
 								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[canonical]" value="1" <?php checked( $s['canonical'] ); ?>>
-								<?php esc_html_e( 'Point rel="canonical" at the original article (recommended for SEO on syndicated content)', 'c365-syndicator' ); ?>
+								<?php esc_html_e( 'Point rel="canonical" at the original article (recommended for SEO on syndicated content)', 'syndicate-pro' ); ?>
 							</label>
 						</fieldset>
 					</td>
@@ -546,16 +546,16 @@ class C365_Settings {
 		$stored = (array) get_option( self::TEMPLATES_OPTION, array() );
 		?>
 		<p class="description" style="max-width:760px;">
-			<?php esc_html_e( 'Customise how imported content and social announcements are built, per content type. Leave a box empty to use the default. Placeholders:', 'c365-syndicator' ); ?>
+			<?php esc_html_e( 'Customise how imported content and social announcements are built, per content type. Leave a box empty to use the default. Placeholders:', 'syndicate-pro' ); ?>
 		</p>
 		<p>
-			<code>{content}</code> <?php esc_html_e( 'full original text', 'c365-syndicator' ); ?> &nbsp;
+			<code>{content}</code> <?php esc_html_e( 'full original text', 'syndicate-pro' ); ?> &nbsp;
 			<code>{title}</code> &nbsp;
-			<code>{author}</code> <?php esc_html_e( '(member name; @handle in social posts where available)', 'c365-syndicator' ); ?> &nbsp;
-			<code>{excerpt}</code> <?php esc_html_e( '(one sentence in social posts)', 'c365-syndicator' ); ?> &nbsp;
-			<code>{link}</code> <?php esc_html_e( '(this site’s post URL — social only)', 'c365-syndicator' ); ?> &nbsp;
-			<code>{source_name}</code> &nbsp; <code>{source_url}</code> &nbsp; <code>{date}</code> <?php esc_html_e( '(original publish date)', 'c365-syndicator' ); ?> &nbsp;
-			<code>{hashtags}</code> <?php esc_html_e( '(categories as #hashtags — social only)', 'c365-syndicator' ); ?>
+			<code>{author}</code> <?php esc_html_e( '(member name; @handle in social posts where available)', 'syndicate-pro' ); ?> &nbsp;
+			<code>{excerpt}</code> <?php esc_html_e( '(one sentence in social posts)', 'syndicate-pro' ); ?> &nbsp;
+			<code>{link}</code> <?php esc_html_e( '(this site’s post URL — social only)', 'syndicate-pro' ); ?> &nbsp;
+			<code>{source_name}</code> &nbsp; <code>{source_url}</code> &nbsp; <code>{date}</code> <?php esc_html_e( '(original publish date)', 'syndicate-pro' ); ?> &nbsp;
+			<code>{hashtags}</code> <?php esc_html_e( '(categories as #hashtags — social only)', 'syndicate-pro' ); ?>
 		</p>
 
 		<form method="post" action="options.php">
@@ -566,26 +566,26 @@ class C365_Settings {
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row">
-							<label for="c365-tpl-post-<?php echo esc_attr( $post_type ); ?>"><?php esc_html_e( 'Post body template', 'c365-syndicator' ); ?></label>
+							<label for="c365-tpl-post-<?php echo esc_attr( $post_type ); ?>"><?php esc_html_e( 'Post body template', 'syndicate-pro' ); ?></label>
 						</th>
 						<td>
 							<textarea class="large-text code" rows="4"
 								id="c365-tpl-post-<?php echo esc_attr( $post_type ); ?>"
 								name="<?php echo esc_attr( self::TEMPLATES_OPTION ); ?>[<?php echo esc_attr( $post_type ); ?>][post]"
 								placeholder="{content}"><?php echo esc_textarea( isset( $stored[ $post_type ]['post'] ) ? $stored[ $post_type ]['post'] : '' ); ?></textarea>
-							<p class="description"><?php esc_html_e( 'HTML allowed. Default {content} imports the original text unchanged. Example: <p><em>From {source_name}, {date}:</em></p>{content}', 'c365-syndicator' ); ?></p>
+							<p class="description"><?php esc_html_e( 'HTML allowed. Default {content} imports the original text unchanged. Example: <p><em>From {source_name}, {date}:</em></p>{content}', 'syndicate-pro' ); ?></p>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row">
-							<label for="c365-tpl-social-<?php echo esc_attr( $post_type ); ?>"><?php esc_html_e( 'Social post template', 'c365-syndicator' ); ?></label>
+							<label for="c365-tpl-social-<?php echo esc_attr( $post_type ); ?>"><?php esc_html_e( 'Social post template', 'syndicate-pro' ); ?></label>
 						</th>
 						<td>
 							<textarea class="large-text code" rows="4"
 								id="c365-tpl-social-<?php echo esc_attr( $post_type ); ?>"
 								name="<?php echo esc_attr( self::TEMPLATES_OPTION ); ?>[<?php echo esc_attr( $post_type ); ?>][social]"
 								placeholder="<?php echo esc_attr( class_exists( 'C365_Social' ) ? C365_Social::default_template( $post_type ) : '' ); ?>"><?php echo esc_textarea( isset( $stored[ $post_type ]['social'] ) ? $stored[ $post_type ]['social'] : '' ); ?></textarea>
-							<p class="description"><?php esc_html_e( 'Plain text. Applied to every connected network, then truncated to each network’s length limit (excerpt shrinks first, then hashtags drop — never the title or link).', 'c365-syndicator' ); ?></p>
+							<p class="description"><?php esc_html_e( 'Plain text. Applied to every connected network, then truncated to each network’s length limit (excerpt shrinks first, then hashtags drop — never the title or link).', 'syndicate-pro' ); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -607,32 +607,32 @@ class C365_Settings {
 		<form method="post" action="options.php">
 			<?php settings_fields( 'c365_emails' ); ?>
 
-			<h2><?php esc_html_e( 'Welcome email', 'c365-syndicator' ); ?></h2>
-			<p class="description"><?php esc_html_e( 'Sent to a member once, when their first piece of content goes live on the site. Placeholders: {name} {title} {link} {profile_url} {site_name}.', 'c365-syndicator' ); ?></p>
+			<h2><?php esc_html_e( 'Welcome email', 'syndicate-pro' ); ?></h2>
+			<p class="description"><?php esc_html_e( 'Sent to a member once, when their first piece of content goes live on the site. Placeholders: {name} {title} {link} {profile_url} {site_name}.', 'syndicate-pro' ); ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th><?php esc_html_e( 'Enabled', 'c365-syndicator' ); ?></th>
-					<td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[welcome_enabled]" value="1" <?php checked( $s['welcome_enabled'] ); ?>> <?php esc_html_e( 'Send the welcome email', 'c365-syndicator' ); ?></label></td>
+					<th><?php esc_html_e( 'Enabled', 'syndicate-pro' ); ?></th>
+					<td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[welcome_enabled]" value="1" <?php checked( $s['welcome_enabled'] ); ?>> <?php esc_html_e( 'Send the welcome email', 'syndicate-pro' ); ?></label></td>
 				</tr>
 				<tr>
-					<th><label for="c365-welcome-subject"><?php esc_html_e( 'Subject', 'c365-syndicator' ); ?></label></th>
+					<th><label for="c365-welcome-subject"><?php esc_html_e( 'Subject', 'syndicate-pro' ); ?></label></th>
 					<td><input type="text" class="large-text" id="c365-welcome-subject" name="<?php echo esc_attr( $option ); ?>[welcome_subject]" value="<?php echo esc_attr( $s['welcome_subject'] ); ?>"></td>
 				</tr>
 				<tr>
-					<th><label for="c365-welcome-body"><?php esc_html_e( 'Body', 'c365-syndicator' ); ?></label></th>
+					<th><label for="c365-welcome-body"><?php esc_html_e( 'Body', 'syndicate-pro' ); ?></label></th>
 					<td><textarea class="large-text" rows="12" id="c365-welcome-body" name="<?php echo esc_attr( $option ); ?>[welcome_body]"><?php echo esc_textarea( $s['welcome_body'] ); ?></textarea></td>
 				</tr>
 			</table>
 
-			<h2><?php esc_html_e( 'Weekly digest', 'c365-syndicator' ); ?></h2>
+			<h2><?php esc_html_e( 'Weekly digest', 'syndicate-pro' ); ?></h2>
 			<p class="description">
-				<?php esc_html_e( 'The week’s top 10 blog posts (by views, newest first as a tiebreak), emailed weekly to everyone who hasn’t opted out on their profile.', 'c365-syndicator' ); ?>
+				<?php esc_html_e( 'The week’s top 10 blog posts (by views, newest first as a tiebreak), emailed weekly to everyone who hasn’t opted out on their profile.', 'syndicate-pro' ); ?>
 				<?php
 				if ( $next ) {
 					echo ' ';
 					printf(
 						/* translators: %s: human-readable time difference. */
-						esc_html__( 'Next send: in %s.', 'c365-syndicator' ),
+						esc_html__( 'Next send: in %s.', 'syndicate-pro' ),
 						esc_html( human_time_diff( time(), $next ) )
 					);
 				}
@@ -640,18 +640,18 @@ class C365_Settings {
 			</p>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th><?php esc_html_e( 'Enabled', 'c365-syndicator' ); ?></th>
-					<td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[digest_enabled]" value="1" <?php checked( $s['digest_enabled'] ); ?>> <?php esc_html_e( 'Send the weekly digest', 'c365-syndicator' ); ?></label></td>
+					<th><?php esc_html_e( 'Enabled', 'syndicate-pro' ); ?></th>
+					<td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[digest_enabled]" value="1" <?php checked( $s['digest_enabled'] ); ?>> <?php esc_html_e( 'Send the weekly digest', 'syndicate-pro' ); ?></label></td>
 				</tr>
 				<tr>
-					<th><label for="c365-digest-subject"><?php esc_html_e( 'Subject', 'c365-syndicator' ); ?></label></th>
+					<th><label for="c365-digest-subject"><?php esc_html_e( 'Subject', 'syndicate-pro' ); ?></label></th>
 					<td><input type="text" class="large-text" id="c365-digest-subject" name="<?php echo esc_attr( $option ); ?>[digest_subject]" value="<?php echo esc_attr( $s['digest_subject'] ); ?>"></td>
 				</tr>
 				<tr>
-					<th><label for="c365-digest-intro"><?php esc_html_e( 'Intro text', 'c365-syndicator' ); ?></label></th>
+					<th><label for="c365-digest-intro"><?php esc_html_e( 'Intro text', 'syndicate-pro' ); ?></label></th>
 					<td>
 						<textarea class="large-text" rows="3" id="c365-digest-intro" name="<?php echo esc_attr( $option ); ?>[digest_intro]"><?php echo esc_textarea( $s['digest_intro'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'The numbered top-10 list is appended automatically below this text.', 'c365-syndicator' ); ?></p>
+						<p class="description"><?php esc_html_e( 'The numbered top-10 list is appended automatically below this text.', 'syndicate-pro' ); ?></p>
 					</td>
 				</tr>
 			</table>
@@ -668,10 +668,10 @@ class C365_Settings {
 		$s          = C365_Social::settings();
 		$networks   = C365_Social::networks();
 		$post_types = array(
-			'post'         => __( 'Blog posts', 'c365-syndicator' ),
-			'c365_event'   => __( 'Events', 'c365-syndicator' ),
-			'c365_podcast' => __( 'Podcasts', 'c365-syndicator' ),
-			'c365_video'   => __( 'Videos', 'c365-syndicator' ),
+			'post'         => __( 'Blog posts', 'syndicate-pro' ),
+			'c365_event'   => __( 'Events', 'syndicate-pro' ),
+			'c365_podcast' => __( 'Podcasts', 'syndicate-pro' ),
+			'c365_video'   => __( 'Videos', 'syndicate-pro' ),
 		);
 		$option = C365_Social::OPTION;
 
@@ -680,12 +680,12 @@ class C365_Settings {
 				'<input type="password" class="regular-text" name="%s[%s]" value="" placeholder="%s" autocomplete="new-password">',
 				esc_attr( $option ),
 				esc_attr( $name ),
-				esc_attr( $has_value ? __( '•••••• (saved — leave blank to keep)', 'c365-syndicator' ) : $placeholder )
+				esc_attr( $has_value ? __( '•••••• (saved — leave blank to keep)', 'syndicate-pro' ) : $placeholder )
 			);
 		};
 		?>
 		<p class="description" style="max-width:720px;">
-			<?php esc_html_e( 'When new content is published, it is announced on the community’s own accounts below, e.g. “New Post: {title} by {author}” with a one-sentence excerpt, the link, category hashtags, and the featured image. Members are credited by their @handle when their profile links provide one. Credentials are stored server-side and never shown in full.', 'c365-syndicator' ); ?>
+			<?php esc_html_e( 'When new content is published, it is announced on the community’s own accounts below, e.g. “New Post: {title} by {author}” with a one-sentence excerpt, the link, category hashtags, and the featured image. Members are credited by their @handle when their profile links provide one. Credentials are stored server-side and never shown in full.', 'syndicate-pro' ); ?>
 		</p>
 
 		<form method="post" action="options.php">
@@ -694,56 +694,56 @@ class C365_Settings {
 			<h2>Mastodon</h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th><label><?php esc_html_e( 'Instance URL', 'c365-syndicator' ); ?></label></th>
+					<th><label><?php esc_html_e( 'Instance URL', 'syndicate-pro' ); ?></label></th>
 					<td><input type="url" class="regular-text" name="<?php echo esc_attr( $option ); ?>[mastodon_instance]" value="<?php echo esc_attr( $s['mastodon_instance'] ); ?>" placeholder="https://mastodon.social"></td>
 				</tr>
 				<tr>
-					<th><label><?php esc_html_e( 'Access token', 'c365-syndicator' ); ?></label></th>
+					<th><label><?php esc_html_e( 'Access token', 'syndicate-pro' ); ?></label></th>
 					<td><?php $secret_field( 'mastodon_token', (bool) $s['mastodon_token'] ); ?>
-					<p class="description"><?php esc_html_e( 'Mastodon → Preferences → Development → New application (write:statuses, write:media).', 'c365-syndicator' ); ?></p></td>
+					<p class="description"><?php esc_html_e( 'Mastodon → Preferences → Development → New application (write:statuses, write:media).', 'syndicate-pro' ); ?></p></td>
 				</tr>
 			</table>
 
 			<h2>Bluesky</h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th><label><?php esc_html_e( 'Handle', 'c365-syndicator' ); ?></label></th>
+					<th><label><?php esc_html_e( 'Handle', 'syndicate-pro' ); ?></label></th>
 					<td><input type="text" class="regular-text" name="<?php echo esc_attr( $option ); ?>[bluesky_handle]" value="<?php echo esc_attr( $s['bluesky_handle'] ); ?>" placeholder="365community.bsky.social"></td>
 				</tr>
 				<tr>
-					<th><label><?php esc_html_e( 'App password', 'c365-syndicator' ); ?></label></th>
+					<th><label><?php esc_html_e( 'App password', 'syndicate-pro' ); ?></label></th>
 					<td><?php $secret_field( 'bluesky_app_password', (bool) $s['bluesky_app_password'] ); ?>
-					<p class="description"><?php esc_html_e( 'Bluesky → Settings → Privacy and security → App passwords.', 'c365-syndicator' ); ?></p></td>
+					<p class="description"><?php esc_html_e( 'Bluesky → Settings → Privacy and security → App passwords.', 'syndicate-pro' ); ?></p></td>
 				</tr>
 			</table>
 
 			<h2>X / Twitter</h2>
 			<table class="form-table" role="presentation">
-				<tr><th><label><?php esc_html_e( 'API key', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_api_key', (bool) $s['twitter_api_key'] ); ?></td></tr>
-				<tr><th><label><?php esc_html_e( 'API secret', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_api_secret', (bool) $s['twitter_api_secret'] ); ?></td></tr>
-				<tr><th><label><?php esc_html_e( 'Access token', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_access_token', (bool) $s['twitter_access_token'] ); ?></td></tr>
-				<tr><th><label><?php esc_html_e( 'Access token secret', 'c365-syndicator' ); ?></label></th><td><?php $secret_field( 'twitter_access_secret', (bool) $s['twitter_access_secret'] ); ?>
-				<p class="description"><?php esc_html_e( 'From an app at developer.x.com with Read and Write permissions. Note: the free API tier has low monthly posting caps.', 'c365-syndicator' ); ?></p></td></tr>
+				<tr><th><label><?php esc_html_e( 'API key', 'syndicate-pro' ); ?></label></th><td><?php $secret_field( 'twitter_api_key', (bool) $s['twitter_api_key'] ); ?></td></tr>
+				<tr><th><label><?php esc_html_e( 'API secret', 'syndicate-pro' ); ?></label></th><td><?php $secret_field( 'twitter_api_secret', (bool) $s['twitter_api_secret'] ); ?></td></tr>
+				<tr><th><label><?php esc_html_e( 'Access token', 'syndicate-pro' ); ?></label></th><td><?php $secret_field( 'twitter_access_token', (bool) $s['twitter_access_token'] ); ?></td></tr>
+				<tr><th><label><?php esc_html_e( 'Access token secret', 'syndicate-pro' ); ?></label></th><td><?php $secret_field( 'twitter_access_secret', (bool) $s['twitter_access_secret'] ); ?>
+				<p class="description"><?php esc_html_e( 'From an app at developer.x.com with Read and Write permissions. Note: the free API tier has low monthly posting caps.', 'syndicate-pro' ); ?></p></td></tr>
 			</table>
 
 			<h2>LinkedIn</h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th><label><?php esc_html_e( 'Organisation URN', 'c365-syndicator' ); ?></label></th>
+					<th><label><?php esc_html_e( 'Organisation URN', 'syndicate-pro' ); ?></label></th>
 					<td><input type="text" class="regular-text" name="<?php echo esc_attr( $option ); ?>[linkedin_org_urn]" value="<?php echo esc_attr( $s['linkedin_org_urn'] ); ?>" placeholder="urn:li:organization:12345678"></td>
 				</tr>
 				<tr>
-					<th><label><?php esc_html_e( 'Access token', 'c365-syndicator' ); ?></label></th>
+					<th><label><?php esc_html_e( 'Access token', 'syndicate-pro' ); ?></label></th>
 					<td><?php $secret_field( 'linkedin_token', (bool) $s['linkedin_token'] ); ?>
-					<p class="description"><?php esc_html_e( 'OAuth token with the w_organization_social scope for your company page; LinkedIn tokens expire and need periodic renewal.', 'c365-syndicator' ); ?></p></td>
+					<p class="description"><?php esc_html_e( 'OAuth token with the w_organization_social scope for your company page; LinkedIn tokens expire and need periodic renewal.', 'syndicate-pro' ); ?></p></td>
 				</tr>
 			</table>
 
-			<h2><?php esc_html_e( 'What gets shared where', 'c365-syndicator' ); ?></h2>
+			<h2><?php esc_html_e( 'What gets shared where', 'syndicate-pro' ); ?></h2>
 			<table class="widefat striped" style="max-width:640px;">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Content type', 'c365-syndicator' ); ?></th>
+						<th><?php esc_html_e( 'Content type', 'syndicate-pro' ); ?></th>
 						<?php foreach ( $networks as $network_label ) : ?>
 							<th><?php echo esc_html( $network_label ); ?></th>
 						<?php endforeach; ?>
@@ -769,7 +769,7 @@ class C365_Settings {
 				<?php
 				printf(
 					/* translators: %s: Templates tab URL. */
-					wp_kses_post( __( 'Message wording is edited per content type on the <a href="%s">Templates</a> tab.', 'c365-syndicator' ) ),
+					wp_kses_post( __( 'Message wording is edited per content type on the <a href="%s">Templates</a> tab.', 'syndicate-pro' ) ),
 					esc_url( admin_url( 'admin.php?page=c365-syndication&tab=templates' ) )
 				);
 				?>
@@ -778,7 +778,7 @@ class C365_Settings {
 			<?php submit_button(); ?>
 		</form>
 
-		<h2><?php esc_html_e( 'Test connections', 'c365-syndicator' ); ?></h2>
+		<h2><?php esc_html_e( 'Test connections', 'syndicate-pro' ); ?></h2>
 		<p>
 			<?php foreach ( $networks as $network => $network_label ) : ?>
 				<?php if ( C365_Social::is_connected( $network ) ) : ?>
@@ -786,7 +786,7 @@ class C365_Settings {
 						<?php
 						printf(
 							/* translators: %s: network name. */
-							esc_html__( 'Send test post to %s', 'c365-syndicator' ),
+							esc_html__( 'Send test post to %s', 'syndicate-pro' ),
 							esc_html( $network_label )
 						);
 						?>
@@ -794,7 +794,7 @@ class C365_Settings {
 				<?php endif; ?>
 			<?php endforeach; ?>
 			<?php if ( ! array_filter( array_map( array( 'C365_Social', 'is_connected' ), array_keys( $networks ) ) ) ) : ?>
-				<em><?php esc_html_e( 'Save credentials above to enable test buttons.', 'c365-syndicator' ); ?></em>
+				<em><?php esc_html_e( 'Save credentials above to enable test buttons.', 'syndicate-pro' ); ?></em>
 			<?php endif; ?>
 		</p>
 		<?php

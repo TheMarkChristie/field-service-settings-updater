@@ -70,15 +70,15 @@ class C365_Frontend {
 		$html = '<div class="c365-attribution">';
 		$html .= sprintf(
 			/* translators: 1: original article URL, 2: source name. */
-			__( '<strong>Original source:</strong> <a href="%1$s" rel="external noopener" target="_blank">%2$s</a>.', 'c365-syndicator' ),
+			__( '<strong>Original source:</strong> <a href="%1$s" rel="external noopener" target="_blank">%2$s</a>.', 'syndicate-pro' ),
 			esc_url( $source['url'] ),
 			esc_html( $source['name'] ? $source['name'] : $source['url'] )
 		);
 		$html .= ' ';
 		$html .= sprintf(
 			/* translators: %s: author display name. */
-			esc_html__( 'This content is republished here with the permission of %s.', 'c365-syndicator' ),
-			esc_html( $author ? $author : __( 'the original author', 'c365-syndicator' ) )
+			esc_html__( 'This content is republished here with the permission of %s.', 'syndicate-pro' ),
+			esc_html( $author ? $author : __( 'the original author', 'syndicate-pro' ) )
 		);
 		$html .= '</div>';
 

@@ -47,14 +47,14 @@ class C365_Profile {
 	 */
 	public static function link_fields() {
 		return array(
-			'c365_link_website'  => __( 'Website', 'c365-syndicator' ),
-			'c365_link_blog'     => __( 'Blog', 'c365-syndicator' ),
-			'c365_link_linkedin' => __( 'LinkedIn', 'c365-syndicator' ),
-			'c365_link_twitter'  => __( 'X / Twitter', 'c365-syndicator' ),
-			'c365_link_bluesky'  => __( 'Bluesky', 'c365-syndicator' ),
-			'c365_link_github'   => __( 'GitHub', 'c365-syndicator' ),
-			'c365_link_youtube'  => __( 'YouTube', 'c365-syndicator' ),
-			'c365_link_mastodon' => __( 'Mastodon', 'c365-syndicator' ),
+			'c365_link_website'  => __( 'Website', 'syndicate-pro' ),
+			'c365_link_blog'     => __( 'Blog', 'syndicate-pro' ),
+			'c365_link_linkedin' => __( 'LinkedIn', 'syndicate-pro' ),
+			'c365_link_twitter'  => __( 'X / Twitter', 'syndicate-pro' ),
+			'c365_link_bluesky'  => __( 'Bluesky', 'syndicate-pro' ),
+			'c365_link_github'   => __( 'GitHub', 'syndicate-pro' ),
+			'c365_link_youtube'  => __( 'YouTube', 'syndicate-pro' ),
+			'c365_link_mastodon' => __( 'Mastodon', 'syndicate-pro' ),
 		);
 	}
 
@@ -65,12 +65,12 @@ class C365_Profile {
 	 */
 	public static function section_toggles() {
 		return array(
-			'c365_show_blogs'    => __( 'Show my blog posts', 'c365-syndicator' ),
-			'c365_show_podcasts' => __( 'Show my podcast episodes', 'c365-syndicator' ),
-			'c365_show_videos'   => __( 'Show my videos', 'c365-syndicator' ),
-			'c365_show_events'   => __( 'Show my events', 'c365-syndicator' ),
-			'c365_show_links'    => __( 'Show my links', 'c365-syndicator' ),
-			'c365_show_bio'      => __( 'Show my bio', 'c365-syndicator' ),
+			'c365_show_blogs'    => __( 'Show my blog posts', 'syndicate-pro' ),
+			'c365_show_podcasts' => __( 'Show my podcast episodes', 'syndicate-pro' ),
+			'c365_show_videos'   => __( 'Show my videos', 'syndicate-pro' ),
+			'c365_show_events'   => __( 'Show my events', 'syndicate-pro' ),
+			'c365_show_links'    => __( 'Show my links', 'syndicate-pro' ),
+			'c365_show_bio'      => __( 'Show my bio', 'syndicate-pro' ),
 		);
 	}
 
@@ -121,19 +121,19 @@ class C365_Profile {
 			return $html . '</select>';
 		};
 		?>
-		<h2><?php esc_html_e( 'Syndication feeds', 'c365-syndicator' ); ?></h2>
+		<h2><?php esc_html_e( 'Syndication feeds', 'syndicate-pro' ); ?></h2>
 		<p class="description">
-			<?php esc_html_e( 'The site checks these automatically and republishes new items under your name, with a link back to the original and a note that it is shared with your permission. You can add several feeds and point each at its own category. For YouTube, enter your channel ID (starts with “UC”). No RSS feed? Choose “Web page (no RSS)” and enter your blog’s listing page URL — the site will discover new articles on it automatically.', 'c365-syndicator' ); ?>
+			<?php esc_html_e( 'The site checks these automatically and republishes new items under your name, with a link back to the original and a note that it is shared with your permission. You can add several feeds and point each at its own category. For YouTube, enter your channel ID (starts with “UC”). No RSS feed? Choose “Web page (no RSS)” and enter your blog’s listing page URL — the site will discover new articles on it automatically.', 'syndicate-pro' ); ?>
 		</p>
 		<table class="widefat striped" style="max-width:900px;">
 			<thead>
 				<tr>
-					<th><?php esc_html_e( 'Type', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Feed URL / channel ID', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Post into category(ies)', 'c365-syndicator' ); ?></th>
-					<th title="<?php esc_attr_e( 'If your feed only contains summaries, tick this so the site fetches the full article text from your blog.', 'c365-syndicator' ); ?>"><?php esc_html_e( 'Full text', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Active', 'c365-syndicator' ); ?></th>
-					<th><?php esc_html_e( 'Delete', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Type', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Feed URL / channel ID', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Post into category(ies)', 'syndicate-pro' ); ?></th>
+					<th title="<?php esc_attr_e( 'If your feed only contains summaries, tick this so the site fetches the full article text from your blog.', 'syndicate-pro' ); ?>"><?php esc_html_e( 'Full text', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Active', 'syndicate-pro' ); ?></th>
+					<th><?php esc_html_e( 'Delete', 'syndicate-pro' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -158,7 +158,7 @@ class C365_Profile {
 				</tr>
 			</tbody>
 		</table>
-		<p class="description"><?php esc_html_e( 'Fill in the last row to add a feed; it is saved when you update the profile. The first fetch of a new feed imports its full history (existing posts on this site are detected and never duplicated).', 'c365-syndicator' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Fill in the last row to add a feed; it is saved when you update the profile. The first fetch of a new feed imports its full history (existing posts on this site are detected and never duplicated).', 'syndicate-pro' ); ?></p>
 		<?php
 	}
 
@@ -172,35 +172,35 @@ class C365_Profile {
 		$cover_url  = get_user_meta( $user->ID, 'c365_cover_url', true );
 		$tagline    = get_user_meta( $user->ID, 'c365_tagline', true );
 		?>
-		<h2><?php esc_html_e( 'Author page', 'c365-syndicator' ); ?></h2>
-		<p class="description"><?php esc_html_e( 'Control how your public author page looks and what it shows. Your social links are also used to credit you by @handle when the site shares your posts to its social accounts.', 'c365-syndicator' ); ?></p>
+		<h2><?php esc_html_e( 'Author page', 'syndicate-pro' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Control how your public author page looks and what it shows. Your social links are also used to credit you by @handle when the site shares your posts to its social accounts.', 'syndicate-pro' ); ?></p>
 		<table class="form-table" role="presentation">
 			<tr>
-				<th><label for="c365-tagline"><?php esc_html_e( 'Tagline', 'c365-syndicator' ); ?></label></th>
-				<td><input type="text" class="regular-text" id="c365-tagline" name="c365_tagline" value="<?php echo esc_attr( $tagline ); ?>" placeholder="<?php esc_attr_e( 'e.g. Dynamics 365 Field Service MVP', 'c365-syndicator' ); ?>"></td>
+				<th><label for="c365-tagline"><?php esc_html_e( 'Tagline', 'syndicate-pro' ); ?></label></th>
+				<td><input type="text" class="regular-text" id="c365-tagline" name="c365_tagline" value="<?php echo esc_attr( $tagline ); ?>" placeholder="<?php esc_attr_e( 'e.g. Dynamics 365 Field Service MVP', 'syndicate-pro' ); ?>"></td>
 			</tr>
 			<tr>
-				<th><label for="c365-avatar-url"><?php esc_html_e( 'Profile photo URL', 'c365-syndicator' ); ?></label></th>
+				<th><label for="c365-avatar-url"><?php esc_html_e( 'Profile photo URL', 'syndicate-pro' ); ?></label></th>
 				<td>
 					<input type="url" class="regular-text" id="c365-avatar-url" name="c365_avatar_url" value="<?php echo esc_attr( $avatar_url ); ?>">
-					<p class="description"><?php esc_html_e( 'Used instead of your Gravatar across the site. Paste an image URL (upload one via the Media Library first if needed).', 'c365-syndicator' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Used instead of your Gravatar across the site. Paste an image URL (upload one via the Media Library first if needed).', 'syndicate-pro' ); ?></p>
 				</td>
 			</tr>
 			<tr>
-				<th><label for="c365-cover-url"><?php esc_html_e( 'Cover image URL', 'c365-syndicator' ); ?></label></th>
+				<th><label for="c365-cover-url"><?php esc_html_e( 'Cover image URL', 'syndicate-pro' ); ?></label></th>
 				<td><input type="url" class="regular-text" id="c365-cover-url" name="c365_cover_url" value="<?php echo esc_attr( $cover_url ); ?>"></td>
 			</tr>
 			<tr>
-				<th><?php esc_html_e( 'Emails', 'c365-syndicator' ); ?></th>
+				<th><?php esc_html_e( 'Emails', 'syndicate-pro' ); ?></th>
 				<td>
 					<label>
 						<input type="checkbox" name="c365_digest" value="1" <?php checked( '0' !== (string) get_user_meta( $user->ID, 'c365_digest', true ) ); ?>>
-						<?php esc_html_e( 'Send me the weekly community digest email', 'c365-syndicator' ); ?>
+						<?php esc_html_e( 'Send me the weekly community digest email', 'syndicate-pro' ); ?>
 					</label>
 				</td>
 			</tr>
 			<tr>
-				<th><?php esc_html_e( 'Sections to show', 'c365-syndicator' ); ?></th>
+				<th><?php esc_html_e( 'Sections to show', 'syndicate-pro' ); ?></th>
 				<td>
 					<fieldset>
 						<?php foreach ( self::section_toggles() as $key => $label ) : ?>
@@ -213,7 +213,7 @@ class C365_Profile {
 				</td>
 			</tr>
 			<tr>
-				<th><?php esc_html_e( 'Links', 'c365-syndicator' ); ?></th>
+				<th><?php esc_html_e( 'Links', 'syndicate-pro' ); ?></th>
 				<td>
 					<?php foreach ( self::link_fields() as $key => $label ) : ?>
 						<p>

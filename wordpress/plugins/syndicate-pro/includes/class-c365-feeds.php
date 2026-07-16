@@ -29,11 +29,11 @@ class C365_Feeds {
 	 */
 	public static function types() {
 		return array(
-			'blog'    => __( 'Blog RSS', 'c365-syndicator' ),
-			'scrape'  => __( 'Web page (no RSS)', 'c365-syndicator' ),
-			'podcast' => __( 'Podcast RSS', 'c365-syndicator' ),
-			'youtube' => __( 'YouTube channel', 'c365-syndicator' ),
-			'event'   => __( 'Events feed', 'c365-syndicator' ),
+			'blog'    => __( 'Blog RSS', 'syndicate-pro' ),
+			'scrape'  => __( 'Web page (no RSS)', 'syndicate-pro' ),
+			'podcast' => __( 'Podcast RSS', 'syndicate-pro' ),
+			'youtube' => __( 'YouTube channel', 'syndicate-pro' ),
+			'event'   => __( 'Events feed', 'syndicate-pro' ),
 		);
 	}
 

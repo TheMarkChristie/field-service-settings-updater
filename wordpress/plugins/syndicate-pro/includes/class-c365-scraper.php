@@ -24,7 +24,7 @@ class C365_Scraper {
 	 */
 	public static function http_get( $url ) {
 		if ( ! $url || 0 !== strpos( $url, 'http' ) ) {
-			return new WP_Error( 'c365_bad_url', __( 'Not a fetchable URL.', 'c365-syndicator' ) );
+			return new WP_Error( 'c365_bad_url', __( 'Not a fetchable URL.', 'syndicate-pro' ) );
 		}
 
 		$response = wp_remote_get(

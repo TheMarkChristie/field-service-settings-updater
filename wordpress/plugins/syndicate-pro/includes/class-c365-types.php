@@ -39,9 +39,9 @@ class C365_Types {
 	public static function render_category_image_add() {
 		?>
 		<div class="form-field">
-			<label for="c365-category-image"><?php esc_html_e( 'Category image URL', 'c365-syndicator' ); ?></label>
+			<label for="c365-category-image"><?php esc_html_e( 'Category image URL', 'syndicate-pro' ); ?></label>
 			<input type="url" id="c365-category-image" name="c365_category_image" value="">
-			<p><?php esc_html_e( 'Used as the featured image for imported posts in this category that have no image of their own.', 'c365-syndicator' ); ?></p>
+			<p><?php esc_html_e( 'Used as the featured image for imported posts in this category that have no image of their own.', 'syndicate-pro' ); ?></p>
 		</div>
 		<?php
 	}
@@ -55,10 +55,10 @@ class C365_Types {
 		$url = get_term_meta( $term->term_id, 'c365_category_image', true );
 		?>
 		<tr class="form-field">
-			<th scope="row"><label for="c365-category-image"><?php esc_html_e( 'Category image URL', 'c365-syndicator' ); ?></label></th>
+			<th scope="row"><label for="c365-category-image"><?php esc_html_e( 'Category image URL', 'syndicate-pro' ); ?></label></th>
 			<td>
 				<input type="url" id="c365-category-image" name="c365_category_image" value="<?php echo esc_attr( $url ); ?>" class="regular-text">
-				<p class="description"><?php esc_html_e( 'Used as the featured image for imported posts in this category that have no image of their own. Paste an image URL (upload one via the Media Library first if needed).', 'c365-syndicator' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Used as the featured image for imported posts in this category that have no image of their own. Paste an image URL (upload one via the Media Library first if needed).', 'syndicate-pro' ); ?></p>
 			</td>
 		</tr>
 		<?php
@@ -156,10 +156,10 @@ class C365_Types {
 				$common,
 				array(
 					'labels'      => array(
-						'name'          => __( 'Events', 'c365-syndicator' ),
-						'singular_name' => __( 'Event', 'c365-syndicator' ),
-						'add_new_item'  => __( 'Add New Event', 'c365-syndicator' ),
-						'edit_item'     => __( 'Edit Event', 'c365-syndicator' ),
+						'name'          => __( 'Events', 'syndicate-pro' ),
+						'singular_name' => __( 'Event', 'syndicate-pro' ),
+						'add_new_item'  => __( 'Add New Event', 'syndicate-pro' ),
+						'edit_item'     => __( 'Edit Event', 'syndicate-pro' ),
 					),
 					'menu_icon'   => 'dashicons-calendar-alt',
 					'rewrite'     => array( 'slug' => 'events' ),
@@ -173,10 +173,10 @@ class C365_Types {
 				$common,
 				array(
 					'labels'      => array(
-						'name'          => __( 'Podcasts', 'c365-syndicator' ),
-						'singular_name' => __( 'Podcast Episode', 'c365-syndicator' ),
-						'add_new_item'  => __( 'Add New Episode', 'c365-syndicator' ),
-						'edit_item'     => __( 'Edit Episode', 'c365-syndicator' ),
+						'name'          => __( 'Podcasts', 'syndicate-pro' ),
+						'singular_name' => __( 'Podcast Episode', 'syndicate-pro' ),
+						'add_new_item'  => __( 'Add New Episode', 'syndicate-pro' ),
+						'edit_item'     => __( 'Edit Episode', 'syndicate-pro' ),
 					),
 					'menu_icon'   => 'dashicons-microphone',
 					'rewrite'     => array( 'slug' => 'podcasts' ),
@@ -190,10 +190,10 @@ class C365_Types {
 				$common,
 				array(
 					'labels'      => array(
-						'name'          => __( 'Videos', 'c365-syndicator' ),
-						'singular_name' => __( 'Video', 'c365-syndicator' ),
-						'add_new_item'  => __( 'Add New Video', 'c365-syndicator' ),
-						'edit_item'     => __( 'Edit Video', 'c365-syndicator' ),
+						'name'          => __( 'Videos', 'syndicate-pro' ),
+						'singular_name' => __( 'Video', 'syndicate-pro' ),
+						'add_new_item'  => __( 'Add New Video', 'syndicate-pro' ),
+						'edit_item'     => __( 'Edit Video', 'syndicate-pro' ),
 					),
 					'menu_icon'   => 'dashicons-video-alt3',
 					'rewrite'     => array( 'slug' => 'videos' ),
@@ -206,9 +206,9 @@ class C365_Types {
 	 * Meta boxes for manually-added items.
 	 */
 	public static function add_meta_boxes() {
-		add_meta_box( 'c365_event_details', __( 'Event details', 'c365-syndicator' ), array( __CLASS__, 'render_event_box' ), 'c365_event', 'side' );
-		add_meta_box( 'c365_podcast_details', __( 'Episode details', 'c365-syndicator' ), array( __CLASS__, 'render_podcast_box' ), 'c365_podcast', 'side' );
-		add_meta_box( 'c365_video_details', __( 'Video details', 'c365-syndicator' ), array( __CLASS__, 'render_video_box' ), 'c365_video', 'side' );
+		add_meta_box( 'c365_event_details', __( 'Event details', 'syndicate-pro' ), array( __CLASS__, 'render_event_box' ), 'c365_event', 'side' );
+		add_meta_box( 'c365_podcast_details', __( 'Episode details', 'syndicate-pro' ), array( __CLASS__, 'render_podcast_box' ), 'c365_podcast', 'side' );
+		add_meta_box( 'c365_video_details', __( 'Video details', 'syndicate-pro' ), array( __CLASS__, 'render_video_box' ), 'c365_video', 'side' );
 	}
 
 	/**
@@ -224,19 +224,19 @@ class C365_Types {
 		$url      = get_post_meta( $post->ID, '_c365_event_url', true );
 		?>
 		<p>
-			<label for="c365-event-start"><strong><?php esc_html_e( 'Starts', 'c365-syndicator' ); ?></strong></label><br>
+			<label for="c365-event-start"><strong><?php esc_html_e( 'Starts', 'syndicate-pro' ); ?></strong></label><br>
 			<input type="datetime-local" id="c365-event-start" name="c365_event_start" value="<?php echo esc_attr( $start ); ?>" style="width:100%">
 		</p>
 		<p>
-			<label for="c365-event-end"><strong><?php esc_html_e( 'Ends', 'c365-syndicator' ); ?></strong></label><br>
+			<label for="c365-event-end"><strong><?php esc_html_e( 'Ends', 'syndicate-pro' ); ?></strong></label><br>
 			<input type="datetime-local" id="c365-event-end" name="c365_event_end" value="<?php echo esc_attr( $end ); ?>" style="width:100%">
 		</p>
 		<p>
-			<label for="c365-event-location"><strong><?php esc_html_e( 'Location', 'c365-syndicator' ); ?></strong></label><br>
-			<input type="text" id="c365-event-location" name="c365_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%" placeholder="<?php esc_attr_e( 'Online / venue name', 'c365-syndicator' ); ?>">
+			<label for="c365-event-location"><strong><?php esc_html_e( 'Location', 'syndicate-pro' ); ?></strong></label><br>
+			<input type="text" id="c365-event-location" name="c365_event_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%" placeholder="<?php esc_attr_e( 'Online / venue name', 'syndicate-pro' ); ?>">
 		</p>
 		<p>
-			<label for="c365-event-url"><strong><?php esc_html_e( 'Registration / info URL', 'c365-syndicator' ); ?></strong></label><br>
+			<label for="c365-event-url"><strong><?php esc_html_e( 'Registration / info URL', 'syndicate-pro' ); ?></strong></label><br>
 			<input type="url" id="c365-event-url" name="c365_event_url" value="<?php echo esc_attr( $url ); ?>" style="width:100%">
 		</p>
 		<?php
@@ -253,11 +253,11 @@ class C365_Types {
 		$duration = get_post_meta( $post->ID, '_c365_duration', true );
 		?>
 		<p>
-			<label for="c365-audio-url"><strong><?php esc_html_e( 'Audio file URL (MP3)', 'c365-syndicator' ); ?></strong></label><br>
+			<label for="c365-audio-url"><strong><?php esc_html_e( 'Audio file URL (MP3)', 'syndicate-pro' ); ?></strong></label><br>
 			<input type="url" id="c365-audio-url" name="c365_audio_url" value="<?php echo esc_attr( $audio ); ?>" style="width:100%">
 		</p>
 		<p>
-			<label for="c365-duration"><strong><?php esc_html_e( 'Duration', 'c365-syndicator' ); ?></strong></label><br>
+			<label for="c365-duration"><strong><?php esc_html_e( 'Duration', 'syndicate-pro' ); ?></strong></label><br>
 			<input type="text" id="c365-duration" name="c365_duration" value="<?php echo esc_attr( $duration ); ?>" style="width:100%" placeholder="45:00">
 		</p>
 		<?php
@@ -273,7 +273,7 @@ class C365_Types {
 		$video_id = get_post_meta( $post->ID, '_c365_video_id', true );
 		?>
 		<p>
-			<label for="c365-video-id"><strong><?php esc_html_e( 'YouTube video ID', 'c365-syndicator' ); ?></strong></label><br>
+			<label for="c365-video-id"><strong><?php esc_html_e( 'YouTube video ID', 'syndicate-pro' ); ?></strong></label><br>
 			<input type="text" id="c365-video-id" name="c365_video_id" value="<?php echo esc_attr( $video_id ); ?>" style="width:100%" placeholder="dQw4w9WgXcQ">
 		</p>
 		<?php

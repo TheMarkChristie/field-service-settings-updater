@@ -94,10 +94,10 @@ class C365_Social {
 	 */
 	public static function default_template( $post_type ) {
 		$lines = array(
-			'post'         => __( 'New Post: {title} by {author}', 'c365-syndicator' ),
-			'c365_event'   => __( 'New Event: {title} by {author}', 'c365-syndicator' ),
-			'c365_podcast' => __( 'New Episode: {title} by {author}', 'c365-syndicator' ),
-			'c365_video'   => __( 'New Video: {title} by {author}', 'c365-syndicator' ),
+			'post'         => __( 'New Post: {title} by {author}', 'syndicate-pro' ),
+			'c365_event'   => __( 'New Event: {title} by {author}', 'syndicate-pro' ),
+			'c365_podcast' => __( 'New Episode: {title} by {author}', 'syndicate-pro' ),
+			'c365_video'   => __( 'New Video: {title} by {author}', 'syndicate-pro' ),
 		);
 		$first = isset( $lines[ $post_type ] ) ? $lines[ $post_type ] : $lines['post'];
 		return $first . "\n{excerpt}\n{link}\n{hashtags}";
@@ -420,7 +420,7 @@ class C365_Social {
 			}
 		}
 
-		return $name ? $name : __( 'a community member', 'c365-syndicator' );
+		return $name ? $name : __( 'a community member', 'syndicate-pro' );
 	}
 
 	/**
@@ -592,7 +592,7 @@ class C365_Social {
 		}
 		$auth = json_decode( wp_remote_retrieve_body( $session ), true );
 		if ( empty( $auth['accessJwt'] ) || empty( $auth['did'] ) ) {
-			return new WP_Error( 'c365_bluesky_auth', __( 'Bluesky login failed.', 'c365-syndicator' ) );
+			return new WP_Error( 'c365_bluesky_auth', __( 'Bluesky login failed.', 'syndicate-pro' ) );
 		}
 
 		$record = array(
@@ -907,18 +907,18 @@ class C365_Social {
 	 */
 	public static function handle_test_post() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
+			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
 		$network = isset( $_GET['network'] ) ? sanitize_key( $_GET['network'] ) : '';
 		check_admin_referer( 'c365_social_test_' . $network );
 
 		if ( ! isset( self::networks()[ $network ] ) ) {
-			wp_die( esc_html__( 'Unknown network.', 'c365-syndicator' ) );
+			wp_die( esc_html__( 'Unknown network.', 'syndicate-pro' ) );
 		}
 
 		$message = sprintf(
 			/* translators: 1: site name, 2: site URL. */
-			__( 'Test post from %1$s — connection working. %2$s', 'c365-syndicator' ),
+			__( 'Test post from %1$s — connection working. %2$s', 'syndicate-pro' ),
 			get_bloginfo( 'name' ),
 			home_url( '/' )
 		);

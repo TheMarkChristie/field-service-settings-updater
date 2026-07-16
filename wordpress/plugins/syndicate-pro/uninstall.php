@@ -1,6 +1,6 @@
 <?php
 /**
- * Uninstall cleanup for 365 Community Syndicator.
+ * Uninstall cleanup for Syndicate Pro.
  *
  * Removes plugin options, the feeds table, and per-user syndication meta.
  * Imported posts, podcasts, videos, events, and their media are

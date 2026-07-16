@@ -36,14 +36,14 @@ class C365_Emails {
 	public static function defaults() {
 		return array(
 			'welcome_enabled' => 1,
-			'welcome_subject' => __( 'Welcome to {site_name} — your content is live!', 'c365-syndicator' ),
+			'welcome_subject' => __( 'Welcome to {site_name} — your content is live!', 'syndicate-pro' ),
 			'welcome_body'    => __(
 				"Hi {name},\n\nGreat news — your first piece of content is now live on {site_name}:\n\n{title}\n{link}\n\nFrom here, everything is automatic: we check your feeds every few minutes and republish new posts under your name, always linking back to the original and noting it is shared with your permission. New posts are also announced on our community social accounts.\n\nTake a minute to polish your author page — photo, bio, and links — here:\n{profile_url}\n\nThanks for being part of the community!\n{site_name}",
-				'c365-syndicator'
+				'syndicate-pro'
 			),
 			'digest_enabled'  => 1,
-			'digest_subject'  => __( 'This week on {site_name}: the top posts', 'c365-syndicator' ),
-			'digest_intro'    => __( "Here are the most-read posts from the community this week:", 'c365-syndicator' ),
+			'digest_subject'  => __( 'This week on {site_name}: the top posts', 'syndicate-pro' ),
+			'digest_intro'    => __( "Here are the most-read posts from the community this week:", 'syndicate-pro' ),
 		);
 	}
 
@@ -192,12 +192,12 @@ class C365_Emails {
 				$rank++,
 				wp_strip_all_tags( get_the_title( $post ) ),
 				$author,
-				$views ? sprintf( /* translators: %d: view count. */ __( ' (%d views)', 'c365-syndicator' ), $views ) : ''
+				$views ? sprintf( /* translators: %d: view count. */ __( ' (%d views)', 'syndicate-pro' ), $views ) : ''
 			);
 			$lines[] = get_permalink( $post );
 			$lines[] = '';
 		}
-		$lines[] = sprintf( /* translators: %s: site URL. */ __( 'Read everything at %s', 'c365-syndicator' ), home_url( '/' ) );
+		$lines[] = sprintf( /* translators: %s: site URL. */ __( 'Read everything at %s', 'syndicate-pro' ), home_url( '/' ) );
 		$body    = implode( "\n", $lines );
 
 		foreach ( self::digest_recipients() as $recipient ) {

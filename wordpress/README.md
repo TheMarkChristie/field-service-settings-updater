@@ -1,12 +1,12 @@
 # 365 Community — WordPress theme + syndication plugin
 
-A self-contained replacement for the current 365community.online stack (WP Automatic
-etc.). Two installable packages, built only on WordPress core — no other plugins
+Syndicate Pro + Community 365: a self-contained replacement for the current
+365community.online stack (WP Automatic etc.). Two installable packages, built only on WordPress core — no other plugins
 required:
 
 | Package | Folder | What it does |
 |---|---|---|
-| **365 Community Syndicator** (plugin, v1.7.0) | `plugins/c365-syndicator` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, admin dashboard and wp-admin widgets. |
+| **Syndicate Pro** (plugin, v2.0.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, admin dashboard and wp-admin widgets. |
 | **Community 365** (theme, v1.0.0) | `themes/community365` | Presentation: card-based magazine design with a distinct layout per content type, member author pages, source badges, dark mode. |
 
 The full requirements are in [`docs/full-specification.md`](docs/full-specification.md).
@@ -14,7 +14,7 @@ The full requirements are in [`docs/full-specification.md`](docs/full-specificat
 ## Installing
 
 1. Zip each folder (or use the delivered zips), then in wp-admin:
-   - **Plugins → Add New Plugin → Upload Plugin** → `c365-syndicator.zip` → Activate.
+   - **Plugins → Add New Plugin → Upload Plugin** → `syndicate-pro.zip` → Activate.
    - **Appearance → Themes → Add New Theme → Upload Theme** → `community365.zip` → Activate.
 2. Go to **Settings → Permalinks** and click *Save Changes* once (registers the
    `/events/`, `/podcasts/`, `/videos/` URLs).

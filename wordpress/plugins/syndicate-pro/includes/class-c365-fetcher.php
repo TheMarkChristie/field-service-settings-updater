@@ -171,7 +171,7 @@ class C365_Fetcher {
 			$row->id,
 			sprintf(
 				/* translators: %d: imported count. */
-				$backfill ? __( 'Backfill complete — %d item(s) imported', 'c365-syndicator' ) : __( '%d new item(s) imported', 'c365-syndicator' ),
+				$backfill ? __( 'Backfill complete — %d item(s) imported', 'syndicate-pro' ) : __( '%d new item(s) imported', 'syndicate-pro' ),
 				$imported
 			),
 			false,
@@ -482,13 +482,14 @@ class C365_Fetcher {
 		wp_mail(
 			get_option( 'admin_email' ),
 			sprintf(
-				/* translators: %s: member name. */
-				__( '[365 Community] Feed failing for %s', 'c365-syndicator' ),
+				/* translators: 1: site name, 2: member name. */
+				__( '[%1$s] Feed failing for %2$s', 'syndicate-pro' ),
+				get_bloginfo( 'name' ),
 				$name
 			),
 			sprintf(
 				/* translators: 1: member name, 2: feed type, 3: feed URL, 4: failure count, 5: last error, 6: admin URL. */
-				__( "The %2\$s feed for %1\$s has failed %4\$d fetches in a row.\n\nFeed: %3\$s\nLast error: %5\$s\n\nManage feeds: %6\$s", 'c365-syndicator' ),
+				__( "The %2\$s feed for %1\$s has failed %4\$d fetches in a row.\n\nFeed: %3\$s\nLast error: %5\$s\n\nManage feeds: %6\$s", 'syndicate-pro' ),
 				$name,
 				$row->type,
 				C365_Feeds::resolved_url( $row ),
@@ -509,7 +510,7 @@ class C365_Fetcher {
 	public static function handle_fetch_feed() {
 		$feed_id = isset( $_GET['feed_id'] ) ? absint( $_GET['feed_id'] ) : 0;
 		if ( ! current_user_can( 'manage_options' ) || ! $feed_id ) {
-			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
+			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
 		check_admin_referer( 'c365_fetch_feed_' . $feed_id );
 
@@ -526,7 +527,7 @@ class C365_Fetcher {
 	public static function handle_backfill_feed() {
 		$feed_id = isset( $_GET['feed_id'] ) ? absint( $_GET['feed_id'] ) : 0;
 		if ( ! current_user_can( 'manage_options' ) || ! $feed_id ) {
-			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
+			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
 		check_admin_referer( 'c365_backfill_feed_' . $feed_id );
 
@@ -545,7 +546,7 @@ class C365_Fetcher {
 	 */
 	public static function handle_backfill_all() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
+			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
 		check_admin_referer( 'c365_backfill_all' );
 
@@ -567,7 +568,7 @@ class C365_Fetcher {
 	 */
 	public static function handle_fetch_all() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
+			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
 		check_admin_referer( 'c365_fetch_all' );
 

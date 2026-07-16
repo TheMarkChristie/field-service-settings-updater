@@ -44,9 +44,9 @@ class C365_Dashboard {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		wp_add_dashboard_widget( 'c365_top_posters', __( '365 Community — Top posters this month', 'c365-syndicator' ), array( __CLASS__, 'render_top_posters' ) );
-		wp_add_dashboard_widget( 'c365_failing_feeds', __( '365 Community — Failing feeds', 'c365-syndicator' ), array( __CLASS__, 'render_failing_feeds' ) );
-		wp_add_dashboard_widget( 'c365_unverified', __( '365 Community — Unverified members', 'c365-syndicator' ), array( __CLASS__, 'render_unverified' ) );
+		wp_add_dashboard_widget( 'c365_top_posters', __( 'Syndicate Pro — Top posters this month', 'syndicate-pro' ), array( __CLASS__, 'render_top_posters' ) );
+		wp_add_dashboard_widget( 'c365_failing_feeds', __( 'Syndicate Pro — Failing feeds', 'syndicate-pro' ), array( __CLASS__, 'render_failing_feeds' ) );
+		wp_add_dashboard_widget( 'c365_unverified', __( 'Syndicate Pro — Unverified members', 'syndicate-pro' ), array( __CLASS__, 'render_unverified' ) );
 	}
 
 	/**
@@ -72,7 +72,7 @@ class C365_Dashboard {
 		);
 
 		if ( ! $rows ) {
-			echo '<p>' . esc_html__( 'No content published yet this month.', 'c365-syndicator' ) . '</p>';
+			echo '<p>' . esc_html__( 'No content published yet this month.', 'syndicate-pro' ) . '</p>';
 			return;
 		}
 
@@ -85,7 +85,7 @@ class C365_Dashboard {
 				'<li>%s — <strong>%d</strong> %s</li>',
 				$url ? '<a href="' . esc_url( $url ) . '">' . esc_html( $name ) . '</a>' : esc_html( $name ),
 				(int) $row->total,
-				esc_html( _n( 'item', 'items', (int) $row->total, 'c365-syndicator' ) )
+				esc_html( _n( 'item', 'items', (int) $row->total, 'syndicate-pro' ) )
 			);
 		}
 		echo '</ol>';
@@ -103,7 +103,7 @@ class C365_Dashboard {
 		);
 
 		if ( ! $failing ) {
-			echo '<p>' . esc_html__( 'All feeds are healthy. 🎉', 'c365-syndicator' ) . '</p>';
+			echo '<p>' . esc_html__( 'All feeds are healthy. 🎉', 'syndicate-pro' ) . '</p>';
 			return;
 		}
 
@@ -115,7 +115,7 @@ class C365_Dashboard {
 		);
 
 		$types = C365_Feeds::types();
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Member', 'c365-syndicator' ) . '</th><th>' . esc_html__( 'Feed', 'c365-syndicator' ) . '</th><th>' . esc_html__( 'Fails', 'c365-syndicator' ) . '</th></tr></thead><tbody>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Member', 'syndicate-pro' ) . '</th><th>' . esc_html__( 'Feed', 'syndicate-pro' ) . '</th><th>' . esc_html__( 'Fails', 'syndicate-pro' ) . '</th></tr></thead><tbody>';
 		foreach ( array_slice( $failing, 0, 10 ) as $row ) {
 			$user = get_user_by( 'id', (int) $row->user_id );
 			printf(
@@ -130,7 +130,7 @@ class C365_Dashboard {
 		printf(
 			'<p><a href="%s">%s</a></p>',
 			esc_url( admin_url( 'admin.php?page=c365-syndication' ) ),
-			esc_html__( 'Open the Syndication dashboard', 'c365-syndicator' )
+			esc_html__( 'Open the Syndication dashboard', 'syndicate-pro' )
 		);
 	}
 
@@ -164,7 +164,7 @@ class C365_Dashboard {
 		$total = (int) $query->get_total();
 
 		if ( ! $users ) {
-			echo '<p>' . esc_html__( 'Every member has logged in or updated their profile. 🎉', 'c365-syndicator' ) . '</p>';
+			echo '<p>' . esc_html__( 'Every member has logged in or updated their profile. 🎉', 'syndicate-pro' ) . '</p>';
 			return;
 		}
 
@@ -173,7 +173,7 @@ class C365_Dashboard {
 			esc_html(
 				sprintf(
 					/* translators: %d: number of unverified members. */
-					_n( '%d member has never logged in or updated their profile:', '%d members have never logged in or updated their profile:', $total, 'c365-syndicator' ),
+					_n( '%d member has never logged in or updated their profile:', '%d members have never logged in or updated their profile:', $total, 'syndicate-pro' ),
 					$total
 				)
 			)
@@ -194,11 +194,11 @@ class C365_Dashboard {
 			printf(
 				'<p><a href="%s">%s</a></p>',
 				esc_url( admin_url( 'users.php' ) ),
-				esc_html( sprintf( /* translators: %d: remaining count. */ __( '…and %d more — see all users', 'c365-syndicator' ), $total - 15 ) )
+				esc_html( sprintf( /* translators: %d: remaining count. */ __( '…and %d more — see all users', 'syndicate-pro' ), $total - 15 ) )
 			);
 		}
 
-		echo '<p class="description">' . esc_html__( 'Tracking starts from plugin activation — a member clears this list the first time they log in or save their profile.', 'c365-syndicator' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Tracking starts from plugin activation — a member clears this list the first time they log in or save their profile.', 'syndicate-pro' ) . '</p>';
 	}
 }
 

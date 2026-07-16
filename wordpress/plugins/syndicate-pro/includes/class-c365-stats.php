@@ -127,29 +127,29 @@ class C365_Stats {
 		$post_count  = count_user_posts( $user->ID, self::COUNTED, true );
 		$top         = self::author_top_posts( $user->ID );
 		?>
-		<h2><?php esc_html_e( 'Your content stats', 'c365-syndicator' ); ?></h2>
+		<h2><?php esc_html_e( 'Your content stats', 'syndicate-pro' ); ?></h2>
 		<table class="form-table" role="presentation">
 			<tr>
-				<th><?php esc_html_e( 'Views this month', 'c365-syndicator' ); ?></th>
+				<th><?php esc_html_e( 'Views this month', 'syndicate-pro' ); ?></th>
 				<td><strong style="font-size:1.4em;"><?php echo esc_html( number_format_i18n( $month_views ) ); ?></strong></td>
 			</tr>
 			<tr>
-				<th><?php esc_html_e( 'All-time views', 'c365-syndicator' ); ?></th>
+				<th><?php esc_html_e( 'All-time views', 'syndicate-pro' ); ?></th>
 				<td><?php echo esc_html( number_format_i18n( $total_views ) ); ?></td>
 			</tr>
 			<tr>
-				<th><?php esc_html_e( 'Published items', 'c365-syndicator' ); ?></th>
+				<th><?php esc_html_e( 'Published items', 'syndicate-pro' ); ?></th>
 				<td><?php echo esc_html( number_format_i18n( (int) $post_count ) ); ?></td>
 			</tr>
 			<?php if ( $top ) : ?>
 				<tr>
-					<th><?php esc_html_e( 'Your most-read posts', 'c365-syndicator' ); ?></th>
+					<th><?php esc_html_e( 'Your most-read posts', 'syndicate-pro' ); ?></th>
 					<td>
 						<ol style="margin:0 0 0 1.2em;">
 							<?php foreach ( $top as $row ) : ?>
 								<li>
 									<a href="<?php echo esc_url( get_permalink( (int) $row->ID ) ); ?>"><?php echo esc_html( $row->post_title ); ?></a>
-									— <?php echo esc_html( number_format_i18n( (int) $row->views ) ); ?> <?php esc_html_e( 'views', 'c365-syndicator' ); ?>
+									— <?php echo esc_html( number_format_i18n( (int) $row->views ) ); ?> <?php esc_html_e( 'views', 'syndicate-pro' ); ?>
 								</li>
 							<?php endforeach; ?>
 						</ol>
@@ -157,7 +157,7 @@ class C365_Stats {
 				</tr>
 			<?php endif; ?>
 		</table>
-		<p class="description"><?php esc_html_e( 'Counts start from when this feature was installed, and cached page views may not be included.', 'c365-syndicator' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Counts start from when this feature was installed, and cached page views may not be included.', 'syndicate-pro' ); ?></p>
 		<?php
 	}
 }

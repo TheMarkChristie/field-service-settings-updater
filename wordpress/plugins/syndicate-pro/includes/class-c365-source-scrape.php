@@ -33,7 +33,7 @@ class C365_Source_Scrape {
 
 		$links = C365_Scraper::discover_article_links( $body, $row->feed_url );
 		if ( ! $links ) {
-			return new WP_Error( 'c365_no_links', __( 'No article links found on the page', 'c365-syndicator' ) );
+			return new WP_Error( 'c365_no_links', __( 'No article links found on the page', 'syndicate-pro' ) );
 		}
 
 		if ( $max > 0 ) {
