@@ -17,6 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array|null { name: string, url: string } or null when not syndicated.
  */
 function community365_get_source( $post_id = null ) {
+	// The syndicator plugin owns the definition of "source" — delegate so the
+	// theme's badges and the plugin's attribution never disagree.
+	if ( class_exists( 'C365_Frontend' ) ) {
+		return C365_Frontend::get_source( $post_id );
+	}
+
 	$post_id = $post_id ? $post_id : get_the_ID();
 	if ( ! $post_id ) {
 		return null;

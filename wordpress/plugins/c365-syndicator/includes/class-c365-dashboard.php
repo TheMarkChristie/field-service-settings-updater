@@ -139,9 +139,11 @@ class C365_Dashboard {
 	 * (tracking starts when this version of the plugin is activated).
 	 */
 	public static function render_unverified() {
-		$users = get_users(
+		// Bounded query: fetch only the 15 rows we render plus the total
+		// count — hydrating every matching user would blow up on large sites.
+		$query = new WP_User_Query(
 			array(
-				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'meta_query'  => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'AND',
 					array(
 						'key'     => 'c365_last_login',
@@ -152,10 +154,14 @@ class C365_Dashboard {
 						'compare' => 'NOT EXISTS',
 					),
 				),
-				'orderby'    => 'registered',
-				'order'      => 'ASC',
+				'orderby'     => 'registered',
+				'order'       => 'ASC',
+				'number'      => 15,
+				'count_total' => true,
 			)
 		);
+		$users = $query->get_results();
+		$total = (int) $query->get_total();
 
 		if ( ! $users ) {
 			echo '<p>' . esc_html__( 'Every member has logged in or updated their profile. 🎉', 'c365-syndicator' ) . '</p>';
@@ -167,14 +173,14 @@ class C365_Dashboard {
 			esc_html(
 				sprintf(
 					/* translators: %d: number of unverified members. */
-					_n( '%d member has never logged in or updated their profile:', '%d members have never logged in or updated their profile:', count( $users ), 'c365-syndicator' ),
-					count( $users )
+					_n( '%d member has never logged in or updated their profile:', '%d members have never logged in or updated their profile:', $total, 'c365-syndicator' ),
+					$total
 				)
 			)
 		);
 
 		echo '<ul style="margin-left:1.2em;list-style:disc;">';
-		foreach ( array_slice( $users, 0, 15 ) as $user ) {
+		foreach ( $users as $user ) {
 			printf(
 				'<li><a href="%s">%s</a> <span style="color:#888;">(%s)</span></li>',
 				esc_url( get_edit_user_link( $user->ID ) ),
@@ -184,11 +190,11 @@ class C365_Dashboard {
 		}
 		echo '</ul>';
 
-		if ( count( $users ) > 15 ) {
+		if ( $total > 15 ) {
 			printf(
 				'<p><a href="%s">%s</a></p>',
 				esc_url( admin_url( 'users.php' ) ),
-				esc_html( sprintf( /* translators: %d: remaining count. */ __( '…and %d more — see all users', 'c365-syndicator' ), count( $users ) - 15 ) )
+				esc_html( sprintf( /* translators: %d: remaining count. */ __( '…and %d more — see all users', 'c365-syndicator' ), $total - 15 ) )
 			);
 		}
 

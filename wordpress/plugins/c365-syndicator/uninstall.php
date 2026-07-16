@@ -34,6 +34,24 @@ $meta_keys = array(
 	'c365_last_result',
 	'c365_last_login',
 	'c365_profile_updated',
+	// Profile / author-page fields.
+	'c365_avatar_url',
+	'c365_cover_url',
+	'c365_tagline',
+	'c365_link_website',
+	'c365_link_blog',
+	'c365_link_linkedin',
+	'c365_link_twitter',
+	'c365_link_bluesky',
+	'c365_link_github',
+	'c365_link_youtube',
+	'c365_link_mastodon',
+	'c365_show_blogs',
+	'c365_show_podcasts',
+	'c365_show_videos',
+	'c365_show_events',
+	'c365_show_links',
+	'c365_show_bio',
 );
 
 foreach ( $meta_keys as $key ) {

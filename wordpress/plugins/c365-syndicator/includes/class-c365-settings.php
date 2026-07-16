@@ -229,14 +229,19 @@ class C365_Settings {
 			}
 		}
 
-		$clean['templates'] = array();
-		if ( ! empty( $input['templates'] ) && is_array( $input['templates'] ) ) {
+		// The Social tab form has no template fields (they live on the
+		// Templates tab), so keep whatever is stored — otherwise every save
+		// of this tab would silently wipe legacy/per-network overrides.
+		if ( isset( $input['templates'] ) && is_array( $input['templates'] ) ) {
+			$clean['templates'] = array();
 			foreach ( $input['templates'] as $key => $template ) {
 				$template = trim( sanitize_textarea_field( $template ) );
 				if ( $template && preg_match( '/^[a-z]+:[a-z0-9_]+$/', $key ) ) {
 					$clean['templates'][ $key ] = $template;
 				}
 			}
+		} else {
+			$clean['templates'] = isset( $stored['templates'] ) ? (array) $stored['templates'] : array();
 		}
 
 		return $clean;
@@ -248,6 +253,13 @@ class C365_Settings {
 	public static function render_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
+		}
+
+		// Self-heal: if the rotation event vanished (cron cleanup plugin,
+		// failed reschedule), restore it when an admin opens this page —
+		// saving unchanged settings would not fire the update hook.
+		if ( ! wp_next_scheduled( C365_SYN_CRON_HOOK ) ) {
+			wp_schedule_event( time() + 60, self::get( 'interval' ), C365_SYN_CRON_HOOK );
 		}
 
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended

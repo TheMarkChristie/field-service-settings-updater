@@ -53,6 +53,12 @@ class C365_Frontend {
 	 * @return string
 	 */
 	public static function attribution_html( $post_id = null ) {
+		// The site-wide attribution toggle is authoritative everywhere —
+		// including themes that render this box themselves.
+		if ( ! C365_Settings::get( 'attribution' ) ) {
+			return '';
+		}
+
 		$post_id = $post_id ? $post_id : get_the_ID();
 		$source  = self::get_source( $post_id );
 		if ( ! $source || ! $source['url'] ) {

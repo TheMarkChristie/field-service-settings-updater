@@ -321,8 +321,9 @@ class C365_Feeds {
 		 *
 		 * @param object $row        Feed row (pre-update).
 		 * @param int    $fail_count New consecutive failure count.
+		 * @param string $result     The result message just recorded.
 		 */
-		do_action( 'c365_feed_result_recorded', $row, (int) $fields['fail_count'] );
+		do_action( 'c365_feed_result_recorded', $row, (int) $fields['fail_count'], $result );
 	}
 
 	/* -----------------------------------------------------------------------

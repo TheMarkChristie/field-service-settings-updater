@@ -188,6 +188,20 @@ class C365_Social {
 			return;
 		}
 
+		// Durable backfill guard: a post imported by a feed whose backfilled
+		// flag is still 0 was created by that feed's historic run (the flag is
+		// set only after the run completes) — never announce it, even if the
+		// in-process flag above was lost to an error mid-run.
+		if ( class_exists( 'C365_Feeds' ) ) {
+			$feed_id = (int) get_post_meta( $post->ID, '_c365_feed_id', true );
+			if ( $feed_id ) {
+				$feed_row = C365_Feeds::get( $feed_id );
+				if ( $feed_row && ! (int) $feed_row->backfilled ) {
+					return;
+				}
+			}
+		}
+
 		$queued = false;
 		foreach ( array_keys( self::networks() ) as $network ) {
 			if ( ! self::is_enabled( $network, $post->post_type ) ) {
@@ -227,8 +241,19 @@ class C365_Social {
 	 * counts, drop jobs that exhausted their retries (recording the error).
 	 */
 	public static function process_queue() {
+		// Only one processor at a time: overlapping cron runs would otherwise
+		// snapshot the same jobs and double-post.
+		if ( get_transient( 'c365_share_queue_lock' ) ) {
+			if ( ! wp_next_scheduled( 'c365_process_share_queue' ) ) {
+				wp_schedule_single_event( time() + MINUTE_IN_SECONDS, 'c365_process_share_queue' );
+			}
+			return;
+		}
+		set_transient( 'c365_share_queue_lock', 1, 2 * MINUTE_IN_SECONDS );
+
 		$queue = (array) get_option( self::QUEUE_OPTION, array() );
 		if ( empty( $queue ) ) {
+			delete_transient( 'c365_share_queue_lock' );
 			return;
 		}
 		update_option( self::QUEUE_OPTION, array(), false );
@@ -239,12 +264,18 @@ class C365_Social {
 			if ( ! $post || 'publish' !== $post->post_status ) {
 				continue;
 			}
-			if ( get_post_meta( $post->ID, '_c365_shared_' . $job['network'], true ) ) {
-				continue;
+
+			// Claim before sending: add_post_meta with $unique=true fails if
+			// the key exists, so a post can never be announced twice on the
+			// same network even by racing processes. A failed send releases
+			// the claim for the retry.
+			if ( ! add_post_meta( $post->ID, '_c365_shared_' . $job['network'], time(), true ) ) {
+				continue; // Already shared or claimed elsewhere.
 			}
 
 			$result = self::share( $post, $job['network'] );
 			if ( is_wp_error( $result ) ) {
+				delete_post_meta( $post->ID, '_c365_shared_' . $job['network'] );
 				$job['attempts']++;
 				if ( $job['attempts'] < self::MAX_ATTEMPTS ) {
 					$retry[] = $job;
@@ -252,7 +283,6 @@ class C365_Social {
 					update_post_meta( $post->ID, '_c365_share_error_' . $job['network'], $result->get_error_message() );
 				}
 			} else {
-				update_post_meta( $post->ID, '_c365_shared_' . $job['network'], time() );
 				delete_post_meta( $post->ID, '_c365_share_error_' . $job['network'] );
 			}
 		}
@@ -264,6 +294,8 @@ class C365_Social {
 				wp_schedule_single_event( time() + 5 * MINUTE_IN_SECONDS, 'c365_process_share_queue' );
 			}
 		}
+
+		delete_transient( 'c365_share_queue_lock' );
 	}
 
 	/* -----------------------------------------------------------------------
@@ -280,13 +312,15 @@ class C365_Social {
 	public static function build_message( $post, $network ) {
 		$s = self::settings();
 		// Priority: per-network developer override, then the per-type template
-		// from the Templates tab, then legacy "all:" keys, then the default.
+		// from the Templates tab (explicit stored value, not compared against
+		// the rendered default), then legacy "all:" keys, then the default.
 		$network_key = $network . ':' . $post->post_type;
 		$all_key     = 'all:' . $post->post_type;
+		$tab_stored  = (array) get_option( 'c365_templates', array() );
 		if ( ! empty( $s['templates'][ $network_key ] ) ) {
 			$template = $s['templates'][ $network_key ];
-		} elseif ( class_exists( 'C365_Settings' ) && C365_Settings::get_template( $post->post_type, 'social' ) !== self::default_template( $post->post_type ) ) {
-			$template = C365_Settings::get_template( $post->post_type, 'social' );
+		} elseif ( ! empty( $tab_stored[ $post->post_type ]['social'] ) ) {
+			$template = $tab_stored[ $post->post_type ]['social'];
 		} elseif ( ! empty( $s['templates'][ $all_key ] ) ) {
 			$template = $s['templates'][ $all_key ];
 		} else {
@@ -336,6 +370,19 @@ class C365_Social {
 		}
 		if ( $length( $message ) > $limit && $hashtags ) {
 			$message = trim( str_replace( $hashtags, '', $message ) );
+		}
+
+		// Last resort: shorten the title itself, otherwise a very long title
+		// plus the link would exceed the limit on every attempt and the share
+		// could never succeed.
+		if ( $length( $message ) > $limit && $title && mb_strlen( $title ) > 40 ) {
+			$excess      = $length( $message ) - $limit;
+			$keep        = max( 30, mb_strlen( $title ) - $excess - 1 );
+			$short_title = rtrim( mb_substr( $title, 0, $keep ) ) . '…';
+			$message     = str_replace( $title, $short_title, $message );
+		}
+		if ( $length( $message ) > $limit ) {
+			$message = rtrim( mb_substr( $message, 0, $limit - 1 ) ) . '…';
 		}
 
 		return $message;

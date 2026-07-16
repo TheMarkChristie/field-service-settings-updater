@@ -33,12 +33,11 @@ class C365_Fetcher {
 	 */
 	public static function init() {
 		add_action( C365_SYN_CRON_HOOK, array( __CLASS__, 'rotate' ) );
-		add_action( 'admin_post_c365_fetch_user', array( __CLASS__, 'handle_fetch_user' ) );
 		add_action( 'admin_post_c365_fetch_feed', array( __CLASS__, 'handle_fetch_feed' ) );
 		add_action( 'admin_post_c365_fetch_all', array( __CLASS__, 'handle_fetch_all' ) );
 		add_action( 'admin_post_c365_backfill_feed', array( __CLASS__, 'handle_backfill_feed' ) );
 		add_action( 'admin_post_c365_backfill_all', array( __CLASS__, 'handle_backfill_all' ) );
-		add_action( 'c365_feed_result_recorded', array( __CLASS__, 'maybe_alert_admin' ), 10, 2 );
+		add_action( 'c365_feed_result_recorded', array( __CLASS__, 'maybe_alert_admin' ), 10, 3 );
 	}
 
 	/* -----------------------------------------------------------------------
@@ -110,13 +109,6 @@ class C365_Fetcher {
 				$imported += self::fetch_feed_record( $row );
 			}
 		}
-
-		update_user_meta( $user_id, 'c365_last_fetch', time() );
-		update_user_meta(
-			$user_id,
-			'c365_last_result',
-			sprintf( /* translators: %d: imported count. */ __( '%d new item(s) imported', 'c365-syndicator' ), $imported )
-		);
 
 		return $imported;
 	}
@@ -317,6 +309,8 @@ class C365_Fetcher {
 			self::attach_podcast_meta( $post_id, $item );
 		} elseif ( 'c365_video' === $post_type ) {
 			self::attach_video_meta( $post_id, $item );
+		} elseif ( 'c365_event' === $post_type ) {
+			self::attach_event_meta( $post_id, $item );
 		}
 
 		// Featured image: enclosure/media image, else first image in content.
@@ -364,9 +358,12 @@ class C365_Fetcher {
 			return 0;
 		}
 
+		// Backfill imports every article the page exposes (bounded naturally
+		// by the listing page itself); later fetches respect the cap.
 		$backfill = ! (int) $row->backfilled;
-		$max      = $backfill ? 20 : (int) C365_Settings::get( 'max_items' );
-		$links    = array_slice( $links, 0, $max );
+		if ( ! $backfill ) {
+			$links = array_slice( $links, 0, (int) C365_Settings::get( 'max_items' ) );
+		}
 
 		$was_suppressed = class_exists( 'C365_Social' ) ? C365_Social::$suppressed : false;
 		if ( $backfill && class_exists( 'C365_Social' ) ) {
@@ -477,11 +474,22 @@ class C365_Fetcher {
 		if ( preg_match( '~^https?://~i', $href ) ) {
 			return esc_url_raw( $href );
 		}
+
+		// Core's resolver handles ports, ../ segments, and scheme-relative
+		// URLs correctly — don't reimplement it.
+		if ( ! class_exists( 'WP_Http' ) ) {
+			require_once ABSPATH . WPINC . '/class-http.php';
+		}
+		if ( class_exists( 'WP_Http' ) && method_exists( 'WP_Http', 'make_absolute_url' ) ) {
+			return esc_url_raw( WP_Http::make_absolute_url( $href, $base ) );
+		}
+
+		// Minimal fallback (should not be reached on real WordPress).
 		$parts = wp_parse_url( $base );
 		if ( empty( $parts['host'] ) ) {
 			return '';
 		}
-		$origin = ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . '://' . $parts['host'];
+		$origin = ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . '://' . $parts['host'] . ( isset( $parts['port'] ) ? ':' . $parts['port'] : '' );
 		if ( 0 === strpos( $href, '//' ) ) {
 			return esc_url_raw( ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . ':' . $href );
 		}
@@ -780,7 +788,9 @@ class C365_Fetcher {
 		$existing = get_posts(
 			array(
 				'post_type'      => array( 'post', 'c365_event', 'c365_podcast', 'c365_video' ),
-				'post_status'    => 'any',
+				// Explicit list including trash: a trashed import must stay
+				// deleted, not resurrect on the next fetch ('any' skips trash).
+				'post_status'    => array( 'publish', 'future', 'draft', 'pending', 'private', 'trash' ),
 				'meta_key'       => '_c365_guid', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => $guid,        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'fields'         => 'ids',
@@ -803,7 +813,7 @@ class C365_Fetcher {
 		global $wpdb;
 		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status NOT IN ('trash','auto-draft') AND post_title = %s LIMIT 1",
+				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status NOT IN ('auto-draft') AND post_title = %s LIMIT 1",
 				$post_type,
 				$title
 			)
@@ -832,18 +842,30 @@ class C365_Fetcher {
 			return false;
 		}
 
+		// Cache the verdict so an interrupted backfill never re-asks for the
+		// same video, and keep the timeout short — a slow response is treated
+		// as "not a Short" rather than stalling the whole cron tick.
+		$cache_key = 'c365_short_' . $video_id;
+		$cached    = get_transient( $cache_key );
+		if ( false !== $cached ) {
+			return 'yes' === $cached;
+		}
+
 		$response = wp_remote_head(
 			'https://www.youtube.com/shorts/' . rawurlencode( $video_id ),
 			array(
 				'redirection' => 0,
-				'timeout'     => 5,
+				'timeout'     => 3,
 			)
 		);
 		if ( is_wp_error( $response ) ) {
 			return false;
 		}
 
-		return 200 === (int) wp_remote_retrieve_response_code( $response );
+		$is_short = 200 === (int) wp_remote_retrieve_response_code( $response );
+		set_transient( $cache_key, $is_short ? 'yes' : 'no', WEEK_IN_SECONDS );
+
+		return $is_short;
 	}
 
 	/**
@@ -935,6 +957,62 @@ class C365_Fetcher {
 	}
 
 	/**
+	 * Extract event details from a feed item where the feed provides them
+	 * (RSS event/xCal modules), so imported events carry a start date,
+	 * location, and link like manually added ones. Feeds without event
+	 * markup import with the description only.
+	 *
+	 * @param int            $post_id Post ID.
+	 * @param SimplePie_Item $item    Feed item.
+	 */
+	protected static function attach_event_meta( $post_id, $item ) {
+		$namespaces = array(
+			'http://purl.org/rss/1.0/modules/event/' => array(
+				'start'    => 'startdate',
+				'end'      => 'enddate',
+				'location' => 'location',
+			),
+			'urn:ietf:params:xml:ns:xcal'             => array(
+				'start'    => 'dtstart',
+				'end'      => 'dtend',
+				'location' => 'location',
+			),
+		);
+
+		$get_tag = function ( $ns, $tag ) use ( $item ) {
+			$tags = $item->get_item_tags( $ns, $tag );
+			return isset( $tags[0]['data'] ) ? trim( (string) $tags[0]['data'] ) : '';
+		};
+
+		foreach ( $namespaces as $ns => $tags ) {
+			$start = $get_tag( $ns, $tags['start'] );
+			if ( ! $start ) {
+				continue;
+			}
+			$start_ts = strtotime( $start );
+			if ( $start_ts ) {
+				update_post_meta( $post_id, '_c365_event_start', gmdate( 'Y-m-d\TH:i', $start_ts ) );
+			}
+			$end    = $get_tag( $ns, $tags['end'] );
+			$end_ts = $end ? strtotime( $end ) : 0;
+			if ( $end_ts ) {
+				update_post_meta( $post_id, '_c365_event_end', gmdate( 'Y-m-d\TH:i', $end_ts ) );
+			}
+			$location = $get_tag( $ns, $tags['location'] );
+			if ( $location ) {
+				update_post_meta( $post_id, '_c365_event_location', sanitize_text_field( $location ) );
+			}
+			break;
+		}
+
+		// The original page is the natural "more info" link for the event.
+		$link = (string) $item->get_permalink();
+		if ( $link ) {
+			update_post_meta( $post_id, '_c365_event_url', esc_url_raw( $link ) );
+		}
+	}
+
+	/**
 	 * Sideload the item's image and set it as the featured image.
 	 *
 	 * @param int            $post_id Post ID.
@@ -1011,8 +1089,9 @@ class C365_Fetcher {
 	 *
 	 * @param object $row        Feed row (pre-update).
 	 * @param int    $fail_count New consecutive failure count.
+	 * @param string $message    The result message just recorded.
 	 */
-	public static function maybe_alert_admin( $row, $fail_count ) {
+	public static function maybe_alert_admin( $row, $fail_count, $message = '' ) {
 		/**
 		 * Filter the consecutive-failure threshold for admin alerts.
 		 *
@@ -1040,7 +1119,7 @@ class C365_Fetcher {
 				$row->type,
 				C365_Feeds::resolved_url( $row ),
 				$fail_count,
-				(string) $row->last_result,
+				'' !== $message ? $message : (string) $row->last_result,
 				admin_url( 'admin.php?page=c365-syndication' )
 			)
 		);
@@ -1049,21 +1128,6 @@ class C365_Fetcher {
 	/* -----------------------------------------------------------------------
 	 * Manual fetch handlers (admin buttons)
 	 * -------------------------------------------------------------------- */
-
-	/**
-	 * "Fetch now" for a single member.
-	 */
-	public static function handle_fetch_user() {
-		$user_id = isset( $_GET['user_id'] ) ? absint( $_GET['user_id'] ) : 0;
-		if ( ! current_user_can( 'manage_options' ) || ! $user_id ) {
-			wp_die( esc_html__( 'Not allowed.', 'c365-syndicator' ) );
-		}
-		check_admin_referer( 'c365_fetch_user_' . $user_id );
-
-		$count = self::fetch_user( $user_id );
-		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
-		exit;
-	}
 
 	/**
 	 * "Fetch now" for a single feed record.
