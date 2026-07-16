@@ -4,22 +4,22 @@
  *
  * Every cron tick (5 minutes by default) this picks the NEXT member in the
  * rotation and checks all of their active feed records. WHERE items come
- * from is delegated to a source strategy per record type (C365_Source_Rss,
- * C365_Source_Scrape); everything else — backfill handling, social
+ * from is delegated to a source strategy per record type (Synpro_Source_Rss,
+ * Synpro_Source_Scrape); everything else — backfill handling, social
  * suppression, de-duplication (GUID + title with legacy back-stamping),
  * template application, inserting, type meta, featured images with category
  * fallback, result recording, and failure alerts — lives here, once.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Fetcher' ) ) :
+if ( ! class_exists( 'Synpro_Fetcher' ) ) :
 
-class C365_Fetcher {
+class Synpro_Fetcher {
 
 	/**
 	 * Consecutive failures before the admin is emailed.
@@ -30,12 +30,12 @@ class C365_Fetcher {
 	 * Hook everything up.
 	 */
 	public static function init() {
-		add_action( C365_SYN_CRON_HOOK, array( __CLASS__, 'rotate' ) );
-		add_action( 'admin_post_c365_fetch_feed', array( __CLASS__, 'handle_fetch_feed' ) );
-		add_action( 'admin_post_c365_fetch_all', array( __CLASS__, 'handle_fetch_all' ) );
-		add_action( 'admin_post_c365_backfill_feed', array( __CLASS__, 'handle_backfill_feed' ) );
-		add_action( 'admin_post_c365_backfill_all', array( __CLASS__, 'handle_backfill_all' ) );
-		add_action( 'c365_feed_result_recorded', array( __CLASS__, 'maybe_alert_admin' ), 10, 3 );
+		add_action( SYNPRO_CRON_HOOK, array( __CLASS__, 'rotate' ) );
+		add_action( 'admin_post_synpro_fetch_feed', array( __CLASS__, 'handle_fetch_feed' ) );
+		add_action( 'admin_post_synpro_fetch_all', array( __CLASS__, 'handle_fetch_all' ) );
+		add_action( 'admin_post_synpro_backfill_feed', array( __CLASS__, 'handle_backfill_feed' ) );
+		add_action( 'admin_post_synpro_backfill_all', array( __CLASS__, 'handle_backfill_all' ) );
+		add_action( 'synpro_feed_result_recorded', array( __CLASS__, 'maybe_alert_admin' ), 10, 3 );
 	}
 
 	/**
@@ -46,9 +46,9 @@ class C365_Fetcher {
 	 */
 	public static function source_for( $type ) {
 		if ( 'scrape' === $type ) {
-			return new C365_Source_Scrape();
+			return new Synpro_Source_Scrape();
 		}
-		return new C365_Source_Rss();
+		return new Synpro_Source_Rss();
 	}
 
 	/* -----------------------------------------------------------------------
@@ -61,7 +61,7 @@ class C365_Fetcher {
 	 * @return int[]
 	 */
 	public static function get_member_ids() {
-		return C365_Feeds::member_ids();
+		return Synpro_Feeds::member_ids();
 	}
 
 	/**
@@ -90,16 +90,16 @@ class C365_Fetcher {
 	public static function rotate() {
 		$members = self::get_member_ids();
 		if ( ! empty( $members ) ) {
-			$pointer = (int) get_option( 'c365_rotation_pointer', 0 );
+			$pointer = (int) get_option( 'synpro_rotation_pointer', 0 );
 			$next_id = self::next_member_id( $members, $pointer );
 			if ( $next_id ) {
-				update_option( 'c365_rotation_pointer', $next_id, false );
+				update_option( 'synpro_rotation_pointer', $next_id, false );
 				self::fetch_user( $next_id );
 			}
 		}
 
-		if ( class_exists( 'C365_Social' ) ) {
-			C365_Social::process_queue();
+		if ( class_exists( 'Synpro_Social' ) ) {
+			Synpro_Social::process_queue();
 		}
 	}
 
@@ -115,7 +115,7 @@ class C365_Fetcher {
 	 */
 	public static function fetch_user( $user_id ) {
 		$imported = 0;
-		foreach ( C365_Feeds::for_user( $user_id ) as $row ) {
+		foreach ( Synpro_Feeds::for_user( $user_id ) as $row ) {
 			if ( (int) $row->active ) {
 				$imported += self::fetch_feed_record( $row );
 			}
@@ -139,22 +139,22 @@ class C365_Fetcher {
 		// the per-fetch cap applies. Backfilled content is historic, so
 		// social sharing is suppressed for the whole run.
 		$backfill = ! (int) $row->backfilled;
-		$max      = $backfill ? 0 : (int) C365_Settings::get( 'max_items' );
+		$max      = $backfill ? 0 : (int) Synpro_Settings::get( 'max_items' );
 
 		$source = self::source_for( $row->type );
 		$items  = $source->fetch( $row, $max );
 		if ( is_wp_error( $items ) ) {
-			C365_Feeds::record_result( $row->id, $items->get_error_message(), true );
+			Synpro_Feeds::record_result( $row->id, $items->get_error_message(), true );
 			return 0;
 		}
 
-		$post_type  = C365_Feeds::post_type_for( $row->type );
-		$categories = C365_Feeds::parse_categories( $row->categories );
+		$post_type  = Synpro_Feeds::post_type_for( $row->type );
+		$categories = Synpro_Feeds::parse_categories( $row->categories );
 		$imported   = 0;
 
-		$was_suppressed = class_exists( 'C365_Social' ) ? C365_Social::$suppressed : false;
-		if ( $backfill && class_exists( 'C365_Social' ) ) {
-			C365_Social::$suppressed = true;
+		$was_suppressed = class_exists( 'Synpro_Social' ) ? Synpro_Social::$suppressed : false;
+		if ( $backfill && class_exists( 'Synpro_Social' ) ) {
+			Synpro_Social::$suppressed = true;
 		}
 
 		foreach ( $items as $item ) {
@@ -163,11 +163,11 @@ class C365_Fetcher {
 			}
 		}
 
-		if ( class_exists( 'C365_Social' ) ) {
-			C365_Social::$suppressed = $was_suppressed;
+		if ( class_exists( 'Synpro_Social' ) ) {
+			Synpro_Social::$suppressed = $was_suppressed;
 		}
 
-		C365_Feeds::record_result(
+		Synpro_Feeds::record_result(
 			$row->id,
 			sprintf(
 				/* translators: %d: imported count. */
@@ -235,28 +235,28 @@ class C365_Fetcher {
 
 		$postarr = array(
 			'post_type'    => $post_type,
-			'post_status'  => C365_Settings::get( 'post_status' ),
+			'post_status'  => Synpro_Settings::get( 'post_status' ),
 			'post_author'  => $user->ID,
 			'post_title'   => $item['title'],
 			'post_content' => $content,
 			'post_excerpt' => $item['excerpt'],
 			'meta_input'   => array(
-				'_c365_guid'        => $item['guid'],
-				'_c365_feed_id'     => (int) $row->id,
-				'_c365_source_url'  => $item['source_url'],
-				'_c365_source_name' => $item['source_name'],
+				'_synpro_guid'        => $item['guid'],
+				'_synpro_feed_id'     => (int) $row->id,
+				'_synpro_source_url'  => $item['source_url'],
+				'_synpro_source_name' => $item['source_name'],
 			),
 		);
 
 		// Keep the original publish date.
-		if ( $item['timestamp'] && C365_Settings::get( 'use_original_date' ) ) {
+		if ( $item['timestamp'] && Synpro_Settings::get( 'use_original_date' ) ) {
 			$postarr['post_date_gmt'] = gmdate( 'Y-m-d H:i:s', $item['timestamp'] );
 			$postarr['post_date']     = get_date_from_gmt( $postarr['post_date_gmt'] );
 		}
 
 		// Categories: the record's mapping, optionally plus the item's own.
 		$assign = $categories;
-		if ( 'post' === $post_type && C365_Settings::get( 'import_categories' ) && ! empty( $item['category_names'] ) ) {
+		if ( 'post' === $post_type && Synpro_Settings::get( 'import_categories' ) && ! empty( $item['category_names'] ) ) {
 			$assign = array_merge( $assign, self::map_category_names( $item['category_names'] ) );
 		}
 		if ( 'post' === $post_type && $assign ) {
@@ -275,13 +275,13 @@ class C365_Fetcher {
 
 		// Type extras from the normalized item.
 		$extra_meta = array(
-			'_c365_audio_url'      => 'audio_url',
-			'_c365_duration'       => 'duration',
-			'_c365_video_id'       => 'video_id',
-			'_c365_event_start'    => 'event_start',
-			'_c365_event_end'      => 'event_end',
-			'_c365_event_location' => 'event_location',
-			'_c365_event_url'      => 'event_url',
+			'_synpro_audio_url'      => 'audio_url',
+			'_synpro_duration'       => 'duration',
+			'_synpro_video_id'       => 'video_id',
+			'_synpro_event_start'    => 'event_start',
+			'_synpro_event_end'      => 'event_end',
+			'_synpro_event_location' => 'event_location',
+			'_synpro_event_url'      => 'event_url',
 		);
 		foreach ( $extra_meta as $meta_key => $item_key ) {
 			if ( ! empty( $item[ $item_key ] ) ) {
@@ -289,7 +289,7 @@ class C365_Fetcher {
 			}
 		}
 
-		if ( C365_Settings::get( 'set_featured_image' ) ) {
+		if ( Synpro_Settings::get( 'set_featured_image' ) ) {
 			self::attach_featured_image( $post_id, $item['image_url'], $item['content'] );
 		}
 
@@ -305,7 +305,7 @@ class C365_Fetcher {
 	 * @return string
 	 */
 	public static function apply_post_template( $post_type, $vars ) {
-		$template = class_exists( 'C365_Settings' ) ? C365_Settings::get_template( $post_type, 'post' ) : '{content}';
+		$template = class_exists( 'Synpro_Settings' ) ? Synpro_Settings::get_template( $post_type, 'post' ) : '{content}';
 		if ( '{content}' === trim( $template ) ) {
 			return $vars['{content}'];
 		}
@@ -325,11 +325,11 @@ class C365_Fetcher {
 	protected static function guid_exists( $guid ) {
 		$existing = get_posts(
 			array(
-				'post_type'      => array( 'post', 'c365_event', 'c365_podcast', 'c365_video' ),
+				'post_type'      => array( 'post', 'synpro_event', 'synpro_podcast', 'synpro_video' ),
 				// Explicit list including trash: a trashed import must stay
 				// deleted, not resurrect on the next fetch ('any' skips trash).
 				'post_status'    => array( 'publish', 'future', 'draft', 'pending', 'private', 'trash' ),
-				'meta_key'       => '_c365_guid', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_synpro_guid', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => $guid,        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'fields'         => 'ids',
 				'posts_per_page' => 1,
@@ -361,8 +361,8 @@ class C365_Fetcher {
 		if ( ! $existing ) {
 			return false;
 		}
-		if ( ! get_post_meta( $existing, '_c365_guid', true ) ) {
-			update_post_meta( $existing, '_c365_guid', $guid );
+		if ( ! get_post_meta( $existing, '_synpro_guid', true ) ) {
+			update_post_meta( $existing, '_synpro_guid', $guid );
 		}
 		return true;
 	}
@@ -445,7 +445,7 @@ class C365_Fetcher {
 	 */
 	protected static function set_category_fallback_image( $post_id ) {
 		foreach ( wp_get_post_categories( $post_id ) as $term_id ) {
-			$attachment_id = C365_Types::category_image_attachment_id( (int) $term_id );
+			$attachment_id = Synpro_Types::category_image_attachment_id( (int) $term_id );
 			if ( $attachment_id ) {
 				set_post_thumbnail( $post_id, $attachment_id );
 				return;
@@ -471,7 +471,7 @@ class C365_Fetcher {
 		 *
 		 * @param int $threshold Default 5.
 		 */
-		$threshold = (int) apply_filters( 'c365_alert_threshold', self::ALERT_THRESHOLD );
+		$threshold = (int) apply_filters( 'synpro_alert_threshold', self::ALERT_THRESHOLD );
 		if ( $fail_count !== $threshold ) {
 			return;
 		}
@@ -492,10 +492,10 @@ class C365_Fetcher {
 				__( "The %2\$s feed for %1\$s has failed %4\$d fetches in a row.\n\nFeed: %3\$s\nLast error: %5\$s\n\nManage feeds: %6\$s", 'syndicate-pro' ),
 				$name,
 				$row->type,
-				C365_Feeds::resolved_url( $row ),
+				Synpro_Feeds::resolved_url( $row ),
 				$fail_count,
 				'' !== $message ? $message : (string) $row->last_result,
-				admin_url( 'admin.php?page=c365-syndication' )
+				admin_url( 'admin.php?page=synpro-syndication' )
 			)
 		);
 	}
@@ -512,11 +512,11 @@ class C365_Fetcher {
 		if ( ! current_user_can( 'manage_options' ) || ! $feed_id ) {
 			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
-		check_admin_referer( 'c365_fetch_feed_' . $feed_id );
+		check_admin_referer( 'synpro_fetch_feed_' . $feed_id );
 
-		$row   = C365_Feeds::get( $feed_id );
+		$row   = Synpro_Feeds::get( $feed_id );
 		$count = $row ? self::fetch_feed_record( $row ) : 0;
-		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=synpro-syndication&synpro_fetched=' . $count ) );
 		exit;
 	}
 
@@ -529,14 +529,14 @@ class C365_Fetcher {
 		if ( ! current_user_can( 'manage_options' ) || ! $feed_id ) {
 			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
-		check_admin_referer( 'c365_backfill_feed_' . $feed_id );
+		check_admin_referer( 'synpro_backfill_feed_' . $feed_id );
 
 		$count = 0;
-		if ( C365_Feeds::reset_backfill( $feed_id ) ) {
-			$row   = C365_Feeds::get( $feed_id );
+		if ( Synpro_Feeds::reset_backfill( $feed_id ) ) {
+			$row   = Synpro_Feeds::get( $feed_id );
 			$count = $row ? self::fetch_feed_record( $row ) : 0;
 		}
-		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=synpro-syndication&synpro_fetched=' . $count ) );
 		exit;
 	}
 
@@ -548,18 +548,18 @@ class C365_Fetcher {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
-		check_admin_referer( 'c365_backfill_all' );
+		check_admin_referer( 'synpro_backfill_all' );
 
 		$count = 0;
-		foreach ( C365_Feeds::all() as $row ) {
+		foreach ( Synpro_Feeds::all() as $row ) {
 			if ( ! (int) $row->active ) {
 				continue;
 			}
-			C365_Feeds::reset_backfill( (int) $row->id );
+			Synpro_Feeds::reset_backfill( (int) $row->id );
 			$row->backfilled = 0;
 			$count          += self::fetch_feed_record( $row );
 		}
-		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=synpro-syndication&synpro_fetched=' . $count ) );
 		exit;
 	}
 
@@ -570,13 +570,13 @@ class C365_Fetcher {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
-		check_admin_referer( 'c365_fetch_all' );
+		check_admin_referer( 'synpro_fetch_all' );
 
 		$count = 0;
 		foreach ( self::get_member_ids() as $member_id ) {
 			$count += self::fetch_user( $member_id );
 		}
-		wp_safe_redirect( admin_url( 'admin.php?page=c365-syndication&c365_fetched=' . $count ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=synpro-syndication&synpro_fetched=' . $count ) );
 		exit;
 	}
 }

@@ -5,16 +5,16 @@
  * article-body extraction, listing-page link discovery, and article
  * metadata parsing.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Scraper' ) ) :
+if ( ! class_exists( 'Synpro_Scraper' ) ) :
 
-class C365_Scraper {
+class Synpro_Scraper {
 
 	/**
 	 * Fetch a URL with the syndicator's user agent.
@@ -24,7 +24,7 @@ class C365_Scraper {
 	 */
 	public static function http_get( $url ) {
 		if ( ! $url || 0 !== strpos( $url, 'http' ) ) {
-			return new WP_Error( 'c365_bad_url', __( 'Not a fetchable URL.', 'syndicate-pro' ) );
+			return new WP_Error( 'synpro_bad_url', __( 'Not a fetchable URL.', 'syndicate-pro' ) );
 		}
 
 		$response = wp_remote_get(
@@ -39,7 +39,7 @@ class C365_Scraper {
 		}
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $code ) {
-			return new WP_Error( 'c365_http_' . $code, 'HTTP ' . $code );
+			return new WP_Error( 'synpro_http_' . $code, 'HTTP ' . $code );
 		}
 		return wp_remote_retrieve_body( $response );
 	}

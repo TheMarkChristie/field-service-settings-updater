@@ -2,16 +2,16 @@
 /**
  * Front-end output: source attribution, permission note, and canonical URLs.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Frontend' ) ) :
+if ( ! class_exists( 'Synpro_Frontend' ) ) :
 
-class C365_Frontend {
+class Synpro_Frontend {
 
 	/**
 	 * Hook everything up.
@@ -32,8 +32,8 @@ class C365_Frontend {
 		if ( ! $post_id ) {
 			return null;
 		}
-		$url  = get_post_meta( $post_id, '_c365_source_url', true );
-		$name = get_post_meta( $post_id, '_c365_source_name', true );
+		$url  = get_post_meta( $post_id, '_synpro_source_url', true );
+		$name = get_post_meta( $post_id, '_synpro_source_name', true );
 		if ( ! $url && ! $name ) {
 			return null;
 		}
@@ -55,7 +55,7 @@ class C365_Frontend {
 	public static function attribution_html( $post_id = null ) {
 		// The site-wide attribution toggle is authoritative everywhere —
 		// including themes that render this box themselves.
-		if ( ! C365_Settings::get( 'attribution' ) ) {
+		if ( ! Synpro_Settings::get( 'attribution' ) ) {
 			return '';
 		}
 
@@ -67,7 +67,7 @@ class C365_Frontend {
 
 		$author = get_the_author_meta( 'display_name', (int) get_post_field( 'post_author', $post_id ) );
 
-		$html = '<div class="c365-attribution">';
+		$html = '<div class="synpro-attribution">';
 		$html .= sprintf(
 			/* translators: 1: original article URL, 2: source name. */
 			__( '<strong>Original source:</strong> <a href="%1$s" rel="external noopener" target="_blank">%2$s</a>.', 'syndicate-pro' ),
@@ -89,13 +89,13 @@ class C365_Frontend {
 		 * @param int    $post_id Post ID.
 		 * @param array  $source  { url, name }.
 		 */
-		return apply_filters( 'c365_attribution_html', $html, $post_id, $source );
+		return apply_filters( 'synpro_attribution_html', $html, $post_id, $source );
 	}
 
 	/**
 	 * Append the attribution below the content on single views.
 	 *
-	 * Skipped when the active theme declares `c365-attribution` support and
+	 * Skipped when the active theme declares `synpro-attribution` support and
 	 * renders its own attribution UI (like the Community 365 theme does).
 	 *
 	 * @param string $content Post content.
@@ -105,10 +105,10 @@ class C365_Frontend {
 		if ( ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
-		if ( ! C365_Settings::get( 'attribution' ) ) {
+		if ( ! Synpro_Settings::get( 'attribution' ) ) {
 			return $content;
 		}
-		if ( current_theme_supports( 'c365-attribution' ) ) {
+		if ( current_theme_supports( 'synpro-attribution' ) ) {
 			return $content;
 		}
 
@@ -128,7 +128,7 @@ class C365_Frontend {
 	 * @return string
 	 */
 	public static function canonical_url( $canonical, $post ) {
-		if ( ! C365_Settings::get( 'canonical' ) ) {
+		if ( ! Synpro_Settings::get( 'canonical' ) ) {
 			return $canonical;
 		}
 		$source = self::get_source( $post->ID );

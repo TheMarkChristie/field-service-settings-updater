@@ -12,8 +12,8 @@
 get_header();
 
 $author_id = get_queried_object_id();
-$cover     = get_user_meta( $author_id, 'c365_cover_url', true );
-$tagline   = get_user_meta( $author_id, 'c365_tagline', true );
+$cover     = get_user_meta( $author_id, 'synpro_cover_url', true );
+$tagline   = get_user_meta( $author_id, 'synpro_tagline', true );
 ?>
 
 <section class="c365-author-hero <?php echo $cover ? 'has-cover' : ''; ?>"
@@ -31,23 +31,23 @@ $tagline   = get_user_meta( $author_id, 'c365_tagline', true );
 		</div>
 	</header>
 
-	<?php if ( community365_author_section_enabled( $author_id, 'c365_show_bio' ) ) : ?>
+	<?php if ( community365_author_section_enabled( $author_id, 'synpro_show_bio' ) ) : ?>
 		<?php $bio = get_the_author_meta( 'description', $author_id ); ?>
 		<?php if ( $bio ) : ?>
 			<div class="c365-author-bio"><?php echo wp_kses_post( wpautop( $bio ) ); ?></div>
 		<?php endif; ?>
 	<?php endif; ?>
 
-	<?php if ( community365_author_section_enabled( $author_id, 'c365_show_links' ) ) : ?>
+	<?php if ( community365_author_section_enabled( $author_id, 'synpro_show_links' ) ) : ?>
 		<?php community365_author_links( $author_id ); ?>
 	<?php endif; ?>
 
 	<?php
 	$sections = array(
-		'c365_show_blogs'    => array( 'post', __( 'Blog posts', 'community365' ) ),
-		'c365_show_podcasts' => array( 'c365_podcast', __( 'Podcast episodes', 'community365' ) ),
-		'c365_show_videos'   => array( 'c365_video', __( 'Videos', 'community365' ) ),
-		'c365_show_events'   => array( 'c365_event', __( 'Events', 'community365' ) ),
+		'synpro_show_blogs'    => array( 'post', __( 'Blog posts', 'community365' ) ),
+		'synpro_show_podcasts' => array( 'synpro_podcast', __( 'Podcast episodes', 'community365' ) ),
+		'synpro_show_videos'   => array( 'synpro_video', __( 'Videos', 'community365' ) ),
+		'synpro_show_events'   => array( 'synpro_event', __( 'Events', 'community365' ) ),
 	);
 
 	foreach ( $sections as $toggle => $section ) :

@@ -8,16 +8,16 @@
  * (audio_url, duration, video_id, event_start, event_end, event_location,
  * event_url).
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Source_Rss' ) ) :
+if ( ! class_exists( 'Synpro_Source_Rss' ) ) :
 
-class C365_Source_Rss {
+class Synpro_Source_Rss {
 
 	/**
 	 * Fetch and normalize up to $max items for a feed record.
@@ -36,7 +36,7 @@ class C365_Source_Rss {
 			return 4 * MINUTE_IN_SECONDS;
 		};
 		add_filter( 'wp_feed_cache_transient_lifetime', $shorten );
-		$feed = fetch_feed( C365_Feeds::resolved_url( $row ) );
+		$feed = fetch_feed( Synpro_Feeds::resolved_url( $row ) );
 		remove_filter( 'wp_feed_cache_transient_lifetime', $shorten );
 
 		if ( is_wp_error( $feed ) ) {
@@ -65,7 +65,7 @@ class C365_Source_Rss {
 		}
 
 		if ( ! empty( $row->full_content ) && $item['source_url'] ) {
-			$scraped = C365_Scraper::scrape_full_content( $item['source_url'] );
+			$scraped = Synpro_Scraper::scrape_full_content( $item['source_url'] );
 			if ( $scraped && strlen( $scraped ) > max( 300, (int) ( strlen( $item['content'] ) * 1.2 ) ) ) {
 				$item['content'] = $scraped;
 			}
@@ -241,7 +241,7 @@ class C365_Source_Rss {
 	 * @return bool
 	 */
 	protected function is_short( $video_id ) {
-		$cache_key = 'c365_short_' . $video_id;
+		$cache_key = 'synpro_short_' . $video_id;
 		$cached    = get_transient( $cache_key );
 		if ( false !== $cached ) {
 			return 'yes' === $cached;

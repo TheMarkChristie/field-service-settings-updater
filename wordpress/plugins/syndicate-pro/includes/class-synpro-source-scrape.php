@@ -7,16 +7,16 @@
  * de-duplication happens before any per-article HTTP; enrich() fetches the
  * article page and fills in title, content, date, image, and site name.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Source_Scrape' ) ) :
+if ( ! class_exists( 'Synpro_Source_Scrape' ) ) :
 
-class C365_Source_Scrape {
+class Synpro_Source_Scrape {
 
 	/**
 	 * Discover article links on the listing page.
@@ -26,14 +26,14 @@ class C365_Source_Scrape {
 	 * @return array|WP_Error Normalized (minimal) items.
 	 */
 	public function fetch( $row, $max ) {
-		$body = C365_Scraper::http_get( $row->feed_url );
+		$body = Synpro_Scraper::http_get( $row->feed_url );
 		if ( is_wp_error( $body ) ) {
 			return $body;
 		}
 
-		$links = C365_Scraper::discover_article_links( $body, $row->feed_url );
+		$links = Synpro_Scraper::discover_article_links( $body, $row->feed_url );
 		if ( ! $links ) {
-			return new WP_Error( 'c365_no_links', __( 'No article links found on the page', 'syndicate-pro' ) );
+			return new WP_Error( 'synpro_no_links', __( 'No article links found on the page', 'syndicate-pro' ) );
 		}
 
 		if ( $max > 0 ) {
@@ -65,13 +65,13 @@ class C365_Source_Scrape {
 	 * @return array|null Enriched item, or null when the page is unusable.
 	 */
 	public function enrich( $item, $row ) {
-		$body = C365_Scraper::http_get( $item['source_url'] );
+		$body = Synpro_Scraper::http_get( $item['source_url'] );
 		if ( is_wp_error( $body ) ) {
 			return null;
 		}
 
-		$meta    = C365_Scraper::parse_article_meta( $body, $item['source_url'] );
-		$content = C365_Scraper::extract_article_html( $body );
+		$meta    = Synpro_Scraper::parse_article_meta( $body, $item['source_url'] );
+		$content = Synpro_Scraper::extract_article_html( $body );
 		if ( '' === $meta['title'] || '' === $content ) {
 			return null;
 		}

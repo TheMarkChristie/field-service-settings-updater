@@ -17,19 +17,19 @@
  * editable per network x post type. Shares are queued and processed by
  * cron so a slow social API never blocks publishing or importing.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Social' ) ) :
+if ( ! class_exists( 'Synpro_Social' ) ) :
 
-class C365_Social {
+class Synpro_Social {
 
-	const OPTION       = 'c365_social_settings';
-	const QUEUE_OPTION = 'c365_share_queue';
+	const OPTION       = 'synpro_social_settings';
+	const QUEUE_OPTION = 'synpro_share_queue';
 	const MAX_ATTEMPTS = 3;
 
 	/**
@@ -37,7 +37,7 @@ class C365_Social {
 	 *
 	 * @var string[]
 	 */
-	const SHAREABLE = array( 'post', 'c365_event', 'c365_podcast', 'c365_video' );
+	const SHAREABLE = array( 'post', 'synpro_event', 'synpro_podcast', 'synpro_video' );
 
 	/**
 	 * When true, publishing does not queue social shares. The fetcher sets
@@ -52,8 +52,8 @@ class C365_Social {
 	 */
 	public static function init() {
 		add_action( 'transition_post_status', array( __CLASS__, 'on_publish' ), 10, 3 );
-		add_action( 'c365_process_share_queue', array( __CLASS__, 'process_queue' ) );
-		add_action( 'admin_post_c365_social_test', array( __CLASS__, 'handle_test_post' ) );
+		add_action( 'synpro_process_share_queue', array( __CLASS__, 'process_queue' ) );
+		add_action( 'admin_post_synpro_social_test', array( __CLASS__, 'handle_test_post' ) );
 	}
 
 	/**
@@ -95,9 +95,9 @@ class C365_Social {
 	public static function default_template( $post_type ) {
 		$lines = array(
 			'post'         => __( 'New Post: {title} by {author}', 'syndicate-pro' ),
-			'c365_event'   => __( 'New Event: {title} by {author}', 'syndicate-pro' ),
-			'c365_podcast' => __( 'New Episode: {title} by {author}', 'syndicate-pro' ),
-			'c365_video'   => __( 'New Video: {title} by {author}', 'syndicate-pro' ),
+			'synpro_event'   => __( 'New Event: {title} by {author}', 'syndicate-pro' ),
+			'synpro_podcast' => __( 'New Episode: {title} by {author}', 'syndicate-pro' ),
+			'synpro_video'   => __( 'New Video: {title} by {author}', 'syndicate-pro' ),
 		);
 		$first = isset( $lines[ $post_type ] ) ? $lines[ $post_type ] : $lines['post'];
 		return $first . "\n{excerpt}\n{link}\n{hashtags}";
@@ -192,10 +192,10 @@ class C365_Social {
 		// flag is still 0 was created by that feed's historic run (the flag is
 		// set only after the run completes) — never announce it, even if the
 		// in-process flag above was lost to an error mid-run.
-		if ( class_exists( 'C365_Feeds' ) ) {
-			$feed_id = (int) get_post_meta( $post->ID, '_c365_feed_id', true );
+		if ( class_exists( 'Synpro_Feeds' ) ) {
+			$feed_id = (int) get_post_meta( $post->ID, '_synpro_feed_id', true );
 			if ( $feed_id ) {
-				$feed_row = C365_Feeds::get( $feed_id );
+				$feed_row = Synpro_Feeds::get( $feed_id );
 				if ( $feed_row && ! (int) $feed_row->backfilled ) {
 					return;
 				}
@@ -207,7 +207,7 @@ class C365_Social {
 			if ( ! self::is_enabled( $network, $post->post_type ) ) {
 				continue;
 			}
-			if ( get_post_meta( $post->ID, '_c365_shared_' . $network, true ) ) {
+			if ( get_post_meta( $post->ID, '_synpro_shared_' . $network, true ) ) {
 				continue; // Already announced on this network.
 			}
 			self::enqueue( $post->ID, $network );
@@ -215,8 +215,8 @@ class C365_Social {
 		}
 
 		// Process soon rather than waiting for the next 5-minute tick.
-		if ( $queued && ! wp_next_scheduled( 'c365_process_share_queue' ) ) {
-			wp_schedule_single_event( time() + 15, 'c365_process_share_queue' );
+		if ( $queued && ! wp_next_scheduled( 'synpro_process_share_queue' ) ) {
+			wp_schedule_single_event( time() + 15, 'synpro_process_share_queue' );
 		}
 	}
 
@@ -243,17 +243,17 @@ class C365_Social {
 	public static function process_queue() {
 		// Only one processor at a time: overlapping cron runs would otherwise
 		// snapshot the same jobs and double-post.
-		if ( get_transient( 'c365_share_queue_lock' ) ) {
-			if ( ! wp_next_scheduled( 'c365_process_share_queue' ) ) {
-				wp_schedule_single_event( time() + MINUTE_IN_SECONDS, 'c365_process_share_queue' );
+		if ( get_transient( 'synpro_share_queue_lock' ) ) {
+			if ( ! wp_next_scheduled( 'synpro_process_share_queue' ) ) {
+				wp_schedule_single_event( time() + MINUTE_IN_SECONDS, 'synpro_process_share_queue' );
 			}
 			return;
 		}
-		set_transient( 'c365_share_queue_lock', 1, 2 * MINUTE_IN_SECONDS );
+		set_transient( 'synpro_share_queue_lock', 1, 2 * MINUTE_IN_SECONDS );
 
 		$queue = (array) get_option( self::QUEUE_OPTION, array() );
 		if ( empty( $queue ) ) {
-			delete_transient( 'c365_share_queue_lock' );
+			delete_transient( 'synpro_share_queue_lock' );
 			return;
 		}
 		update_option( self::QUEUE_OPTION, array(), false );
@@ -269,33 +269,33 @@ class C365_Social {
 			// the key exists, so a post can never be announced twice on the
 			// same network even by racing processes. A failed send releases
 			// the claim for the retry.
-			if ( ! add_post_meta( $post->ID, '_c365_shared_' . $job['network'], time(), true ) ) {
+			if ( ! add_post_meta( $post->ID, '_synpro_shared_' . $job['network'], time(), true ) ) {
 				continue; // Already shared or claimed elsewhere.
 			}
 
 			$result = self::share( $post, $job['network'] );
 			if ( is_wp_error( $result ) ) {
-				delete_post_meta( $post->ID, '_c365_shared_' . $job['network'] );
+				delete_post_meta( $post->ID, '_synpro_shared_' . $job['network'] );
 				$job['attempts']++;
 				if ( $job['attempts'] < self::MAX_ATTEMPTS ) {
 					$retry[] = $job;
 				} else {
-					update_post_meta( $post->ID, '_c365_share_error_' . $job['network'], $result->get_error_message() );
+					update_post_meta( $post->ID, '_synpro_share_error_' . $job['network'], $result->get_error_message() );
 				}
 			} else {
-				delete_post_meta( $post->ID, '_c365_share_error_' . $job['network'] );
+				delete_post_meta( $post->ID, '_synpro_share_error_' . $job['network'] );
 			}
 		}
 
 		if ( $retry ) {
 			$existing = (array) get_option( self::QUEUE_OPTION, array() );
 			update_option( self::QUEUE_OPTION, array_merge( $existing, $retry ), false );
-			if ( ! wp_next_scheduled( 'c365_process_share_queue' ) ) {
-				wp_schedule_single_event( time() + 5 * MINUTE_IN_SECONDS, 'c365_process_share_queue' );
+			if ( ! wp_next_scheduled( 'synpro_process_share_queue' ) ) {
+				wp_schedule_single_event( time() + 5 * MINUTE_IN_SECONDS, 'synpro_process_share_queue' );
 			}
 		}
 
-		delete_transient( 'c365_share_queue_lock' );
+		delete_transient( 'synpro_share_queue_lock' );
 	}
 
 	/* -----------------------------------------------------------------------
@@ -316,7 +316,7 @@ class C365_Social {
 		// the rendered default), then legacy "all:" keys, then the default.
 		$network_key = $network . ':' . $post->post_type;
 		$all_key     = 'all:' . $post->post_type;
-		$tab_stored  = (array) get_option( 'c365_templates', array() );
+		$tab_stored  = (array) get_option( 'synpro_templates', array() );
 		if ( ! empty( $s['templates'][ $network_key ] ) ) {
 			$template = $s['templates'][ $network_key ];
 		} elseif ( ! empty( $tab_stored[ $post->post_type ]['social'] ) ) {
@@ -333,8 +333,8 @@ class C365_Social {
 		$link     = get_permalink( $post );
 		$hashtags = self::hashtags( $post );
 
-		$source_url  = get_post_meta( $post->ID, '_c365_source_url', true );
-		$source_name = get_post_meta( $post->ID, '_c365_source_name', true );
+		$source_url  = get_post_meta( $post->ID, '_synpro_source_url', true );
+		$source_name = get_post_meta( $post->ID, '_synpro_source_name', true );
 
 		$message = strtr(
 			$template,
@@ -400,12 +400,12 @@ class C365_Social {
 		$name = get_the_author_meta( 'display_name', $user_id );
 
 		if ( 'bluesky' === $network ) {
-			$url = get_user_meta( $user_id, 'c365_link_bluesky', true );
+			$url = get_user_meta( $user_id, 'synpro_link_bluesky', true );
 			if ( $url && preg_match( '~/profile/([^/?#]+)~', $url, $m ) ) {
 				return '@' . $m[1];
 			}
 		} elseif ( 'mastodon' === $network ) {
-			$url = get_user_meta( $user_id, 'c365_link_mastodon', true );
+			$url = get_user_meta( $user_id, 'synpro_link_mastodon', true );
 			if ( $url ) {
 				$host = wp_parse_url( $url, PHP_URL_HOST );
 				$path = (string) wp_parse_url( $url, PHP_URL_PATH );
@@ -414,7 +414,7 @@ class C365_Social {
 				}
 			}
 		} elseif ( 'twitter' === $network ) {
-			$url = get_user_meta( $user_id, 'c365_link_twitter', true );
+			$url = get_user_meta( $user_id, 'synpro_link_twitter', true );
 			if ( $url && preg_match( '~(?:twitter|x)\.com/@?([A-Za-z0-9_]+)~', $url, $m ) ) {
 				return '@' . $m[1];
 			}
@@ -510,7 +510,7 @@ class C365_Social {
 			case 'linkedin':
 				return self::post_linkedin( $message, $image );
 		}
-		return new WP_Error( 'c365_unknown_network', $network );
+		return new WP_Error( 'synpro_unknown_network', $network );
 	}
 
 	/* ----------------------------- Mastodon ----------------------------- */
@@ -592,7 +592,7 @@ class C365_Social {
 		}
 		$auth = json_decode( wp_remote_retrieve_body( $session ), true );
 		if ( empty( $auth['accessJwt'] ) || empty( $auth['did'] ) ) {
-			return new WP_Error( 'c365_bluesky_auth', __( 'Bluesky login failed.', 'syndicate-pro' ) );
+			return new WP_Error( 'synpro_bluesky_auth', __( 'Bluesky login failed.', 'syndicate-pro' ) );
 		}
 
 		$record = array(
@@ -897,7 +897,7 @@ class C365_Social {
 		}
 		$body = wp_remote_retrieve_body( $response );
 		return new WP_Error(
-			'c365_social_http_' . $code,
+			'synpro_social_http_' . $code,
 			sprintf( 'HTTP %d: %s', $code, mb_substr( wp_strip_all_tags( (string) $body ), 0, 200 ) )
 		);
 	}
@@ -910,7 +910,7 @@ class C365_Social {
 			wp_die( esc_html__( 'Not allowed.', 'syndicate-pro' ) );
 		}
 		$network = isset( $_GET['network'] ) ? sanitize_key( $_GET['network'] ) : '';
-		check_admin_referer( 'c365_social_test_' . $network );
+		check_admin_referer( 'synpro_social_test_' . $network );
 
 		if ( ! isset( self::networks()[ $network ] ) ) {
 			wp_die( esc_html__( 'Unknown network.', 'syndicate-pro' ) );
@@ -939,8 +939,8 @@ class C365_Social {
 				break;
 		}
 
-		$arg = is_wp_error( $result ) ? array( 'c365_test_error' => rawurlencode( $result->get_error_message() ) ) : array( 'c365_test_ok' => $network );
-		wp_safe_redirect( add_query_arg( $arg, admin_url( 'admin.php?page=c365-syndication&tab=social' ) ) );
+		$arg = is_wp_error( $result ) ? array( 'synpro_test_error' => rawurlencode( $result->get_error_message() ) ) : array( 'synpro_test_ok' => $network );
+		wp_safe_redirect( add_query_arg( $arg, admin_url( 'admin.php?page=synpro-syndication&tab=social' ) ) );
 		exit;
 	}
 }

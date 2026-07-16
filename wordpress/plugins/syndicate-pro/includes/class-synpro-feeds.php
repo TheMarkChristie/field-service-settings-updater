@@ -1,6 +1,6 @@
 <?php
 /**
- * Feed records: the {prefix}c365_feeds table, CRUD helpers, and the
+ * Feed records: the {prefix}synpro_feeds table, CRUD helpers, and the
  * migration from the v1.0.0 per-user profile fields.
  *
  * Each row = one feed belonging to one member: type (blog / podcast /
@@ -9,16 +9,16 @@
  * number of feeds, including several of the same type mapped to
  * different categories.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Feeds' ) ) :
+if ( ! class_exists( 'Synpro_Feeds' ) ) :
 
-class C365_Feeds {
+class Synpro_Feeds {
 
 	const DB_VERSION = '2';
 
@@ -47,9 +47,9 @@ class C365_Feeds {
 		$map = array(
 			'blog'    => 'post',
 			'scrape'  => 'post',
-			'podcast' => 'c365_podcast',
-			'youtube' => 'c365_video',
-			'event'   => 'c365_event',
+			'podcast' => 'synpro_podcast',
+			'youtube' => 'synpro_video',
+			'event'   => 'synpro_event',
 		);
 		return isset( $map[ $type ] ) ? $map[ $type ] : 'post';
 	}
@@ -61,7 +61,7 @@ class C365_Feeds {
 	 */
 	public static function table() {
 		global $wpdb;
-		return $wpdb->prefix . 'c365_feeds';
+		return $wpdb->prefix . 'synpro_feeds';
 	}
 
 	/**
@@ -70,7 +70,7 @@ class C365_Feeds {
 	public static function install() {
 		global $wpdb;
 
-		if ( get_option( 'c365_feeds_db_version' ) === self::DB_VERSION ) {
+		if ( get_option( 'synpro_feeds_db_version' ) === self::DB_VERSION ) {
 			return;
 		}
 
@@ -100,7 +100,7 @@ class C365_Feeds {
 		);
 
 		self::migrate_user_meta();
-		update_option( 'c365_feeds_db_version', self::DB_VERSION );
+		update_option( 'synpro_feeds_db_version', self::DB_VERSION );
 	}
 
 	/**
@@ -108,10 +108,10 @@ class C365_Feeds {
 	 */
 	protected static function migrate_user_meta() {
 		$legacy = array(
-			'c365_blog_feed'       => 'blog',
-			'c365_podcast_feed'    => 'podcast',
-			'c365_youtube_channel' => 'youtube',
-			'c365_events_feed'     => 'event',
+			'synpro_blog_feed'       => 'blog',
+			'synpro_podcast_feed'    => 'podcast',
+			'synpro_youtube_channel' => 'youtube',
+			'synpro_events_feed'     => 'event',
 		);
 
 		foreach ( $legacy as $meta_key => $type ) {
@@ -127,7 +127,7 @@ class C365_Feeds {
 				if ( $url ) {
 					$categories = array();
 					if ( 'blog' === $type ) {
-						$cat = (int) get_user_meta( $user_id, 'c365_blog_category', true );
+						$cat = (int) get_user_meta( $user_id, 'synpro_blog_category', true );
 						if ( $cat ) {
 							$categories[] = $cat;
 						}
@@ -146,7 +146,7 @@ class C365_Feeds {
 				delete_user_meta( $user_id, $meta_key );
 			}
 		}
-		delete_metadata( 'user', 0, 'c365_blog_category', '', true );
+		delete_metadata( 'user', 0, 'synpro_blog_category', '', true );
 	}
 
 	/* -----------------------------------------------------------------------
@@ -323,7 +323,7 @@ class C365_Feeds {
 		 * @param int    $fail_count New consecutive failure count.
 		 * @param string $result     The result message just recorded.
 		 */
-		do_action( 'c365_feed_result_recorded', $row, (int) $fields['fail_count'], $result );
+		do_action( 'synpro_feed_result_recorded', $row, (int) $fields['fail_count'], $result );
 	}
 
 	/* -----------------------------------------------------------------------
@@ -402,7 +402,7 @@ class C365_Feeds {
 	public static function drop() {
 		global $wpdb;
 		$wpdb->query( 'DROP TABLE IF EXISTS ' . self::table() ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		delete_option( 'c365_feeds_db_version' );
+		delete_option( 'synpro_feeds_db_version' );
 	}
 }
 

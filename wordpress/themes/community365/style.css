@@ -369,7 +369,8 @@ th { background: var(--c365-accent-soft); }
 .entry-content > *:first-child { margin-top: 0; }
 
 /* Syndication attribution box */
-.c365-attribution {
+.c365-attribution,
+.synpro-attribution {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;

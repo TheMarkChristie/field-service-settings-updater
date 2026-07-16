@@ -6,19 +6,19 @@
  * Templates are editable under Syndication → Emails. Members can opt out
  * of the digest on their profile.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Emails' ) ) :
+if ( ! class_exists( 'Synpro_Emails' ) ) :
 
-class C365_Emails {
+class Synpro_Emails {
 
-	const OPTION    = 'c365_email_settings';
-	const CRON_HOOK = 'c365_weekly_digest';
+	const OPTION    = 'synpro_email_settings';
+	const CRON_HOOK = 'synpro_weekly_digest';
 
 	/**
 	 * Hook everything up.
@@ -93,7 +93,7 @@ class C365_Emails {
 		if ( 'publish' !== $new_status || 'publish' === $old_status ) {
 			return;
 		}
-		if ( ! in_array( $post->post_type, array( 'post', 'c365_event', 'c365_podcast', 'c365_video' ), true ) ) {
+		if ( ! in_array( $post->post_type, array( 'post', 'synpro_event', 'synpro_podcast', 'synpro_video' ), true ) ) {
 			return;
 		}
 		if ( ! self::get( 'welcome_enabled' ) ) {
@@ -101,7 +101,7 @@ class C365_Emails {
 		}
 
 		$author_id = (int) $post->post_author;
-		if ( ! $author_id || get_user_meta( $author_id, 'c365_welcomed', true ) ) {
+		if ( ! $author_id || get_user_meta( $author_id, 'synpro_welcomed', true ) ) {
 			return;
 		}
 
@@ -111,7 +111,7 @@ class C365_Emails {
 		}
 
 		// Mark first so a mail failure can never cause repeat sends.
-		update_user_meta( $author_id, 'c365_welcomed', time() );
+		update_user_meta( $author_id, 'synpro_welcomed', time() );
 
 		$replacements = array(
 			'{name}'        => $user->display_name,
@@ -152,8 +152,8 @@ class C365_Emails {
 		usort(
 			$posts,
 			function ( $a, $b ) {
-				$views_a = (int) get_post_meta( $a->ID, '_c365_views', true );
-				$views_b = (int) get_post_meta( $b->ID, '_c365_views', true );
+				$views_a = (int) get_post_meta( $a->ID, '_synpro_views', true );
+				$views_b = (int) get_post_meta( $b->ID, '_synpro_views', true );
 				if ( $views_a === $views_b ) {
 					return strcmp( $b->post_date, $a->post_date );
 				}
@@ -185,7 +185,7 @@ class C365_Emails {
 		$lines[] = '';
 		$rank    = 1;
 		foreach ( $posts as $post ) {
-			$views   = (int) get_post_meta( $post->ID, '_c365_views', true );
+			$views   = (int) get_post_meta( $post->ID, '_synpro_views', true );
 			$author  = get_the_author_meta( 'display_name', (int) $post->post_author );
 			$lines[] = sprintf(
 				'%d. %s — %s%s',
@@ -216,7 +216,7 @@ class C365_Emails {
 			array_filter(
 				$users,
 				function ( $user ) {
-					return '0' !== (string) get_user_meta( $user->ID, 'c365_digest', true );
+					return '0' !== (string) get_user_meta( $user->ID, 'synpro_digest', true );
 				}
 			)
 		);

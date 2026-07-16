@@ -136,19 +136,19 @@ Dark mode follows the visitor's OS.
 
 ## For developers
 
-- Feed records: `{prefix}c365_feeds` table (user, type, feed_url, categories,
-  active, backfilled, full_content, diagnostics), managed via the `C365_Feeds`
-  class; schema auto-upgrades via `dbDelta` and `c365_feeds_db_version`.
-- Imported content meta: `_c365_guid`, `_c365_feed_id`, `_c365_source_url`,
-  `_c365_source_name`; plus `_c365_audio_url`/`_c365_duration` (podcasts),
-  `_c365_video_id` (videos), `_c365_event_*` (events); `_c365_shared_<network>`
+- Feed records: `{prefix}synpro_feeds` table (user, type, feed_url, categories,
+  active, backfilled, full_content, diagnostics), managed via the `Synpro_Feeds`
+  class; schema auto-upgrades via `dbDelta` and `synpro_feeds_db_version`.
+- Imported content meta: `_synpro_guid`, `_synpro_feed_id`, `_synpro_source_url`,
+  `_synpro_source_name`; plus `_synpro_audio_url`/`_synpro_duration` (podcasts),
+  `_synpro_video_id` (videos), `_synpro_event_*` (events); `_synpro_shared_<network>`
   marks completed social shares.
-- Term meta: `c365_category_image` (URL) and `c365_category_image_id`
+- Term meta: `synpro_category_image` (URL) and `synpro_category_image_id`
   (cached attachment) power the category fallback image.
-- Options: `c365_syndicator_settings`, `c365_templates`,
-  `c365_social_settings`, `c365_share_queue`, `c365_rotation_pointer`.
-- Filters: `c365_attribution_html` (attribution wording),
-  `c365_alert_threshold` (failure alert threshold).
+- Options: `synpro_syndicator_settings`, `synpro_templates`,
+  `synpro_social_settings`, `synpro_share_queue`, `synpro_rotation_pointer`.
+- Filters: `synpro_attribution_html` (attribution wording),
+  `synpro_alert_threshold` (failure alert threshold).
 - Any theme can declare `add_theme_support( 'c365-attribution' )` to take over
   rendering the attribution box.
 - A WordPress-stub smoke-test harness covering load, activation, rotation,

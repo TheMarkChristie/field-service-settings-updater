@@ -14,7 +14,7 @@ $c365_type_label = community365_type_label( $c365_type );
 	<?php if ( has_post_thumbnail() ) : ?>
 		<a class="c365-card-thumb" href="<?php the_permalink(); ?>" aria-hidden="true" tabindex="-1">
 			<?php the_post_thumbnail( 'c365-card', array( 'loading' => 'lazy' ) ); ?>
-			<?php if ( 'c365_video' === $c365_type || 'c365_podcast' === $c365_type ) : ?>
+			<?php if ( 'synpro_video' === $c365_type || 'synpro_podcast' === $c365_type ) : ?>
 				<span class="c365-play-overlay" aria-hidden="true">&#9654;</span>
 			<?php endif; ?>
 		</a>
@@ -22,7 +22,7 @@ $c365_type_label = community365_type_label( $c365_type );
 
 	<div class="c365-card-body">
 		<?php if ( $c365_type_label ) : ?>
-			<span class="c365-type-badge c365-type-<?php echo esc_attr( str_replace( 'c365_', '', $c365_type ) ); ?>">
+			<span class="c365-type-badge c365-type-<?php echo esc_attr( str_replace( 'synpro_', '', $c365_type ) ); ?>">
 				<?php echo esc_html( $c365_type_label ); ?>
 			</span>
 		<?php else : ?>
@@ -42,10 +42,10 @@ $c365_type_label = community365_type_label( $c365_type );
 			<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
 		</h2>
 
-		<?php if ( 'c365_event' === $c365_type ) : ?>
+		<?php if ( 'synpro_event' === $c365_type ) : ?>
 			<?php
-			$c365_start    = get_post_meta( get_the_ID(), '_c365_event_start', true );
-			$c365_location = get_post_meta( get_the_ID(), '_c365_event_location', true );
+			$c365_start    = get_post_meta( get_the_ID(), '_synpro_event_start', true );
+			$c365_location = get_post_meta( get_the_ID(), '_synpro_event_location', true );
 			?>
 			<p class="c365-card-event-meta">
 				<?php if ( $c365_start ) : ?>

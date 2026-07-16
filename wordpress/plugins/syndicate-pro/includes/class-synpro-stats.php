@@ -10,23 +10,23 @@
  * Note: on sites behind full-page caching, cached hits do not execute PHP,
  * so counts are a floor, not an exact analytics figure.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Stats' ) ) :
+if ( ! class_exists( 'Synpro_Stats' ) ) :
 
-class C365_Stats {
+class Synpro_Stats {
 
 	/**
 	 * Post types whose views are counted.
 	 *
 	 * @var string[]
 	 */
-	const COUNTED = array( 'post', 'c365_event', 'c365_podcast', 'c365_video' );
+	const COUNTED = array( 'post', 'synpro_event', 'synpro_podcast', 'synpro_video' );
 
 	/**
 	 * Hook everything up.
@@ -38,12 +38,12 @@ class C365_Stats {
 	}
 
 	/**
-	 * The current month's meta key, e.g. _c365_views_202607.
+	 * The current month's meta key, e.g. _synpro_views_202607.
 	 *
 	 * @return string
 	 */
 	public static function month_key() {
-		return '_c365_views_' . gmdate( 'Ym' );
+		return '_synpro_views_' . gmdate( 'Ym' );
 	}
 
 	/**
@@ -62,7 +62,7 @@ class C365_Stats {
 			return;
 		}
 
-		update_post_meta( $post_id, '_c365_views', (int) get_post_meta( $post_id, '_c365_views', true ) + 1 );
+		update_post_meta( $post_id, '_synpro_views', (int) get_post_meta( $post_id, '_synpro_views', true ) + 1 );
 		update_post_meta( $post_id, self::month_key(), (int) get_post_meta( $post_id, self::month_key(), true ) + 1 );
 	}
 
@@ -70,7 +70,7 @@ class C365_Stats {
 	 * Sum a view meta key across a member's published content.
 	 *
 	 * @param int    $user_id  Member ID.
-	 * @param string $meta_key _c365_views or a monthly key.
+	 * @param string $meta_key _synpro_views or a monthly key.
 	 * @return int
 	 */
 	public static function author_views( $user_id, $meta_key ) {
@@ -81,7 +81,7 @@ class C365_Stats {
 				 FROM {$wpdb->posts} p
 				 JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = %s
 				 WHERE p.post_author = %d AND p.post_status = 'publish'
-				   AND p.post_type IN ('post','c365_event','c365_podcast','c365_video')",
+				   AND p.post_type IN ('post','synpro_event','synpro_podcast','synpro_video')",
 				$meta_key,
 				$user_id
 			)
@@ -101,9 +101,9 @@ class C365_Stats {
 			$wpdb->prepare(
 				"SELECT p.ID, p.post_title, CAST( pm.meta_value AS UNSIGNED ) AS views
 				 FROM {$wpdb->posts} p
-				 JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_c365_views'
+				 JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_synpro_views'
 				 WHERE p.post_author = %d AND p.post_status = 'publish'
-				   AND p.post_type IN ('post','c365_event','c365_podcast','c365_video')
+				   AND p.post_type IN ('post','synpro_event','synpro_podcast','synpro_video')
 				 ORDER BY views DESC
 				 LIMIT %d",
 				$user_id,
@@ -123,7 +123,7 @@ class C365_Stats {
 		}
 
 		$month_views = self::author_views( $user->ID, self::month_key() );
-		$total_views = self::author_views( $user->ID, '_c365_views' );
+		$total_views = self::author_views( $user->ID, '_synpro_views' );
 		$post_count  = count_user_posts( $user->ID, self::COUNTED, true );
 		$top         = self::author_top_posts( $user->ID );
 		?>

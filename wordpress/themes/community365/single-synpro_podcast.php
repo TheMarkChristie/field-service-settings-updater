@@ -9,8 +9,8 @@ get_header();
 
 while ( have_posts() ) :
 	the_post();
-	$audio    = get_post_meta( get_the_ID(), '_c365_audio_url', true );
-	$duration = get_post_meta( get_the_ID(), '_c365_duration', true );
+	$audio    = get_post_meta( get_the_ID(), '_synpro_audio_url', true );
+	$duration = get_post_meta( get_the_ID(), '_synpro_duration', true );
 	?>
 	<div class="c365-container">
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article c365-article-podcast' ); ?>>

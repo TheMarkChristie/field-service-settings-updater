@@ -9,10 +9,10 @@ get_header();
 
 while ( have_posts() ) :
 	the_post();
-	$start    = get_post_meta( get_the_ID(), '_c365_event_start', true );
-	$end      = get_post_meta( get_the_ID(), '_c365_event_end', true );
-	$location = get_post_meta( get_the_ID(), '_c365_event_location', true );
-	$link     = get_post_meta( get_the_ID(), '_c365_event_url', true );
+	$start    = get_post_meta( get_the_ID(), '_synpro_event_start', true );
+	$end      = get_post_meta( get_the_ID(), '_synpro_event_end', true );
+	$location = get_post_meta( get_the_ID(), '_synpro_event_location', true );
+	$link     = get_post_meta( get_the_ID(), '_synpro_event_url', true );
 	?>
 	<div class="c365-container">
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article c365-article-event' ); ?>>

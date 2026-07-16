@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Get syndication source info for a post, if it was imported by the
- * 365 Community Syndicator plugin (or any plugin using the same meta keys).
+ * Syndicate Pro plugin (or any plugin using the same meta keys).
  *
  * @param int|null $post_id Post ID. Defaults to current post.
  * @return array|null { name: string, url: string } or null when not syndicated.
@@ -19,8 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 function community365_get_source( $post_id = null ) {
 	// The syndicator plugin owns the definition of "source" — delegate so the
 	// theme's badges and the plugin's attribution never disagree.
-	if ( class_exists( 'C365_Frontend' ) ) {
-		return C365_Frontend::get_source( $post_id );
+	if ( class_exists( 'Synpro_Frontend' ) ) {
+		return Synpro_Frontend::get_source( $post_id );
 	}
 
 	$post_id = $post_id ? $post_id : get_the_ID();
@@ -28,8 +28,8 @@ function community365_get_source( $post_id = null ) {
 		return null;
 	}
 
-	$url  = get_post_meta( $post_id, '_c365_source_url', true );
-	$name = get_post_meta( $post_id, '_c365_source_name', true );
+	$url  = get_post_meta( $post_id, '_synpro_source_url', true );
+	$name = get_post_meta( $post_id, '_synpro_source_name', true );
 
 	if ( ! $url && ! $name ) {
 		return null;
@@ -77,8 +77,8 @@ function community365_source_badge( $post_id = null ) {
  */
 function community365_attribution_box() {
 	// Prefer the syndicator plugin's attribution (source link + permission note).
-	if ( class_exists( 'C365_Frontend' ) ) {
-		echo wp_kses_post( C365_Frontend::attribution_html() );
+	if ( class_exists( 'Synpro_Frontend' ) ) {
+		echo wp_kses_post( Synpro_Frontend::attribution_html() );
 		return;
 	}
 
@@ -126,8 +126,8 @@ function community365_entry_meta( $show_author = true ) {
  * @return bool
  */
 function community365_author_section_enabled( $user_id, $key ) {
-	if ( class_exists( 'C365_Profile' ) ) {
-		return C365_Profile::section_enabled( $user_id, $key );
+	if ( class_exists( 'Synpro_Profile' ) ) {
+		return Synpro_Profile::section_enabled( $user_id, $key );
 	}
 	$value = get_user_meta( $user_id, $key, true );
 	return '' === $value ? true : (bool) (int) $value;
@@ -139,15 +139,15 @@ function community365_author_section_enabled( $user_id, $key ) {
  * @param int $user_id User ID.
  */
 function community365_author_links( $user_id ) {
-	$fields = class_exists( 'C365_Profile' ) ? C365_Profile::link_fields() : array(
-		'c365_link_website'  => __( 'Website', 'community365' ),
-		'c365_link_blog'     => __( 'Blog', 'community365' ),
-		'c365_link_linkedin' => __( 'LinkedIn', 'community365' ),
-		'c365_link_twitter'  => __( 'X / Twitter', 'community365' ),
-		'c365_link_bluesky'  => __( 'Bluesky', 'community365' ),
-		'c365_link_github'   => __( 'GitHub', 'community365' ),
-		'c365_link_youtube'  => __( 'YouTube', 'community365' ),
-		'c365_link_mastodon' => __( 'Mastodon', 'community365' ),
+	$fields = class_exists( 'Synpro_Profile' ) ? Synpro_Profile::link_fields() : array(
+		'synpro_link_website'  => __( 'Website', 'community365' ),
+		'synpro_link_blog'     => __( 'Blog', 'community365' ),
+		'synpro_link_linkedin' => __( 'LinkedIn', 'community365' ),
+		'synpro_link_twitter'  => __( 'X / Twitter', 'community365' ),
+		'synpro_link_bluesky'  => __( 'Bluesky', 'community365' ),
+		'synpro_link_github'   => __( 'GitHub', 'community365' ),
+		'synpro_link_youtube'  => __( 'YouTube', 'community365' ),
+		'synpro_link_mastodon' => __( 'Mastodon', 'community365' ),
 	);
 
 	$links = array();
@@ -197,9 +197,9 @@ function community365_format_event_date( $datetime ) {
  */
 function community365_type_label( $post_type ) {
 	$labels = array(
-		'c365_event'   => __( 'Event', 'community365' ),
-		'c365_podcast' => __( 'Podcast', 'community365' ),
-		'c365_video'   => __( 'Video', 'community365' ),
+		'synpro_event'   => __( 'Event', 'community365' ),
+		'synpro_podcast' => __( 'Podcast', 'community365' ),
+		'synpro_video'   => __( 'Video', 'community365' ),
 	);
 	return isset( $labels[ $post_type ] ) ? $labels[ $post_type ] : '';
 }

@@ -3,7 +3,7 @@
  * Plugin Name: Syndicate Pro
  * Plugin URI:  https://365community.online
  * Description: Community content engine. Every 5 minutes it rotates to the next member and checks their feed records — blog RSS, podcast RSS, YouTube channels, events feeds — creating posts, podcasts, videos, and events with the original title, image, and text, credited to that member with a link to the original source and a "republished with permission" note. New content is auto-shared to the community's LinkedIn, Bluesky, Mastodon, and X accounts. Members manage their own feeds and author-page profile. Built entirely on WordPress core — no other plugins required.
- * Version:     2.0.0
+ * Version:     2.0.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author:      365 Community
@@ -12,7 +12,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: syndicate-pro
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,77 +21,77 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // If another copy of this plugin is already loaded (e.g. two installs in
 // different folders), bail out instead of fataling on redeclarations.
-if ( defined( 'C365_SYN_VERSION' ) ) {
+if ( defined( 'SYNPRO_VERSION' ) ) {
 	return;
 }
 
-define( 'C365_SYN_VERSION', '2.0.0' );
-define( 'C365_SYN_FILE', __FILE__ );
-define( 'C365_SYN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'C365_SYN_CRON_HOOK', 'c365_syndicator_rotate' );
+define( 'SYNPRO_VERSION', '2.0.1' );
+define( 'SYNPRO_FILE', __FILE__ );
+define( 'SYNPRO_DIR', plugin_dir_path( __FILE__ ) );
+define( 'SYNPRO_CRON_HOOK', 'synpro_syndicator_rotate' );
 
-require_once C365_SYN_DIR . 'includes/class-c365-feeds.php';
-require_once C365_SYN_DIR . 'includes/class-c365-scraper.php';
-require_once C365_SYN_DIR . 'includes/class-c365-source-rss.php';
-require_once C365_SYN_DIR . 'includes/class-c365-source-scrape.php';
-require_once C365_SYN_DIR . 'includes/class-c365-social.php';
-require_once C365_SYN_DIR . 'includes/class-c365-settings.php';
-require_once C365_SYN_DIR . 'includes/class-c365-types.php';
-require_once C365_SYN_DIR . 'includes/class-c365-profile.php';
-require_once C365_SYN_DIR . 'includes/class-c365-fetcher.php';
-require_once C365_SYN_DIR . 'includes/class-c365-frontend.php';
-require_once C365_SYN_DIR . 'includes/class-c365-dashboard.php';
-require_once C365_SYN_DIR . 'includes/class-c365-emails.php';
-require_once C365_SYN_DIR . 'includes/class-c365-stats.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-feeds.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-scraper.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-source-rss.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-source-scrape.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-social.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-settings.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-types.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-profile.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-fetcher.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-frontend.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-dashboard.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-emails.php';
+require_once SYNPRO_DIR . 'includes/class-synpro-stats.php';
 
-C365_Settings::init();
-C365_Types::init();
-C365_Profile::init();
-C365_Fetcher::init();
-C365_Frontend::init();
-C365_Social::init();
-C365_Dashboard::init();
-C365_Emails::init();
-C365_Stats::init();
+Synpro_Settings::init();
+Synpro_Types::init();
+Synpro_Profile::init();
+Synpro_Fetcher::init();
+Synpro_Frontend::init();
+Synpro_Social::init();
+Synpro_Dashboard::init();
+Synpro_Emails::init();
+Synpro_Stats::init();
 
 // Create/upgrade the feeds table on updates too (not just activation).
-add_action( 'init', array( 'C365_Feeds', 'install' ), 5 );
+add_action( 'init', array( 'Synpro_Feeds', 'install' ), 5 );
 
 /**
  * On activation: create the feeds table (migrating any v1.0.0 profile-field
  * feeds), register content types, and schedule the 5-minute rotation.
  */
-if ( ! function_exists( 'c365_syn_activate' ) ) :
-function c365_syn_activate() {
-	C365_Feeds::install();
-	C365_Types::register();
+if ( ! function_exists( 'synpro_syn_activate' ) ) :
+function synpro_syn_activate() {
+	Synpro_Feeds::install();
+	Synpro_Types::register();
 	flush_rewrite_rules();
 
 	// Pre-create the large/secret-bearing options with autoload off — they
 	// are only read at fetch/share/settings time, and credentials should not
 	// ride along in alloptions on every front-end request.
-	add_option( 'c365_social_settings', array(), '', 'no' );
-	add_option( 'c365_templates', array(), '', 'no' );
+	add_option( 'synpro_social_settings', array(), '', 'no' );
+	add_option( 'synpro_templates', array(), '', 'no' );
 
-	if ( ! wp_next_scheduled( C365_SYN_CRON_HOOK ) ) {
-		wp_schedule_event( time() + 60, C365_Settings::get( 'interval' ), C365_SYN_CRON_HOOK );
+	if ( ! wp_next_scheduled( SYNPRO_CRON_HOOK ) ) {
+		wp_schedule_event( time() + 60, Synpro_Settings::get( 'interval' ), SYNPRO_CRON_HOOK );
 	}
-	if ( ! wp_next_scheduled( C365_Emails::CRON_HOOK ) ) {
-		wp_schedule_event( time() + WEEK_IN_SECONDS, 'weekly', C365_Emails::CRON_HOOK );
+	if ( ! wp_next_scheduled( Synpro_Emails::CRON_HOOK ) ) {
+		wp_schedule_event( time() + WEEK_IN_SECONDS, 'weekly', Synpro_Emails::CRON_HOOK );
 	}
 }
 endif;
-register_activation_hook( __FILE__, 'c365_syn_activate' );
+register_activation_hook( __FILE__, 'synpro_syn_activate' );
 
 /**
  * On deactivation: clear the schedules.
  */
-if ( ! function_exists( 'c365_syn_deactivate' ) ) :
-function c365_syn_deactivate() {
-	wp_clear_scheduled_hook( C365_SYN_CRON_HOOK );
-	wp_clear_scheduled_hook( 'c365_process_share_queue' );
-	wp_clear_scheduled_hook( C365_Emails::CRON_HOOK );
+if ( ! function_exists( 'synpro_syn_deactivate' ) ) :
+function synpro_syn_deactivate() {
+	wp_clear_scheduled_hook( SYNPRO_CRON_HOOK );
+	wp_clear_scheduled_hook( 'synpro_process_share_queue' );
+	wp_clear_scheduled_hook( Synpro_Emails::CRON_HOOK );
 	flush_rewrite_rules();
 }
 endif;
-register_deactivation_hook( __FILE__, 'c365_syn_deactivate' );
+register_deactivation_hook( __FILE__, 'synpro_syn_deactivate' );

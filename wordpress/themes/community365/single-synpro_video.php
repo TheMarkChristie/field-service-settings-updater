@@ -9,7 +9,7 @@ get_header();
 
 while ( have_posts() ) :
 	the_post();
-	$video_id = get_post_meta( get_the_ID(), '_c365_video_id', true );
+	$video_id = get_post_meta( get_the_ID(), '_synpro_video_id', true );
 	?>
 	<div class="c365-container">
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article c365-article-video' ); ?>>

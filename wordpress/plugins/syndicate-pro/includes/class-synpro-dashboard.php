@@ -6,18 +6,18 @@
  *  - Unverified members (never logged in AND never updated their profile)
  *
  * Login times and profile updates are tracked from plugin activation
- * onward via the c365_last_login / c365_profile_updated user meta.
+ * onward via the synpro_last_login / synpro_profile_updated user meta.
  *
- * @package C365_Syndicator
+ * @package Synpro_Syndicator
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'C365_Dashboard' ) ) :
+if ( ! class_exists( 'Synpro_Dashboard' ) ) :
 
-class C365_Dashboard {
+class Synpro_Dashboard {
 
 	/**
 	 * Hook everything up.
@@ -34,7 +34,7 @@ class C365_Dashboard {
 	 * @param WP_User $user  User.
 	 */
 	public static function record_login( $login, $user ) {
-		update_user_meta( $user->ID, 'c365_last_login', time() );
+		update_user_meta( $user->ID, 'synpro_last_login', time() );
 	}
 
 	/**
@@ -44,9 +44,9 @@ class C365_Dashboard {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		wp_add_dashboard_widget( 'c365_top_posters', __( 'Syndicate Pro — Top posters this month', 'syndicate-pro' ), array( __CLASS__, 'render_top_posters' ) );
-		wp_add_dashboard_widget( 'c365_failing_feeds', __( 'Syndicate Pro — Failing feeds', 'syndicate-pro' ), array( __CLASS__, 'render_failing_feeds' ) );
-		wp_add_dashboard_widget( 'c365_unverified', __( 'Syndicate Pro — Unverified members', 'syndicate-pro' ), array( __CLASS__, 'render_unverified' ) );
+		wp_add_dashboard_widget( 'synpro_top_posters', __( 'Syndicate Pro — Top posters this month', 'syndicate-pro' ), array( __CLASS__, 'render_top_posters' ) );
+		wp_add_dashboard_widget( 'synpro_failing_feeds', __( 'Syndicate Pro — Failing feeds', 'syndicate-pro' ), array( __CLASS__, 'render_failing_feeds' ) );
+		wp_add_dashboard_widget( 'synpro_unverified', __( 'Syndicate Pro — Unverified members', 'syndicate-pro' ), array( __CLASS__, 'render_unverified' ) );
 	}
 
 	/**
@@ -62,7 +62,7 @@ class C365_Dashboard {
 				"SELECT post_author, COUNT(*) AS total
 				 FROM {$wpdb->posts}
 				 WHERE post_status = 'publish'
-				   AND post_type IN ('post','c365_event','c365_podcast','c365_video')
+				   AND post_type IN ('post','synpro_event','synpro_podcast','synpro_video')
 				   AND post_date >= %s
 				 GROUP BY post_author
 				 ORDER BY total DESC
@@ -96,7 +96,7 @@ class C365_Dashboard {
 	 */
 	public static function render_failing_feeds() {
 		$failing = array_filter(
-			C365_Feeds::all(),
+			Synpro_Feeds::all(),
 			function ( $row ) {
 				return (int) $row->fail_count > 0 && (int) $row->active;
 			}
@@ -114,7 +114,7 @@ class C365_Dashboard {
 			}
 		);
 
-		$types = C365_Feeds::types();
+		$types = Synpro_Feeds::types();
 		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Member', 'syndicate-pro' ) . '</th><th>' . esc_html__( 'Feed', 'syndicate-pro' ) . '</th><th>' . esc_html__( 'Fails', 'syndicate-pro' ) . '</th></tr></thead><tbody>';
 		foreach ( array_slice( $failing, 0, 10 ) as $row ) {
 			$user = get_user_by( 'id', (int) $row->user_id );
@@ -129,7 +129,7 @@ class C365_Dashboard {
 		echo '</tbody></table>';
 		printf(
 			'<p><a href="%s">%s</a></p>',
-			esc_url( admin_url( 'admin.php?page=c365-syndication' ) ),
+			esc_url( admin_url( 'admin.php?page=synpro-syndication' ) ),
 			esc_html__( 'Open the Syndication dashboard', 'syndicate-pro' )
 		);
 	}
@@ -146,11 +146,11 @@ class C365_Dashboard {
 				'meta_query'  => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'AND',
 					array(
-						'key'     => 'c365_last_login',
+						'key'     => 'synpro_last_login',
 						'compare' => 'NOT EXISTS',
 					),
 					array(
-						'key'     => 'c365_profile_updated',
+						'key'     => 'synpro_profile_updated',
 						'compare' => 'NOT EXISTS',
 					),
 				),

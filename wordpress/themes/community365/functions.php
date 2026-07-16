@@ -33,10 +33,10 @@ function community365_setup() {
 	);
 
 	/*
-	 * Tells the 365 Community Syndicator plugin that this theme renders its own
+	 * Tells the Syndicate Pro plugin that this theme renders its own
 	 * source-attribution UI, so the plugin should not append its fallback box.
 	 */
-	add_theme_support( 'c365-attribution' );
+	add_theme_support( 'synpro-attribution' );
 
 	register_nav_menus(
 		array(
