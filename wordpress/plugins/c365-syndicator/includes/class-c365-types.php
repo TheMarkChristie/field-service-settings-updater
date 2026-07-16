@@ -25,6 +25,96 @@ class C365_Types {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
 		add_action( 'save_post', array( __CLASS__, 'save_meta' ), 10, 2 );
 		add_filter( 'posts_clauses', array( __CLASS__, 'events_archive_order' ), 10, 2 );
+
+		// Category images: used as the fallback featured image for imports.
+		add_action( 'category_add_form_fields', array( __CLASS__, 'render_category_image_add' ) );
+		add_action( 'category_edit_form_fields', array( __CLASS__, 'render_category_image_edit' ) );
+		add_action( 'created_category', array( __CLASS__, 'save_category_image' ) );
+		add_action( 'edited_category', array( __CLASS__, 'save_category_image' ) );
+	}
+
+	/**
+	 * Category image field on the Add Category form.
+	 */
+	public static function render_category_image_add() {
+		?>
+		<div class="form-field">
+			<label for="c365-category-image"><?php esc_html_e( 'Category image URL', 'c365-syndicator' ); ?></label>
+			<input type="url" id="c365-category-image" name="c365_category_image" value="">
+			<p><?php esc_html_e( 'Used as the featured image for imported posts in this category that have no image of their own.', 'c365-syndicator' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Category image field on the Edit Category form.
+	 *
+	 * @param WP_Term $term Term being edited.
+	 */
+	public static function render_category_image_edit( $term ) {
+		$url = get_term_meta( $term->term_id, 'c365_category_image', true );
+		?>
+		<tr class="form-field">
+			<th scope="row"><label for="c365-category-image"><?php esc_html_e( 'Category image URL', 'c365-syndicator' ); ?></label></th>
+			<td>
+				<input type="url" id="c365-category-image" name="c365_category_image" value="<?php echo esc_attr( $url ); ?>" class="regular-text">
+				<p class="description"><?php esc_html_e( 'Used as the featured image for imported posts in this category that have no image of their own. Paste an image URL (upload one via the Media Library first if needed).', 'c365-syndicator' ); ?></p>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Save the category image URL; changing it clears the cached attachment.
+	 *
+	 * @param int $term_id Term ID.
+	 */
+	public static function save_category_image( $term_id ) {
+		if ( ! isset( $_POST['c365_category_image'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- core taxonomy forms carry their own nonces, verified before these hooks fire.
+			return;
+		}
+		$url = esc_url_raw( wp_unslash( $_POST['c365_category_image'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$old = get_term_meta( $term_id, 'c365_category_image', true );
+
+		if ( $url !== $old ) {
+			delete_term_meta( $term_id, 'c365_category_image_id' );
+		}
+		if ( '' === $url ) {
+			delete_term_meta( $term_id, 'c365_category_image' );
+		} else {
+			update_term_meta( $term_id, 'c365_category_image', $url );
+		}
+	}
+
+	/**
+	 * The attachment ID for a category's image, sideloading the URL into the
+	 * Media Library once and reusing the same attachment thereafter.
+	 *
+	 * @param int $term_id Category term ID.
+	 * @return int Attachment ID, or 0 when the category has no usable image.
+	 */
+	public static function category_image_attachment_id( $term_id ) {
+		$cached = (int) get_term_meta( $term_id, 'c365_category_image_id', true );
+		if ( $cached && get_post( $cached ) ) {
+			return $cached;
+		}
+
+		$url = get_term_meta( $term_id, 'c365_category_image', true );
+		if ( ! $url || 0 !== strpos( $url, 'http' ) ) {
+			return 0;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$attachment_id = media_sideload_image( esc_url_raw( $url ), 0, null, 'id' );
+		if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
+			return 0;
+		}
+
+		update_term_meta( $term_id, 'c365_category_image_id', (int) $attachment_id );
+		return (int) $attachment_id;
 	}
 
 	/**

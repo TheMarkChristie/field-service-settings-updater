@@ -574,8 +574,10 @@ class C365_Fetcher {
 			return false;
 		}
 
-		// Featured image: og:image, else first image in the article.
+		// Featured image: og:image, else first image in the article, else the
+		// category's fallback image.
 		if ( C365_Settings::get( 'set_featured_image' ) ) {
+			$done      = false;
 			$image_url = $meta['image'];
 			if ( ! $image_url && preg_match( '/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m ) ) {
 				$image_url = $m[1];
@@ -587,7 +589,11 @@ class C365_Fetcher {
 				$attachment_id = media_sideload_image( esc_url_raw( $image_url ), $post_id, $meta['title'], 'id' );
 				if ( ! is_wp_error( $attachment_id ) ) {
 					set_post_thumbnail( $post_id, $attachment_id );
+					$done = true;
 				}
+			}
+			if ( ! $done ) {
+				self::set_category_fallback_image( $post_id );
 			}
 		}
 
@@ -963,6 +969,7 @@ class C365_Fetcher {
 		}
 
 		if ( ! $image_url || 0 !== strpos( $image_url, 'http' ) ) {
+			self::set_category_fallback_image( $post_id );
 			return;
 		}
 
@@ -973,6 +980,24 @@ class C365_Fetcher {
 		$attachment_id = media_sideload_image( esc_url_raw( $image_url ), $post_id, get_the_title( $post_id ), 'id' );
 		if ( ! is_wp_error( $attachment_id ) ) {
 			set_post_thumbnail( $post_id, $attachment_id );
+		} else {
+			self::set_category_fallback_image( $post_id );
+		}
+	}
+
+	/**
+	 * Last-resort featured image: the image of the first of the post's
+	 * categories that has one (set on the category edit screen).
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	protected static function set_category_fallback_image( $post_id ) {
+		foreach ( wp_get_post_categories( $post_id ) as $term_id ) {
+			$attachment_id = C365_Types::category_image_attachment_id( (int) $term_id );
+			if ( $attachment_id ) {
+				set_post_thumbnail( $post_id, $attachment_id );
+				return;
+			}
 		}
 	}
 
