@@ -279,12 +279,14 @@ class C365_Social {
 	 */
 	public static function build_message( $post, $network ) {
 		$s = self::settings();
-		// Per-network template wins, then the per-type "all:" template from
-		// the settings UI, then the built-in default.
+		// Priority: per-network developer override, then the per-type template
+		// from the Templates tab, then legacy "all:" keys, then the default.
 		$network_key = $network . ':' . $post->post_type;
 		$all_key     = 'all:' . $post->post_type;
 		if ( ! empty( $s['templates'][ $network_key ] ) ) {
 			$template = $s['templates'][ $network_key ];
+		} elseif ( class_exists( 'C365_Settings' ) && C365_Settings::get_template( $post->post_type, 'social' ) !== self::default_template( $post->post_type ) ) {
+			$template = C365_Settings::get_template( $post->post_type, 'social' );
 		} elseif ( ! empty( $s['templates'][ $all_key ] ) ) {
 			$template = $s['templates'][ $all_key ];
 		} else {
@@ -297,14 +299,20 @@ class C365_Social {
 		$link     = get_permalink( $post );
 		$hashtags = self::hashtags( $post );
 
+		$source_url  = get_post_meta( $post->ID, '_c365_source_url', true );
+		$source_name = get_post_meta( $post->ID, '_c365_source_name', true );
+
 		$message = strtr(
 			$template,
 			array(
-				'{title}'    => $title,
-				'{author}'   => $author,
-				'{excerpt}'  => $excerpt,
-				'{link}'     => $link,
-				'{hashtags}' => $hashtags,
+				'{title}'       => $title,
+				'{author}'      => $author,
+				'{excerpt}'     => $excerpt,
+				'{link}'        => $link,
+				'{hashtags}'    => $hashtags,
+				'{source_name}' => $source_name,
+				'{source_url}'  => $source_url,
+				'{date}'        => get_the_date( '', $post ),
 			)
 		);
 		$message = trim( preg_replace( "/\n{3,}/", "\n\n", $message ) );

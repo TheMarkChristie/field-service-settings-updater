@@ -3,7 +3,7 @@
  * Plugin Name: 365 Community Syndicator
  * Plugin URI:  https://365community.online
  * Description: Community content engine. Every 5 minutes it rotates to the next member and checks their feed records — blog RSS, podcast RSS, YouTube channels, events feeds — creating posts, podcasts, videos, and events with the original title, image, and text, credited to that member with a link to the original source and a "republished with permission" note. New content is auto-shared to the community's LinkedIn, Bluesky, Mastodon, and X accounts. Members manage their own feeds and author-page profile. Built entirely on WordPress core — no other plugins required.
- * Version:     1.3.0
+ * Version:     1.4.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author:      365 Community
@@ -25,7 +25,7 @@ if ( defined( 'C365_SYN_VERSION' ) ) {
 	return;
 }
 
-define( 'C365_SYN_VERSION', '1.3.0' );
+define( 'C365_SYN_VERSION', '1.4.0' );
 define( 'C365_SYN_FILE', __FILE__ );
 define( 'C365_SYN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'C365_SYN_CRON_HOOK', 'c365_syndicator_rotate' );

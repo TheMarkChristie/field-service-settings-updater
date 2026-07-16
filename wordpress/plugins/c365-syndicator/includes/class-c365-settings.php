@@ -14,7 +14,8 @@ if ( ! class_exists( 'C365_Settings' ) ) :
 
 class C365_Settings {
 
-	const OPTION = 'c365_syndicator_settings';
+	const OPTION           = 'c365_syndicator_settings';
+	const TEMPLATES_OPTION = 'c365_templates';
 
 	/**
 	 * Hook everything up.
@@ -109,6 +110,61 @@ class C365_Settings {
 	public static function register() {
 		register_setting( 'c365_syndicator', self::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize' ) ) );
 		register_setting( 'c365_social', C365_Social::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_social' ) ) );
+		register_setting( 'c365_templates', self::TEMPLATES_OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_templates' ) ) );
+	}
+
+	/**
+	 * The post types that have editable templates.
+	 *
+	 * @return array post_type => label.
+	 */
+	public static function template_types() {
+		return array(
+			'post'         => __( 'Blog posts', 'c365-syndicator' ),
+			'c365_event'   => __( 'Events', 'c365-syndicator' ),
+			'c365_podcast' => __( 'Podcast episodes', 'c365-syndicator' ),
+			'c365_video'   => __( 'Videos', 'c365-syndicator' ),
+		);
+	}
+
+	/**
+	 * Get the effective template for a post type.
+	 *
+	 * @param string $post_type Post type.
+	 * @param string $kind      'post' (imported post body) or 'social'.
+	 * @return string
+	 */
+	public static function get_template( $post_type, $kind ) {
+		$stored = (array) get_option( self::TEMPLATES_OPTION, array() );
+		if ( ! empty( $stored[ $post_type ][ $kind ] ) ) {
+			return $stored[ $post_type ][ $kind ];
+		}
+		if ( 'social' === $kind && class_exists( 'C365_Social' ) ) {
+			return C365_Social::default_template( $post_type );
+		}
+		return '{content}';
+	}
+
+	/**
+	 * Sanitise the templates option.
+	 *
+	 * @param array $input Raw input.
+	 * @return array
+	 */
+	public static function sanitize_templates( $input ) {
+		$input = (array) $input;
+		$clean = array();
+		foreach ( array_keys( self::template_types() ) as $post_type ) {
+			$post_template   = isset( $input[ $post_type ]['post'] ) ? trim( wp_kses_post( (string) $input[ $post_type ]['post'] ) ) : '';
+			$social_template = isset( $input[ $post_type ]['social'] ) ? trim( sanitize_textarea_field( (string) $input[ $post_type ]['social'] ) ) : '';
+			if ( '' !== $post_template || '' !== $social_template ) {
+				$clean[ $post_type ] = array(
+					'post'   => $post_template,
+					'social' => $social_template,
+				);
+			}
+		}
+		return $clean;
 	}
 
 	/**
@@ -206,6 +262,7 @@ class C365_Settings {
 				$tabs = array(
 					'dashboard' => __( 'Dashboard', 'c365-syndicator' ),
 					'settings'  => __( 'Settings', 'c365-syndicator' ),
+					'templates' => __( 'Templates', 'c365-syndicator' ),
 					'social'    => __( 'Social sharing', 'c365-syndicator' ),
 				);
 				foreach ( $tabs as $key => $label ) {
@@ -222,6 +279,8 @@ class C365_Settings {
 			<?php
 			if ( 'settings' === $tab ) {
 				self::render_settings_tab();
+			} elseif ( 'templates' === $tab ) {
+				self::render_templates_tab();
 			} elseif ( 'social' === $tab ) {
 				self::render_social_tab();
 			} else {
@@ -461,6 +520,64 @@ class C365_Settings {
 	}
 
 	/**
+	 * Templates tab: per content type, the imported-post body template and
+	 * the social announcement template.
+	 */
+	protected static function render_templates_tab() {
+		$stored = (array) get_option( self::TEMPLATES_OPTION, array() );
+		?>
+		<p class="description" style="max-width:760px;">
+			<?php esc_html_e( 'Customise how imported content and social announcements are built, per content type. Leave a box empty to use the default. Placeholders:', 'c365-syndicator' ); ?>
+		</p>
+		<p>
+			<code>{content}</code> <?php esc_html_e( 'full original text', 'c365-syndicator' ); ?> &nbsp;
+			<code>{title}</code> &nbsp;
+			<code>{author}</code> <?php esc_html_e( '(member name; @handle in social posts where available)', 'c365-syndicator' ); ?> &nbsp;
+			<code>{excerpt}</code> <?php esc_html_e( '(one sentence in social posts)', 'c365-syndicator' ); ?> &nbsp;
+			<code>{link}</code> <?php esc_html_e( '(this site’s post URL — social only)', 'c365-syndicator' ); ?> &nbsp;
+			<code>{source_name}</code> &nbsp; <code>{source_url}</code> &nbsp; <code>{date}</code> <?php esc_html_e( '(original publish date)', 'c365-syndicator' ); ?> &nbsp;
+			<code>{hashtags}</code> <?php esc_html_e( '(categories as #hashtags — social only)', 'c365-syndicator' ); ?>
+		</p>
+
+		<form method="post" action="options.php">
+			<?php settings_fields( 'c365_templates' ); ?>
+
+			<?php foreach ( self::template_types() as $post_type => $label ) : ?>
+				<h2><?php echo esc_html( $label ); ?></h2>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row">
+							<label for="c365-tpl-post-<?php echo esc_attr( $post_type ); ?>"><?php esc_html_e( 'Post body template', 'c365-syndicator' ); ?></label>
+						</th>
+						<td>
+							<textarea class="large-text code" rows="4"
+								id="c365-tpl-post-<?php echo esc_attr( $post_type ); ?>"
+								name="<?php echo esc_attr( self::TEMPLATES_OPTION ); ?>[<?php echo esc_attr( $post_type ); ?>][post]"
+								placeholder="{content}"><?php echo esc_textarea( isset( $stored[ $post_type ]['post'] ) ? $stored[ $post_type ]['post'] : '' ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'HTML allowed. Default {content} imports the original text unchanged. Example: <p><em>From {source_name}, {date}:</em></p>{content}', 'c365-syndicator' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">
+							<label for="c365-tpl-social-<?php echo esc_attr( $post_type ); ?>"><?php esc_html_e( 'Social post template', 'c365-syndicator' ); ?></label>
+						</th>
+						<td>
+							<textarea class="large-text code" rows="4"
+								id="c365-tpl-social-<?php echo esc_attr( $post_type ); ?>"
+								name="<?php echo esc_attr( self::TEMPLATES_OPTION ); ?>[<?php echo esc_attr( $post_type ); ?>][social]"
+								placeholder="<?php echo esc_attr( class_exists( 'C365_Social' ) ? C365_Social::default_template( $post_type ) : '' ); ?>"><?php echo esc_textarea( isset( $stored[ $post_type ]['social'] ) ? $stored[ $post_type ]['social'] : '' ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Plain text. Applied to every connected network, then truncated to each network’s length limit (excerpt shrinks first, then hashtags drop — never the title or link).', 'c365-syndicator' ); ?></p>
+						</td>
+					</tr>
+				</table>
+			<?php endforeach; ?>
+
+			<?php submit_button(); ?>
+		</form>
+		<?php
+	}
+
+	/**
 	 * Social sharing tab.
 	 */
 	protected static function render_social_tab() {
@@ -564,24 +681,15 @@ class C365_Settings {
 				</tbody>
 			</table>
 
-			<h2><?php esc_html_e( 'Message templates', 'c365-syndicator' ); ?></h2>
-			<p class="description"><?php esc_html_e( 'One template per content type (applied to every network, then truncated to each network’s limit). Placeholders: {title} {author} {excerpt} {link} {hashtags}. Leave blank for the default.', 'c365-syndicator' ); ?></p>
-			<table class="form-table" role="presentation">
-				<?php foreach ( $post_types as $post_type => $type_label ) : ?>
-					<?php
-					// One template per type: stored under the "all:" pseudo-network key
-					// wins; per-network keys remain supported for developers.
-					$key   = 'all:' . $post_type;
-					$value = isset( $s['templates'][ $key ] ) ? $s['templates'][ $key ] : '';
-					?>
-					<tr>
-						<th><label><?php echo esc_html( $type_label ); ?></label></th>
-						<td>
-							<textarea class="large-text" rows="4" name="<?php echo esc_attr( $option ); ?>[templates][<?php echo esc_attr( $key ); ?>]" placeholder="<?php echo esc_attr( C365_Social::default_template( $post_type ) ); ?>"><?php echo esc_textarea( $value ); ?></textarea>
-						</td>
-					</tr>
-				<?php endforeach; ?>
-			</table>
+			<p>
+				<?php
+				printf(
+					/* translators: %s: Templates tab URL. */
+					wp_kses_post( __( 'Message wording is edited per content type on the <a href="%s">Templates</a> tab.', 'c365-syndicator' ) ),
+					esc_url( admin_url( 'admin.php?page=c365-syndication&tab=templates' ) )
+				);
+				?>
+			</p>
 
 			<?php submit_button(); ?>
 		</form>

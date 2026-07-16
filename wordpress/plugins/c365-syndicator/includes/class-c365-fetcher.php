@@ -237,6 +237,20 @@ class C365_Fetcher {
 		}
 		$content = wp_kses_post( $content );
 
+		// Apply the per-type post body template (Syndication → Templates).
+		$content = self::apply_post_template(
+			$post_type,
+			array(
+				'{content}'     => $content,
+				'{title}'       => $title,
+				'{author}'      => $user->display_name,
+				'{excerpt}'     => wp_trim_words( wp_strip_all_tags( (string) $item->get_description() ), 40 ),
+				'{source_name}' => wp_strip_all_tags( (string) $feed->get_title() ),
+				'{source_url}'  => esc_url_raw( (string) $item->get_permalink() ),
+				'{date}'        => (string) $item->get_date( 'j F Y' ),
+			)
+		);
+
 		$postarr = array(
 			'post_type'    => $post_type,
 			'post_status'  => C365_Settings::get( 'post_status' ),
@@ -295,6 +309,22 @@ class C365_Fetcher {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Build the post body from the per-type template (default: '{content}',
+	 * i.e. the original text unchanged).
+	 *
+	 * @param string $post_type Post type.
+	 * @param array  $vars      Placeholder replacements including {content}.
+	 * @return string
+	 */
+	public static function apply_post_template( $post_type, $vars ) {
+		$template = class_exists( 'C365_Settings' ) ? C365_Settings::get_template( $post_type, 'post' ) : '{content}';
+		if ( '{content}' === trim( $template ) ) {
+			return $vars['{content}'];
+		}
+		return wp_kses_post( strtr( $template, $vars ) );
 	}
 
 	/**

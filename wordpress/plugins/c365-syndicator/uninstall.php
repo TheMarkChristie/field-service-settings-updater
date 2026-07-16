@@ -19,6 +19,7 @@ C365_Feeds::drop();
 delete_option( 'c365_syndicator_settings' );
 delete_option( 'c365_social_settings' );
 delete_option( 'c365_share_queue' );
+delete_option( 'c365_templates' );
 delete_option( 'c365_rotation_pointer' );
 
 $meta_keys = array(
