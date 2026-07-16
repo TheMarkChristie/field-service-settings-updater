@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! class_exists( 'C365_Types' ) ) :
+
 class C365_Types {
 
 	/**
@@ -231,3 +233,5 @@ class C365_Types {
 		}
 	}
 }
+
+endif;

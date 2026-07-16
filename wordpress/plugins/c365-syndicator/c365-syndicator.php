@@ -19,6 +19,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// If another copy of this plugin is already loaded (e.g. two installs in
+// different folders), bail out instead of fataling on redeclarations.
+if ( defined( 'C365_SYN_VERSION' ) ) {
+	return;
+}
+
 define( 'C365_SYN_VERSION', '1.2.0' );
 define( 'C365_SYN_FILE', __FILE__ );
 define( 'C365_SYN_DIR', plugin_dir_path( __FILE__ ) );
@@ -46,6 +52,7 @@ add_action( 'init', array( 'C365_Feeds', 'install' ), 5 );
  * On activation: create the feeds table (migrating any v1.0.0 profile-field
  * feeds), register content types, and schedule the 5-minute rotation.
  */
+if ( ! function_exists( 'c365_syn_activate' ) ) :
 function c365_syn_activate() {
 	C365_Feeds::install();
 	C365_Types::register();
@@ -55,14 +62,17 @@ function c365_syn_activate() {
 		wp_schedule_event( time() + 60, C365_Settings::get( 'interval' ), C365_SYN_CRON_HOOK );
 	}
 }
+endif;
 register_activation_hook( __FILE__, 'c365_syn_activate' );
 
 /**
  * On deactivation: clear the schedules.
  */
+if ( ! function_exists( 'c365_syn_deactivate' ) ) :
 function c365_syn_deactivate() {
 	wp_clear_scheduled_hook( C365_SYN_CRON_HOOK );
 	wp_clear_scheduled_hook( 'c365_process_share_queue' );
 	flush_rewrite_rules();
 }
+endif;
 register_deactivation_hook( __FILE__, 'c365_syn_deactivate' );

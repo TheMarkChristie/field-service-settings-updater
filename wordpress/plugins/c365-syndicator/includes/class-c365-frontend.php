@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! class_exists( 'C365_Frontend' ) ) :
+
 class C365_Frontend {
 
 	/**
@@ -130,3 +132,5 @@ class C365_Frontend {
 		return $canonical;
 	}
 }
+
+endif;

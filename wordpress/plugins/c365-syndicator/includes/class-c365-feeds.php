@@ -16,6 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! class_exists( 'C365_Feeds' ) ) :
+
 class C365_Feeds {
 
 	const DB_VERSION = '1';
@@ -386,3 +388,5 @@ class C365_Feeds {
 		delete_option( 'c365_feeds_db_version' );
 	}
 }
+
+endif;

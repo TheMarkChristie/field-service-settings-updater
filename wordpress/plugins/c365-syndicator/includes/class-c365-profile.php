@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! class_exists( 'C365_Profile' ) ) :
+
 class C365_Profile {
 
 	/**
@@ -335,3 +337,5 @@ class C365_Profile {
 		return $url;
 	}
 }
+
+endif;

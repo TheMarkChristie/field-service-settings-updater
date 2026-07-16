@@ -24,6 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! class_exists( 'C365_Social' ) ) :
+
 class C365_Social {
 
 	const OPTION       = 'c365_social_settings';
@@ -876,3 +878,5 @@ class C365_Social {
 		exit;
 	}
 }
+
+endif;

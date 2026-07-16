@@ -19,6 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! class_exists( 'C365_Fetcher' ) ) :
+
 class C365_Fetcher {
 
 	/**
@@ -592,3 +594,5 @@ class C365_Fetcher {
 		exit;
 	}
 }
+
+endif;

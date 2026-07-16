@@ -10,6 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! class_exists( 'C365_Settings' ) ) :
+
 class C365_Settings {
 
 	const OPTION = 'c365_syndicator_settings';
@@ -595,3 +597,5 @@ class C365_Settings {
 		<?php
 	}
 }
+
+endif;
