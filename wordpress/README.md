@@ -6,7 +6,7 @@ required:
 
 | Package | Folder | What it does |
 |---|---|---|
-| **365 Community Syndicator** (plugin, v1.2.0) | `plugins/c365-syndicator` | The whole back end: member feed records, the 5-minute rotation, importing with de-duplication, Events/Podcasts/Videos content types, member profiles, social auto-sharing, admin dashboard. |
+| **365 Community Syndicator** (plugin, v1.7.0) | `plugins/c365-syndicator` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, admin dashboard and wp-admin widgets. |
 | **Community 365** (theme, v1.0.0) | `themes/community365` | Presentation: card-based magazine design with a distinct layout per content type, member author pages, source badges, dark mode. |
 
 The full requirements are in [`docs/full-specification.md`](docs/full-specification.md).
@@ -30,23 +30,56 @@ The full requirements are in [`docs/full-specification.md`](docs/full-specificat
 
 - **Feed records**: each member (Contributor role and above) manages their own
   feeds on their profile screen (**Users → Profile**) — any number of feeds,
-  each with a type (Blog RSS / Podcast RSS / YouTube channel / Events feed) and
-  its own target category(ies). Admins see and manage everything under
-  **Syndication** in wp-admin.
+  each with a type (Blog RSS / **Web page (no RSS)** / Podcast RSS / YouTube
+  channel / Events feed) and its own target category(ies). Admins see and
+  manage everything under **Syndication** in wp-admin.
 - A cron tick runs **every 5 minutes** and rotates to the **next member**
   (round-robin), checking all of that member's feeds.
-- **First fetch of a new feed backfills its full history**; after that, up to
-  5 new items per feed per fetch (configurable).
+- **First fetch of a new feed backfills its full history** (with social
+  posting suppressed); after that, up to 5 new items per feed per fetch
+  (configurable). Admins can also trigger **Run historic** per feed or
+  **Run all historic (no social posting)** from the dashboard at any time.
 - Imports keep the **original title, image (sideloaded to the Media Library),
   full text, and publish date**, are authored by the member, and land in the
   feed record's categories. **YouTube Shorts are skipped.**
+- **Full text** toggle per feed: when a feed only carries summaries, the
+  importer fetches the actual article page and extracts the complete body
+  (used only when clearly more complete than the feed's own content).
+- **Web page (no RSS)** sources: point a record at any listing-page URL and
+  the importer discovers new article links itself, then scrapes each new
+  article's title, date, `og:image`, and full body.
 - Every syndicated item ends with a link to the **original source** and a note
   that it is **republished with the member's permission**; `rel="canonical"`
   points at the original.
 - Duplicates are impossible: items are matched by feed GUID *and* by title
   (legacy posts get the GUID stamped on for fast future checks).
+- **Featured image fallback chain**: item image → first image in the content
+  → the **category's image** (set under Posts → Categories; downloaded once
+  and reused) → none.
 - If a feed fails 5 fetches in a row, the **site admin gets an email**; other
   feeds are unaffected.
+
+## Templates
+
+**Syndication → Templates** holds two editable templates per content type
+(blog post / event / podcast episode / video):
+
+- **Post body template** — how the imported post itself is built (HTML
+  allowed; default `{content}` imports the original text unchanged).
+- **Social post template** — the announcement wording for that type.
+
+Placeholders: `{content}` `{title}` `{author}` `{excerpt}` `{link}`
+`{source_name}` `{source_url}` `{date}` `{hashtags}`. Post-body placeholders
+are filled at import time from the feed item; social placeholders at share
+time from the created post.
+
+## wp-admin Dashboard widgets
+
+Admins see three widgets on the standard WordPress Dashboard: **Top posters
+this month** (top 10 members by published items across all four types),
+**Failing feeds** (consecutive failures, worst first), and **Unverified
+members** (never logged in and never updated their profile — tracking starts
+at plugin activation).
 
 ## Social auto-sharing
 
@@ -103,12 +136,21 @@ Dark mode follows the visitor's OS.
 
 ## For developers
 
-- Feed records: `{prefix}c365_feeds` table, managed via the `C365_Feeds` class.
+- Feed records: `{prefix}c365_feeds` table (user, type, feed_url, categories,
+  active, backfilled, full_content, diagnostics), managed via the `C365_Feeds`
+  class; schema auto-upgrades via `dbDelta` and `c365_feeds_db_version`.
 - Imported content meta: `_c365_guid`, `_c365_feed_id`, `_c365_source_url`,
   `_c365_source_name`; plus `_c365_audio_url`/`_c365_duration` (podcasts),
   `_c365_video_id` (videos), `_c365_event_*` (events); `_c365_shared_<network>`
   marks completed social shares.
+- Term meta: `c365_category_image` (URL) and `c365_category_image_id`
+  (cached attachment) power the category fallback image.
+- Options: `c365_syndicator_settings`, `c365_templates`,
+  `c365_social_settings`, `c365_share_queue`, `c365_rotation_pointer`.
 - Filters: `c365_attribution_html` (attribution wording),
   `c365_alert_threshold` (failure alert threshold).
 - Any theme can declare `add_theme_support( 'c365-attribution' )` to take over
   rendering the attribution box.
+- A WordPress-stub smoke-test harness covering load, activation, rotation,
+  imports, templates, scraping, social sharing, and widgets lives in the
+  development scratchpad and runs on plain PHP — no WordPress install needed.
