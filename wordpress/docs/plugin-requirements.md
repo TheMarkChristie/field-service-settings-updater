@@ -1,5 +1,10 @@
 # 365 Community Syndicator — Requirements Specification
 
+> **Superseded:** the authoritative document is now
+> [`full-specification.md`](full-specification.md) (v1.2), which covers the
+> plugin AND the theme and adds the social auto-sharing requirement (§2.9).
+> This file is kept for history and is accurate up to v1.1.
+
 **Product:** 365 Community Syndicator (WordPress plugin)
 **Site:** https://365community.online
 **Document version:** 1.1 — incorporates the owner's 25 scoping decisions of 16 July 2026 (see Appendix A)

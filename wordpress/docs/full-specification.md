@@ -2,7 +2,7 @@
 
 **Site:** https://365community.online
 **Packages:** 365 Community Syndicator (plugin) + Community 365 (theme)
-**Document version:** 1.1 — incorporates the owner's 25 scoping decisions of 16 July 2026 (Appendix A)
+**Document version:** 1.2 — incorporates the owner's 25 scoping decisions of 16 July 2026 (Appendix A) and the social auto-sharing requirement (Q26, §2.9)
 **Code status:** v1.0.0 of both packages is built and delivered. Requirements tagged **[CHANGE]** or **[NEW]** are approved but not yet implemented (owner chose "update the spec only" pending approval — Q25). Untagged requirements are implemented.
 **Last updated:** 16 July 2026
 
@@ -249,7 +249,78 @@ each mapped to its own category or categories.
   `c365_youtube_channel`, `c365_events_feed`) is migrated into feed-record
   rows automatically, preserving category choices, then removed.
 
-### 2.9 Plugin file layout (v1.0.0, for orientation)
+### 2.9 Social auto-sharing **[NEW]** (Q26)
+
+When new content is published on the site, the plugin posts an announcement to
+the **community's own social accounts** on LinkedIn, Bluesky, Mastodon, and
+X/Twitter.
+
+- **FR-9.1 (trigger)** A share SHALL be queued when a post of any of the four
+  content types (`post`, `c365_event`, `c365_podcast`, `c365_video`)
+  transitions to `publish` for the first time — whether imported by the
+  rotation or created manually. Each post is shared **once** per network
+  (guarded by `_c365_shared_<network>` post meta); later edits and re-publishes
+  do not re-share.
+- **FR-9.2 (message format)** The default message is:
+
+  ```
+  New Post: {title} by {author}
+  {excerpt}
+  {link}
+  {hashtags}
+  ```
+
+  where:
+  - `{title}` — the post title.
+  - `{author}` — the member's **@handle on that network** when it can be
+    derived from their profile links (Bluesky, Mastodon, X), otherwise their
+    WordPress display name. LinkedIn always uses the display name (its API
+    cannot mention personal profiles).
+  - `{excerpt}` — the first sentence of the excerpt/content.
+  - `{link}` — the permalink on 365community.online.
+  - `{hashtags}` — the post's categories as hashtags (spaces stripped,
+    CamelCased: "Field Service" → `#FieldService`).
+- **FR-9.3 (per-type templates)** Each content type SHALL have its own
+  editable template, with defaults:
+  | Type | Default first line |
+  |---|---|
+  | Blog post | `New Post: {title} by {author}` |
+  | Event | `New Event: {title} by {author}` |
+  | Podcast | `New Episode: {title} by {author}` |
+  | Video | `New Video: {title} by {author}` |
+  Templates are editable per network × type in the Syndication settings using
+  the placeholders above; a network can be disabled per type (e.g. don't share
+  events to LinkedIn).
+- **FR-9.4 (image)** The post's **featured image** SHALL be uploaded and
+  attached to the social post on every network that supports it (all four).
+  If there is no featured image, the share is text-only (networks will render
+  their own link preview card).
+- **FR-9.5 (length limits)** Messages SHALL be truncated to fit each network,
+  cutting the excerpt first, then hashtags, never the title or link:
+  X 280 chars (link counts as 23), Bluesky 300, Mastodon 500, LinkedIn 3,000.
+- **FR-9.6 (network connections)** An admin-only **Social sharing** tab in the
+  Syndication settings SHALL hold the credentials, with a "Send test post"
+  button per network:
+  | Network | Auth required | Notes |
+  |---|---|---|
+  | Mastodon | Instance URL + access token | Simple; generated in the Mastodon account's Development settings. |
+  | Bluesky | Handle + app password | Simple; AT Protocol `createRecord` + blob upload for the image. |
+  | X/Twitter | Developer app (API key/secret + access token/secret) | Needs an X developer account; free tier has low monthly write caps — volume may require a paid tier. |
+  | LinkedIn | OAuth app + organisation access token | Posts to the community's **organisation page**; token needs the Community Management / `w_organization_social` scope and periodic renewal. |
+  Credentials are stored server-side in options and never rendered back in
+  full (masked display).
+- **FR-9.7 (delivery)** Shares run on a queue processed by WP-Cron (piggybacks
+  the existing tick), not inline during publish, so a slow social API can
+  never delay importing or editing. Failures retry up to 3 times with backoff,
+  then surface in the Syndication dashboard (and count toward FR-7.4-style
+  admin alerts).
+- **FR-9.8 (member handles)** The member profile fields (FR-6.1) supply the
+  handles: the plugin derives `@handle` from the stored profile URLs
+  (`bsky.app/profile/<handle>`, `<instance>/@<user>`, `x.com/<user>`), so
+  members do not enter anything new — adding their social links to their
+  profile is what enables being credited by handle.
+
+### 2.10 Plugin file layout (v1.0.0, for orientation)
 
 ```
 c365-syndicator/
@@ -262,8 +333,9 @@ c365-syndicator/
     ├── class-c365-fetcher.php     # rotation, fetching, importing
     └── class-c365-frontend.php    # attribution, canonical, source helpers
 ```
-v1.1 adds `class-c365-feeds.php` (feeds table CRUD + migration) and moves feed
-configuration out of `class-c365-profile.php`.
+v1.1+ adds `class-c365-feeds.php` (feeds table CRUD + migration, moving feed
+configuration out of `class-c365-profile.php`) and `class-c365-social.php`
+(share queue + LinkedIn/Bluesky/Mastodon/X connectors, §2.9).
 
 ---
 
@@ -390,6 +462,11 @@ See FR-1.1. Replaces the v1.0.0 per-user meta keys (`c365_blog_feed`,
 | `c365_syndicator_settings` | interval, post status, fetch cap (**5**), featured images, feed-category import, original dates, attribution, canonical, alert threshold |
 | `c365_rotation_pointer` | User ID last processed |
 | `c365_feeds_db_version` **[NEW]** | Feeds table schema version |
+| `c365_social_settings` **[NEW]** | Per-network credentials (masked in UI), per-network × per-type enable flags and message templates (§2.9) |
+| `c365_share_queue` **[NEW]** | Pending/retrying social shares (post ID, network, attempts) |
+
+Sharing also adds post meta `_c365_shared_<network>` **[NEW]** (one per
+network) marking a post as announced, preventing re-shares.
 
 ### 4.5 Theme mods (Customizer)
 
@@ -433,7 +510,10 @@ See FR-1.1. Replaces the v1.0.0 per-user meta keys (`c365_blog_feed`,
    Optionally `define( 'DISABLE_WP_CRON', true );` in `wp-config.php`.
 4. Add feed records for each member; first fetch of each backfills history
    (FR-3.10) with legacy dedup active (FR-3.2).
-5. Verify against the acceptance criteria (Part 6), then deactivate
+5. Connect the community's social accounts under Syndication → Social sharing
+   (Mastodon token, Bluesky app password, X developer app keys, LinkedIn
+   organisation token) and confirm each with "Send test post" (§2.9).
+6. Verify against the acceptance criteria (Part 6), then deactivate
    WP Automatic and the other legacy plugins. Legacy posts remain untouched.
 
 ---
@@ -473,6 +553,14 @@ See FR-1.1. Replaces the v1.0.0 per-user meta keys (`c365_blog_feed`,
 15. Theme: blog posts, events, podcasts, and videos each render with their own
     distinct single layout; dark mode follows the OS; the accent colour changes
     site-wide from the Customizer.
+16. **Social sharing:** publishing a blog post produces one post on each
+    connected network in the format `New Post: {title} by {author}` + one-
+    sentence excerpt + link + category hashtags, with the featured image
+    attached; a podcast episode uses the `New Episode:` template; the member
+    is credited by their network @handle where their profile links allow it.
+17. Re-saving or updating an already-published post does not re-share it; a
+    network being down causes retries and a dashboard error, never a duplicate
+    or a blocked import.
 
 ---
 
@@ -505,6 +593,7 @@ See FR-1.1. Replaces the v1.0.0 per-user meta keys (`c365_blog_feed`,
 | Q23 | Dark mode (theme) | Follow visitor's OS |
 | Q24 | Accent colour (theme) | **Orange** (exact hex to be matched to the current site) |
 | Q25 | Next step | Update the spec only; code changes await approval |
+| Q26 | Social media (added later) | Members add social profiles to their user profile; **every new post is auto-shared to the community's own LinkedIn, Bluesky, Mastodon, and X accounts** as “New Post: (Title) by (@handle or WordPress name)” + one-sentence excerpt + link + #categories, with the featured image as the post image; template differs per post type |
 
 ## Appendix B — Delta summary: v1.0.0 (built) → v1.1 (approved, not yet built)
 
@@ -519,3 +608,4 @@ See FR-1.1. Replaces the v1.0.0 per-user meta keys (`c365_blog_feed`,
 | Events archive | Reverse-chronological | Upcoming first, past below |
 | Failure handling | Shown in admin table | + admin email after 5 consecutive failures |
 | Theme accent | Indigo `#4f46e5` | Orange (hex TBC from current site) |
+| Social sharing | None | Auto-share every new post to LinkedIn, Bluesky, Mastodon, and X with per-type templates, member @handle credit, excerpt, link, category hashtags, and featured image (§2.9) |
