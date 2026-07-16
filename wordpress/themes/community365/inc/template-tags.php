@@ -203,3 +203,84 @@ function community365_type_label( $post_type ) {
 	);
 	return isset( $labels[ $post_type ] ) ? $labels[ $post_type ] : '';
 }
+
+/**
+ * The content-type filters available on a member's author page, honouring
+ * their section toggles. Keyed by the ?type= slug.
+ *
+ * @param int $author_id Member ID.
+ * @return array slug => { post_type, label }
+ */
+function community365_author_types( $author_id ) {
+	$all = array(
+		'blogs'    => array( 'post', __( 'Blogs', 'community365' ), 'synpro_show_blogs' ),
+		'podcasts' => array( 'synpro_podcast', __( 'Podcasts', 'community365' ), 'synpro_show_podcasts' ),
+		'videos'   => array( 'synpro_video', __( 'Videos', 'community365' ), 'synpro_show_videos' ),
+		'events'   => array( 'synpro_event', __( 'Events', 'community365' ), 'synpro_show_events' ),
+	);
+
+	$types = array();
+	foreach ( $all as $slug => $spec ) {
+		if ( community365_author_section_enabled( $author_id, $spec[2] ) ) {
+			$types[ $slug ] = array(
+				'post_type' => $spec[0],
+				'label'     => $spec[1],
+			);
+		}
+	}
+	return $types;
+}
+
+/**
+ * A member's most-used categories (from their recent content), for the
+ * author-page topic pills.
+ *
+ * @param int $author_id Member ID.
+ * @param int $limit     How many.
+ * @return WP_Term[]
+ */
+function community365_author_top_categories( $author_id, $limit = 4 ) {
+	$recent = get_posts(
+		array(
+			'post_type'      => array( 'post', 'synpro_event', 'synpro_podcast', 'synpro_video' ),
+			'author'         => $author_id,
+			'posts_per_page' => 50,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+	if ( ! $recent ) {
+		return array();
+	}
+
+	$counts = array();
+	$terms  = array();
+	foreach ( wp_get_object_terms( $recent, 'category' ) as $term ) {
+		if ( 'uncategorized' === $term->slug ) {
+			continue;
+		}
+		$counts[ $term->slug ] = isset( $counts[ $term->slug ] ) ? $counts[ $term->slug ] + 1 : 1;
+		$terms[ $term->slug ]  = $term;
+	}
+	arsort( $counts );
+
+	$top = array();
+	foreach ( array_slice( array_keys( $counts ), 0, $limit ) as $slug ) {
+		$top[] = $terms[ $slug ];
+	}
+	return $top;
+}
+
+/**
+ * Total views across a member's published content, when the plugin's view
+ * counter is available.
+ *
+ * @param int $author_id Member ID.
+ * @return int
+ */
+function community365_author_total_views( $author_id ) {
+	if ( class_exists( 'Synpro_Stats' ) ) {
+		return Synpro_Stats::author_views( $author_id, '_synpro_views' );
+	}
+	return 0;
+}

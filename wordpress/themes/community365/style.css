@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, dark-mode support, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 1.0.0
+Version: 1.1.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -674,58 +674,133 @@ button:hover, input[type="submit"]:hover { filter: brightness(1.08); }
 }
 
 /* ---------------------------------------------------------------------------
-   Author page
+   Author page — profile card, filter pills, list cards
 --------------------------------------------------------------------------- */
-.c365-author-hero {
-	height: 140px;
-	background: linear-gradient(120deg, var(--c365-accent), var(--c365-accent-soft));
+.c365-author-wrap { padding-top: 1.5rem; }
+
+.c365-profile-card {
+	display: flex;
+	gap: 1.5rem;
+	align-items: flex-start;
+	padding: 1.75rem;
+	border-radius: 16px;
+	background: linear-gradient(135deg, #16181f 0%, #1f2230 100%);
 	background-size: cover;
 	background-position: center;
+	color: #e8eaf1;
+	box-shadow: 0 12px 32px -14px rgba(16, 24, 40, 0.35);
 }
-.c365-author-hero.has-cover { height: 220px; }
-
-.c365-author-header {
-	display: flex;
-	align-items: flex-end;
-	gap: 1.25rem;
-	margin-top: -60px;
-	margin-bottom: 1.25rem;
-	flex-wrap: wrap;
-}
-.c365-author-avatar img {
-	width: 140px;
-	height: 140px;
+.c365-profile-avatar img {
+	width: 108px;
+	height: 108px;
 	border-radius: 50%;
-	border: 5px solid var(--c365-bg);
+	border: 4px solid rgba(255, 255, 255, 0.9);
 	object-fit: cover;
-	background: var(--c365-surface);
 	display: block;
 }
-.c365-author-heading h1 { margin: 0 0 0.15rem; letter-spacing: -0.02em; }
-.c365-author-tagline { margin: 0; color: var(--c365-text-soft); font-weight: 600; }
-
-.c365-author-bio { max-width: 720px; color: var(--c365-text-soft); }
-
-.c365-author-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0.5rem; }
-.c365-link-chip {
-	padding: 0.35rem 0.9rem;
-	border: 1px solid var(--c365-border);
-	border-radius: 999px;
-	background: var(--c365-surface);
-	color: var(--c365-text);
-	font-size: 0.88rem;
+.c365-profile-tagline {
+	margin: 0 0 0.15rem;
+	color: var(--c365-accent);
+	font-weight: 700;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+.c365-profile-name {
+	margin: 0 0 0.4rem;
+	font-size: 1.5rem;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	color: #fff;
+}
+.c365-profile-bio {
+	margin: 0 0 0.9rem;
+	color: #aeb4c4;
+	font-size: 0.95rem;
+	max-width: 52ch;
+}
+.c365-profile-card .c365-author-links { margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.c365-profile-card .c365-link-chip {
+	padding: 0.3rem 0.8rem;
+	border-radius: 7px;
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	color: #dfe3ee;
+	font-size: 0.78rem;
 	font-weight: 600;
 	text-decoration: none;
 }
-.c365-link-chip:hover { border-color: var(--c365-accent); color: var(--c365-accent); text-decoration: none; }
+.c365-profile-card .c365-link-chip:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.c365-profile-stats { margin-left: auto; text-align: right; flex-shrink: 0; }
+.c365-profile-stats div + div { margin-top: 0.7rem; }
+.c365-profile-num { display: block; font-size: 1.35rem; font-weight: 800; color: #fff; }
+.c365-profile-lbl { display: block; font-size: 0.7rem; color: #8e95a8; text-transform: uppercase; letter-spacing: 0.06em; }
 
-.c365-author-section { margin-top: 2.5rem; }
-.c365-author-section > h2 {
-	margin: 0;
-	font-size: 1.3rem;
-	letter-spacing: -0.01em;
-	border-bottom: 2px solid var(--c365-accent);
-	display: inline-block;
-	padding-bottom: 0.25rem;
+@media (max-width: 640px) {
+	.c365-profile-card { flex-wrap: wrap; }
+	.c365-profile-stats { margin-left: 0; text-align: left; display: flex; gap: 1.5rem; }
+	.c365-profile-stats div + div { margin-top: 0; }
 }
-.c365-author-section .c365-grid { padding-top: 1.25rem; }
+
+/* Filter pills */
+.c365-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.4rem 0 0.7rem; }
+.c365-pill {
+	padding: 0.42rem 1rem;
+	border: 1px solid var(--c365-border);
+	border-radius: 999px;
+	background: var(--c365-surface);
+	color: var(--c365-text-soft);
+	font-size: 0.83rem;
+	font-weight: 700;
+	text-decoration: none;
+}
+.c365-pill:hover { border-color: var(--c365-accent); color: var(--c365-accent); text-decoration: none; }
+.c365-pill.is-active { background: #16181f; border-color: #16181f; color: #fff; }
+
+/* Author search */
+.c365-author-search { margin: 0 0 1.25rem; }
+.c365-author-search input[type="search"] { width: 100%; max-width: none; }
+
+/* List cards */
+.c365-list-card {
+	background: var(--c365-surface);
+	border: 1px solid var(--c365-border);
+	border-radius: 12px;
+	padding: 1.1rem 1.3rem;
+	margin-bottom: 0.9rem;
+	transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.c365-list-card:hover { box-shadow: var(--c365-shadow-hover); transform: translateY(-1px); }
+.c365-list-kind {
+	font-size: 0.7rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--c365-accent);
+}
+.c365-list-kind-podcast { color: #7c3aed; }
+.c365-list-kind-video { color: #dc2626; }
+.c365-list-kind-event { color: #d97706; }
+.c365-list-title { margin: 0.35rem 0; font-size: 1.12rem; letter-spacing: -0.01em; }
+.c365-list-title a { color: var(--c365-text); text-decoration: none; }
+.c365-list-title a:hover { color: var(--c365-accent); }
+.c365-list-excerpt {
+	margin: 0 0 0.7rem;
+	color: var(--c365-text-soft);
+	font-size: 0.92rem;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+.c365-list-meta { display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: center; font-size: 0.78rem; color: var(--c365-text-soft); }
+.c365-list-source {
+	margin-left: auto;
+	background: var(--c365-accent-soft);
+	color: var(--c365-accent);
+	font-weight: 700;
+	padding: 0.15rem 0.7rem;
+	border-radius: 999px;
+	text-decoration: none;
+}
+.c365-list-source:hover { text-decoration: none; filter: brightness(0.9); }
