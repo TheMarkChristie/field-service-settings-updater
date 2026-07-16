@@ -23,7 +23,7 @@ the new system must not duplicate.
 
 | Package | Replaces | Responsibility |
 |---|---|---|
-| **365 Community Syndicator** (plugin) | WP Automatic, events plugin, podcast/video import plugins | All content automation and data: feed records, the 5-minute rotation, importing, de-duplication, attribution, canonical SEO, the Events/Podcasts/Videos content types, member profile fields, admin dashboard, failure alerts. |
+| **365 Community Syndicator** (plugin) | WP Automatic, events plugin, podcast/video import plugins, social auto-posters | All content automation and data: feed records, the 5-minute rotation, importing, de-duplication, attribution, canonical SEO, the Events/Podcasts/Videos content types, member profile fields, admin dashboard, failure alerts, and auto-sharing new posts to the community's social accounts (§2.9). |
 | **Community 365** (theme) | Current theme | All presentation: card-grid magazine design, a distinct layout per content type, member author pages, source badges, dark mode, Customizer options. |
 
 Content and data live in the **plugin** so nothing is lost on a theme switch;
@@ -49,6 +49,9 @@ sensibly without the plugin), but they are designed as a pair.
 - Two-way sync back to source blogs.
 - Automatic member registration/on-boarding flows.
 - Podcast audio hosting (audio streams from the member's host — Q11).
+- Importing members' social-network *posts* as site content (only outward
+  sharing is in scope — Q26); social feeds could be a later phase for
+  Bluesky/Mastodon if wanted.
 
 ### 1.5 Actors
 
@@ -211,7 +214,9 @@ each mapped to its own category or categories.
     image **URL** (URL fields confirmed — Q19).
   - Bio (WordPress Biographical Info).
   - Links: Website, Blog, LinkedIn, X/Twitter, Bluesky, GitHub, YouTube,
-    Mastodon.
+    Mastodon. Besides appearing as chips on their author page, these links
+    supply the member's @handle when the site shares their posts to its
+    social accounts (FR-9.8).
   - Their feed records (FR-1.3).
 - **FR-6.2** Author-page section toggles, all defaulting ON: blog posts,
   podcast episodes, videos, events, links, bio. Section **order is fixed**:
@@ -495,7 +500,9 @@ network) marking a post as announced, preventing re-shares.
   `wp_kses_post`; nonces on every form/action; capability checks
   (`manage_options` settings/fetches, `edit_user` profiles, `edit_post` meta
   boxes); members manage only their own feed records; all feeds-table queries
-  through `$wpdb->prepare`; YouTube embeds via `youtube-nocookie.com`.
+  through `$wpdb->prepare`; YouTube embeds via `youtube-nocookie.com`;
+  social credentials (§2.9) stored server-side only, masked in the UI, and
+  never printed to the front end, logs, or emails.
 - **NFR-6 (i18n)** Text domains `c365-syndicator` and `community365`; all
   strings translatable.
 
