@@ -9,7 +9,16 @@ get_header();
 
 while ( have_posts() ) :
 	the_post();
-	get_template_part( 'template-parts/content', 'single' );
+	?>
+	<div class="c365-container">
+		<div class="c365-single-layout">
+			<div class="c365-single-main">
+				<?php get_template_part( 'template-parts/content', 'single' ); ?>
+			</div>
+			<?php get_sidebar( 'c365' ); ?>
+		</div>
+	</div>
+	<?php
 
 	$prev = get_previous_post();
 	$next = get_next_post();

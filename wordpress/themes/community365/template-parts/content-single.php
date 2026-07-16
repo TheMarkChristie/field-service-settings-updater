@@ -5,8 +5,7 @@
  * @package Community365
  */
 ?>
-<div class="c365-container">
-	<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article' ); ?>>
+<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article' ); ?>>
 		<header class="entry-header">
 			<h1 class="entry-title"><?php the_title(); ?></h1>
 			<div class="c365-entry-meta">
@@ -45,5 +44,4 @@
 			echo '<div class="c365-tags">' . wp_kses_post( $tags ) . '</div>';
 		}
 		?>
-	</article>
-</div>
+</article>

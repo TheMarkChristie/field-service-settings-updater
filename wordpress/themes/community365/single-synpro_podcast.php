@@ -13,6 +13,8 @@ while ( have_posts() ) :
 	$duration = get_post_meta( get_the_ID(), '_synpro_duration', true );
 	?>
 	<div class="c365-container">
+		<div class="c365-single-layout">
+		<div class="c365-single-main">
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article c365-article-podcast' ); ?>>
 			<span class="c365-type-badge c365-type-podcast"><?php esc_html_e( 'Podcast', 'community365' ); ?></span>
 			<h1 class="entry-title"><?php the_title(); ?></h1>
@@ -40,6 +42,9 @@ while ( have_posts() ) :
 
 			<?php community365_attribution_box(); ?>
 		</article>
+		</div>
+		<?php get_sidebar( 'c365' ); ?>
+		</div>
 	</div>
 	<?php
 endwhile;

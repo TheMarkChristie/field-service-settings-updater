@@ -130,5 +130,87 @@ function community365_customize_register( $wp_customize ) {
 			'type'        => 'textarea',
 		)
 	);
+
+	/* ---------------- Post sidebar (calendar, advert, social, coffee) --- */
+	$wp_customize->add_section(
+		'c365_sidebar_options',
+		array(
+			'title'    => __( 'Community 365 Post Sidebar', 'community365' ),
+			'priority' => 31,
+		)
+	);
+
+	$wp_customize->add_setting(
+		'c365_show_sidebar',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'c365_show_sidebar',
+		array(
+			'label'   => __( 'Show the sidebar on single posts', 'community365' ),
+			'section' => 'c365_sidebar_options',
+			'type'    => 'checkbox',
+		)
+	);
+
+	// Advert: image + link, or raw HTML (HTML wins when both are set).
+	$wp_customize->add_setting( 'c365_ad_image', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+	$wp_customize->add_control(
+		'c365_ad_image',
+		array(
+			'label'   => __( 'Advert image URL', 'community365' ),
+			'section' => 'c365_sidebar_options',
+			'type'    => 'url',
+		)
+	);
+	$wp_customize->add_setting( 'c365_ad_link', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+	$wp_customize->add_control(
+		'c365_ad_link',
+		array(
+			'label'   => __( 'Advert click-through URL', 'community365' ),
+			'section' => 'c365_sidebar_options',
+			'type'    => 'url',
+		)
+	);
+	$wp_customize->add_setting( 'c365_ad_html', array( 'default' => '', 'sanitize_callback' => 'wp_kses_post' ) );
+	$wp_customize->add_control(
+		'c365_ad_html',
+		array(
+			'label'       => __( 'Advert custom HTML (optional)', 'community365' ),
+			'description' => __( 'Overrides the image advert when set. Script tags are stripped.', 'community365' ),
+			'section'     => 'c365_sidebar_options',
+			'type'        => 'textarea',
+		)
+	);
+
+	// Three social buttons.
+	for ( $i = 1; $i <= 3; $i++ ) {
+		$wp_customize->add_setting( 'c365_social_' . $i, array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+		$wp_customize->add_control(
+			'c365_social_' . $i,
+			array(
+				/* translators: %d: button number. */
+				'label'       => sprintf( __( 'Social button %d URL', 'community365' ), $i ),
+				'description' => 1 === $i ? __( 'The button label is worked out from the URL (LinkedIn, X, Bluesky, Mastodon, YouTube, Facebook, Instagram, GitHub).', 'community365' ) : '',
+				'section'     => 'c365_sidebar_options',
+				'type'        => 'url',
+			)
+		);
+	}
+
+	// Buy Me a Coffee.
+	$wp_customize->add_setting( 'c365_coffee_url', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+	$wp_customize->add_control(
+		'c365_coffee_url',
+		array(
+			'label'       => __( 'Buy Me a Coffee URL', 'community365' ),
+			'description' => __( 'e.g. https://buymeacoffee.com/yourname — the button only shows when set.', 'community365' ),
+			'section'     => 'c365_sidebar_options',
+			'type'        => 'url',
+		)
+	);
 }
 add_action( 'customize_register', 'community365_customize_register' );

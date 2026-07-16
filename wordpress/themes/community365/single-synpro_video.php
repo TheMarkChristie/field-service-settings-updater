@@ -14,6 +14,8 @@ while ( have_posts() ) :
 	$source   = community365_get_source();
 	?>
 	<div class="c365-container">
+		<div class="c365-single-layout">
+		<div class="c365-single-main">
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'c365-article c365-article-video' ); ?>>
 			<h1 class="entry-title"><?php the_title(); ?></h1>
 
@@ -41,6 +43,9 @@ while ( have_posts() ) :
 				<?php endif; ?>
 			</p>
 		</article>
+		</div>
+		<?php get_sidebar( 'c365' ); ?>
+		</div>
 	</div>
 	<?php
 endwhile;

@@ -284,3 +284,137 @@ function community365_author_total_views( $author_id ) {
 	}
 	return 0;
 }
+
+/**
+ * Monthly events calendar: a compact grid with event days highlighted and
+ * linked. Supports ?cal=YYYY-MM prev/next navigation on the same page.
+ */
+function community365_events_calendar() {
+	$requested = isset( $_GET['cal'] ) ? sanitize_text_field( wp_unslash( $_GET['cal'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$base      = preg_match( '/^\d{4}-(0[1-9]|1[0-2])$/', $requested ) ? strtotime( $requested . '-01' ) : (int) current_time( 'timestamp' );
+	$first     = mktime( 0, 0, 0, (int) gmdate( 'n', $base ), 1, (int) gmdate( 'Y', $base ) );
+	$days      = (int) gmdate( 't', $first );
+	$start_dow = (int) gmdate( 'N', $first ); // 1 = Monday.
+	$prefix    = gmdate( 'Y-m', $first );
+	$today     = current_time( 'Y-m-d' );
+
+	// Events with a start date in this month.
+	$events = get_posts(
+		array(
+			'post_type'      => 'synpro_event',
+			'post_status'    => 'publish',
+			'posts_per_page' => 50,
+			'no_found_rows'  => true,
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'     => '_synpro_event_start',
+					'value'   => $prefix,
+					'compare' => 'LIKE',
+				),
+			),
+		)
+	);
+	$map = array();
+	foreach ( $events as $event ) {
+		$start = get_post_meta( $event->ID, '_synpro_event_start', true );
+		$day   = (int) substr( (string) $start, 8, 2 );
+		if ( $day && ! isset( $map[ $day ] ) ) {
+			$map[ $day ] = array(
+				'url'   => get_permalink( $event ),
+				'title' => get_the_title( $event ),
+			);
+		}
+	}
+
+	$page_url = get_permalink();
+	$prev     = add_query_arg( 'cal', gmdate( 'Y-m', strtotime( '-1 month', $first ) ), $page_url );
+	$next     = add_query_arg( 'cal', gmdate( 'Y-m', strtotime( '+1 month', $first ) ), $page_url );
+	?>
+	<div class="c365-cal-nav">
+		<a href="<?php echo esc_url( $prev ); ?>" aria-label="<?php esc_attr_e( 'Previous month', 'community365' ); ?>">&larr;</a>
+		<strong><?php echo esc_html( date_i18n( 'F Y', $first ) ); ?></strong>
+		<a href="<?php echo esc_url( $next ); ?>" aria-label="<?php esc_attr_e( 'Next month', 'community365' ); ?>">&rarr;</a>
+	</div>
+	<table class="c365-cal">
+		<caption class="screen-reader-text">
+			<?php
+			printf(
+				/* translators: %s: month name. */
+				esc_html__( 'Events in %s', 'community365' ),
+				esc_html( date_i18n( 'F Y', $first ) )
+			);
+			?>
+		</caption>
+		<thead>
+			<tr>
+				<?php foreach ( array( __( 'M', 'community365' ), __( 'T', 'community365' ), __( 'W', 'community365' ), __( 'T', 'community365' ), __( 'F', 'community365' ), __( 'S', 'community365' ), __( 'S', 'community365' ) ) as $dow ) : ?>
+					<th scope="col"><?php echo esc_html( $dow ); ?></th>
+				<?php endforeach; ?>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<?php
+				$cell = 1;
+				for ( $blank = 1; $blank < $start_dow; $blank++, $cell++ ) {
+					echo '<td></td>';
+				}
+				for ( $day = 1; $day <= $days; $day++, $cell++ ) {
+					$classes = array();
+					if ( $prefix . '-' . str_pad( (string) $day, 2, '0', STR_PAD_LEFT ) === $today ) {
+						$classes[] = 'is-today';
+					}
+					if ( isset( $map[ $day ] ) ) {
+						printf(
+							'<td class="has-event %1$s"><a href="%2$s" title="%3$s">%4$d</a></td>',
+							esc_attr( implode( ' ', $classes ) ),
+							esc_url( $map[ $day ]['url'] ),
+							esc_attr( $map[ $day ]['title'] ),
+							(int) $day
+						);
+					} else {
+						printf( '<td class="%1$s">%2$d</td>', esc_attr( implode( ' ', $classes ) ), (int) $day );
+					}
+					if ( 0 === $cell % 7 && $day < $days ) {
+						echo '</tr><tr>';
+					}
+				}
+				while ( 0 !== ( $cell - 1 ) % 7 ) {
+					echo '<td></td>';
+					$cell++;
+				}
+				?>
+			</tr>
+		</tbody>
+	</table>
+	<?php
+}
+
+/**
+ * Human label for a social URL, worked out from its host.
+ *
+ * @param string $url Social profile URL.
+ * @return string
+ */
+function community365_social_label( $url ) {
+	$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+	$map  = array(
+		'linkedin.com'  => 'LinkedIn',
+		'twitter.com'   => 'X / Twitter',
+		'x.com'         => 'X / Twitter',
+		'bsky.app'      => 'Bluesky',
+		'youtube.com'   => 'YouTube',
+		'facebook.com'  => 'Facebook',
+		'instagram.com' => 'Instagram',
+		'github.com'    => 'GitHub',
+	);
+	foreach ( $map as $needle => $label ) {
+		if ( false !== strpos( $host, $needle ) ) {
+			return $label;
+		}
+	}
+	if ( false !== strpos( $host, 'mastodon' ) || false !== strpos( $host, 'social' ) ) {
+		return 'Mastodon';
+	}
+	return __( 'Follow us', 'community365' );
+}

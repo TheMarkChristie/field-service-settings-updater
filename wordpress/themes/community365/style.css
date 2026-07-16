@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, dark-mode support, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 1.2.0
+Version: 1.3.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -859,4 +859,96 @@ input:focus-visible,
 	.c365-event-actions .c365-button { flex: 1 1 100%; text-align: center; }
 	.c365-podcast-player { flex-direction: column; align-items: stretch; }
 	.c365-podcast-art img { width: 100%; height: auto; max-height: 220px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Single-post sidebar (v1.3): layout, events calendar, advert, social,
+   Buy Me a Coffee
+--------------------------------------------------------------------------- */
+.c365-single-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 320px;
+	gap: 2rem;
+	align-items: start;
+}
+.c365-single-main > .c365-article { margin-left: 0; margin-right: 0; max-width: none; }
+
+.c365-side { position: sticky; top: 84px; display: grid; gap: 1rem; margin: 2.5rem 0; }
+.c365-side-card {
+	background: var(--c365-surface);
+	border: 1px solid var(--c365-border);
+	border-radius: var(--c365-radius);
+	box-shadow: var(--c365-shadow);
+	padding: 1.1rem 1.2rem;
+}
+.c365-side-title {
+	margin: 0 0 0.7rem;
+	font-size: 0.8rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--c365-text-soft);
+}
+.c365-side-more { margin: 0.6rem 0 0; font-size: 0.85rem; }
+
+/* Calendar */
+.c365-cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.92rem; }
+.c365-cal-nav a { padding: 0 0.5rem; font-weight: 700; }
+table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout: fixed; }
+.c365-cal th { border: 0; background: none; padding: 0.2rem 0; text-align: center; font-size: 0.7rem; color: var(--c365-text-soft); text-transform: uppercase; }
+.c365-cal td { border: 0; padding: 0.15rem 0; text-align: center; font-size: 0.85rem; color: var(--c365-text-soft); height: 2rem; }
+.c365-cal td.is-today { font-weight: 800; color: var(--c365-text); }
+.c365-cal td.has-event a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.8rem;
+	height: 1.8rem;
+	border-radius: 50%;
+	background: var(--c365-accent);
+	color: #fff;
+	font-weight: 700;
+	text-decoration: none;
+}
+.c365-cal td.has-event a:hover { filter: brightness(1.1); text-decoration: none; }
+
+/* Advert */
+.c365-side-ad { text-align: center; }
+.c365-ad-label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c365-text-soft); margin-bottom: 0.5rem; }
+.c365-side-ad img { border-radius: 8px; display: block; width: 100%; height: auto; }
+
+/* Social buttons */
+.c365-side-socials { display: grid; gap: 0.5rem; }
+.c365-social-btn {
+	display: block;
+	text-align: center;
+	padding: 0.6rem 1rem;
+	border-radius: 10px;
+	background: var(--c365-accent-soft);
+	color: var(--c365-accent);
+	font-weight: 700;
+	font-size: 0.9rem;
+	text-decoration: none;
+}
+.c365-social-btn:hover { background: var(--c365-accent); color: #fff; text-decoration: none; }
+
+/* Buy Me a Coffee */
+.c365-coffee-btn {
+	display: block;
+	text-align: center;
+	padding: 0.8rem 1rem;
+	border-radius: 12px;
+	background: #ffdd00;
+	color: #111 !important;
+	font-weight: 800;
+	font-size: 0.95rem;
+	text-decoration: none !important;
+	box-shadow: var(--c365-shadow);
+}
+.c365-coffee-btn:hover { filter: brightness(1.05); }
+
+/* Stack the sidebar under the article on narrower screens */
+@media (max-width: 1024px) {
+	.c365-single-layout { grid-template-columns: 1fr; }
+	.c365-side { position: static; margin-top: 0; }
 }
