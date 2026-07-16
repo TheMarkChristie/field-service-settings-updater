@@ -133,6 +133,11 @@ class C365_Fetcher {
 			return 0;
 		}
 
+		// Web-page sources have no RSS: discover and scrape articles instead.
+		if ( 'scrape' === $row->type ) {
+			return self::fetch_scrape_record( $row, $user );
+		}
+
 		if ( ! function_exists( 'fetch_feed' ) ) {
 			require_once ABSPATH . WPINC . '/feed.php';
 		}
@@ -320,6 +325,324 @@ class C365_Fetcher {
 		}
 
 		return true;
+	}
+
+	/* -----------------------------------------------------------------------
+	 * Web-page sources (no RSS)
+	 * -------------------------------------------------------------------- */
+
+	/**
+	 * Fetch a plain web page, discover its article links, and import the
+	 * new ones. Backfill (first run) imports every discovered article with
+	 * social sharing suppressed; later runs respect the per-fetch cap.
+	 *
+	 * @param object  $row  Feed record (type 'scrape').
+	 * @param WP_User $user Owning member.
+	 * @return int Imported count.
+	 */
+	public static function fetch_scrape_record( $row, $user ) {
+		$response = wp_remote_get(
+			$row->feed_url,
+			array(
+				'timeout'    => 15,
+				'user-agent' => 'Mozilla/5.0 (compatible; C365Syndicator/1.0; +https://365community.online)',
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			C365_Feeds::record_result( $row->id, $response->get_error_message(), true );
+			return 0;
+		}
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $code ) {
+			C365_Feeds::record_result( $row->id, 'HTTP ' . $code, true );
+			return 0;
+		}
+
+		$links = self::discover_article_links( wp_remote_retrieve_body( $response ), $row->feed_url );
+		if ( ! $links ) {
+			C365_Feeds::record_result( $row->id, __( 'No article links found on the page', 'c365-syndicator' ), true );
+			return 0;
+		}
+
+		$backfill = ! (int) $row->backfilled;
+		$max      = $backfill ? 20 : (int) C365_Settings::get( 'max_items' );
+		$links    = array_slice( $links, 0, $max );
+
+		$was_suppressed = class_exists( 'C365_Social' ) ? C365_Social::$suppressed : false;
+		if ( $backfill && class_exists( 'C365_Social' ) ) {
+			C365_Social::$suppressed = true;
+		}
+
+		$categories = C365_Feeds::parse_categories( $row->categories );
+		$imported   = 0;
+		foreach ( $links as $link ) {
+			if ( self::import_scraped_article( $user, $link, $categories, (int) $row->id ) ) {
+				$imported++;
+			}
+		}
+
+		if ( class_exists( 'C365_Social' ) ) {
+			C365_Social::$suppressed = $was_suppressed;
+		}
+
+		C365_Feeds::record_result(
+			$row->id,
+			sprintf(
+				/* translators: %d: imported count. */
+				$backfill ? __( 'Backfill complete — %d article(s) imported', 'c365-syndicator' ) : __( '%d new article(s) imported', 'c365-syndicator' ),
+				$imported
+			),
+			false,
+			$backfill
+		);
+
+		return $imported;
+	}
+
+	/**
+	 * Find likely article URLs on a listing page: links inside <article>
+	 * elements, heading links, and entry-title links — same host only,
+	 * archive/nav URLs filtered out, document order preserved.
+	 *
+	 * @param string $html Listing page HTML.
+	 * @param string $base Listing page URL (for resolving relative links).
+	 * @return string[] Absolute URLs.
+	 */
+	public static function discover_article_links( $html, $base ) {
+		if ( ! class_exists( 'DOMDocument' ) || '' === trim( (string) $html ) ) {
+			return array();
+		}
+
+		$doc = new DOMDocument();
+		libxml_use_internal_errors( true );
+		$loaded = $doc->loadHTML( '<?xml encoding="utf-8"?>' . $html, defined( 'LIBXML_NOWARNING' ) ? LIBXML_NOWARNING | LIBXML_NOERROR : 0 );
+		libxml_clear_errors();
+		if ( ! $loaded ) {
+			return array();
+		}
+
+		$xpath   = new DOMXPath( $doc );
+		$queries = array(
+			'//article//a[@href]',
+			'//h2//a[@href] | //h3//a[@href]',
+			'//a[contains(concat(" ", normalize-space(@class), " "), " entry-title ")][@href]',
+			'//*[contains(concat(" ", normalize-space(@class), " "), " entry-title ")]//a[@href]',
+		);
+
+		$host = wp_parse_url( $base, PHP_URL_HOST );
+		$seen = array();
+		$urls = array();
+
+		foreach ( $queries as $query ) {
+			$nodes = $xpath->query( $query );
+			if ( ! $nodes ) {
+				continue;
+			}
+			foreach ( $nodes as $node ) {
+				$href = trim( (string) $node->getAttribute( 'href' ) );
+				$url  = self::resolve_url( $href, $base );
+				if ( ! $url || isset( $seen[ $url ] ) ) {
+					continue;
+				}
+				$seen[ $url ] = true;
+
+				$link_host = wp_parse_url( $url, PHP_URL_HOST );
+				if ( ! $link_host || strcasecmp( $link_host, (string) $host ) !== 0 ) {
+					continue; // Off-site link.
+				}
+				if ( preg_match( '~/(category|tag|author|page|feed|wp-login|wp-admin|shop|cart|search)([/?]|$)|[?&]s=|#|\.(jpg|jpeg|png|gif|pdf|zip)$~i', $url ) ) {
+					continue; // Archive/nav/asset link.
+				}
+				if ( untrailingslashit( $url ) === untrailingslashit( $base ) ) {
+					continue; // The listing page itself.
+				}
+				$urls[] = $url;
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
+	 * Resolve a possibly-relative href against a base URL.
+	 *
+	 * @param string $href Href value.
+	 * @param string $base Base URL.
+	 * @return string Absolute URL or ''.
+	 */
+	protected static function resolve_url( $href, $base ) {
+		if ( '' === $href || '#' === $href[0] || 0 === strpos( $href, 'mailto:' ) || 0 === strpos( $href, 'javascript:' ) ) {
+			return '';
+		}
+		if ( preg_match( '~^https?://~i', $href ) ) {
+			return esc_url_raw( $href );
+		}
+		$parts = wp_parse_url( $base );
+		if ( empty( $parts['host'] ) ) {
+			return '';
+		}
+		$origin = ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . '://' . $parts['host'];
+		if ( 0 === strpos( $href, '//' ) ) {
+			return esc_url_raw( ( isset( $parts['scheme'] ) ? $parts['scheme'] : 'https' ) . ':' . $href );
+		}
+		if ( 0 === strpos( $href, '/' ) ) {
+			return esc_url_raw( $origin . $href );
+		}
+		$path = isset( $parts['path'] ) ? preg_replace( '~/[^/]*$~', '/', $parts['path'] ) : '/';
+		return esc_url_raw( $origin . $path . $href );
+	}
+
+	/**
+	 * Import one scraped article page, unless it already exists.
+	 *
+	 * @param WP_User $user       Member.
+	 * @param string  $url        Article URL (doubles as the GUID).
+	 * @param int[]   $categories Category IDs from the feed record.
+	 * @param int     $feed_id    Feed record ID.
+	 * @return bool Whether a post was created.
+	 */
+	public static function import_scraped_article( $user, $url, $categories, $feed_id ) {
+		if ( self::guid_exists( $url ) ) {
+			return false;
+		}
+
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'    => 15,
+				'user-agent' => 'Mozilla/5.0 (compatible; C365Syndicator/1.0; +https://365community.online)',
+			)
+		);
+		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+			return false;
+		}
+		$html = wp_remote_retrieve_body( $response );
+
+		$meta    = self::parse_article_meta( $html, $url );
+		$content = self::extract_article_html( $html );
+		if ( '' === $meta['title'] || '' === $content ) {
+			return false;
+		}
+
+		// Title match against existing content (legacy protection).
+		$existing = self::find_by_title( $meta['title'], 'post' );
+		if ( $existing ) {
+			if ( ! get_post_meta( $existing, '_c365_guid', true ) ) {
+				update_post_meta( $existing, '_c365_guid', $url );
+			}
+			return false;
+		}
+
+		$content = self::apply_post_template(
+			'post',
+			array(
+				'{content}'     => $content,
+				'{title}'       => $meta['title'],
+				'{author}'      => $user->display_name,
+				'{excerpt}'     => wp_trim_words( wp_strip_all_tags( $content ), 40 ),
+				'{source_name}' => $meta['site_name'],
+				'{source_url}'  => $url,
+				'{date}'        => $meta['timestamp'] ? gmdate( 'j F Y', $meta['timestamp'] ) : '',
+			)
+		);
+
+		$postarr = array(
+			'post_type'    => 'post',
+			'post_status'  => C365_Settings::get( 'post_status' ),
+			'post_author'  => $user->ID,
+			'post_title'   => $meta['title'],
+			'post_content' => $content,
+			'post_excerpt' => wp_trim_words( wp_strip_all_tags( $content ), 40 ),
+			'meta_input'   => array(
+				'_c365_guid'        => $url,
+				'_c365_feed_id'     => $feed_id,
+				'_c365_source_url'  => esc_url_raw( $url ),
+				'_c365_source_name' => $meta['site_name'],
+			),
+		);
+
+		if ( $meta['timestamp'] && C365_Settings::get( 'use_original_date' ) ) {
+			$postarr['post_date_gmt'] = gmdate( 'Y-m-d H:i:s', $meta['timestamp'] );
+			$postarr['post_date']     = get_date_from_gmt( $postarr['post_date_gmt'] );
+		}
+		if ( $categories ) {
+			$postarr['post_category'] = array_unique( $categories );
+		}
+
+		$post_id = wp_insert_post( wp_slash( $postarr ), true );
+		if ( is_wp_error( $post_id ) || ! $post_id ) {
+			return false;
+		}
+
+		// Featured image: og:image, else first image in the article.
+		if ( C365_Settings::get( 'set_featured_image' ) ) {
+			$image_url = $meta['image'];
+			if ( ! $image_url && preg_match( '/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $m ) ) {
+				$image_url = $m[1];
+			}
+			if ( $image_url && 0 === strpos( $image_url, 'http' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/media.php';
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+				require_once ABSPATH . 'wp-admin/includes/image.php';
+				$attachment_id = media_sideload_image( esc_url_raw( $image_url ), $post_id, $meta['title'], 'id' );
+				if ( ! is_wp_error( $attachment_id ) ) {
+					set_post_thumbnail( $post_id, $attachment_id );
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Pull title / date / image / site name out of an article page's markup
+	 * (Open Graph and standard meta first, visible elements as fallback).
+	 *
+	 * @param string $html Article page HTML.
+	 * @param string $url  Article URL (host used as last-resort site name).
+	 * @return array { title, timestamp, image, site_name }
+	 */
+	public static function parse_article_meta( $html, $url ) {
+		$meta = array(
+			'title'     => '',
+			'timestamp' => 0,
+			'image'     => '',
+			'site_name' => (string) wp_parse_url( $url, PHP_URL_HOST ),
+		);
+
+		$grab = function ( $pattern ) use ( $html ) {
+			return preg_match( $pattern, $html, $m ) ? html_entity_decode( trim( $m[1] ), ENT_QUOTES, 'UTF-8' ) : '';
+		};
+
+		$meta['title'] = $grab( '/<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']/i' );
+		if ( ! $meta['title'] ) {
+			$meta['title'] = $grab( '/<h1[^>]*>(.*?)<\/h1>/is' );
+			$meta['title'] = wp_strip_all_tags( $meta['title'] );
+		}
+		if ( ! $meta['title'] ) {
+			$meta['title'] = $grab( '/<title[^>]*>(.*?)<\/title>/is' );
+		}
+		$meta['title'] = wp_strip_all_tags( $meta['title'] );
+
+		$published = $grab( '/<meta[^>]+property=["\']article:published_time["\'][^>]+content=["\']([^"\']+)["\']/i' );
+		if ( ! $published ) {
+			$published = $grab( '/<time[^>]+datetime=["\']([^"\']+)["\']/i' );
+		}
+		if ( $published ) {
+			$timestamp = strtotime( $published );
+			if ( $timestamp ) {
+				$meta['timestamp'] = $timestamp;
+			}
+		}
+
+		$meta['image'] = $grab( '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/i' );
+
+		$site_name = $grab( '/<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\']([^"\']+)["\']/i' );
+		if ( $site_name ) {
+			$meta['site_name'] = $site_name;
+		}
+
+		return $meta;
 	}
 
 	/**

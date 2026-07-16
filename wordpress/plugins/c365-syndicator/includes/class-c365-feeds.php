@@ -30,6 +30,7 @@ class C365_Feeds {
 	public static function types() {
 		return array(
 			'blog'    => __( 'Blog RSS', 'c365-syndicator' ),
+			'scrape'  => __( 'Web page (no RSS)', 'c365-syndicator' ),
 			'podcast' => __( 'Podcast RSS', 'c365-syndicator' ),
 			'youtube' => __( 'YouTube channel', 'c365-syndicator' ),
 			'event'   => __( 'Events feed', 'c365-syndicator' ),
@@ -45,6 +46,7 @@ class C365_Feeds {
 	public static function post_type_for( $type ) {
 		$map = array(
 			'blog'    => 'post',
+			'scrape'  => 'post',
 			'podcast' => 'c365_podcast',
 			'youtube' => 'c365_video',
 			'event'   => 'c365_event',

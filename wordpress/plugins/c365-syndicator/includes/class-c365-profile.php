@@ -123,7 +123,7 @@ class C365_Profile {
 		?>
 		<h2><?php esc_html_e( 'Syndication feeds', 'c365-syndicator' ); ?></h2>
 		<p class="description">
-			<?php esc_html_e( 'The site checks these automatically and republishes new items under your name, with a link back to the original and a note that it is shared with your permission. You can add several feeds and point each at its own category. For YouTube, enter your channel ID (starts with “UC”).', 'c365-syndicator' ); ?>
+			<?php esc_html_e( 'The site checks these automatically and republishes new items under your name, with a link back to the original and a note that it is shared with your permission. You can add several feeds and point each at its own category. For YouTube, enter your channel ID (starts with “UC”). No RSS feed? Choose “Web page (no RSS)” and enter your blog’s listing page URL — the site will discover new articles on it automatically.', 'c365-syndicator' ); ?>
 		</p>
 		<table class="widefat striped" style="max-width:900px;">
 			<thead>
