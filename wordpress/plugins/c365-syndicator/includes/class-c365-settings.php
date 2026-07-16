@@ -413,6 +413,9 @@ class C365_Settings {
 							<td><?php echo esc_html( isset( $types[ $row->type ] ) ? $types[ $row->type ] : $row->type ); ?></td>
 							<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
 								<?php echo esc_html( $row->feed_url ); ?>
+								<?php if ( ! empty( $row->full_content ) ) : ?>
+									<em title="<?php esc_attr_e( 'Fetches the full article text from the source page', 'c365-syndicator' ); ?>">(<?php esc_html_e( 'full text', 'c365-syndicator' ); ?>)</em>
+								<?php endif; ?>
 								<?php if ( ! (int) $row->active ) : ?>
 									<em>(<?php esc_html_e( 'inactive', 'c365-syndicator' ); ?>)</em>
 								<?php endif; ?>

@@ -131,6 +131,7 @@ class C365_Profile {
 					<th><?php esc_html_e( 'Type', 'c365-syndicator' ); ?></th>
 					<th><?php esc_html_e( 'Feed URL / channel ID', 'c365-syndicator' ); ?></th>
 					<th><?php esc_html_e( 'Post into category(ies)', 'c365-syndicator' ); ?></th>
+					<th title="<?php esc_attr_e( 'If your feed only contains summaries, tick this so the site fetches the full article text from your blog.', 'c365-syndicator' ); ?>"><?php esc_html_e( 'Full text', 'c365-syndicator' ); ?></th>
 					<th><?php esc_html_e( 'Active', 'c365-syndicator' ); ?></th>
 					<th><?php esc_html_e( 'Delete', 'c365-syndicator' ); ?></th>
 				</tr>
@@ -142,6 +143,7 @@ class C365_Profile {
 						<td><?php echo $type_select( $prefix . '[type]', $row->type ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
 						<td><input type="text" name="<?php echo esc_attr( $prefix ); ?>[feed_url]" value="<?php echo esc_attr( $row->feed_url ); ?>" class="regular-text"></td>
 						<td><?php echo $category_select( $prefix . '[categories]', C365_Feeds::parse_categories( $row->categories ) ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+						<td><input type="checkbox" name="<?php echo esc_attr( $prefix ); ?>[full_content]" value="1" <?php checked( ! empty( $row->full_content ) ); ?>></td>
 						<td><input type="checkbox" name="<?php echo esc_attr( $prefix ); ?>[active]" value="1" <?php checked( (int) $row->active ); ?>></td>
 						<td><input type="checkbox" name="<?php echo esc_attr( $prefix ); ?>[delete]" value="1"></td>
 					</tr>
@@ -150,6 +152,7 @@ class C365_Profile {
 					<td><?php echo $type_select( 'c365_feed_rows[new][type]', 'blog' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
 					<td><input type="text" name="c365_feed_rows[new][feed_url]" value="" class="regular-text" placeholder="https://myblog.com/feed/"></td>
 					<td><?php echo $category_select( 'c365_feed_rows[new][categories]', array() ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+					<td><input type="checkbox" name="c365_feed_rows[new][full_content]" value="1"></td>
 					<td><input type="checkbox" name="c365_feed_rows[new][active]" value="1" checked></td>
 					<td>—</td>
 				</tr>
@@ -283,10 +286,11 @@ class C365_Profile {
 
 		foreach ( $rows as $id => $row ) {
 			$data = array(
-				'type'       => isset( $row['type'] ) ? sanitize_key( $row['type'] ) : 'blog',
-				'feed_url'   => isset( $row['feed_url'] ) ? trim( (string) $row['feed_url'] ) : '',
-				'categories' => isset( $row['categories'] ) ? array_map( 'absint', (array) $row['categories'] ) : array(),
-				'active'     => ! empty( $row['active'] ),
+				'type'         => isset( $row['type'] ) ? sanitize_key( $row['type'] ) : 'blog',
+				'feed_url'     => isset( $row['feed_url'] ) ? trim( (string) $row['feed_url'] ) : '',
+				'categories'   => isset( $row['categories'] ) ? array_map( 'absint', (array) $row['categories'] ) : array(),
+				'active'       => ! empty( $row['active'] ),
+				'full_content' => ! empty( $row['full_content'] ),
 			);
 
 			if ( 'new' === $id ) {

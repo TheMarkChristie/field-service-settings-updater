@@ -20,7 +20,7 @@ if ( ! class_exists( 'C365_Feeds' ) ) :
 
 class C365_Feeds {
 
-	const DB_VERSION = '1';
+	const DB_VERSION = '2';
 
 	/**
 	 * Valid feed types.
@@ -86,6 +86,7 @@ class C365_Feeds {
 				categories TEXT,
 				active TINYINT(1) NOT NULL DEFAULT 1,
 				backfilled TINYINT(1) NOT NULL DEFAULT 0,
+				full_content TINYINT(1) NOT NULL DEFAULT 0,
 				last_fetch DATETIME DEFAULT NULL,
 				last_result TEXT,
 				fail_count INT NOT NULL DEFAULT 0,
@@ -168,15 +169,16 @@ class C365_Feeds {
 		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			self::table(),
 			array(
-				'user_id'    => (int) $data['user_id'],
-				'type'       => $type,
-				'feed_url'   => $url,
-				'categories' => self::serialize_categories( isset( $data['categories'] ) ? $data['categories'] : array() ),
-				'active'     => isset( $data['active'] ) ? (int) (bool) $data['active'] : 1,
-				'backfilled' => isset( $data['backfilled'] ) ? (int) (bool) $data['backfilled'] : 0,
-				'created_at' => current_time( 'mysql', true ),
+				'user_id'      => (int) $data['user_id'],
+				'type'         => $type,
+				'feed_url'     => $url,
+				'categories'   => self::serialize_categories( isset( $data['categories'] ) ? $data['categories'] : array() ),
+				'active'       => isset( $data['active'] ) ? (int) (bool) $data['active'] : 1,
+				'backfilled'   => isset( $data['backfilled'] ) ? (int) (bool) $data['backfilled'] : 0,
+				'full_content' => isset( $data['full_content'] ) ? (int) (bool) $data['full_content'] : 0,
+				'created_at'   => current_time( 'mysql', true ),
 			),
-			array( '%d', '%s', '%s', '%s', '%d', '%d', '%s' )
+			array( '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s' )
 		);
 
 		return (int) $wpdb->insert_id;
@@ -204,10 +206,11 @@ class C365_Feeds {
 		}
 
 		$fields = array(
-			'type'       => $type,
-			'feed_url'   => $url,
-			'categories' => self::serialize_categories( isset( $data['categories'] ) ? $data['categories'] : self::parse_categories( $row->categories ) ),
-			'active'     => isset( $data['active'] ) ? (int) (bool) $data['active'] : (int) $row->active,
+			'type'         => $type,
+			'feed_url'     => $url,
+			'categories'   => self::serialize_categories( isset( $data['categories'] ) ? $data['categories'] : self::parse_categories( $row->categories ) ),
+			'active'       => isset( $data['active'] ) ? (int) (bool) $data['active'] : (int) $row->active,
+			'full_content' => isset( $data['full_content'] ) ? (int) (bool) $data['full_content'] : (int) $row->full_content,
 		);
 
 		// Changing the URL makes it a different feed: allow a fresh backfill.

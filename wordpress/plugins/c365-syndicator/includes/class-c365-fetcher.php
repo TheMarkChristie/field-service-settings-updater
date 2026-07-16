@@ -167,7 +167,7 @@ class C365_Fetcher {
 		}
 
 		foreach ( $items as $item ) {
-			if ( self::import_item( $user, $item, $post_type, $feed, $categories, (int) $row->id ) ) {
+			if ( self::import_item( $user, $item, $post_type, $feed, $categories, (int) $row->id, ! empty( $row->full_content ) ) ) {
 				$imported++;
 			}
 		}
@@ -199,9 +199,10 @@ class C365_Fetcher {
 	 * @param SimplePie      $feed       Parent feed.
 	 * @param int[]          $categories Category IDs from the feed record.
 	 * @param int            $feed_id    Feed record ID.
+	 * @param bool           $fetch_full Scrape the source page for the full article text.
 	 * @return bool Whether a post was created.
 	 */
-	protected static function import_item( $user, $item, $post_type, $feed, $categories, $feed_id ) {
+	protected static function import_item( $user, $item, $post_type, $feed, $categories, $feed_id, $fetch_full = false ) {
 		$guid = $item->get_id();
 		if ( ! $guid ) {
 			$guid = $item->get_permalink();
@@ -236,6 +237,16 @@ class C365_Fetcher {
 			$content = (string) $item->get_description();
 		}
 		$content = wp_kses_post( $content );
+
+		// Full-content scrape: fetch the actual article page for feeds that
+		// only publish summaries. The scraped text is used when it is clearly
+		// more complete than what the feed provided; otherwise fall back.
+		if ( $fetch_full ) {
+			$scraped = self::scrape_full_content( (string) $item->get_permalink() );
+			if ( $scraped && strlen( $scraped ) > max( 300, (int) ( strlen( $content ) * 1.2 ) ) ) {
+				$content = $scraped;
+			}
+		}
 
 		// Apply the per-type post body template (Syndication → Templates).
 		$content = self::apply_post_template(
@@ -309,6 +320,109 @@ class C365_Fetcher {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Fetch an article page and extract its main content ("Advance Scrap").
+	 *
+	 * @param string $url Article URL.
+	 * @return string Sanitised article HTML, or '' when unavailable.
+	 */
+	public static function scrape_full_content( $url ) {
+		if ( ! $url || 0 !== strpos( $url, 'http' ) ) {
+			return '';
+		}
+
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'    => 15,
+				'user-agent' => 'Mozilla/5.0 (compatible; C365Syndicator/1.0; +https://365community.online)',
+			)
+		);
+		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+			return '';
+		}
+
+		return self::extract_article_html( wp_remote_retrieve_body( $response ) );
+	}
+
+	/**
+	 * Pull the main article body out of a full HTML page: tries <article>,
+	 * common content containers, then <main>, picking the candidate with the
+	 * most text, and strips navigation/script/share clutter from it.
+	 *
+	 * @param string $html Full page HTML.
+	 * @return string Sanitised article HTML, or '' when nothing usable found.
+	 */
+	public static function extract_article_html( $html ) {
+		if ( ! class_exists( 'DOMDocument' ) || '' === trim( (string) $html ) ) {
+			return '';
+		}
+
+		$doc = new DOMDocument();
+		libxml_use_internal_errors( true );
+		$loaded = $doc->loadHTML( '<?xml encoding="utf-8"?>' . $html, defined( 'LIBXML_NOWARNING' ) ? LIBXML_NOWARNING | LIBXML_NOERROR : 0 );
+		libxml_clear_errors();
+		if ( ! $loaded ) {
+			return '';
+		}
+
+		$xpath   = new DOMXPath( $doc );
+		$queries = array(
+			'//*[@itemprop="articleBody"]',
+			'//article',
+			'//div[contains(concat(" ", normalize-space(@class), " "), " entry-content ")]',
+			'//div[contains(concat(" ", normalize-space(@class), " "), " post-content ")]',
+			'//div[contains(concat(" ", normalize-space(@class), " "), " article-content ")]',
+			'//div[contains(concat(" ", normalize-space(@class), " "), " content-area ")]',
+			'//main',
+		);
+
+		$best      = null;
+		$best_size = 0;
+		foreach ( $queries as $query ) {
+			$nodes = $xpath->query( $query );
+			if ( ! $nodes ) {
+				continue;
+			}
+			foreach ( $nodes as $node ) {
+				$size = strlen( trim( $node->textContent ) );
+				if ( $size > $best_size ) {
+					$best      = $node;
+					$best_size = $size;
+				}
+			}
+			// A named article container beats falling through to <main>.
+			if ( $best && $best_size > 500 ) {
+				break;
+			}
+		}
+
+		if ( ! $best || $best_size < 200 ) {
+			return '';
+		}
+
+		// Strip non-content elements from the chosen container.
+		$junk = $xpath->query( './/script | .//style | .//nav | .//aside | .//form | .//footer | .//header | .//iframe', $best );
+		if ( $junk ) {
+			$remove = array();
+			foreach ( $junk as $node ) {
+				$remove[] = $node;
+			}
+			foreach ( $remove as $node ) {
+				if ( $node->parentNode ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName
+					$node->parentNode->removeChild( $node ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName
+				}
+			}
+		}
+
+		$inner = '';
+		foreach ( $best->childNodes as $child ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName
+			$inner .= $doc->saveHTML( $child );
+		}
+
+		return wp_kses_post( trim( $inner ) );
 	}
 
 	/**
