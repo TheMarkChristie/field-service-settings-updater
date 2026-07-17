@@ -23,9 +23,115 @@ class Synpro_Emails {
 	/**
 	 * Hook everything up.
 	 */
+	const SMTP_OPTION = 'synpro_smtp_settings';
+
 	public static function init() {
 		add_action( 'transition_post_status', array( __CLASS__, 'maybe_send_welcome' ), 20, 3 );
 		add_action( self::CRON_HOOK, array( __CLASS__, 'send_digest' ) );
+
+		// Route all wp_mail through SMTP when configured (better deliverability
+		// than PHP mail() for the digest's volume).
+		add_action( 'phpmailer_init', array( __CLASS__, 'configure_smtp' ) );
+		$smtp = self::smtp_settings();
+		if ( ! empty( $smtp['enabled'] ) && $smtp['from_email'] ) {
+			add_filter( 'wp_mail_from', array( __CLASS__, 'smtp_from_email' ), 20 );
+			add_filter( 'wp_mail_from_name', array( __CLASS__, 'smtp_from_name' ), 20 );
+		}
+	}
+
+	/**
+	 * SMTP settings, with defaults.
+	 *
+	 * @return array
+	 */
+	public static function smtp_settings() {
+		return wp_parse_args(
+			(array) get_option( self::SMTP_OPTION, array() ),
+			array(
+				'enabled'    => 0,
+				'host'       => '',
+				'port'       => 587,
+				'encryption' => 'tls', // '', 'ssl', 'tls'
+				'auth'       => 1,
+				'username'   => '',
+				'password'   => '',
+				'from_email' => '',
+				'from_name'  => '',
+			)
+		);
+	}
+
+	/**
+	 * Sanitise SMTP settings. A blank password keeps the stored one.
+	 *
+	 * @param array $input Raw input.
+	 * @return array
+	 */
+	public static function sanitize_smtp( $input ) {
+		$input  = (array) $input;
+		$stored = self::smtp_settings();
+		$pass   = isset( $input['password'] ) ? (string) $input['password'] : '';
+		if ( '' === $pass ) {
+			$pass = $stored['password'];
+		}
+		$enc = isset( $input['encryption'] ) && in_array( $input['encryption'], array( '', 'ssl', 'tls' ), true ) ? $input['encryption'] : 'tls';
+		return array(
+			'enabled'    => empty( $input['enabled'] ) ? 0 : 1,
+			'host'       => isset( $input['host'] ) ? sanitize_text_field( $input['host'] ) : '',
+			'port'       => min( 65535, max( 1, absint( $input['port'] ?? 587 ) ) ),
+			'encryption' => $enc,
+			'auth'       => empty( $input['auth'] ) ? 0 : 1,
+			'username'   => isset( $input['username'] ) ? sanitize_text_field( $input['username'] ) : '',
+			'password'   => $pass,
+			'from_email' => isset( $input['from_email'] ) ? sanitize_email( $input['from_email'] ) : '',
+			'from_name'  => isset( $input['from_name'] ) ? sanitize_text_field( $input['from_name'] ) : '',
+		);
+	}
+
+	/**
+	 * Configure PHPMailer to use SMTP when enabled.
+	 *
+	 * @param object $phpmailer PHPMailer instance (by reference).
+	 */
+	public static function configure_smtp( $phpmailer ) {
+		$s = self::smtp_settings();
+		if ( empty( $s['enabled'] ) || empty( $s['host'] ) ) {
+			return;
+		}
+		$phpmailer->isSMTP();
+		$phpmailer->Host       = $s['host'];
+		$phpmailer->Port       = (int) $s['port'];
+		$phpmailer->SMTPAuth   = ! empty( $s['auth'] );
+		$phpmailer->SMTPSecure = $s['encryption']; // '', 'ssl', or 'tls'
+		if ( ! empty( $s['auth'] ) ) {
+			$phpmailer->Username = $s['username'];
+			$phpmailer->Password = $s['password'];
+		}
+		if ( $s['from_email'] ) {
+			$phpmailer->setFrom( $s['from_email'], $s['from_name'] ? $s['from_name'] : '', false );
+		}
+	}
+
+	/**
+	 * SMTP "from" address filter.
+	 *
+	 * @param string $email Default from email.
+	 * @return string
+	 */
+	public static function smtp_from_email( $email ) {
+		$s = self::smtp_settings();
+		return $s['from_email'] ? $s['from_email'] : $email;
+	}
+
+	/**
+	 * SMTP "from" name filter.
+	 *
+	 * @param string $name Default from name.
+	 * @return string
+	 */
+	public static function smtp_from_name( $name ) {
+		$s = self::smtp_settings();
+		return $s['from_name'] ? $s['from_name'] : $name;
 	}
 
 	/**

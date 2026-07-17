@@ -1011,3 +1011,21 @@ sign-in, category preferences, a configurable offline cache, a native
 reader, external media playback, Firebase push, and the black/orange
 brand. Its README documents the one-time `flutter create` + Firebase
 bootstrap.
+
+## Part 15 — v2.9.0 / theme v2.6.0: launch-readiness pack
+
+- **Double opt-in subscribers** — website sign-ups now send a
+  confirmation email (token link) and only **confirmed** addresses
+  receive the digest. New `confirmed` / `confirmed_at` columns (subscriber
+  DB v2, existing rows grandfathered to confirmed on upgrade); a
+  `synpro_confirm` handler; the form shows "check your inbox"; the Emails
+  tab shows confirmed vs pending counts. GDPR-friendly consent.
+- **SMTP delivery** — a new `synpro_smtp_settings` option (autoload off;
+  password kept-on-blank) and a `phpmailer_init` hook route all site email
+  through an authenticated SMTP service (host/port/encryption/auth/from),
+  configured on the Emails tab, for digest deliverability. Off by default
+  (uses PHP mail).
+- **Cookie/consent banner** — a dismissible, `localStorage`-remembered
+  banner in the theme footer, with Customizer controls (enable, text, and
+  a privacy-policy page link). Accessible (role=dialog, focusable button,
+  brand-token styled).

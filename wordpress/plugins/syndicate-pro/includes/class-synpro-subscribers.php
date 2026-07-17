@@ -15,7 +15,7 @@ if ( ! class_exists( 'Synpro_Subscribers' ) ) :
 
 class Synpro_Subscribers {
 
-	const DB_VERSION = '1';
+	const DB_VERSION = '2';
 
 	/**
 	 * Hook everything up.
@@ -27,6 +27,8 @@ class Synpro_Subscribers {
 		add_action( 'admin_post_synpro_subscribe', array( __CLASS__, 'handle_subscribe' ) );
 		add_action( 'admin_post_nopriv_synpro_unsubscribe', array( __CLASS__, 'handle_unsubscribe' ) );
 		add_action( 'admin_post_synpro_unsubscribe', array( __CLASS__, 'handle_unsubscribe' ) );
+		add_action( 'admin_post_nopriv_synpro_confirm', array( __CLASS__, 'handle_confirm' ) );
+		add_action( 'admin_post_synpro_confirm', array( __CLASS__, 'handle_confirm' ) );
 	}
 
 	/**
@@ -47,45 +49,66 @@ class Synpro_Subscribers {
 			return;
 		}
 		global $wpdb;
+		$existing = get_option( 'synpro_subscribers_db_version' );
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta(
 			'CREATE TABLE ' . self::table() . " (
 				id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 				email VARCHAR(190) NOT NULL,
 				token VARCHAR(64) NOT NULL,
+				confirmed TINYINT(1) NOT NULL DEFAULT 0,
+				confirmed_at DATETIME DEFAULT NULL,
 				created_at DATETIME DEFAULT NULL,
 				PRIMARY KEY  (id),
 				UNIQUE KEY email (email)
 			) " . $wpdb->get_charset_collate() . ';'
 		);
+		// Grandfather any rows that pre-date double opt-in (v1 → v2) so
+		// existing subscribers aren't silently dropped from the digest.
+		if ( $existing && version_compare( $existing, '2', '<' ) ) {
+			$wpdb->query( 'UPDATE ' . self::table() . ' SET confirmed = 1 WHERE confirmed = 0' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		}
 		update_option( 'synpro_subscribers_db_version', self::DB_VERSION );
 	}
 
 	/**
-	 * All subscribers.
+	 * Confirmed subscribers (the digest recipients).
 	 *
 	 * @return object[] Rows with email + token.
 	 */
 	public static function all() {
 		global $wpdb;
-		return (array) $wpdb->get_results( 'SELECT email, token FROM ' . self::table() . ' ORDER BY id' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		return (array) $wpdb->get_results( 'SELECT email, token FROM ' . self::table() . ' WHERE confirmed = 1 ORDER BY id' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	/**
-	 * Subscriber count.
+	 * Confirmed subscriber count (digest recipients).
 	 *
 	 * @return int
 	 */
 	public static function count() {
 		global $wpdb;
-		return (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::table() ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		return (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::table() . ' WHERE confirmed = 1' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	/**
-	 * Add a subscriber (idempotent).
+	 * Count of subscribers who signed up but haven't confirmed yet.
+	 *
+	 * @return int
+	 */
+	public static function pending_count() {
+		global $wpdb;
+		return (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::table() . ' WHERE confirmed = 0' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
+
+	/**
+	 * Add a subscriber (idempotent) and send a confirmation email when a
+	 * new, unconfirmed row is created (double opt-in). Returns a status:
+	 * 'sent' (confirmation emailed), 'exists' (already confirmed), or
+	 * false (invalid email).
 	 *
 	 * @param string $email Email address.
-	 * @return bool
+	 * @return string|false
 	 */
 	public static function add( $email ) {
 		global $wpdb;
@@ -93,15 +116,52 @@ class Synpro_Subscribers {
 		if ( ! is_email( $email ) ) {
 			return false;
 		}
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare(
-				'INSERT IGNORE INTO ' . self::table() . ' (email, token, created_at) VALUES (%s, %s, %s)',
-				$email,
-				wp_generate_password( 40, false ),
-				current_time( 'mysql', true )
-			)
+
+		$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT id, token, confirmed FROM ' . self::table() . ' WHERE email = %s', $email ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( $existing && (int) $existing->confirmed === 1 ) {
+			return 'exists'; // Already on the list.
+		}
+
+		$token = $existing ? $existing->token : wp_generate_password( 40, false );
+		if ( ! $existing ) {
+			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				$wpdb->prepare(
+					'INSERT IGNORE INTO ' . self::table() . ' (email, token, confirmed, created_at) VALUES (%s, %s, 0, %s)',
+					$email,
+					$token,
+					current_time( 'mysql', true )
+				)
+			);
+		}
+
+		self::send_confirmation( $email, $token );
+		return 'sent';
+	}
+
+	/**
+	 * Email the double opt-in confirmation link.
+	 *
+	 * @param string $email Email address.
+	 * @param string $token Row token.
+	 */
+	protected static function send_confirmation( $email, $token ) {
+		$confirm_url = add_query_arg(
+			array( 'action' => 'synpro_confirm', 'token' => rawurlencode( $token ) ),
+			admin_url( 'admin-post.php' )
 		);
-		return true;
+		$site = get_bloginfo( 'name' );
+		$body = sprintf(
+			/* translators: 1: site name, 2: confirmation URL. */
+			__( "Thanks for subscribing to the %1\$s weekly digest.\n\nPlease confirm your subscription by clicking this link:\n%2\$s\n\nIf you didn't request this, just ignore this email — you won't be added.", 'syndicate-pro' ),
+			$site,
+			$confirm_url
+		);
+		wp_mail(
+			$email,
+			/* translators: %s: site name. */
+			sprintf( __( 'Confirm your subscription to %s', 'syndicate-pro' ), $site ),
+			$body
+		);
 	}
 
 	/**
@@ -134,7 +194,9 @@ class Synpro_Subscribers {
 		$out .= '<label class="screen-reader-text" for="synpro-sub-email">' . esc_html__( 'Email address', 'syndicate-pro' ) . '</label>';
 		$out .= '<input id="synpro-sub-email" type="email" name="synpro_email" required placeholder="' . esc_attr__( 'you@example.com', 'syndicate-pro' ) . '">';
 		$out .= '<button type="submit">' . esc_html__( 'Subscribe', 'syndicate-pro' ) . '</button>';
-		if ( isset( $_GET['synpro_subscribed'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['synpro_check_email'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$out .= '<p class="synpro-subscribe-done">' . esc_html__( 'Almost there! Check your inbox for a confirmation link to complete your subscription.', 'syndicate-pro' ) . '</p>';
+		} elseif ( isset( $_GET['synpro_subscribed'] ) ) { // legacy success flag. phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$out .= '<p class="synpro-subscribe-done">' . esc_html__( 'You’re subscribed — see you in the next digest!', 'syndicate-pro' ) . '</p>';
 		} elseif ( isset( $_GET['synpro_sub_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$out .= '<p class="synpro-subscribe-done">' . esc_html__( 'That didn’t work — please check the address and try again in a minute.', 'syndicate-pro' ) . '</p>';
@@ -164,13 +226,44 @@ class Synpro_Subscribers {
 			exit;
 		}
 
-		$email = isset( $_POST['synpro_email'] ) ? sanitize_email( wp_unslash( $_POST['synpro_email'] ) ) : '';
-		$added = $email && self::add( $email );
-		if ( $added ) {
+		$email  = isset( $_POST['synpro_email'] ) ? sanitize_email( wp_unslash( $_POST['synpro_email'] ) ) : '';
+		$result = $email ? self::add( $email ) : false;
+		if ( $result ) {
 			set_transient( $ip_key, 1, MINUTE_IN_SECONDS );
 		}
-		wp_safe_redirect( add_query_arg( $added ? 'synpro_subscribed' : 'synpro_sub_error', '1', $back ) );
+		// 'sent' = confirmation emailed; 'exists' = already confirmed;
+		// false = invalid. All non-false cases show the "check your inbox"
+		// message so we never disclose whether an address is already on the
+		// list.
+		$flag = $result ? 'synpro_check_email' : 'synpro_sub_error';
+		wp_safe_redirect( add_query_arg( $flag, '1', $back ) );
 		exit;
+	}
+
+	/**
+	 * Handle a confirmation (double opt-in) link.
+	 */
+	public static function handle_confirm() {
+		global $wpdb;
+		$token = isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$rows  = $token
+			? (int) $wpdb->query( $wpdb->prepare( 'UPDATE ' . self::table() . ' SET confirmed = 1, confirmed_at = %s WHERE token = %s AND confirmed = 0', current_time( 'mysql', true ), $token ) ) // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			: 0;
+
+		// Already-confirmed tokens still resolve to a friendly message.
+		$known = $rows || ( $token && (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . self::table() . ' WHERE token = %s', $token ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( $known ) {
+			wp_die(
+				esc_html__( 'Thanks — your subscription is confirmed. See you in the next digest!', 'syndicate-pro' ),
+				esc_html__( 'Subscription confirmed', 'syndicate-pro' ),
+				array( 'response' => 200 )
+			);
+		}
+		wp_die(
+			esc_html__( 'This confirmation link is invalid or has expired. Please subscribe again.', 'syndicate-pro' ),
+			esc_html__( 'Link not recognised', 'syndicate-pro' ),
+			array( 'response' => 404 )
+		);
 	}
 
 	/**

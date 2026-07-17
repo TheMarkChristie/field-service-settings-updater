@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.5.2
+Version: 2.6.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -982,6 +982,43 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .synpro-subscribe button { min-height: 44px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c365-on-accent, #fff); background: var(--c365-accent); border: 0; border-radius: 8px; cursor: pointer; }
 .synpro-subscribe button:hover { filter: brightness(1.1); }
 .synpro-subscribe .synpro-subscribe-done { flex-basis: 100%; margin: 0.25rem 0 0; font-size: 0.85rem; font-weight: 700; color: var(--c365-accent); }
+
+/* ---------------------------------------------------------------------------
+   Cookie / consent banner
+--------------------------------------------------------------------------- */
+.c365-cookie {
+	position: fixed;
+	left: 1rem; right: 1rem; bottom: 1rem;
+	z-index: 200;
+	max-width: 640px;
+	margin: 0 auto;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.8rem 1.2rem;
+	padding: 1rem 1.25rem;
+	background: var(--c365-surface);
+	border: 1px solid var(--c365-border);
+	border-radius: var(--c365-radius);
+	box-shadow: var(--c365-shadow-hover);
+}
+.c365-cookie[hidden] { display: none; }
+.c365-cookie-text { margin: 0; flex: 1 1 260px; font-size: 0.88rem; color: var(--c365-text-soft); }
+.c365-cookie-text a { color: var(--c365-link); font-weight: 700; }
+.c365-cookie-accept {
+	min-height: 44px;
+	padding: 0.5rem 1.4rem;
+	font-size: 0.85rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--c365-on-accent, #fff);
+	background: var(--c365-accent);
+	border: 0;
+	border-radius: 8px;
+	cursor: pointer;
+}
+.c365-cookie-accept:hover { filter: brightness(1.1); }
 
 /* ---------------------------------------------------------------------------
    Paid (sponsored) content disclosure — badge over images, banner on posts

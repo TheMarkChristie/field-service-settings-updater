@@ -134,6 +134,7 @@ class Synpro_Settings {
 		register_setting( 'synpro_social', Synpro_Social::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_social' ) ) );
 		register_setting( 'synpro_templates', self::TEMPLATES_OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_templates' ) ) );
 		register_setting( 'synpro_emails', Synpro_Emails::OPTION, array( 'sanitize_callback' => array( 'Synpro_Emails', 'sanitize' ) ) );
+		register_setting( 'synpro_smtp', Synpro_Emails::SMTP_OPTION, array( 'sanitize_callback' => array( 'Synpro_Emails', 'sanitize_smtp' ) ) );
 		register_setting( 'synpro_app', Synpro_Push::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_push' ) ) );
 	}
 
@@ -768,17 +769,73 @@ class Synpro_Settings {
 						<p>
 							<?php
 							printf(
-								/* translators: %d: subscriber count. */
-								esc_html( _n( '%d subscriber signed up via the website.', '%d subscribers signed up via the website.', Synpro_Subscribers::count(), 'syndicate-pro' ) ),
-								(int) Synpro_Subscribers::count()
+								/* translators: 1: confirmed count, 2: pending count. */
+								esc_html__( '%1$d confirmed subscriber(s), %2$d awaiting confirmation.', 'syndicate-pro' ),
+								(int) Synpro_Subscribers::count(),
+								(int) Synpro_Subscribers::pending_count()
 							);
 							?>
 						</p>
-						<p class="description"><?php esc_html_e( 'Visitors subscribe with the [synpro_subscribe] shortcode — the Community 365 theme shows it in the “Join us” strip automatically, or place the shortcode in any page or widget. Every digest they receive carries a one-click unsubscribe link. Members (WP users) manage their digest on their profile instead.', 'syndicate-pro' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Visitors subscribe with the [synpro_subscribe] shortcode — the Community 365 theme shows it in the “Join us” strip automatically, or place the shortcode in any page or widget. Sign-ups use double opt-in: a confirmation email is sent, and only confirmed addresses receive the digest (each with a one-click unsubscribe link). Members (WP users) manage their digest on their profile instead.', 'syndicate-pro' ); ?></p>
 					</td>
 				</tr>
 			</table>
 
+			<?php submit_button(); ?>
+		</form>
+
+		<?php
+		$smtp = Synpro_Emails::smtp_settings();
+		$sopt = Synpro_Emails::SMTP_OPTION;
+		?>
+		<hr>
+		<h2><?php esc_html_e( 'Email delivery (SMTP)', 'syndicate-pro' ); ?></h2>
+		<p class="description" style="max-width:760px;">
+			<?php esc_html_e( 'The weekly digest can go to hundreds of addresses. Sending through an authenticated SMTP service (your host’s, or a provider such as SendGrid, Mailgun, Brevo, or Amazon SES) with SPF/DKIM set up on your domain keeps those emails out of spam. Leave disabled to use the server’s default PHP mail.', 'syndicate-pro' ); ?>
+		</p>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'synpro_smtp' ); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><?php esc_html_e( 'Use SMTP', 'syndicate-pro' ); ?></th>
+					<td><label><input type="checkbox" name="<?php echo esc_attr( $sopt ); ?>[enabled]" value="1" <?php checked( $smtp['enabled'] ); ?>> <?php esc_html_e( 'Send all site email through SMTP', 'syndicate-pro' ); ?></label></td>
+				</tr>
+				<tr>
+					<th><label for="synpro-smtp-host"><?php esc_html_e( 'Host', 'syndicate-pro' ); ?></label></th>
+					<td><input type="text" class="regular-text" id="synpro-smtp-host" name="<?php echo esc_attr( $sopt ); ?>[host]" value="<?php echo esc_attr( $smtp['host'] ); ?>" placeholder="smtp.example.com"></td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Port & encryption', 'syndicate-pro' ); ?></th>
+					<td>
+						<input type="number" min="1" max="65535" style="width:90px" name="<?php echo esc_attr( $sopt ); ?>[port]" value="<?php echo esc_attr( $smtp['port'] ); ?>">
+						<select name="<?php echo esc_attr( $sopt ); ?>[encryption]">
+							<option value="tls" <?php selected( $smtp['encryption'], 'tls' ); ?>><?php esc_html_e( 'TLS (587)', 'syndicate-pro' ); ?></option>
+							<option value="ssl" <?php selected( $smtp['encryption'], 'ssl' ); ?>><?php esc_html_e( 'SSL (465)', 'syndicate-pro' ); ?></option>
+							<option value="" <?php selected( $smtp['encryption'], '' ); ?>><?php esc_html_e( 'None', 'syndicate-pro' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Authentication', 'syndicate-pro' ); ?></th>
+					<td><label><input type="checkbox" name="<?php echo esc_attr( $sopt ); ?>[auth]" value="1" <?php checked( $smtp['auth'] ); ?>> <?php esc_html_e( 'This server requires a username and password', 'syndicate-pro' ); ?></label></td>
+				</tr>
+				<tr>
+					<th><label for="synpro-smtp-user"><?php esc_html_e( 'Username', 'syndicate-pro' ); ?></label></th>
+					<td><input type="text" class="regular-text" id="synpro-smtp-user" name="<?php echo esc_attr( $sopt ); ?>[username]" value="<?php echo esc_attr( $smtp['username'] ); ?>" autocomplete="off"></td>
+				</tr>
+				<tr>
+					<th><label for="synpro-smtp-pass"><?php esc_html_e( 'Password', 'syndicate-pro' ); ?></label></th>
+					<td><input type="password" class="regular-text" id="synpro-smtp-pass" name="<?php echo esc_attr( $sopt ); ?>[password]" value="" autocomplete="new-password" placeholder="<?php echo $smtp['password'] ? esc_attr__( '•••••• stored — leave blank to keep', 'syndicate-pro' ) : ''; ?>"></td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'From address', 'syndicate-pro' ); ?></th>
+					<td>
+						<input type="email" class="regular-text" name="<?php echo esc_attr( $sopt ); ?>[from_email]" value="<?php echo esc_attr( $smtp['from_email'] ); ?>" placeholder="hello@365community.online">
+						<input type="text" class="regular-text" name="<?php echo esc_attr( $sopt ); ?>[from_name]" value="<?php echo esc_attr( $smtp['from_name'] ); ?>" placeholder="<?php esc_attr_e( '365 Community', 'syndicate-pro' ); ?>">
+						<p class="description"><?php esc_html_e( 'The address and name your email is sent from. Use an address on your own domain that the SMTP service is authorised to send for.', 'syndicate-pro' ); ?></p>
+					</td>
+				</tr>
+			</table>
 			<?php submit_button(); ?>
 		</form>
 		<?php

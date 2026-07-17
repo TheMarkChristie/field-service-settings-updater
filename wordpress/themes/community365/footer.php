@@ -52,6 +52,35 @@
 	</div>
 </footer>
 
+<?php
+if ( get_theme_mod( 'c365_cookie_enabled', true ) ) :
+	$c365_cookie_msg = get_theme_mod( 'c365_cookie_text', __( 'We use cookies to improve your experience on this site. By continuing to browse, you agree to our use of cookies.', 'community365' ) );
+	$c365_policy     = (int) get_theme_mod( 'c365_cookie_policy_page', 0 );
+	?>
+	<div class="c365-cookie" id="c365-cookie" role="dialog" aria-live="polite" aria-label="<?php esc_attr_e( 'Cookie notice', 'community365' ); ?>" hidden>
+		<p class="c365-cookie-text">
+			<?php echo esc_html( $c365_cookie_msg ); ?>
+			<?php if ( $c365_policy && get_permalink( $c365_policy ) ) : ?>
+				<a href="<?php echo esc_url( get_permalink( $c365_policy ) ); ?>"><?php esc_html_e( 'Learn more', 'community365' ); ?></a>
+			<?php endif; ?>
+		</p>
+		<button type="button" class="c365-cookie-accept"><?php esc_html_e( 'Got it', 'community365' ); ?></button>
+	</div>
+	<script>
+	( function () {
+		var KEY = 'c365_cookie_ok';
+		var bar = document.getElementById( 'c365-cookie' );
+		if ( ! bar ) { return; }
+		try { if ( localStorage.getItem( KEY ) === '1' ) { return; } } catch ( e ) {}
+		bar.hidden = false;
+		bar.querySelector( '.c365-cookie-accept' ).addEventListener( 'click', function () {
+			try { localStorage.setItem( KEY, '1' ); } catch ( e ) {}
+			bar.hidden = true;
+		} );
+	} )();
+	</script>
+<?php endif; ?>
+
 <?php wp_footer(); ?>
 </body>
 </html>

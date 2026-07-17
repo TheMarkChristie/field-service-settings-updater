@@ -192,6 +192,38 @@ function community365_customize_register( $wp_customize ) {
 		)
 	);
 
+	// Cookie / consent banner.
+	$wp_customize->add_setting( 'c365_cookie_enabled', array( 'default' => true, 'sanitize_callback' => 'wp_validate_boolean' ) );
+	$wp_customize->add_control(
+		'c365_cookie_enabled',
+		array(
+			'label'   => __( 'Show the cookie consent banner', 'community365' ),
+			'section' => 'c365_theme_options',
+			'type'    => 'checkbox',
+		)
+	);
+	$wp_customize->add_setting( 'c365_cookie_text', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
+	$wp_customize->add_control(
+		'c365_cookie_text',
+		array(
+			'label'       => __( 'Cookie banner text', 'community365' ),
+			'description' => __( 'Leave empty for the default wording.', 'community365' ),
+			'section'     => 'c365_theme_options',
+			'type'        => 'textarea',
+		)
+	);
+	$wp_customize->add_setting( 'c365_cookie_policy_page', array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
+	$wp_customize->add_control(
+		'c365_cookie_policy_page',
+		array(
+			'label'      => __( 'Cookie / privacy policy page', 'community365' ),
+			'description' => __( 'The page the banner’s “Learn more” link points to.', 'community365' ),
+			'section'    => 'c365_theme_options',
+			'type'       => 'dropdown-pages',
+			'allow_addition' => false,
+		)
+	);
+
 	// Footer text.
 	$wp_customize->add_setting(
 		'c365_footer_text',
