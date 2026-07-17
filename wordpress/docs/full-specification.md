@@ -1060,3 +1060,28 @@ The website now has search to match the app:
   `post` + `synpro_event` + `synpro_podcast` + `synpro_video`, so a
   search finds blogs, events, podcasts, and videos — the same four types
   the app's search covers.
+
+## Part 18 — full code + spec check: fixes (plugin v2.10.1 / theme v2.7.1)
+
+A whole-codebase review (spec-coverage audit + fresh full-plugin,
+full-theme, and app correctness passes) confirmed no missing requirements
+and no security/data-loss defects. The medium/low findings were fixed:
+
+Plugin:
+- Welcome email now only sends to syndication members (was firing for any
+  author's first post with feed-oriented wording).
+- Weekly digest recipients restricted to members (edit_posts capability) —
+  plain subscriber-role users were being mailed with no opt-out control.
+- Imported event start/end now stored in site-local wall-clock (wp_date)
+  to match the manual event meta box and the archive's upcoming/past sort.
+
+Theme:
+- Events-calendar month arrows no longer double the subdirectory prefix on
+  subdir installs (use the request path directly, not home_url()-wrapped).
+- searchform.php uses a unique field id per render (get_search_form can
+  appear more than once per page), fixing duplicate ids and label targets.
+- Muted/tertiary text derives from the background when left at default, so
+  it stays WCAG-legible on a light custom background.
+- Author-page search input has an accessible label.
+- "Join us" bars use the auto-contrast on-accent token (solid accent) so
+  the text stays readable under a light primary colour.

@@ -107,7 +107,9 @@ $pill_url   = function ( $type, $topic ) use ( $author_url ) {
 	</nav>
 
 	<form class="c365-author-search" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
-		<input type="search" name="s" placeholder="<?php echo esc_attr( sprintf( /* translators: %s: author display name. */ __( 'Search %s’s content…', 'community365' ), get_the_author_meta( 'display_name', $author_id ) ) ); ?>">
+		<?php $c365_author_search_label = sprintf( /* translators: %s: author display name. */ __( 'Search %s’s content…', 'community365' ), get_the_author_meta( 'display_name', $author_id ) ); ?>
+		<label class="screen-reader-text" for="c365-author-search-field"><?php echo esc_html( $c365_author_search_label ); ?></label>
+		<input type="search" id="c365-author-search-field" name="s" placeholder="<?php echo esc_attr( $c365_author_search_label ); ?>">
 		<input type="hidden" name="author" value="<?php echo esc_attr( $author_id ); ?>">
 	</form>
 

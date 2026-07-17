@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.7.0
+Version: 2.7.1
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -1245,7 +1245,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 
 /* Join bars */
 .c365-join-bars { display: grid; gap: 0.7rem; margin-bottom: 1rem; }
-.c365-join-bar { display: flex; justify-content: space-between; align-items: center; border-radius: 8px; padding: 0.7rem 1.1rem; font-weight: 800; color: #fff; text-decoration: none; background: linear-gradient(90deg, var(--c365-accent), #c2410c); }
+.c365-join-bar { display: flex; justify-content: space-between; align-items: center; border-radius: 8px; padding: 0.7rem 1.1rem; font-weight: 800; color: var(--c365-on-accent, #fff); text-decoration: none; background: var(--c365-accent); }
 .c365-join-bar:hover { filter: brightness(1.1); text-decoration: none; }
 .c365-join-count { font-weight: 700; opacity: 0.9; }
 

@@ -331,7 +331,10 @@ function community365_events_calendar() {
 
 	// On archives/the front page get_permalink() would return whatever post
 	// the last loop left in the global — month arrows must stay on the page.
-	$page_url = is_singular() ? get_permalink() : home_url( add_query_arg( array() ) );
+	// add_query_arg( array() ) is already the current request path (absolute
+	// from the host root); wrapping it in home_url() would double any
+	// subdirectory prefix, so use it as-is off-singular.
+	$page_url = is_singular() ? get_permalink() : add_query_arg( array() );
 	$page_url = remove_query_arg( 'cal', $page_url );
 	$prev     = add_query_arg( 'cal', gmdate( 'Y-m', strtotime( '-1 month', $first ) ), $page_url );
 	$next     = add_query_arg( 'cal', gmdate( 'Y-m', strtotime( '+1 month', $first ) ), $page_url );

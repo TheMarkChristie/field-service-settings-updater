@@ -193,12 +193,16 @@ class Synpro_Source_Rss {
 			}
 			$start_ts = strtotime( $start );
 			if ( $start_ts ) {
-				$item['event_start'] = gmdate( 'Y-m-d\TH:i', $start_ts );
+				// Store in the site's local wall-clock to match the manual
+				// event meta box and the archive's upcoming/past sort (which
+				// compares against current_time()); wp_date() applies the
+				// site timezone to the parsed UTC timestamp.
+				$item['event_start'] = wp_date( 'Y-m-d\TH:i', $start_ts );
 			}
 			$end    = $get_tag( $ns, $tags['end'] );
 			$end_ts = $end ? strtotime( $end ) : 0;
 			if ( $end_ts ) {
-				$item['event_end'] = gmdate( 'Y-m-d\TH:i', $end_ts );
+				$item['event_end'] = wp_date( 'Y-m-d\TH:i', $end_ts );
 			}
 			$location = $get_tag( $ns, $tags['location'] );
 			if ( $location ) {

@@ -213,6 +213,13 @@ class Synpro_Emails {
 			return;
 		}
 
+		// Only syndication members get the welcome email — its wording is
+		// about feeds and republishing, which makes no sense for a plain
+		// admin/editor publishing the site's first post.
+		if ( ! class_exists( 'Synpro_Profile' ) || ! Synpro_Profile::is_member( $author_id ) ) {
+			return;
+		}
+
 		$user = get_user_by( 'id', $author_id );
 		if ( ! $user || ! $user->user_email ) {
 			return;
@@ -390,8 +397,17 @@ class Synpro_Emails {
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
 
-		// WP users who have not opted out (unsubscribe = profile checkbox).
-		foreach ( get_users( array( 'fields' => array( 'ID', 'user_email' ) ) ) as $user ) {
+		// Members (Contributor and above) who have not opted out. Restricted
+		// to members because only they see the digest opt-out on their
+		// profile — plain subscriber-role users would be mailed with no way
+		// to unsubscribe. Website subscribers are handled separately below.
+		$members = get_users(
+			array(
+				'capability' => 'edit_posts',
+				'fields'     => array( 'ID', 'user_email' ),
+			)
+		);
+		foreach ( $members as $user ) {
 			if ( '0' === (string) get_user_meta( $user->ID, 'synpro_digest', true ) ) {
 				continue;
 			}

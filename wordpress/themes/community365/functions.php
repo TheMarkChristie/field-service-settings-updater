@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'COMMUNITY365_VERSION', '2.7.0' );
+define( 'COMMUNITY365_VERSION', '2.7.1' );
 
 /**
  * Theme setup.
@@ -149,6 +149,13 @@ function community365_brand_css() {
 	$surface = community365_shift( $bg, $dark_bg ? 0.05 : -0.04 );
 	$border  = community365_shift( $bg, $dark_bg ? 0.13 : -0.13 );
 	$text    = $dark_bg ? '#f2f3f7' : '#16181f';
+
+	// Muted text (dates, bylines, captions): honour an explicit tertiary
+	// choice, but when it's left at the default derive it from the body text
+	// so it stays legible on a light background instead of pale grey on white.
+	if ( strtolower( $tertiary ) === '#9aa1b2' ) {
+		$tertiary = community365_shift( $text, $dark_bg ? -0.35 : 0.35 );
+	}
 
 	$stacks = array(
 		'system'    => '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif',
