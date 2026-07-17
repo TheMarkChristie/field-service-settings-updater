@@ -6,8 +6,8 @@ required:
 
 | Package | Folder | What it does |
 |---|---|---|
-| **Syndicate Pro** (plugin, v2.3.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, website digest subscribers, a REST API for the mobile app, admin dashboard and wp-admin widgets. |
-| **Community 365** (theme, v2.1.0) | `themes/community365` | Presentation: black/orange/white magazine design, an 8-slot configurable home page with six components, distinct layouts per content type, single-post sidebar (events calendar, advert, social, coffee), member author pages, header sponsor slot, digest subscribe form, fully responsive for mobile and tablet. |
+| **Syndicate Pro** (plugin, v2.4.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, front-end Submit Content and My Account pages, social auto-sharing, category fallback images, website digest subscribers, a REST API for the mobile app, admin dashboard and wp-admin widgets. |
+| **Community 365** (theme, v2.2.0) | `themes/community365` | Presentation: black/orange/white magazine design, an 8-slot configurable home page with six components, distinct layouts per content type, single-post sidebar (events calendar, advert, social, coffee), member author pages, header sponsor slot, digest subscribe form, branded login/registration screens, fully responsive for mobile and tablet. |
 
 The full requirements are in [`docs/full-specification.md`](docs/full-specification.md).
 
@@ -131,6 +131,30 @@ social buttons, Buy Me a Coffee). The whole theme is responsive for mobile
 and tablet (collapsing grids, swipe sliders, 44px touch targets) and ships
 accessibility basics (focus outlines, reduced-motion support, semantic
 markup).
+
+## Member pages and login
+
+Activation creates two front-end pages (add them to your menu):
+
+- **Submit Content** (`/submit-content/`, the `[synpro_submit]` shortcode) —
+  members must be **logged in** (visitors get a styled log in / create
+  account card). They pick a **post type, category(ies), and a URL** — and
+  the URL question changes with the type: blog → RSS feed URL, no-RSS blog
+  → listing page URL, podcast → podcast RSS URL, YouTube → channel ID or
+  URL, events → events feed URL. Submitting adds the source to their feed
+  records, backfills its history on the next rotation, and imports new
+  items automatically from then on. Their existing sources are listed
+  below the form with a live status chip.
+- **My Account** (`/my-account/`, the `[synpro_account]` shortcode) — a
+  branded front-end profile: display name, bio, and the full set of
+  syndication/author-page fields from the wp-admin profile screen (feeds,
+  photos, links, section toggles, digest opt-out) — same fields, same
+  save logic, no wp-admin needed.
+- **Login / registration / lost password** — the theme restyles the
+  WordPress login screen in the site's black/orange design with your logo.
+  To let new members self-register, enable *Settings → General → Anyone
+  can register* and set the default role to **Contributor** (submitting
+  content requires Contributor or above).
 
 ## Mobile app API (Android)
 

@@ -26,6 +26,7 @@ delete_option( 'synpro_templates' );
 delete_option( 'synpro_email_settings' );
 delete_option( 'synpro_rotation_pointer' );
 delete_option( 'synpro_digest_sent' );
+delete_option( 'synpro_pages_created' );
 
 $meta_keys = array(
 	// v1.0.0 legacy feed fields (in case uninstall happens before migration).

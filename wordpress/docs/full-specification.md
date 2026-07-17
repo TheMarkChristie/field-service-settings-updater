@@ -791,3 +791,53 @@ remains as an advanced override that replaces the structured fields.
 The theme also renders the `[synpro_subscribe]` form inside the front
 page's Join us strip automatically whenever the plugin is active, with
 black/orange styling and 44px touch targets.
+
+## Part 9 — v2.4.0 addendum: member pages and branded login
+
+### 9.1 Submit Content page (plugin v2.4.0, `[synpro_submit]`)
+
+- Created automatically on activation as `/submit-content/`.
+- **Login required**: logged-out visitors get a styled members-only card
+  with Log in and (if registration is open) Create account buttons that
+  return them to the page afterwards. Logged-in users below Contributor
+  see an "account not enabled for publishing" message.
+- The form asks for **post type, category(ies) (chip checkboxes), and a
+  URL**, and the URL field's label, placeholder, and help text change with
+  the selected type (vanilla JS, no dependencies):
+  | Type | URL asked for |
+  |---|---|
+  | Blog RSS | the blog's RSS feed URL |
+  | Web page (no RSS) | the blog's listing page URL |
+  | Podcast RSS | the podcast host's RSS URL |
+  | YouTube channel | channel ID (UC…) or channel URL |
+  | Events feed | events feed URL (e.g. Sessionize) |
+  A "fetch full text" toggle shows for the two blog types only.
+- Submissions are nonce-checked, validated per type by the existing
+  `Synpro_Feeds` sanitiser, and stored as feed records owned by the
+  member — history backfills on the next rotation, then new items import
+  automatically. The member's existing sources are listed with status
+  chips (Active / Having trouble / Paused).
+
+### 9.2 My Account page (plugin v2.4.0, `[synpro_account]`)
+
+- Created automatically on activation as `/my-account/`. Login required.
+- Account header: avatar, display name, orange tagline, View my author
+  page + Log out buttons.
+- One form: core display name + bio, then the **same feeds and
+  author-page fields as the wp-admin profile screen** — rendered by
+  `Synpro_Profile::render_fields()` and saved by the same nonce-checked
+  `save_fields()` path via admin-post, so wp-admin and front end can
+  never drift apart. The theme restyles the shared field markup
+  (`.synpro-account` scope) to match the site.
+- Page auto-creation runs once (`synpro_pages_created` option) so deleted
+  pages are not resurrected; existing pages with the same slugs are
+  adopted, not duplicated.
+
+### 9.3 Branded login (theme v2.2.0)
+
+`wp-login.php` is restyled via `login_enqueue_scripts`: black background,
+dark card, orange accent (follows the Customizer accent colour), the
+site's custom logo above the form linking home — covering **login,
+registration, and lost-password** screens in one pass, with WordPress
+core continuing to handle all authentication and security. Self-serve
+membership requires *Anyone can register* plus a Contributor default role.

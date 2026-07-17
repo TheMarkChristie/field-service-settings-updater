@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.1.0
+Version: 2.2.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -961,6 +961,71 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .synpro-subscribe button { min-height: 44px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #fff; background: var(--c365-accent); border: 0; border-radius: 8px; cursor: pointer; }
 .synpro-subscribe button:hover { filter: brightness(1.1); }
 .synpro-subscribe .synpro-subscribe-done { flex-basis: 100%; margin: 0.25rem 0 0; font-size: 0.85rem; font-weight: 700; color: var(--c365-accent); }
+
+/* ---------------------------------------------------------------------------
+   Member pages: Submit Content + My Account ([synpro_submit] / [synpro_account])
+--------------------------------------------------------------------------- */
+.synpro-page { max-width: 860px; }
+.synpro-page h2 { margin: 2rem 0 0.75rem; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.synpro-page h3 { margin: 0 0 0.5rem; }
+
+.synpro-btn { display: inline-block; min-height: 44px; padding: 0.6rem 1.4rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #fff; background: var(--c365-accent); border: 1px solid var(--c365-accent); border-radius: 8px; cursor: pointer; text-decoration: none; }
+.synpro-btn:hover { filter: brightness(1.1); color: #fff; }
+.synpro-btn-ghost { background: transparent; color: var(--c365-text); border-color: var(--c365-border); }
+.synpro-btn-ghost:hover { color: var(--c365-accent); border-color: var(--c365-accent); filter: none; }
+.synpro-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0 0; }
+
+.synpro-login-card { padding: 2rem; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: var(--c365-radius); text-align: center; }
+.synpro-login-card .synpro-actions { justify-content: center; }
+
+.synpro-notice { padding: 0.8rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; }
+.synpro-notice-ok { background: var(--c365-accent-soft, rgba(249,115,22,.12)); color: var(--c365-accent); border: 1px solid var(--c365-accent); }
+.synpro-notice-err { background: rgba(220,50,50,.1); color: #e05252; border: 1px solid #e05252; }
+
+.synpro-field { margin: 0 0 1.1rem; }
+.synpro-field > label, .synpro-cats legend { display: block; margin-bottom: 0.35rem; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c365-text-soft); }
+.synpro-page input[type="text"], .synpro-page input[type="url"], .synpro-page input[type="email"], .synpro-page select, .synpro-page textarea { width: 100%; max-width: 560px; min-height: 44px; padding: 0.5rem 0.8rem; font-size: 0.95rem; color: var(--c365-text); background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: 8px; }
+.synpro-page input:focus, .synpro-page select:focus, .synpro-page textarea:focus { outline: 2px solid var(--c365-accent); outline-offset: 1px; border-color: var(--c365-accent); }
+.synpro-help { display: block; margin-top: 0.35rem; font-size: 0.8rem; color: var(--c365-text-soft); }
+
+.synpro-cats { border: 0; padding: 0; margin: 0 0 1.1rem; }
+.synpro-cat-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.synpro-chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.8rem; font-size: 0.85rem; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: 999px; cursor: pointer; }
+.synpro-chip:has(input:checked) { border-color: var(--c365-accent); color: var(--c365-accent); }
+
+.synpro-sources-title { margin-top: 2rem; }
+.synpro-sources { list-style: none; margin: 0; padding: 0; }
+.synpro-sources li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; padding: 0.7rem 0; border-bottom: 1px solid var(--c365-border); }
+.synpro-source-type { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c365-accent); }
+.synpro-source-url { flex: 1 1 200px; font-size: 0.85rem; color: var(--c365-text-soft); word-break: break-all; }
+.synpro-source-status { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid var(--c365-border); }
+.synpro-source-status.is-ok { color: #2ecc71; border-color: #2ecc71; }
+.synpro-source-status.is-warn { color: var(--c365-accent); border-color: var(--c365-accent); }
+.synpro-source-status.is-off { color: var(--c365-text-soft); }
+
+.synpro-account-head { display: flex; align-items: center; gap: 1.2rem; padding: 1.25rem; margin-bottom: 1.5rem; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: var(--c365-radius); }
+.synpro-account-head img { border-radius: 50%; width: 84px; height: 84px; object-fit: cover; }
+.synpro-account-head h3 { margin: 0; }
+.synpro-account-head .synpro-tagline { margin: 0.15rem 0 0; font-size: 0.85rem; font-weight: 700; color: var(--c365-accent); }
+.synpro-account-head .synpro-actions { margin-top: 0.6rem; }
+
+/* Restyle the shared wp-admin profile fields on the front end */
+.synpro-account .form-table, .synpro-account table.widefat { width: 100%; border-collapse: collapse; background: transparent; border: 0; }
+.synpro-account .form-table th { text-align: left; padding: 0.9rem 1rem 0.9rem 0; vertical-align: top; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c365-text-soft); width: 180px; }
+.synpro-account .form-table td { padding: 0.6rem 0; }
+.synpro-account table.widefat th, .synpro-account table.widefat td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--c365-border); font-size: 0.85rem; text-align: left; }
+.synpro-account table.widefat thead th { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c365-text-soft); }
+.synpro-account .description { font-size: 0.82rem; color: var(--c365-text-soft); }
+.synpro-account input[type="checkbox"] { width: auto; min-height: 0; }
+.synpro-account select[multiple] { min-height: 80px; }
+
+@media (max-width: 640px) {
+	.synpro-account-head { flex-direction: column; text-align: center; }
+	.synpro-account-head .synpro-actions { justify-content: center; }
+	.synpro-account .form-table th { display: block; width: auto; padding-bottom: 0; }
+	.synpro-account .form-table td { display: block; }
+	.synpro-account table.widefat { display: block; overflow-x: auto; }
+}
 
 .c365-ticker { background: var(--c365-accent); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .c365-ticker::-webkit-scrollbar { display: none; }

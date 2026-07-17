@@ -129,6 +129,70 @@ function community365_excerpt_more() {
 }
 add_filter( 'excerpt_more', 'community365_excerpt_more' );
 
+/**
+ * Branded login screen (also styles registration and lost-password —
+ * they're all wp-login.php): black background, orange accent, site logo.
+ */
+function community365_login_styles() {
+	$accent = get_theme_mod( 'c365_accent_color', '#f97316' );
+	if ( ! preg_match( '/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', (string) $accent ) ) {
+		$accent = '#f97316';
+	}
+	$logo = '';
+	if ( has_custom_logo() ) {
+		$logo = wp_get_attachment_image_url( get_theme_mod( 'custom_logo' ), 'medium' );
+	}
+	?>
+	<style>
+		body.login { background: #0c0d12; }
+		body.login #login h1 a {
+			<?php if ( $logo ) : ?>
+			background-image: url('<?php echo esc_url( $logo ); ?>');
+			background-size: contain;
+			width: 220px; height: 70px;
+			<?php else : ?>
+			background: none; text-indent: 0; width: auto; height: auto;
+			font-size: 1.6rem; font-weight: 800; color: #f2f3f7; text-decoration: none;
+			<?php endif; ?>
+		}
+		body.login form {
+			background: #16181f; border: 1px solid #262a35; border-radius: 12px;
+			box-shadow: 0 12px 40px rgba(0,0,0,.5);
+		}
+		body.login label { color: #f2f3f7; }
+		body.login form .input, body.login input[type="text"], body.login input[type="password"], body.login input[type="email"] {
+			background: #0c0d12; border: 1px solid #262a35; color: #f2f3f7; border-radius: 8px;
+		}
+		body.login form .input:focus, body.login input[type="text"]:focus, body.login input[type="password"]:focus, body.login input[type="email"]:focus {
+			border-color: <?php echo esc_html( $accent ); ?>; box-shadow: 0 0 0 1px <?php echo esc_html( $accent ); ?>;
+		}
+		body.login .button-primary {
+			background: <?php echo esc_html( $accent ); ?>; border-color: <?php echo esc_html( $accent ); ?>;
+			border-radius: 8px; text-shadow: none; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+		}
+		body.login .button-primary:hover, body.login .button-primary:focus { background: <?php echo esc_html( $accent ); ?>; filter: brightness(1.12); border-color: <?php echo esc_html( $accent ); ?>; }
+		body.login .wp-login-lost-password, body.login #nav a, body.login #backtoblog a { color: #9aa1b0; }
+		body.login #nav a:hover, body.login #backtoblog a:hover { color: <?php echo esc_html( $accent ); ?>; }
+		body.login .message, body.login .notice, body.login #login_error {
+			background: #16181f; border-left-color: <?php echo esc_html( $accent ); ?>; color: #f2f3f7; border-radius: 0 8px 8px 0;
+		}
+		body.login .privacy-policy-page-link a { color: #9aa1b0; }
+		body.login input[type="checkbox"] { background: #0c0d12; border-color: #262a35; }
+	</style>
+	<?php
+}
+add_action( 'login_enqueue_scripts', 'community365_login_styles' );
+
+function community365_login_headerurl() {
+	return home_url( '/' );
+}
+add_filter( 'login_headerurl', 'community365_login_headerurl' );
+
+function community365_login_headertext() {
+	return get_bloginfo( 'name' );
+}
+add_filter( 'login_headertext', 'community365_login_headertext' );
+
 require get_template_directory() . '/inc/template-tags.php';
 require get_template_directory() . '/inc/customizer.php';
 require get_template_directory() . '/inc/home-slots.php';
