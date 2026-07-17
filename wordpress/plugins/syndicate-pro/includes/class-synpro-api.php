@@ -42,6 +42,7 @@ class Synpro_Api {
 				'args'                => array(
 					'page'     => array( 'default' => 1, 'sanitize_callback' => 'absint' ),
 					'per_page' => array( 'default' => 20, 'sanitize_callback' => 'absint' ),
+					'type'     => array( 'default' => 'post', 'sanitize_callback' => 'sanitize_key' ),
 				),
 			)
 		);
@@ -81,9 +82,10 @@ class Synpro_Api {
 	 * @return WP_REST_Response
 	 */
 	public static function feed( $request ) {
-		$paged = max( 1, (int) $request['page'] );
-		$args  = array(
-			'post_type'           => 'post',
+		$paged     = max( 1, (int) $request['page'] );
+		$post_type = self::post_type_for( (string) $request['type'] );
+		$args      = array(
+			'post_type'           => $post_type,
 			'post_status'         => 'publish',
 			'posts_per_page'      => min( 50, max( 1, (int) $request['per_page'] ) ),
 			'paged'               => $paged,
@@ -93,9 +95,14 @@ class Synpro_Api {
 		);
 
 		if ( is_user_logged_in() ) {
-			$cats = array_filter( array_map( 'absint', (array) get_user_meta( get_current_user_id(), 'synpro_app_cats', true ) ) );
-			if ( $cats ) {
-				$args['category__in'] = $cats;
+			// Category preference applies to blog posts (the only type that
+			// uses the standard category taxonomy). Other types return the
+			// member's recent items unfiltered.
+			if ( 'post' === $post_type ) {
+				$cats = array_filter( array_map( 'absint', (array) get_user_meta( get_current_user_id(), 'synpro_app_cats', true ) ) );
+				if ( $cats ) {
+					$args['category__in'] = $cats;
+				}
 			}
 		} else {
 			// Anonymous: everything, but only the last 5 days.
@@ -124,6 +131,37 @@ class Synpro_Api {
 	}
 
 	/**
+	 * Map an app content-type key to a WordPress post type.
+	 *
+	 * @param string $type App type key (post|event|podcast|video).
+	 * @return string
+	 */
+	protected static function post_type_for( $type ) {
+		$map = array(
+			'post'    => 'post',
+			'event'   => 'synpro_event',
+			'podcast' => 'synpro_podcast',
+			'video'   => 'synpro_video',
+		);
+		return isset( $map[ $type ] ) ? $map[ $type ] : 'post';
+	}
+
+	/**
+	 * Map a WordPress post type back to the app's content-type key.
+	 *
+	 * @param string $post_type Post type.
+	 * @return string
+	 */
+	protected static function type_key_for( $post_type ) {
+		$map = array(
+			'synpro_event'   => 'event',
+			'synpro_podcast' => 'podcast',
+			'synpro_video'   => 'video',
+		);
+		return isset( $map[ $post_type ] ) ? $map[ $post_type ] : 'post';
+	}
+
+	/**
 	 * One post in the app's shape.
 	 *
 	 * @param WP_Post $post Post.
@@ -138,8 +176,9 @@ class Synpro_Api {
 			);
 		}
 
-		return array(
+		$data = array(
 			'id'         => (int) $post->ID,
+			'type'       => self::type_key_for( $post->post_type ),
 			'title'      => wp_strip_all_tags( get_the_title( $post ) ),
 			'excerpt'    => wp_trim_words( wp_strip_all_tags( get_the_excerpt( $post ) ), 40 ),
 			'content'    => apply_filters( 'the_content', $post->post_content ),
@@ -148,8 +187,29 @@ class Synpro_Api {
 			'source_url' => (string) get_post_meta( $post->ID, '_synpro_source_url', true ),
 			'image'      => (string) get_the_post_thumbnail_url( $post, 'large' ),
 			'author'     => get_the_author_meta( 'display_name', (int) $post->post_author ),
+			'paid'       => class_exists( 'Synpro_Paid' ) && Synpro_Paid::is_paid( $post->ID ),
 			'categories' => $categories,
 		);
+
+		// Type-specific extras the app renders (podcast player, video embed,
+		// event details). Only the keys relevant to the type are populated.
+		switch ( $post->post_type ) {
+			case 'synpro_podcast':
+				$data['audio_url'] = (string) get_post_meta( $post->ID, '_synpro_audio_url', true );
+				$data['duration']  = (string) get_post_meta( $post->ID, '_synpro_duration', true );
+				break;
+			case 'synpro_video':
+				$data['video_id'] = (string) get_post_meta( $post->ID, '_synpro_video_id', true );
+				break;
+			case 'synpro_event':
+				$data['event_start']    = (string) get_post_meta( $post->ID, '_synpro_event_start', true );
+				$data['event_end']      = (string) get_post_meta( $post->ID, '_synpro_event_end', true );
+				$data['event_location'] = (string) get_post_meta( $post->ID, '_synpro_event_location', true );
+				$data['event_url']      = (string) get_post_meta( $post->ID, '_synpro_event_url', true );
+				break;
+		}
+
+		return $data;
 	}
 
 	/**

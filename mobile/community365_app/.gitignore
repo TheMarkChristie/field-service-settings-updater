@@ -1,0 +1,31 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Generated platform folders (run `flutter create .` to regenerate)
+# We keep lib/, pubspec.yaml, assets/, and the reference platform snippets
+# under version control; the full android/ ios/ trees are generated locally.
+ios/
+linux/
+macos/
+windows/
+web/
+
+# Firebase secrets — never commit these
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# Signing
+android/key.properties
+android/app/*.keystore
+android/app/*.jks

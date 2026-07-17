@@ -989,3 +989,25 @@ pre-slot-era home-page Customizer controls that no longer drove anything
 were removed (ticker + Join us toggles remain), hero controls are
 relabelled as blog-posts-page options, and slot item counts left empty
 now use each component's own default.
+
+## Part 14 — v2.7.0: mobile REST API extended for the Android app
+
+The `synpro/v1/feed` endpoint now serves all four content types for the
+Flutter app (see `mobile/community365_app`):
+
+- `GET /feed?type=post|event|podcast|video` — `type` maps to the matching
+  post type (post / synpro_event / synpro_podcast / synpro_video). The
+  logged-in category filter applies to blog posts only (the type using the
+  category taxonomy); other types return recent items. The anonymous
+  5-day window applies to every type.
+- Each item now also carries `type`, `paid` (from Synpro_Paid), and
+  type-specific extras: `audio_url` + `duration` (podcasts), `video_id`
+  (videos), and `event_start` / `event_end` / `event_location` /
+  `event_url` (events).
+
+The Android app itself lives in `mobile/community365_app` — a Flutter
+project (min Android 8.0) with four content tabs, Application-Password
+sign-in, category preferences, a configurable offline cache, a native
+reader, external media playback, Firebase push, and the black/orange
+brand. Its README documents the one-time `flutter create` + Firebase
+bootstrap.

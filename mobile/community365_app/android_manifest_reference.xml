@@ -1,0 +1,29 @@
+<!--
+  Reference AndroidManifest.xml for the 365 Community app.
+
+  After running `flutter create .` (see README step 1), merge these into
+  android/app/src/main/AndroidManifest.xml. They add the INTERNET
+  permission (required for the API), set the app label, and allow opening
+  podcasts/videos/source links in external apps.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Fetch content, images, and talk to the API. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Notifications on Android 13+ (Firebase Cloud Messaging). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Needed on Android 11+ so url_launcher can resolve https/mailto. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+    </queries>
+
+    <application
+        android:label="365 Community"
+        android:icon="@mipmap/ic_launcher">
+        <!-- Flutter's generated <activity> block stays as-is. -->
+    </application>
+</manifest>
