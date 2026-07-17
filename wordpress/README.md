@@ -145,6 +145,16 @@ Activation creates two front-end pages (add them to your menu):
   records, backfills its history on the next rotation, and imports new
   items automatically from then on. Their existing sources are listed
   below the form with a live status chip.
+- **Write a Post** (`/write-a-post/`, the `[synpro_write]` shortcode) —
+  for members **without a blog of their own**: a logged-in writing screen
+  (rich text editor, category chips, optional featured-image upload) whose
+  submissions go in as **Pending** for a **site admin to approve** from the
+  normal Posts screen — the admin also gets an email with a review link.
+  Once approved, the post behaves like any other (author page, social
+  share, stats), but with **no source attribution or redirect** since it
+  was written here. The member sees their on-site posts listed with
+  Published / Awaiting approval status, and the Submit Content page
+  cross-links here ("No blog? Write your post right here").
 - **My Account** (`/my-account/`, the `[synpro_account]` shortcode) — a
   branded front-end profile: display name, bio, and the full set of
   syndication/author-page fields from the wp-admin profile screen (feeds,

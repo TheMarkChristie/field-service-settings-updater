@@ -916,3 +916,32 @@ whole visual identity:
   Posts list *Paid* column shows tier, featured-until, and an
   *awaiting payment* warning. (A PayPal-webhook auto-confirmation is a
   possible later upgrade.)
+
+## Part 12 — v2.6.0 addendum: write-a-post on site (admin approval)
+
+For members without their own blog: a third auto-created member page,
+**Write a Post** (`/write-a-post/`, `[synpro_write]`).
+
+- **Access**: login required (styled members-only card otherwise);
+  Contributor+ like all publishing features.
+- **The screen**: title, rich-text editor (`wp_editor`, no media buttons),
+  category chips, optional featured-image upload (JPG/PNG/WebP via
+  `media_handle_upload`; the category fallback image applies when
+  omitted), Submit for approval button. Below it, the member's on-site
+  posts with Published / Awaiting approval / Draft status chips.
+- **Approval flow**: submissions are inserted as **`pending`**, so the
+  site admin approves from the standard Posts screen (native WordPress
+  moderation — no new admin UI to learn). The admin email address gets a
+  notification with the author, title, and a direct review link.
+  Publishing triggers the normal pipeline (social share, welcome email
+  on a first post, stats).
+- **Provenance**: on-site posts are stamped `_synpro_onsite` and have no
+  `_synpro_source_url`, so the attribution box, canonical tag, and
+  redirect-to-original never apply to them.
+- **Page creation**: `ensure_pages()` now creates any page it hasn't
+  handled before (per-slug bookkeeping in `synpro_pages_created`), so
+  existing installs gain the new page on update without resurrecting
+  pages the owner deleted. The Submit Content page cross-links to Write
+  a Post and vice versa.
+- Theme v2.5.0 frames the light editor canvas inside the dark form and
+  styles the file-upload control.

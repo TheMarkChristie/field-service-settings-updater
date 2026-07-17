@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.4.0
+Version: 2.5.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -1064,6 +1064,16 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .synpro-source-status.is-ok { color: #2ecc71; border-color: #2ecc71; }
 .synpro-source-status.is-warn { color: var(--c365-accent); border-color: var(--c365-accent); }
 .synpro-source-status.is-off { color: var(--c365-text-soft); }
+
+/* Write-a-post screen: the rich editor renders on a light canvas — frame
+   it so it reads as intentional inside the dark form. */
+.synpro-write .wp-editor-wrap, .synpro-write .mce-tinymce { border: 1px solid var(--c365-border); border-radius: 8px; overflow: hidden; }
+.synpro-write .wp-editor-container { border: 0; }
+.synpro-write .mce-toolbar-grp, .synpro-write .mce-statusbar { background: var(--c365-surface); border-color: var(--c365-border); }
+.synpro-write textarea.wp-editor-area { width: 100%; min-height: 320px; padding: 0.8rem; font-size: 0.95rem; color: var(--c365-text); background: var(--c365-surface); border: 0; }
+.synpro-write input[type="file"] { display: block; color: var(--c365-text-soft); font-size: 0.85rem; }
+.synpro-write input[type="file"]::file-selector-button { min-height: 40px; margin-right: 0.7rem; padding: 0.4rem 1rem; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c365-text); background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: 8px; cursor: pointer; }
+.synpro-write input[type="file"]::file-selector-button:hover { border-color: var(--c365-accent); color: var(--c365-accent); }
 
 .synpro-account-head { display: flex; align-items: center; gap: 1.2rem; padding: 1.25rem; margin-bottom: 1.5rem; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: var(--c365-radius); }
 .synpro-account-head img { border-radius: 50%; width: 84px; height: 84px; object-fit: cover; }
