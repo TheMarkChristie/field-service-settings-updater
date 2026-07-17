@@ -28,6 +28,10 @@
 			<p class="site-title">
 				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?><span class="c365-dot">.</span></a>
 			</p>
+			<?php $c365_sponsor = get_theme_mod( 'c365_sponsor_html', '' ); ?>
+			<?php if ( $c365_sponsor ) : ?>
+				<div class="c365-sponsor"><?php echo wp_kses_post( $c365_sponsor ); ?></div>
+			<?php endif; ?>
 		</div>
 
 		<button class="menu-toggle" aria-controls="site-navigation" aria-expanded="false">
