@@ -1045,3 +1045,18 @@ bootstrap.
   `mounted` guards on post-await `setState` in the login and categories
   screens. The new PHP (push/SMTP/opt-in/API) passed review with no
   findings.
+
+## Part 17 — theme v2.7.0: site search
+
+The website now has search to match the app:
+
+- A **search toggle** (magnifier) in the header reveals a collapsible,
+  full-width search field (Escape closes it; the field auto-focuses;
+  44px touch targets).
+- A themed **`searchform.php`** (used by `get_search_form()` everywhere)
+  and the existing `search.php` results template render matches as cards
+  with pagination.
+- **`pre_get_posts`** widens the main search query to cover
+  `post` + `synpro_event` + `synpro_podcast` + `synpro_video`, so a
+  search finds blogs, events, podcasts, and videos — the same four types
+  the app's search covers.

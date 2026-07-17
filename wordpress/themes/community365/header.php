@@ -63,6 +63,16 @@
 			);
 			?>
 		</nav>
+
+		<button class="c365-search-toggle" aria-controls="c365-header-search" aria-expanded="false">
+			<span aria-hidden="true">&#128269;</span>
+			<span class="screen-reader-text"><?php esc_html_e( 'Search', 'community365' ); ?></span>
+		</button>
+	</div>
+	<div id="c365-header-search" class="c365-header-search" hidden>
+		<div class="c365-container">
+			<?php get_search_form(); ?>
+		</div>
 	</div>
 </header>
 

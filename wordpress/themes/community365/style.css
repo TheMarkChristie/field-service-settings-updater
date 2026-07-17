@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.6.0
+Version: 2.7.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -193,6 +193,51 @@ th { background: var(--c365-accent-soft); }
 	background: var(--c365-accent-soft);
 }
 .main-navigation ul ul { display: none; } /* flat menu; submenus shown on mobile only */
+
+/* Header search toggle + collapsible panel */
+.c365-search-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 44px;
+	min-height: 44px;
+	margin-left: 0.25rem;
+	border: 1px solid var(--c365-border);
+	background: var(--c365-surface);
+	color: var(--c365-text);
+	border-radius: 8px;
+	font-size: 1rem;
+	cursor: pointer;
+}
+.c365-search-toggle:hover { color: var(--c365-accent); border-color: var(--c365-accent); }
+.c365-header-search { border-top: 1px solid var(--c365-border); background: var(--c365-surface); }
+.c365-header-search[hidden] { display: none; }
+.c365-header-search .c365-container { padding-top: 0.9rem; padding-bottom: 0.9rem; }
+
+.c365-search-form { display: flex; gap: 0.5rem; max-width: 720px; margin: 0 auto; }
+.c365-search-field {
+	flex: 1 1 auto;
+	min-height: 46px;
+	padding: 0.5rem 0.9rem;
+	font-size: 1rem;
+	color: var(--c365-text);
+	background: var(--c365-bg);
+	border: 1px solid var(--c365-border);
+	border-radius: 10px;
+}
+.c365-search-field:focus { outline: 2px solid var(--c365-accent); outline-offset: 1px; border-color: var(--c365-accent); }
+.c365-search-submit {
+	min-width: 46px;
+	min-height: 46px;
+	padding: 0 1rem;
+	font-size: 1rem;
+	color: var(--c365-on-accent, #fff);
+	background: var(--c365-accent);
+	border: 0;
+	border-radius: 10px;
+	cursor: pointer;
+}
+.c365-search-submit:hover { filter: brightness(1.1); }
 
 .menu-toggle {
 	display: none;

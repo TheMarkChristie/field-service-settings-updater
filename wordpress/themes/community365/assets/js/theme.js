@@ -22,3 +22,39 @@
 		}
 	} );
 } )();
+
+/* Community 365 — header search toggle. */
+( function () {
+	'use strict';
+
+	var toggle = document.querySelector( '.c365-search-toggle' );
+	var panel = document.getElementById( 'c365-header-search' );
+
+	if ( ! toggle || ! panel ) {
+		return;
+	}
+
+	function close() {
+		panel.hidden = true;
+		toggle.setAttribute( 'aria-expanded', 'false' );
+	}
+
+	toggle.addEventListener( 'click', function () {
+		var open = panel.hidden;
+		panel.hidden = ! open;
+		toggle.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
+		if ( open ) {
+			var field = panel.querySelector( '.c365-search-field' );
+			if ( field ) {
+				field.focus();
+			}
+		}
+	} );
+
+	document.addEventListener( 'keyup', function ( event ) {
+		if ( 'Escape' === event.key && ! panel.hidden ) {
+			close();
+			toggle.focus();
+		}
+	} );
+} )();

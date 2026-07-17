@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'COMMUNITY365_VERSION', '2.6.0' );
+define( 'COMMUNITY365_VERSION', '2.7.0' );
 
 /**
  * Theme setup.
@@ -307,6 +307,22 @@ add_filter( 'login_headertext', 'community365_login_headertext' );
  *
  * @return string
  */
+/**
+ * Make site search cover the community content types too, not just blog
+ * posts — a search should find events, podcasts, and videos as well.
+ *
+ * @param WP_Query $query The query.
+ */
+function community365_search_post_types( $query ) {
+	if ( ! is_admin() && $query->is_main_query() && $query->is_search() ) {
+		$query->set(
+			'post_type',
+			array( 'post', 'synpro_event', 'synpro_podcast', 'synpro_video' )
+		);
+	}
+}
+add_action( 'pre_get_posts', 'community365_search_post_types' );
+
 function community365_events_calendar_shortcode() {
 	if ( ! function_exists( 'community365_events_calendar' ) ) {
 		return '';
