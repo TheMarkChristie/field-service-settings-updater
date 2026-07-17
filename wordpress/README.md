@@ -229,16 +229,30 @@ links / bio).
 
 ## Theme options
 
-**Appearance → Customize → Community 365 Options**: accent colour, hero
-heading/intro, show/hide hero, show/hide source badges, footer credit text.
-Dark mode follows the visitor's OS.
+**Appearance → Customize → Branding — logos, colours, fonts** gathers the
+whole brand in one place:
 
-**Header sponsor** (Customize → Home page): the site logo is the normal
-WordPress custom logo; next to it the theme can show a sponsor slot —
-a **label** (default "Sponsored by", fully editable), the **sponsor's
-logo**, and an optional **click-through link**. An advanced free-form
-HTML field overrides all three if you need something custom. Leave the
-logo empty to hide the slot.
+- **Logos** — upload the **website logo** (shown in the header and on the
+  login screen) and the **header sponsor**: an editable label (default
+  "Sponsored by"), the sponsor's **logo upload**, and an optional
+  **click-through link** (plus an advanced free-form HTML override).
+  Leave the sponsor logo empty to hide the slot.
+- **Six palette colours** — **primary** (buttons, highlights, badges,
+  ticker), **secondary** (tags, hover flourishes, kind labels),
+  **tertiary** (muted text: dates, bylines, help text), **hyperlink**,
+  **hyperlink clicked** (visited — applied in article bodies and
+  comments), and **background**. The theme derives everything else:
+  card surfaces, borders, and body text follow the background (pick a
+  light background and text goes dark automatically), and text on
+  primary-coloured elements auto-flips between white and black so
+  buttons stay readable whatever you pick. Shipped defaults all pass
+  WCAG AA contrast.
+- **Fonts** — a font choice (six bundled system stacks: sans, Helvetica,
+  Verdana, Trebuchet, Georgia, Palatino — no external font downloads)
+  and a **base font size** (14–20px); headings scale with it.
+
+**Community 365 Options** keeps the rest: hero heading/intro, show/hide
+hero, show/hide source badges, footer credit text.
 
 ## For developers
 

@@ -841,3 +841,35 @@ site's custom logo above the form linking home — covering **login,
 registration, and lost-password** screens in one pass, with WordPress
 core continuing to handle all authentication and security. Self-serve
 membership requires *Anyone can register* plus a Contributor default role.
+
+## Part 10 — v2.3.0 theme addendum: Branding section (logos, colours, fonts)
+
+One Customizer section — **Branding — logos, colours, fonts** — now owns the
+whole visual identity:
+
+- **Logos**: the core website-logo uploader is surfaced here (header +
+  login screen), alongside the header sponsor's editable label, logo
+  upload, click-through link, and advanced HTML override.
+- **Six palette colours** mapped to semantic CSS tokens:
+  | Colour | Token | Used for |
+  |---|---|---|
+  | Primary | `--c365-accent` | buttons, highlights, badges, ticker, calendars |
+  | Secondary | `--c365-accent-2` | tags, hover flourishes, content-kind labels |
+  | Tertiary | `--c365-text-soft` | muted text: dates, bylines, captions, help |
+  | Hyperlink | `--c365-link` | all links |
+  | Hyperlink clicked | `--c365-link-visited` | visited links in article bodies, comments, attribution |
+  | Background | `--c365-bg` | page background |
+- **Derived values with readability safeguards** (WCAG AA): card surfaces
+  and borders are computed from the background (lightened on dark
+  backgrounds, darkened on light ones); body text flips light/dark from
+  the background's WCAG relative luminance; and `--c365-on-accent` picks
+  white or black for text on primary-coloured elements by contrast
+  (which also fixed the shipped default — white on `#f97316` was 2.8:1,
+  below AA; near-black text now used automatically). The login screen
+  follows the same palette. All shipped defaults pass AA.
+- **Fonts**: `c365_font_family` — six bundled system stacks (system sans,
+  Helvetica/Arial, Verdana, Trebuchet, Georgia, Palatino; no external
+  font requests) — and `c365_font_size` (14–20px base, clamped
+  server-side; headings scale relatively).
+- **Back-compat**: the legacy single `c365_accent_color` setting is
+  honoured as the primary fallback for upgraded sites.

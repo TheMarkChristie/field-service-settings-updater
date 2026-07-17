@@ -23,23 +23,102 @@ function community365_customize_register( $wp_customize ) {
 		)
 	);
 
-	// Accent colour.
+	// ------------------------------------------------------------------
+	// Branding: logos, colour palette, fonts — one section for it all.
+	// ------------------------------------------------------------------
+	$wp_customize->add_section(
+		'c365_branding',
+		array(
+			'title'       => __( 'Branding — logos, colours, fonts', 'community365' ),
+			'description' => __( 'Everything that makes the site yours. Tip: keep text colours at a contrast ratio of at least 4.5:1 against the background so the site stays readable (and WCAG AA compliant).', 'community365' ),
+			'priority'    => 25,
+		)
+	);
+
+	// Website logo: reuse the core custom-logo uploader, but surface it here.
+	$core_logo = $wp_customize->get_control( 'custom_logo' );
+	if ( $core_logo ) {
+		$core_logo->section  = 'c365_branding';
+		$core_logo->priority = 1;
+		$core_logo->label    = __( 'Website logo', 'community365' );
+	}
+
+	// The six palette colours. Defaults are the shipped black/orange/white
+	// design — every default pairing passes WCAG AA contrast.
+	$palette = array(
+		'c365_color_primary'      => array( '#f97316', __( 'Primary colour', 'community365' ), __( 'Buttons, highlights, badges, the ticker. Button text automatically switches between white and black to stay readable on whatever you pick.', 'community365' ) ),
+		'c365_color_secondary'    => array( '#fdba74', __( 'Secondary colour', 'community365' ), __( 'Secondary accents: tags, hover states, small flourishes.', 'community365' ) ),
+		'c365_color_tertiary'     => array( '#9aa1b2', __( 'Tertiary colour', 'community365' ), __( 'Muted text: dates, bylines, help text, captions.', 'community365' ) ),
+		'c365_color_link'         => array( '#f97316', __( 'Hyperlink colour', 'community365' ), '' ),
+		'c365_color_link_visited' => array( '#d97706', __( 'Hyperlink colour — clicked (visited)', 'community365' ), '' ),
+		'c365_color_background'   => array( '#0c0d12', __( 'Background colour', 'community365' ), __( 'The page background. Card/panel surfaces are derived from it automatically.', 'community365' ) ),
+	);
+	$palette_priority = 10;
+	foreach ( $palette as $key => $spec ) {
+		$wp_customize->add_setting(
+			$key,
+			array(
+				'default'           => $spec[0],
+				'sanitize_callback' => 'sanitize_hex_color',
+				'transport'         => 'refresh',
+			)
+		);
+		$wp_customize->add_control(
+			new WP_Customize_Color_Control(
+				$wp_customize,
+				$key,
+				array(
+					'label'       => $spec[1],
+					'description' => $spec[2],
+					'section'     => 'c365_branding',
+					'priority'    => $palette_priority++,
+				)
+			)
+		);
+	}
+
+	// Fonts: bundled system stacks only (no external font requests — fast and
+	// private). Sizes are a sensible readable range.
+	$wp_customize->add_setting( 'c365_font_family', array( 'default' => 'system', 'sanitize_callback' => 'sanitize_key' ) );
+	$wp_customize->add_control(
+		'c365_font_family',
+		array(
+			'label'       => __( 'Font', 'community365' ),
+			'description' => __( 'System font stacks — no external font downloads, so the site stays fast.', 'community365' ),
+			'section'     => 'c365_branding',
+			'type'        => 'select',
+			'priority'    => 20,
+			'choices'     => array(
+				'system'    => __( 'System sans-serif (default)', 'community365' ),
+				'helvetica' => __( 'Helvetica / Arial', 'community365' ),
+				'verdana'   => __( 'Verdana — wide and clear', 'community365' ),
+				'trebuchet' => __( 'Trebuchet MS — rounded', 'community365' ),
+				'georgia'   => __( 'Georgia — serif', 'community365' ),
+				'palatino'  => __( 'Palatino — bookish serif', 'community365' ),
+			),
+		)
+	);
+	$wp_customize->add_setting( 'c365_font_size', array( 'default' => 17, 'sanitize_callback' => 'absint' ) );
+	$wp_customize->add_control(
+		'c365_font_size',
+		array(
+			'label'       => __( 'Base font size (px)', 'community365' ),
+			'description' => __( 'Body text size, 14–20px. Headings scale with it.', 'community365' ),
+			'section'     => 'c365_branding',
+			'type'        => 'number',
+			'priority'    => 21,
+			'input_attrs' => array( 'min' => 14, 'max' => 20, 'step' => 1 ),
+		)
+	);
+
+	// Back-compat: the old single accent setting still exists on upgraded
+	// sites; the primary colour above supersedes it (and falls back to it).
 	$wp_customize->add_setting(
 		'c365_accent_color',
 		array(
 			'default'           => '#f97316',
 			'sanitize_callback' => 'sanitize_hex_color',
 			'transport'         => 'refresh',
-		)
-	);
-	$wp_customize->add_control(
-		new WP_Customize_Color_Control(
-			$wp_customize,
-			'c365_accent_color',
-			array(
-				'label'   => __( 'Accent colour', 'community365' ),
-				'section' => 'c365_theme_options',
-			)
 		)
 	);
 
@@ -303,15 +382,17 @@ function community365_customize_register( $wp_customize ) {
 		);
 	}
 
-	// Header sponsor: "Sponsored by" label + sponsor logo, next to the site logo.
+	// Header sponsor: "Sponsored by" label + sponsor logo + link, shown next
+	// to the website logo. Lives in the Branding section with the other logos.
 	$wp_customize->add_setting( 'c365_sponsor_label', array( 'default' => __( 'Sponsored by', 'community365' ), 'sanitize_callback' => 'sanitize_text_field' ) );
 	$wp_customize->add_control(
 		'c365_sponsor_label',
 		array(
 			'label'       => __( 'Header sponsor — label', 'community365' ),
 			'description' => __( 'The words shown before the sponsor logo (default "Sponsored by").', 'community365' ),
-			'section'     => 'c365_home_options',
+			'section'     => 'c365_branding',
 			'type'        => 'text',
+			'priority'    => 30,
 		)
 	);
 	$wp_customize->add_setting( 'c365_sponsor_logo', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
@@ -321,8 +402,9 @@ function community365_customize_register( $wp_customize ) {
 			'c365_sponsor_logo',
 			array(
 				'label'       => __( 'Header sponsor — logo', 'community365' ),
-				'description' => __( 'The sponsor’s logo image. Leave empty to hide the sponsor slot.', 'community365' ),
-				'section'     => 'c365_home_options',
+				'description' => __( 'Upload the sponsor’s logo. Leave empty to hide the sponsor slot.', 'community365' ),
+				'section'     => 'c365_branding',
+				'priority'    => 31,
 			)
 		)
 	);
@@ -332,8 +414,9 @@ function community365_customize_register( $wp_customize ) {
 		array(
 			'label'       => __( 'Header sponsor — link', 'community365' ),
 			'description' => __( 'Where clicking the sponsor logo goes (optional).', 'community365' ),
-			'section'     => 'c365_home_options',
+			'section'     => 'c365_branding',
 			'type'        => 'url',
+			'priority'    => 32,
 		)
 	);
 	// Advanced override: free-form HTML replaces the label + logo fields entirely.
@@ -343,8 +426,9 @@ function community365_customize_register( $wp_customize ) {
 		array(
 			'label'       => __( 'Header sponsor — custom HTML (advanced)', 'community365' ),
 			'description' => __( 'If filled in, this HTML replaces the label + logo fields above.', 'community365' ),
-			'section'     => 'c365_home_options',
+			'section'     => 'c365_branding',
 			'type'        => 'textarea',
+			'priority'    => 33,
 		)
 	);
 }

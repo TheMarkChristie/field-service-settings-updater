@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.2.0
+Version: 2.3.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -18,14 +18,25 @@ Tags: blog, news, one-column, custom-logo, custom-menu, featured-images, threade
    Design tokens
 --------------------------------------------------------------------------- */
 /* Core palette: black, orange, white. */
+/* All colour/font tokens are overridden by Customize → Branding:
+   primary → --c365-accent, secondary → --c365-accent-2, tertiary →
+   --c365-text-soft, hyperlink → --c365-link (+ visited), background →
+   --c365-bg (surfaces, borders, and body text derive from it), and
+   --c365-on-accent auto-flips white/black to stay readable on the
+   chosen primary. */
 :root {
-	--c365-accent: #f97316;        /* overridden by Customizer */
+	--c365-accent: #f97316;
 	--c365-accent-soft: rgba(249, 115, 22, 0.14);
+	--c365-accent-2: #fdba74;
+	--c365-on-accent: #ffffff;
+	--c365-link: #f97316;
+	--c365-link-visited: #d97706;
 	--c365-bg: #0c0d12;
 	--c365-surface: #16181f;
 	--c365-text: #f2f3f7;
 	--c365-text-soft: #9aa1b2;
 	--c365-border: #262a36;
+	--c365-font-size: 17px;
 	--c365-radius: 14px;
 	--c365-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
 	--c365-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.5), 0 16px 32px -12px rgba(0, 0, 0, 0.7);
@@ -42,7 +53,7 @@ Tags: blog, news, one-column, custom-logo, custom-menu, featured-images, threade
 body {
 	margin: 0;
 	font-family: var(--c365-font);
-	font-size: 17px;
+	font-size: var(--c365-font-size, 17px);
 	line-height: 1.65;
 	color: var(--c365-text);
 	background: var(--c365-bg);
@@ -51,8 +62,14 @@ body {
 
 img { max-width: 100%; height: auto; }
 
-a { color: var(--c365-accent); text-decoration: none; }
+a { color: var(--c365-link, var(--c365-accent)); text-decoration: none; }
 a:hover, a:focus { text-decoration: underline; }
+/* Visited state applies in reading contexts (article bodies, comments),
+   where it carries meaning — not on nav/cards, where it would just look
+   inconsistent. */
+.entry-content a:visited,
+.comment-content a:visited,
+.synpro-attribution a:visited { color: var(--c365-link-visited, var(--c365-link)); }
 
 h1, h2, h3, h4, h5, h6 {
 	line-height: 1.25;
@@ -384,7 +401,7 @@ th { background: var(--c365-accent-soft); }
 	color: var(--c365-text-soft);
 	text-decoration: none;
 }
-.c365-tags a:hover { border-color: var(--c365-accent); color: var(--c365-accent); }
+.c365-tags a:hover { border-color: var(--c365-accent-2, var(--c365-accent)); color: var(--c365-accent-2, var(--c365-accent)); }
 
 /* Post navigation */
 .c365-post-nav {
@@ -443,7 +460,7 @@ th { background: var(--c365-accent-soft); }
 .c365-pagination .page-numbers.current {
 	background: var(--c365-accent);
 	border-color: var(--c365-accent);
-	color: #fff;
+	color: var(--c365-on-accent, #fff);
 }
 .c365-pagination .page-numbers:hover:not(.current) { border-color: var(--c365-accent); color: var(--c365-accent); }
 
@@ -482,7 +499,7 @@ th { background: var(--c365-accent-soft); }
 
 button, input[type="submit"], .wp-block-button__link {
 	background: var(--c365-accent);
-	color: #fff;
+	color: var(--c365-on-accent, #fff);
 	border: 0;
 	border-radius: 10px;
 	padding: 0.65rem 1.4rem;
@@ -556,7 +573,7 @@ button:hover, input[type="submit"]:hover { filter: brightness(1.08); }
 	font-weight: 800;
 	text-transform: uppercase;
 	letter-spacing: 0.07em;
-	color: #fff;
+	color: var(--c365-on-accent, #fff);
 	background: var(--c365-accent);
 }
 .c365-type-event   { background: #d97706; }
@@ -612,7 +629,7 @@ button:hover, input[type="submit"]:hover { filter: brightness(1.08); }
 .c365-button {
 	display: inline-block;
 	background: var(--c365-accent);
-	color: #fff !important;
+	color: var(--c365-on-accent, #fff) !important;
 	padding: 0.6rem 1.3rem;
 	border-radius: 10px;
 	font-weight: 700;
@@ -744,7 +761,7 @@ button:hover, input[type="submit"]:hover { filter: brightness(1.08); }
 	text-decoration: none;
 }
 .c365-pill:hover { border-color: var(--c365-accent); color: var(--c365-accent); text-decoration: none; }
-.c365-pill.is-active { background: var(--c365-accent); border-color: var(--c365-accent); color: #fff; }
+.c365-pill.is-active { background: var(--c365-accent); border-color: var(--c365-accent); color: var(--c365-on-accent, #fff); }
 
 /* Author search */
 .c365-author-search { margin: 0 0 1.25rem; }
@@ -765,7 +782,7 @@ button:hover, input[type="submit"]:hover { filter: brightness(1.08); }
 	font-weight: 800;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: var(--c365-accent);
+	color: var(--c365-accent-2, var(--c365-accent));
 }
 .c365-list-kind-podcast { color: #7c3aed; }
 .c365-list-kind-video { color: #dc2626; }
@@ -896,7 +913,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 	height: 1.8rem;
 	border-radius: 50%;
 	background: var(--c365-accent);
-	color: #fff;
+	color: var(--c365-on-accent, #fff);
 	font-weight: 700;
 	text-decoration: none;
 }
@@ -920,7 +937,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 	font-size: 0.9rem;
 	text-decoration: none;
 }
-.c365-social-btn:hover { background: var(--c365-accent); color: #fff; text-decoration: none; }
+.c365-social-btn:hover { background: var(--c365-accent); color: var(--c365-on-accent, #fff); text-decoration: none; }
 
 /* Buy Me a Coffee */
 .c365-coffee-btn {
@@ -958,7 +975,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .synpro-subscribe { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .synpro-subscribe input[type="email"] { flex: 1 1 200px; min-height: 44px; padding: 0.5rem 0.8rem; font-size: 0.9rem; color: var(--c365-text); background: var(--c365-bg); border: 1px solid var(--c365-border); border-radius: 8px; }
 .synpro-subscribe input[type="email"]:focus { outline: 2px solid var(--c365-accent); outline-offset: 1px; border-color: var(--c365-accent); }
-.synpro-subscribe button { min-height: 44px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #fff; background: var(--c365-accent); border: 0; border-radius: 8px; cursor: pointer; }
+.synpro-subscribe button { min-height: 44px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c365-on-accent, #fff); background: var(--c365-accent); border: 0; border-radius: 8px; cursor: pointer; }
 .synpro-subscribe button:hover { filter: brightness(1.1); }
 .synpro-subscribe .synpro-subscribe-done { flex-basis: 100%; margin: 0.25rem 0 0; font-size: 0.85rem; font-weight: 700; color: var(--c365-accent); }
 
@@ -969,8 +986,8 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .synpro-page h2 { margin: 2rem 0 0.75rem; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
 .synpro-page h3 { margin: 0 0 0.5rem; }
 
-.synpro-btn { display: inline-block; min-height: 44px; padding: 0.6rem 1.4rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #fff; background: var(--c365-accent); border: 1px solid var(--c365-accent); border-radius: 8px; cursor: pointer; text-decoration: none; }
-.synpro-btn:hover { filter: brightness(1.1); color: #fff; }
+.synpro-btn { display: inline-block; min-height: 44px; padding: 0.6rem 1.4rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c365-on-accent, #fff); background: var(--c365-accent); border: 1px solid var(--c365-accent); border-radius: 8px; cursor: pointer; text-decoration: none; }
+.synpro-btn:hover { filter: brightness(1.1); color: var(--c365-on-accent, #fff); }
 .synpro-btn-ghost { background: transparent; color: var(--c365-text); border-color: var(--c365-border); }
 .synpro-btn-ghost:hover { color: var(--c365-accent); border-color: var(--c365-accent); filter: none; }
 .synpro-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0 0; }
@@ -1030,7 +1047,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .c365-ticker { background: var(--c365-accent); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .c365-ticker::-webkit-scrollbar { display: none; }
 .c365-ticker-inner { display: flex; gap: 0.25rem; padding: 0.45rem clamp(1rem, 4vw, 2rem); white-space: nowrap; }
-.c365-ticker a { color: #fff; font-size: 0.8rem; font-weight: 700; padding: 0.15rem 0.7rem; border-right: 1px solid rgba(255,255,255,.35); text-decoration: none; }
+.c365-ticker a { color: var(--c365-on-accent, #fff); font-size: 0.8rem; font-weight: 700; padding: 0.15rem 0.7rem; border-right: 1px solid rgba(255,255,255,.35); text-decoration: none; }
 .c365-ticker a:hover { text-decoration: underline; }
 
 .c365-home-heading { display: flex; align-items: center; gap: 0.8rem; font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin: 2.2rem 0 1rem; }
@@ -1046,7 +1063,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .c365-mini { display: flex; gap: 0.75rem; align-items: flex-start; }
 .c365-mini-thumb img { width: 74px; height: 74px; object-fit: cover; border-radius: 8px; display: block; }
 .c365-mini-meta { margin: 0 0 0.15rem; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c365-text-soft); }
-.c365-mini-meta .c365-mini-kind { color: var(--c365-accent); }
+.c365-mini-meta .c365-mini-kind { color: var(--c365-accent-2, var(--c365-accent)); }
 .c365-mini-title { margin: 0; font-size: 0.92rem; line-height: 1.35; }
 .c365-mini-title a { color: var(--c365-text); text-decoration: none; }
 .c365-mini-title a:hover { color: var(--c365-accent); }
@@ -1066,9 +1083,9 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 
 /* Spotlight banner */
 .c365-spotlight { margin: 2.2rem 0; border-radius: var(--c365-radius); background: var(--c365-surface); background-size: cover; background-position: center; padding: clamp(2rem, 6vw, 4.5rem) clamp(1rem, 4vw, 2.5rem); }
-.c365-spotlight-card { max-width: 560px; background: var(--c365-accent); color: #fff; border-radius: 12px; padding: 1.4rem 1.6rem; }
+.c365-spotlight-card { max-width: 560px; background: var(--c365-accent); color: var(--c365-on-accent, #fff); border-radius: 12px; padding: 1.4rem 1.6rem; }
 .c365-spotlight-card .c365-mini-meta { color: rgba(255,255,255,.85); }
-.c365-spotlight-card h2 { margin: 0.3rem 0 0.5rem; font-size: 1.35rem; color: #fff; }
+.c365-spotlight-card h2 { margin: 0.3rem 0 0.5rem; font-size: 1.35rem; color: var(--c365-on-accent, #fff); }
 .c365-spotlight-excerpt { margin: 0 0 1rem; font-size: 0.92rem; color: rgba(255,255,255,.9); }
 .c365-spotlight-card .c365-button { background: #0c0d12; color: #fff !important; }
 
@@ -1087,7 +1104,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 
 /* Join bars */
 .c365-join-bars { display: grid; gap: 0.7rem; margin-bottom: 1rem; }
-.c365-join-bar { display: flex; justify-content: space-between; align-items: center; border-radius: 8px; padding: 0.7rem 1.1rem; font-weight: 800; color: #fff; text-decoration: none; background: linear-gradient(90deg, var(--c365-accent), #c2410c); }
+.c365-join-bar { display: flex; justify-content: space-between; align-items: center; border-radius: 8px; padding: 0.7rem 1.1rem; font-weight: 800; color: var(--c365-on-accent, #fff); text-decoration: none; background: linear-gradient(90deg, var(--c365-accent), #c2410c); }
 .c365-join-bar:hover { filter: brightness(1.1); text-decoration: none; }
 .c365-join-count { font-weight: 700; opacity: 0.9; }
 
@@ -1140,7 +1157,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .c365-podcast-feature > img { width: 180px; height: 180px; object-fit: cover; border-radius: 12px; }
 .c365-podcast-feature-body { flex: 1; min-width: 240px; }
 .c365-podcast-feature-body audio { width: 100%; margin-top: 0.8rem; }
-.c365-new-badge { display: inline-block; background: var(--c365-accent); color: #fff; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; padding: 0.2rem 0.7rem; border-radius: 999px; margin-bottom: 0.4rem; }
+.c365-new-badge { display: inline-block; background: var(--c365-accent); color: var(--c365-on-accent, #fff); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; padding: 0.2rem 0.7rem; border-radius: 999px; margin-bottom: 0.4rem; }
 
 /* Post-blocks strip slider */
 .c365-strip-wrap { position: relative; }
@@ -1149,7 +1166,7 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .c365-strip-card { flex: 0 0 300px; scroll-snap-align: start; }
 .c365-strip-thumb { position: relative; display: block; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--c365-surface); }
 .c365-strip-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.c365-strip-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; background: var(--c365-accent); color: #fff; border: 0; border-radius: 8px; width: 2.2rem; height: 3.2rem; font-size: 1.1rem; cursor: pointer; }
+.c365-strip-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; background: var(--c365-accent); color: var(--c365-on-accent, #fff); border: 0; border-radius: 8px; width: 2.2rem; height: 3.2rem; font-size: 1.1rem; cursor: pointer; }
 .c365-strip-prev { left: -0.6rem; }
 .c365-strip-next { right: -0.6rem; }
 
@@ -1163,12 +1180,12 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 @media (max-width: 820px) { .c365-events-wide { grid-template-columns: 1fr; } }
 .c365-upcoming { display: grid; gap: 1rem; }
 .c365-upcoming-row { display: flex; gap: 1rem; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: 12px; padding: 0.9rem 1.1rem; }
-.c365-upcoming-date { text-align: center; min-width: 3.2rem; background: var(--c365-accent); color: #fff; border-radius: 10px; padding: 0.45rem 0.3rem; height: fit-content; }
+.c365-upcoming-date { text-align: center; min-width: 3.2rem; background: var(--c365-accent); color: var(--c365-on-accent, #fff); border-radius: 10px; padding: 0.45rem 0.3rem; height: fit-content; }
 .c365-upcoming-day { display: block; font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
 .c365-upcoming-mon { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 .c365-upcoming-actions { margin: 0.5rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .c365-chip-btn { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 999px; background: var(--c365-accent-soft); color: var(--c365-accent); text-decoration: none; }
-.c365-chip-btn:hover { background: var(--c365-accent); color: #fff; text-decoration: none; }
+.c365-chip-btn:hover { background: var(--c365-accent); color: var(--c365-on-accent, #fff); text-decoration: none; }
 
 /* ---------------------------------------------------------------------------
    Responsive pass (v2.0.1): tablet + mobile refinements across all
