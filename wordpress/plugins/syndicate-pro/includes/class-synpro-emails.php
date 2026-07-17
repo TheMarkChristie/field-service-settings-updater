@@ -44,6 +44,7 @@ class Synpro_Emails {
 			'digest_enabled'  => 1,
 			'digest_subject'  => __( 'This week on {site_name}: the top posts', 'syndicate-pro' ),
 			'digest_intro'    => __( "Here are the most-read posts from the community this week:", 'syndicate-pro' ),
+			'digest_html'     => '',
 		);
 	}
 
@@ -74,6 +75,7 @@ class Synpro_Emails {
 			'digest_enabled'  => empty( $input['digest_enabled'] ) ? 0 : 1,
 			'digest_subject'  => isset( $input['digest_subject'] ) && '' !== trim( $input['digest_subject'] ) ? sanitize_text_field( $input['digest_subject'] ) : $defaults['digest_subject'],
 			'digest_intro'    => isset( $input['digest_intro'] ) ? sanitize_textarea_field( $input['digest_intro'] ) : $defaults['digest_intro'],
+			'digest_html'     => isset( $input['digest_html'] ) ? wp_kses_post( $input['digest_html'] ) : '',
 		);
 	}
 
@@ -133,93 +135,170 @@ class Synpro_Emails {
 	 * -------------------------------------------------------------------- */
 
 	/**
-	 * The week's top 10 blog posts: by views this month when view data
-	 * exists, newest first otherwise.
+	 * Pick top not-previously-sent items of one post type, ranked by views
+	 * (date as tiebreak), topping up with newest unsent when views are thin.
 	 *
+	 * @param string $post_type Post type.
+	 * @param int    $limit     How many.
+	 * @param int[]  $exclude   Post IDs never to repeat.
 	 * @return WP_Post[]
 	 */
-	public static function top_posts_of_week() {
-		$posts = get_posts(
+	public static function pick_unsent( $post_type, $limit, $exclude ) {
+		$base = array(
+			'post_type'      => $post_type,
+			'post_status'    => 'publish',
+			'post__not_in'   => $exclude,
+			'posts_per_page' => $limit,
+			'no_found_rows'  => true,
+		);
+
+		$by_views = get_posts(
+			$base + array(
+				'meta_key' => '_synpro_views', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'orderby'  => 'meta_value_num',
+				'order'    => 'DESC',
+			)
+		);
+		if ( count( $by_views ) >= $limit ) {
+			return $by_views;
+		}
+
+		$have    = wp_list_pluck( $by_views, 'ID' );
+		$fill    = get_posts( $base + array( 'post__not_in' => array_merge( $exclude, $have ), 'posts_per_page' => $limit - count( $by_views ) ) );
+		return array_merge( $by_views, $fill );
+	}
+
+	/**
+	 * One item as a digest HTML row.
+	 *
+	 * @param WP_Post $post  Post.
+	 * @param string  $label Section label.
+	 * @return string
+	 */
+	protected static function item_html( $post, $label ) {
+		$image = get_the_post_thumbnail_url( $post, 'medium' );
+		$row   = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr>';
+		if ( $image ) {
+			$row .= '<td width="110" valign="top" style="padding-right:12px"><a href="' . esc_url( get_permalink( $post ) ) . '"><img src="' . esc_url( $image ) . '" width="110" alt="" style="border-radius:8px;display:block"></a></td>';
+		}
+		$row .= '<td valign="top">'
+			. '<div style="font-size:11px;font-weight:bold;letter-spacing:.05em;text-transform:uppercase;color:#f97316">' . esc_html( $label ) . '</div>'
+			. '<a href="' . esc_url( get_permalink( $post ) ) . '" style="font-size:16px;font-weight:bold;color:#111;text-decoration:none">' . esc_html( get_the_title( $post ) ) . '</a>'
+			. '<div style="font-size:12px;color:#666">' . esc_html( get_the_author_meta( 'display_name', (int) $post->post_author ) ) . '</div>'
+			. '</td></tr></table>';
+		return $row;
+	}
+
+	/**
+	 * Build this week's digest: top 4 blogs, top video, top podcast, and the
+	 * newest event — none of which has appeared in a previous digest.
+	 *
+	 * @return array|null { subject, html, sent_ids } or null when empty.
+	 */
+	public static function build_digest() {
+		$sent = array_map( 'intval', (array) get_option( 'synpro_digest_sent', array() ) );
+		$site = get_bloginfo( 'name' );
+
+		$blogs   = self::pick_unsent( 'post', 4, $sent );
+		$video   = self::pick_unsent( 'synpro_video', 1, $sent );
+		$podcast = self::pick_unsent( 'synpro_podcast', 1, $sent );
+		$event   = get_posts(
 			array(
-				'post_type'      => 'post',
+				'post_type'      => 'synpro_event',
 				'post_status'    => 'publish',
-				'date_query'     => array( array( 'after' => '1 week ago' ) ),
-				'posts_per_page' => 50,
+				'post__not_in'   => $sent,
+				'posts_per_page' => 1,
 				'no_found_rows'  => true,
 			)
 		);
 
-		usort(
-			$posts,
-			function ( $a, $b ) {
-				$views_a = (int) get_post_meta( $a->ID, '_synpro_views', true );
-				$views_b = (int) get_post_meta( $b->ID, '_synpro_views', true );
-				if ( $views_a === $views_b ) {
-					return strcmp( $b->post_date, $a->post_date );
-				}
-				return $views_b <=> $views_a;
-			}
+		$chosen = array_merge( $blogs, $video, $podcast, $event );
+		if ( ! $chosen ) {
+			return null;
+		}
+
+		$sections = '';
+		foreach ( $blogs as $post ) {
+			$sections .= self::item_html( $post, __( 'Top blog', 'syndicate-pro' ) );
+		}
+		foreach ( $video as $post ) {
+			$sections .= self::item_html( $post, __( 'Top video', 'syndicate-pro' ) );
+		}
+		foreach ( $podcast as $post ) {
+			$sections .= self::item_html( $post, __( 'Top podcast', 'syndicate-pro' ) );
+		}
+		foreach ( $event as $post ) {
+			$sections .= self::item_html( $post, __( 'New event', 'syndicate-pro' ) );
+		}
+
+		$intro    = strtr( self::get( 'digest_intro' ), array( '{site_name}' => $site ) );
+		$template = self::get( 'digest_html' );
+		if ( ! $template ) {
+			$template = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:20px">'
+				. '<h1 style="color:#f97316;font-size:20px">{site_name}</h1>'
+				. '<p style="color:#333">{intro}</p>{items}'
+				. '<p style="font-size:12px;color:#999">{unsubscribe}</p></div>';
+		}
+
+		$html = strtr(
+			$template,
+			array(
+				'{site_name}' => esc_html( $site ),
+				'{intro}'     => esc_html( $intro ),
+				'{items}'     => $sections,
+				'{link}'      => esc_url( home_url( '/' ) ),
+			)
 		);
 
-		return array_slice( $posts, 0, 10 );
+		return array(
+			'subject'  => strtr( self::get( 'digest_subject' ), array( '{site_name}' => $site ) ),
+			'html'     => $html,
+			'sent_ids' => wp_list_pluck( $chosen, 'ID' ),
+		);
 	}
 
 	/**
-	 * Send the weekly digest to every user who has not opted out.
+	 * Send the weekly digest to members (unless opted out) and website
+	 * subscribers, then record the featured post IDs so no item is ever
+	 * sent twice.
 	 */
 	public static function send_digest() {
 		if ( ! self::get( 'digest_enabled' ) ) {
 			return;
 		}
 
-		$posts = self::top_posts_of_week();
-		if ( ! $posts ) {
-			return; // Quiet week — no email.
+		$digest = self::build_digest();
+		if ( ! $digest ) {
+			return; // Nothing new — no email this week.
 		}
 
-		$site    = get_bloginfo( 'name' );
-		$subject = strtr( self::get( 'digest_subject' ), array( '{site_name}' => $site ) );
+		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
 
-		$lines   = array();
-		$lines[] = strtr( self::get( 'digest_intro' ), array( '{site_name}' => $site ) );
-		$lines[] = '';
-		$rank    = 1;
-		foreach ( $posts as $post ) {
-			$views   = (int) get_post_meta( $post->ID, '_synpro_views', true );
-			$author  = get_the_author_meta( 'display_name', (int) $post->post_author );
-			$lines[] = sprintf(
-				'%d. %s — %s%s',
-				$rank++,
-				wp_strip_all_tags( get_the_title( $post ) ),
-				$author,
-				$views ? sprintf( /* translators: %d: view count. */ __( ' (%d views)', 'syndicate-pro' ), $views ) : ''
+		// WP users who have not opted out (unsubscribe = profile checkbox).
+		foreach ( get_users( array( 'fields' => array( 'ID', 'user_email' ) ) ) as $user ) {
+			if ( '0' === (string) get_user_meta( $user->ID, 'synpro_digest', true ) ) {
+				continue;
+			}
+			$html = str_replace(
+				'{unsubscribe}',
+				esc_html__( 'To stop these emails, untick the weekly digest box on your profile.', 'syndicate-pro' ),
+				$digest['html']
 			);
-			$lines[] = get_permalink( $post );
-			$lines[] = '';
+			wp_mail( $user->user_email, $digest['subject'], $html, $headers );
 		}
-		$lines[] = sprintf( /* translators: %s: site URL. */ __( 'Read everything at %s', 'syndicate-pro' ), home_url( '/' ) );
-		$body    = implode( "\n", $lines );
 
-		foreach ( self::digest_recipients() as $recipient ) {
-			wp_mail( $recipient->user_email, $subject, $body );
+		// Website subscribers (tokenised unsubscribe link).
+		if ( class_exists( 'Synpro_Subscribers' ) ) {
+			foreach ( Synpro_Subscribers::all() as $subscriber ) {
+				$unsub = '<a href="' . esc_url( Synpro_Subscribers::unsubscribe_url( $subscriber ) ) . '">' . esc_html__( 'Unsubscribe', 'syndicate-pro' ) . '</a>';
+				$html  = str_replace( '{unsubscribe}', $unsub, $digest['html'] );
+				wp_mail( $subscriber->email, $digest['subject'], $html, $headers );
+			}
 		}
-	}
 
-	/**
-	 * Users receiving the digest: everyone except explicit opt-outs.
-	 *
-	 * @return object[] With user_email.
-	 */
-	public static function digest_recipients() {
-		$users = get_users( array( 'fields' => array( 'ID', 'user_email', 'display_name' ) ) );
-		return array_values(
-			array_filter(
-				$users,
-				function ( $user ) {
-					return '0' !== (string) get_user_meta( $user->ID, 'synpro_digest', true );
-				}
-			)
-		);
+		$sent = array_map( 'intval', (array) get_option( 'synpro_digest_sent', array() ) );
+		$sent = array_slice( array_merge( $sent, array_map( 'intval', $digest['sent_ids'] ) ), -5000 );
+		update_option( 'synpro_digest_sent', $sent, false );
 	}
 }
 

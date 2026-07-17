@@ -50,6 +50,13 @@ get_header();
 				<?php if ( $coffee_url ) : ?>
 					<a class="c365-coffee-btn" href="<?php echo esc_url( $coffee_url ); ?>" rel="external noopener" target="_blank">☕ <?php esc_html_e( 'Buy me a coffee', 'community365' ); ?></a>
 				<?php endif; ?>
+				<?php if ( shortcode_exists( 'synpro_subscribe' ) ) : ?>
+					<div class="c365-subscribe">
+						<h3 class="c365-subscribe-title"><?php esc_html_e( 'Weekly digest', 'community365' ); ?></h3>
+						<p class="c365-subscribe-text"><?php esc_html_e( 'The best of the community in your inbox, once a week.', 'community365' ); ?></p>
+						<?php echo do_shortcode( '[synpro_subscribe]' ); ?>
+					</div>
+				<?php endif; ?>
 			</section>
 			<div></div>
 		</div>

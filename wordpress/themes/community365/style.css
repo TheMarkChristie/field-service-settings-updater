@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.0.1
+Version: 2.1.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -948,7 +948,19 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
    headlines, join bars, sponsor slot
 --------------------------------------------------------------------------- */
 .c365-sponsor { display: flex; align-items: center; font-size: 0.7rem; color: var(--c365-text-soft); gap: 0.4rem; }
-.c365-sponsor img { max-height: 28px; width: auto; }
+.c365-sponsor img { max-height: 28px; width: auto; display: block; }
+.c365-sponsor-label { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+
+/* Weekly digest subscribe form ([synpro_subscribe], Join us strip) */
+.c365-subscribe { margin-top: 1.5rem; padding: 1.1rem; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: var(--c365-radius); }
+.c365-subscribe-title { margin: 0 0 0.25rem; font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+.c365-subscribe-text { margin: 0 0 0.75rem; font-size: 0.85rem; color: var(--c365-text-soft); }
+.synpro-subscribe { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.synpro-subscribe input[type="email"] { flex: 1 1 200px; min-height: 44px; padding: 0.5rem 0.8rem; font-size: 0.9rem; color: var(--c365-text); background: var(--c365-bg); border: 1px solid var(--c365-border); border-radius: 8px; }
+.synpro-subscribe input[type="email"]:focus { outline: 2px solid var(--c365-accent); outline-offset: 1px; border-color: var(--c365-accent); }
+.synpro-subscribe button { min-height: 44px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #fff; background: var(--c365-accent); border: 0; border-radius: 8px; cursor: pointer; }
+.synpro-subscribe button:hover { filter: brightness(1.1); }
+.synpro-subscribe .synpro-subscribe-done { flex-basis: 100%; margin: 0.25rem 0 0; font-size: 0.85rem; font-weight: 700; color: var(--c365-accent); }
 
 .c365-ticker { background: var(--c365-accent); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .c365-ticker::-webkit-scrollbar { display: none; }

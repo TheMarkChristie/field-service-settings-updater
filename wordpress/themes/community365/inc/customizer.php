@@ -303,13 +303,46 @@ function community365_customize_register( $wp_customize ) {
 		);
 	}
 
-	// Header sponsor logo/text ("Brought to you by ...").
+	// Header sponsor: "Sponsored by" label + sponsor logo, next to the site logo.
+	$wp_customize->add_setting( 'c365_sponsor_label', array( 'default' => __( 'Sponsored by', 'community365' ), 'sanitize_callback' => 'sanitize_text_field' ) );
+	$wp_customize->add_control(
+		'c365_sponsor_label',
+		array(
+			'label'       => __( 'Header sponsor — label', 'community365' ),
+			'description' => __( 'The words shown before the sponsor logo (default "Sponsored by").', 'community365' ),
+			'section'     => 'c365_home_options',
+			'type'        => 'text',
+		)
+	);
+	$wp_customize->add_setting( 'c365_sponsor_logo', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+	$wp_customize->add_control(
+		new WP_Customize_Image_Control(
+			$wp_customize,
+			'c365_sponsor_logo',
+			array(
+				'label'       => __( 'Header sponsor — logo', 'community365' ),
+				'description' => __( 'The sponsor’s logo image. Leave empty to hide the sponsor slot.', 'community365' ),
+				'section'     => 'c365_home_options',
+			)
+		)
+	);
+	$wp_customize->add_setting( 'c365_sponsor_link', array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+	$wp_customize->add_control(
+		'c365_sponsor_link',
+		array(
+			'label'       => __( 'Header sponsor — link', 'community365' ),
+			'description' => __( 'Where clicking the sponsor logo goes (optional).', 'community365' ),
+			'section'     => 'c365_home_options',
+			'type'        => 'url',
+		)
+	);
+	// Advanced override: free-form HTML replaces the label + logo fields entirely.
 	$wp_customize->add_setting( 'c365_sponsor_html', array( 'default' => '', 'sanitize_callback' => 'wp_kses_post' ) );
 	$wp_customize->add_control(
 		'c365_sponsor_html',
 		array(
-			'label'       => __( 'Header sponsor HTML', 'community365' ),
-			'description' => __( 'Shown next to the logo, e.g. "Brought to you by" + a sponsor logo image/link.', 'community365' ),
+			'label'       => __( 'Header sponsor — custom HTML (advanced)', 'community365' ),
+			'description' => __( 'If filled in, this HTML replaces the label + logo fields above.', 'community365' ),
 			'section'     => 'c365_home_options',
 			'type'        => 'textarea',
 		)

@@ -16,12 +16,16 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 require_once __DIR__ . '/includes/class-synpro-feeds.php';
 Synpro_Feeds::drop();
 
+require_once __DIR__ . '/includes/class-synpro-subscribers.php';
+Synpro_Subscribers::drop();
+
 delete_option( 'synpro_syndicator_settings' );
 delete_option( 'synpro_social_settings' );
 delete_option( 'synpro_share_queue' );
 delete_option( 'synpro_templates' );
 delete_option( 'synpro_email_settings' );
 delete_option( 'synpro_rotation_pointer' );
+delete_option( 'synpro_digest_sent' );
 
 $meta_keys = array(
 	// v1.0.0 legacy feed fields (in case uninstall happens before migration).
@@ -37,6 +41,7 @@ $meta_keys = array(
 	'synpro_profile_updated',
 	'synpro_welcomed',
 	'synpro_digest',
+	'synpro_app_cats',
 	// Profile / author-page fields.
 	'synpro_avatar_url',
 	'synpro_cover_url',

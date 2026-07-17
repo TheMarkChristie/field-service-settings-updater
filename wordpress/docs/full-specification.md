@@ -744,3 +744,50 @@ category images, emails, stats, pruning/redirect settings, and the ten
 code-review regression fixes). An 8-angle code review was run and all ten
 confirmed findings fixed (v1.7.1). **Not yet done: a staging install against
 real WordPress and the production content — required before launch.**
+
+## Part 8 — v2.3.0 addendum: digest 2.0, mobile app API, header sponsor
+
+### 8.1 Weekly digest 2.0 (plugin v2.3.0)
+
+- **Content**: each digest contains the **top 4 blog posts, the top YouTube
+  video, the top podcast episode, and the newest event** — selected by
+  views (newest first as tiebreak; date order fills gaps), and **never
+  anything sent in a previous digest**. Sent post IDs accumulate in the
+  `synpro_digest_sent` option (capped at the most recent 5,000). A week
+  with nothing new and unsent skips silently.
+- **Custom HTML template**: Syndication → Emails now has an "HTML template"
+  box — supply a full HTML email using `{site_name} {intro} {items}
+  {unsubscribe} {link}`; `{items}` renders the selected content rows
+  (thumbnail, type label, linked title, author). Empty = built-in design.
+- **Website subscribers**: new `{prefix}synpro_subscribers` table (unique
+  email + 40-char unsubscribe token). Visitors subscribe through the
+  `[synpro_subscribe]` shortcode (nonce + honeypot protected; idempotent
+  INSERT IGNORE). The digest goes to WP members who haven't opted out on
+  their profile (unchanged) **plus** all website subscribers; each
+  subscriber email ends with their tokenised one-click unsubscribe link
+  (admin-post handler deletes the row and confirms). Subscriber count is
+  shown on the Emails tab. Uninstall drops the table.
+
+### 8.2 Mobile app REST API (plugin v2.3.0)
+
+Namespace `synpro/v1` (the Android app itself is a separate codebase; this
+is its complete server side):
+
+| Route | Auth | Behaviour |
+|---|---|---|
+| `GET /feed` | optional | Published blog posts, paginated (`page`, `per_page` ≤ 50). Logged in (core **Application Passwords**): only the user's selected categories (`synpro_app_cats` user meta). Anonymous: all categories but only the **last 5 days**. Items: id, title, excerpt, rendered content, ISO date, permalink, original source URL, featured image, author, categories. Response flags `logged_in`. |
+| `GET /categories` | none | id / name / count for the app's category picker. |
+| `GET /preferences` | required | The user's saved category IDs. |
+| `POST /preferences` | required | Save category IDs (absint-sanitised). |
+
+### 8.3 Header sponsor (theme v2.1.0)
+
+The header shows the site's own logo (WordPress custom logo) and, next to
+it, a sponsor slot driven by three Customizer fields: **label** (default
+"Sponsored by" — the wording is editable, per the requirement), **sponsor
+logo** (image; empty hides the slot), and optional **click-through link**
+(`rel="sponsored"`). The pre-existing free-form `c365_sponsor_html` field
+remains as an advanced override that replaces the structured fields.
+The theme also renders the `[synpro_subscribe]` form inside the front
+page's Join us strip automatically whenever the plugin is active, with
+black/orange styling and 44px touch targets.

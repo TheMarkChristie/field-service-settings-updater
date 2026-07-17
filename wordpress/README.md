@@ -6,8 +6,8 @@ required:
 
 | Package | Folder | What it does |
 |---|---|---|
-| **Syndicate Pro** (plugin, v2.2.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, admin dashboard and wp-admin widgets. |
-| **Community 365** (theme, v2.0.1) | `themes/community365` | Presentation: black/orange/white magazine design, an 8-slot configurable home page with six components, distinct layouts per content type, single-post sidebar (events calendar, advert, social, coffee), member author pages, fully responsive for mobile and tablet. |
+| **Syndicate Pro** (plugin, v2.3.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, website digest subscribers, a REST API for the mobile app, admin dashboard and wp-admin widgets. |
+| **Community 365** (theme, v2.1.0) | `themes/community365` | Presentation: black/orange/white magazine design, an 8-slot configurable home page with six components, distinct layouts per content type, single-post sidebar (events calendar, advert, social, coffee), member author pages, header sponsor slot, digest subscribe form, fully responsive for mobile and tablet. |
 
 The full requirements are in [`docs/full-specification.md`](docs/full-specification.md).
 
@@ -78,8 +78,16 @@ time from the created post.
 - **Welcome email** — sent once when a member's first content goes live;
   editable subject/body under **Syndication → Emails** (placeholders
   `{name} {title} {link} {profile_url} {site_name}`).
-- **Weekly digest** — the week's top 10 blog posts by views, emailed weekly;
-  editable subject/intro; members opt out on their profile; quiet weeks skip.
+- **Weekly digest** — every week: the **top 4 blog posts, the top YouTube
+  video, the top podcast episode, and the newest event** — and nothing that
+  was ever in an earlier digest (sent items are remembered). Recipients are
+  all members who haven't opted out on their profile **plus everyone who
+  subscribed on the website** (the `[synpro_subscribe]` form — the theme
+  shows it in the Join us strip; every email to a website subscriber carries
+  a one-click unsubscribe link). You can supply your **own HTML template**
+  under Syndication → Emails (placeholders `{site_name} {intro} {items}
+  {unsubscribe} {link}`), or leave it empty for the built-in design. Weeks
+  with no unsent content skip silently.
 - **View stats** — the plugin counts post views (all-time + per month) and
   members see a "Your content stats" panel on their profile screen: views
   this month, all-time, published items, top 3 most-read posts.
@@ -123,6 +131,22 @@ social buttons, Buy Me a Coffee). The whole theme is responsive for mobile
 and tablet (collapsing grids, swipe sliders, 44px touch targets) and ships
 accessibility basics (focus outlines, reduced-motion support, semantic
 markup).
+
+## Mobile app API (Android)
+
+The plugin ships the back end for the Android app as a REST API under
+`/wp-json/synpro/v1/` (the app itself is a separate project):
+
+- `GET /feed` — blog posts for the app, paginated. **Logged-in users**
+  (authenticate with a core WordPress **Application Password**) receive
+  only the categories they've selected; **anonymous requests** receive
+  everything, but only the **last 5 days**. Each item carries title,
+  excerpt, full content, date, link, original source URL, image, author,
+  and categories.
+- `GET /categories` — the category list for the app's picker.
+- `GET/POST /preferences` — read/save the logged-in user's selected
+  category IDs (stored per user; the same selection applies on every
+  device they sign in on).
 
 ## wp-admin Dashboard widgets
 
@@ -185,6 +209,13 @@ links / bio).
 heading/intro, show/hide hero, show/hide source badges, footer credit text.
 Dark mode follows the visitor's OS.
 
+**Header sponsor** (Customize → Home page): the site logo is the normal
+WordPress custom logo; next to it the theme can show a sponsor slot —
+a **label** (default "Sponsored by", fully editable), the **sponsor's
+logo**, and an optional **click-through link**. An advanced free-form
+HTML field overrides all three if you need something custom. Leave the
+logo empty to hide the slot.
+
 ## For developers
 
 - Feed records: `{prefix}synpro_feeds` table (user, type, feed_url, categories,
@@ -196,8 +227,15 @@ Dark mode follows the visitor's OS.
   marks completed social shares.
 - Term meta: `synpro_category_image` (URL) and `synpro_category_image_id`
   (cached attachment) power the category fallback image.
+- Website digest subscribers: `{prefix}synpro_subscribers` table (email +
+  unsubscribe token), managed via `Synpro_Subscribers`; already-sent digest
+  content IDs live in the `synpro_digest_sent` option; the app's per-user
+  category picks in `synpro_app_cats` user meta.
+- REST API: namespace `synpro/v1` (`/feed`, `/categories`, `/preferences`),
+  authenticated with core Application Passwords.
 - Options: `synpro_syndicator_settings`, `synpro_templates`,
-  `synpro_social_settings`, `synpro_share_queue`, `synpro_rotation_pointer`.
+  `synpro_social_settings`, `synpro_share_queue`, `synpro_rotation_pointer`,
+  `synpro_digest_sent`.
 - Filters: `synpro_attribution_html` (attribution wording),
   `synpro_alert_threshold` (failure alert threshold).
 - Any theme can declare `add_theme_support( 'c365-attribution' )` to take over

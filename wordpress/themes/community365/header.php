@@ -28,9 +28,22 @@
 			<p class="site-title">
 				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?><span class="c365-dot">.</span></a>
 			</p>
-			<?php $c365_sponsor = get_theme_mod( 'c365_sponsor_html', '' ); ?>
-			<?php if ( $c365_sponsor ) : ?>
-				<div class="c365-sponsor"><?php echo wp_kses_post( $c365_sponsor ); ?></div>
+			<?php
+			$c365_sponsor_html = get_theme_mod( 'c365_sponsor_html', '' );
+			$c365_sponsor_logo = get_theme_mod( 'c365_sponsor_logo', '' );
+			if ( $c365_sponsor_html ) :
+				?>
+				<div class="c365-sponsor"><?php echo wp_kses_post( $c365_sponsor_html ); ?></div>
+			<?php elseif ( $c365_sponsor_logo ) : ?>
+				<div class="c365-sponsor">
+					<span class="c365-sponsor-label"><?php echo esc_html( get_theme_mod( 'c365_sponsor_label', __( 'Sponsored by', 'community365' ) ) ); ?></span>
+					<?php $c365_sponsor_link = get_theme_mod( 'c365_sponsor_link', '' ); ?>
+					<?php if ( $c365_sponsor_link ) : ?>
+						<a href="<?php echo esc_url( $c365_sponsor_link ); ?>" rel="external noopener sponsored" target="_blank"><img src="<?php echo esc_url( $c365_sponsor_logo ); ?>" alt="<?php esc_attr_e( 'Sponsor logo', 'community365' ); ?>"></a>
+					<?php else : ?>
+						<img src="<?php echo esc_url( $c365_sponsor_logo ); ?>" alt="<?php esc_attr_e( 'Sponsor logo', 'community365' ); ?>">
+					<?php endif; ?>
+				</div>
 			<?php endif; ?>
 		</div>
 

@@ -656,7 +656,7 @@ class Synpro_Settings {
 
 			<h2><?php esc_html_e( 'Weekly digest', 'syndicate-pro' ); ?></h2>
 			<p class="description">
-				<?php esc_html_e( 'The week’s top 10 blog posts (by views, newest first as a tiebreak), emailed weekly to everyone who hasn’t opted out on their profile.', 'syndicate-pro' ); ?>
+				<?php esc_html_e( 'Sent weekly: the top 4 blog posts, the top YouTube video, the top podcast episode, and the newest event — never repeating anything already sent in an earlier digest. Goes to every member who hasn’t opted out on their profile, plus everyone who subscribed on the website.', 'syndicate-pro' ); ?>
 				<?php
 				if ( $next ) {
 					echo ' ';
@@ -681,7 +681,29 @@ class Synpro_Settings {
 					<th><label for="synpro-digest-intro"><?php esc_html_e( 'Intro text', 'syndicate-pro' ); ?></label></th>
 					<td>
 						<textarea class="large-text" rows="3" id="synpro-digest-intro" name="<?php echo esc_attr( $option ); ?>[digest_intro]"><?php echo esc_textarea( $s['digest_intro'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'The numbered top-10 list is appended automatically below this text.', 'syndicate-pro' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Fills the {intro} placeholder in the HTML template.', 'syndicate-pro' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="synpro-digest-html"><?php esc_html_e( 'HTML template', 'syndicate-pro' ); ?></label></th>
+					<td>
+						<textarea class="large-text code" rows="14" id="synpro-digest-html" name="<?php echo esc_attr( $option ); ?>[digest_html]" placeholder="<?php esc_attr_e( 'Leave empty to use the built-in template.', 'syndicate-pro' ); ?>"><?php echo esc_textarea( $s['digest_html'] ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'Supply your own full HTML email. Placeholders: {site_name} {intro} {items} {unsubscribe} {link}. {items} is replaced with the selected content rows; {unsubscribe} with the reader’s unsubscribe instructions. Leave empty for the built-in design.', 'syndicate-pro' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Website subscribers', 'syndicate-pro' ); ?></th>
+					<td>
+						<p>
+							<?php
+							printf(
+								/* translators: %d: subscriber count. */
+								esc_html( _n( '%d subscriber signed up via the website.', '%d subscribers signed up via the website.', Synpro_Subscribers::count(), 'syndicate-pro' ) ),
+								(int) Synpro_Subscribers::count()
+							);
+							?>
+						</p>
+						<p class="description"><?php esc_html_e( 'Visitors subscribe with the [synpro_subscribe] shortcode — the Community 365 theme shows it in the “Join us” strip automatically, or place the shortcode in any page or widget. Every digest they receive carries a one-click unsubscribe link. Members (WP users) manage their digest on their profile instead.', 'syndicate-pro' ); ?></p>
 					</td>
 				</tr>
 			</table>
