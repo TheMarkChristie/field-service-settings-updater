@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.0.0
+Version: 2.0.1
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -1092,3 +1092,68 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .c365-upcoming-actions { margin: 0.5rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .c365-chip-btn { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 999px; background: var(--c365-accent-soft); color: var(--c365-accent); text-decoration: none; }
 .c365-chip-btn:hover { background: var(--c365-accent); color: #fff; text-decoration: none; }
+
+/* ---------------------------------------------------------------------------
+   Responsive pass (v2.0.1): tablet + mobile refinements across all
+   components. Breakpoints: <=1024 tablet, <=782 nav, <=640 phone.
+--------------------------------------------------------------------------- */
+
+/* Tablet: tighter grids, roomier touch targets */
+@media (max-width: 1024px) {
+	.c365-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+	.c365-media { grid-template-columns: 1.8fr 1fr; }
+	.c365-profile-card { padding: 1.4rem; }
+	.c365-profile-avatar img { width: 88px; height: 88px; }
+	.c365-strip-card { flex: 0 0 260px; }
+}
+
+/* Between tablet and phone the media playlist moves below the player */
+@media (max-width: 900px) {
+	.c365-media { grid-template-columns: 1fr; }
+	.c365-media-list { grid-template-columns: 1fr 1fr; max-height: none; }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+	body { font-size: 16px; }
+	.c365-container { padding: 0 1rem; }
+	.c365-slot { margin: 1.8rem 0; }
+	.c365-home-heading { margin: 1.6rem 0 0.8rem; }
+	.c365-home-heading-accent { font-size: 1.15rem; }
+
+	/* Touch targets: WCAG-friendly 44px minimum on interactive chrome */
+	.c365-tab, .c365-pill, .c365-chip-btn, .c365-cal-nav a, .menu-toggle { min-height: 44px; display: inline-flex; align-items: center; }
+	.c365-media-item { min-height: 56px; }
+
+	.c365-ticker a { font-size: 0.75rem; padding: 0.35rem 0.6rem; }
+	.c365-hero-feature-overlay strong { font-size: 0.95rem; }
+	.c365-media-list { grid-template-columns: 1fr; }
+	.c365-media-item-thumb img { width: 74px; height: 48px; }
+	.c365-strip-card { flex: 0 0 78vw; }
+	.c365-strip-arrow { display: none; } /* swipe is the interaction on touch */
+	.c365-spotlight { padding: 1.6rem 1rem; }
+	.c365-spotlight-card { padding: 1.1rem 1.2rem; }
+	.c365-podcast-feature { padding: 1rem; }
+	.c365-podcast-feature > img { width: 100%; height: auto; max-height: 240px; }
+	.c365-upcoming-row { flex-wrap: wrap; }
+	.c365-headline-thumb img { width: 80px; height: 62px; }
+	.c365-cal td { font-size: 0.78rem; height: 1.8rem; }
+	.c365-cal td.has-event a { width: 1.6rem; height: 1.6rem; }
+	.c365-list-card { padding: 0.9rem 1rem; }
+	.c365-list-meta { row-gap: 0.3rem; }
+	.c365-list-source { margin-left: 0; }
+	.c365-profile-name { font-size: 1.25rem; }
+	.c365-author-search input[type="search"] { min-height: 44px; }
+	.c365-join-bar { padding: 0.85rem 1rem; }
+}
+
+/* Long content never breaks the viewport */
+.entry-content table { display: block; overflow-x: auto; }
+.entry-content iframe { max-width: 100%; }
+.c365-mini-title a, .c365-media-item-title, .c365-headline .c365-mini-title a { overflow-wrap: anywhere; }
+
+/* Very small phones */
+@media (max-width: 380px) {
+	.c365-mini-thumb img { width: 60px; height: 60px; }
+	.c365-upcoming-date { min-width: 2.7rem; }
+}

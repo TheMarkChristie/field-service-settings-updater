@@ -2,8 +2,8 @@
 
 **Site:** https://365community.online
 **Packages:** 365 Community Syndicator (plugin) + Community 365 (theme)
-**Document version:** 1.2 — incorporates the owner's 25 scoping decisions of 16 July 2026 (Appendix A) and the social auto-sharing requirement (Q26, §2.9)
-**Code status:** v1.0.0 of both packages is built and delivered. Requirements tagged **[CHANGE]** or **[NEW]** are approved but not yet implemented (owner chose "update the spec only" pending approval — Q25). Untagged requirements are implemented.
+**Document version:** 2.0 — as-built specification
+**Code status:** DELIVERED. Plugin **Syndicate Pro v2.2.0** and theme **Community 365 v2.0.1**. Every requirement in Parts 1–6 (including all items previously tagged [CHANGE]/[NEW]) is implemented, plus the additional scope in **Part 7 (As-built addendum)**. Naming note: the plugin was renamed from "365 Community Syndicator" to **Syndicate Pro** and, since nothing was installed anywhere, ALL internal schemas were renamed from `c365_*` to `synpro_*` — read every `c365_`/`_c365_` data key in Parts 2–5 as `synpro_`/`_synpro_` (classes `C365_*` → `Synpro_*`, table `{prefix}synpro_feeds`, post types `synpro_event/podcast/video`, theme-support flag `synpro-attribution`). The theme keeps its own `c365_` prefix for theme-owned Customizer keys and CSS classes.
 **Last updated:** 16 July 2026
 
 ---
@@ -616,3 +616,131 @@ network) marking a post as announced, preventing re-shares.
 | Failure handling | Shown in admin table | + admin email after 5 consecutive failures |
 | Theme accent | Indigo `#4f46e5` | Orange (hex TBC from current site) |
 | Social sharing | None | Auto-share every new post to LinkedIn, Bluesky, Mastodon, and X with per-type templates, member @handle credit, excerpt, link, category hashtags, and featured image (§2.9) |
+
+---
+
+## Part 7 — As-built addendum (delivered beyond the v1.2 spec)
+
+Everything below was requested, built, and delivered after v1.2 was written.
+
+### 7.1 Plugin — Syndicate Pro (v2.2.0)
+
+- **Feed sources**: fifth type **`scrape` — "Web page (no RSS)"**: point a record
+  at any listing-page URL; article links are discovered (article/heading/
+  entry-title anchors, same host, archive/nav/asset URLs filtered), each new
+  article scraped for title (og:title/h1/title), publish date, og:image, site
+  name, and full body. Article URL doubles as the GUID. Per-feed **`full_content`
+  toggle** ("Full text"): summary-only RSS items get the article page fetched
+  and the complete body extracted (used only when clearly more complete).
+- **Import architecture**: source strategies (`Synpro_Source_Rss`,
+  `Synpro_Source_Scrape`) over ONE shared pipeline in `Synpro_Fetcher`
+  (backfill/cap selection, social suppression, GUID + title dedup with legacy
+  back-stamping, template application, insert, type meta, featured image,
+  result recording); shared HTML/HTTP utilities in `Synpro_Scraper`.
+  Enrichment (page scrape, Shorts check) runs post-dedup so duplicates cost
+  no HTTP. Shorts verdicts cached (transient, 1 week, 3s timeout).
+- **Backfill controls**: per-feed **Run historic** and global **Run all
+  historic (no social posting)** admin buttons; ALL backfill runs (automatic
+  first fetch included) suppress social sharing — belt (in-process flag) and
+  braces (durable check: a post whose feed row still has `backfilled=0` is
+  never announced).
+- **Templates tab**: per content type, an editable **post body template**
+  (HTML; default `{content}` = original text unchanged) and **social post
+  template** (plain text). Placeholders: `{content} {title} {author} {excerpt}
+  {link} {source_name} {source_url} {date} {hashtags}`. Post placeholders fill
+  at import from the feed item; social at share time from the created post.
+- **Event fields**: events carry **Website URL, Tickets URL, and Call for
+  speakers URL** (`_synpro_event_url/_tickets/_cfs`) plus start/end/location;
+  RSS event/xCal modules are parsed on import and the item permalink becomes
+  the website link.
+- **Category images**: categories have an image URL (term meta
+  `synpro_category_image`); it is sideloaded ONCE (cached attachment ID) and
+  used as the **featured-image fallback** when an import has no image of its
+  own. Fallback chain: item image → first `<img>` in content → category image
+  → none.
+- **wp-admin Dashboard widgets**: Top posters this month (top 10 by published
+  items across all four types), Failing feeds (consecutive failures, worst
+  first), Unverified members (never logged in AND never updated their
+  profile; login/profile-save tracking from activation; bounded query).
+- **Emails** (Syndication → Emails): **welcome email** sent once when a
+  member's first content goes live (editable subject/body, placeholders
+  `{name} {title} {link} {profile_url} {site_name}`, marked before sending);
+  **weekly digest** (cron, weekly) with the week's top 10 blog posts by views
+  (recency tiebreak), editable subject/intro, per-member opt-out checkbox,
+  quiet weeks skipped.
+- **View stats**: per-post view counter (all-time `_synpro_views` + per-month
+  `_synpro_views_YYYYMM`; admins excluded; cached-page caveat documented) and
+  a **"Your content stats"** panel on the member profile screen (views this
+  month, all-time, published items, top 3 most-read).
+- **Content pruning**: daily cron moves **imported** content older than
+  **3 years with fewer than 50 views** to the bin (both thresholds + on/off
+  configurable; 100/day cap; manual content never touched; 30-day recovery;
+  `synpro_prune_post` veto filter).
+- **Redirect to original**: visitors opening a syndicated **blog post** are
+  **302-redirected to the author's site**; the view counter runs first;
+  editors, previews, and `?noredirect=1` exempt; toggleable.
+- **Social sharing hardening** (from the full code review): queue processing
+  lock + unique-meta send claims (no double-posts, no lost jobs under
+  overlapping cron), explicit Templates-tab priority, Social-tab saves
+  preserve stored templates, last-resort title truncation so an over-long
+  title can never make a share permanently undeliverable.
+- **Admin**: Syndication menu = Dashboard (rotation status, per-feed table
+  with Fetch now / Run historic) / Settings / Templates / Social sharing /
+  Emails tabs; feed-failure alert email names the failure that tripped the
+  threshold; rotation self-heals if its cron event vanishes.
+
+### 7.2 Theme — Community 365 (v2.0.1)
+
+- **Palette**: black/orange/white is the core design site-wide (near-black
+  `#0c0d12` background, white text, orange accent as the Customizer default) —
+  no OS-dependent mode.
+- **Home page = slot system**: **8 slots**, each assigned a component in
+  Customize → Home Slot N, with the **universal filter set** on every slot:
+  category include, category exclude, date window (Any / Today / This week
+  excl. today / Last week / This month; weeks start Monday), author include,
+  author exclude, item counts. Empty/contentless slots skip. Component
+  library:
+  1. **News main block** — 3 feature cards left (own category/count), centre
+     large feature with working **Popular/Recent JS tabs**, right title list
+     (own category/count).
+  2. **YouTube slider** — large in-place player + numbered thumbnail
+     playlist; clicking a card swaps the video into the player (autoplay).
+  3. **Popular posts** — card grid by views (last 30 days default), content
+     types selectable per slot, view counts hidden.
+  4. **Podcast slider** — same layout; newest episode auto-featured with a
+     NEW badge; inline audio player; cards swap artwork/title/audio in.
+  5. **Events calendar** — monthly grid + every scheduled upcoming event with
+     orange date tiles and 🎟/🎤/🌐 chips.
+  6. **Post blocks** — full-width featured-image blog slider (arrows +
+     native swipe) over three configurable blog columns.
+  Plus: category ticker bar, Join us social bars (editable follower counts),
+  Buy Me a Coffee, header sponsor HTML slot.
+- **Author pages**: dark profile card (photo, orange tagline, bio, link
+  chips, posts/views stats; cover image becomes the card background), filter
+  pills (types honouring member toggles + top categories), author-scoped
+  native search, paginated list cards with source chips. All member-editable.
+- **Single layouts**: blog (full article + attribution), video (title +
+  embed + description + slim byline only), podcast (player panel + notes),
+  event (details list, organiser link, Tickets / Call for speakers / Website
+  buttons, description). Every single gets a **sticky right sidebar**:
+  monthly events calendar (event days linked, ?cal=YYYY-MM month paging),
+  configurable advert (image+link or HTML, "Sponsored", rel=sponsored),
+  three social buttons (labels derived from URL host), Buy Me a Coffee —
+  one Customizer section, one master toggle.
+- **JS bundle** (front page only, dependency-free): tabs, media swap
+  (video/podcast), strip paging. Nav toggle remains the only other script.
+- **Responsive**: dedicated tablet (≤1024px) and phone (≤640px) layers on
+  top of per-component breakpoints — grids collapse, media playlists move
+  below players, strip sliders become swipe-only, 44px touch targets on
+  interactive chrome, fluid type, tables/iframes never overflow the
+  viewport. Accessibility: focus-visible outlines, prefers-reduced-motion,
+  semantic markup (dl/time/table captions), screen-reader labels.
+
+### 7.3 Verification status
+
+All code passes `php -l` and a WordPress-stub smoke/regression harness
+(load, activation, rotation, imports, templates, extraction, link discovery,
+category images, emails, stats, pruning/redirect settings, and the ten
+code-review regression fixes). An 8-angle code review was run and all ten
+confirmed findings fixed (v1.7.1). **Not yet done: a staging install against
+real WordPress and the production content — required before launch.**

@@ -6,8 +6,8 @@ required:
 
 | Package | Folder | What it does |
 |---|---|---|
-| **Syndicate Pro** (plugin, v2.0.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, admin dashboard and wp-admin widgets. |
-| **Community 365** (theme, v1.0.0) | `themes/community365` | Presentation: card-based magazine design with a distinct layout per content type, member author pages, source badges, dark mode. |
+| **Syndicate Pro** (plugin, v2.2.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, social auto-sharing, category fallback images, admin dashboard and wp-admin widgets. |
+| **Community 365** (theme, v2.0.1) | `themes/community365` | Presentation: black/orange/white magazine design, an 8-slot configurable home page with six components, distinct layouts per content type, single-post sidebar (events calendar, advert, social, coffee), member author pages, fully responsive for mobile and tablet. |
 
 The full requirements are in [`docs/full-specification.md`](docs/full-specification.md).
 
@@ -72,6 +72,57 @@ Placeholders: `{content}` `{title}` `{author}` `{excerpt}` `{link}`
 `{source_name}` `{source_url}` `{date}` `{hashtags}`. Post-body placeholders
 are filled at import time from the feed item; social placeholders at share
 time from the created post.
+
+## Member emails and stats
+
+- **Welcome email** — sent once when a member's first content goes live;
+  editable subject/body under **Syndication → Emails** (placeholders
+  `{name} {title} {link} {profile_url} {site_name}`).
+- **Weekly digest** — the week's top 10 blog posts by views, emailed weekly;
+  editable subject/intro; members opt out on their profile; quiet weeks skip.
+- **View stats** — the plugin counts post views (all-time + per month) and
+  members see a "Your content stats" panel on their profile screen: views
+  this month, all-time, published items, top 3 most-read posts.
+
+## Lifecycle automation
+
+- **Content pruning** — daily, imported content older than **3 years with
+  fewer than 50 views** goes to the bin (thresholds + toggle in Settings;
+  100/day cap; manual content never touched; 30-day recovery). Consider
+  leaving this OFF for a few months after install so view counts can
+  accumulate first.
+- **Redirect to original** — visitors opening a syndicated blog post are
+  302-redirected to the author's site (view counted first; editors,
+  previews, and `?noredirect=1` exempt; toggleable).
+
+## The home page (theme)
+
+The home page is an **8-slot component system** — assign each slot a
+component in **Customize → Home Slot N**, every slot carrying the universal
+filters (category include/exclude, date window: today / this week excl.
+today / last week / this month, author include/exclude, item counts):
+
+1. **News main block** — 3 feature cards left, Popular/Recent tabbed large
+   feature centre, title list right (side columns have their own category
+   and count).
+2. **YouTube slider** — large in-place player with a numbered thumbnail
+   playlist; clicking a card plays it in place.
+3. **Popular posts** — card grid by views (last 30 days default), content
+   types selectable, no view counts shown.
+4. **Podcast slider** — newest episode auto-featured with a NEW badge and
+   inline audio player; episode cards swap into the player.
+5. **Events calendar** — monthly grid plus every scheduled event with
+   Tickets / Speak / Website chips.
+6. **Post blocks** — featured-image blog slider over three configurable
+   blog columns.
+
+Around the slots: the #category ticker, Join us social bars (editable
+follower counts), Buy Me a Coffee, and a header sponsor slot. Single posts
+get a sticky right sidebar (events calendar, configurable advert, three
+social buttons, Buy Me a Coffee). The whole theme is responsive for mobile
+and tablet (collapsing grids, swipe sliders, 44px touch targets) and ships
+accessibility basics (focus outlines, reduced-motion support, semantic
+markup).
 
 ## wp-admin Dashboard widgets
 
