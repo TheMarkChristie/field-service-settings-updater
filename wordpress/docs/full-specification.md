@@ -1085,3 +1085,19 @@ Theme:
 - Author-page search input has an accessible label.
 - "Join us" bars use the auto-contrast on-accent token (solid accent) so
   the text stays readable under a light primary colour.
+
+## Part 19 — app: cross-platform (iOS + Windows next)
+
+The Flutter app is written from one codebase to target Android (shipped
+first), then **iOS** and **Windows**. Two capabilities differ by platform
+and degrade gracefully:
+
+- **Offline cache**: bundled SQLite on Android/iOS; the FFI SQLite engine
+  (`sqflite_common_ffi`) on Windows/desktop, selected automatically in
+  `main.dart`. The database path uses `path_provider` so it is valid on
+  every platform.
+- **Push (FCM)**: Android and iOS only — skipped on Windows (Firebase
+  Cloud Messaging has no Windows support); everything else works.
+
+Per-platform bootstrap (project generation, iOS APNs, Windows toolchain,
+minimum versions) is documented in the app README.

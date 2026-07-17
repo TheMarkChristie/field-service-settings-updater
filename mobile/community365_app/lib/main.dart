@@ -1,6 +1,10 @@
+import 'dart:io' show Platform;
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'app.dart';
 import 'services/api_client.dart';
@@ -10,14 +14,31 @@ import 'services/feed_repository.dart';
 import 'services/push_service.dart';
 import 'services/settings_service.dart';
 
+/// Desktop (Windows/macOS/Linux) uses the FFI SQLite engine; mobile uses
+/// the bundled sqflite. Guarded by kIsWeb so Platform is never touched on
+/// web.
+bool get _isDesktop =>
+    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+/// Firebase Cloud Messaging is only supported on Android and iOS.
+bool get _isMobile => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase is optional at first run — the app works without it until
-  // google-services.json + firebase_options.dart are added.
-  try {
-    await Firebase.initializeApp();
-  } catch (_) {}
+  // Desktop needs the FFI implementation registered before any DB access.
+  if (_isDesktop) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
+  // Firebase/push run on mobile only. Optional at first run — the app works
+  // without it until google-services.json + firebase_options.dart are added.
+  if (_isMobile) {
+    try {
+      await Firebase.initializeApp();
+    } catch (_) {}
+  }
 
   final auth = AuthService();
   final settings = SettingsService();
@@ -27,7 +48,9 @@ Future<void> main() async {
   final api = ApiClient(auth);
   final repo = FeedRepository(api: api, cache: cache, settings: settings);
   final push = PushService();
-  await push.init();
+  if (_isMobile) {
+    await push.init();
+  }
 
   runApp(
     MultiProvider(

@@ -110,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _header('About', colors),
           const ListTile(
             title: Text('365 Community'),
-            subtitle: Text('Version 1.0.0'),
+            subtitle: Text('Version 1.1.0'),
           ),
         ],
       ),

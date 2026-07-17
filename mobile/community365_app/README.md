@@ -1,12 +1,24 @@
-# 365 Community — Android app (Flutter)
+# 365 Community — app (Flutter)
 
-The mobile reader for [365community.online](https://365community.online).
-It talks to the **Syndicate Pro** plugin's REST API (`synpro/v1`) and shows
-the community's **blogs, events, podcasts, and videos**, with offline
-reading, category preferences, and push notifications for new content.
+The reader for [365community.online](https://365community.online). It talks
+to the **Syndicate Pro** plugin's REST API (`synpro/v1`) and shows the
+community's **blogs, events, podcasts, and videos**, with offline reading,
+category preferences, and push notifications for new content.
 
-Built with **Flutter (Dart)**, minimum **Android 8.0 (API 26)**, distributed
-via the **Google Play Store**.
+Built with **Flutter (Dart)** from one codebase. Target platforms, in order:
+
+1. **Android** (minimum 8.0 / API 26) — Google Play Store.
+2. **iOS** (minimum 13) — Apple App Store.
+3. **Windows** (10/11) — desktop build.
+
+The code is written to run on all three. Two capabilities differ by
+platform and degrade gracefully:
+
+- **Offline cache** uses the bundled SQLite on Android/iOS and the FFI
+  SQLite engine on Windows (wired up automatically in `main.dart`).
+- **Push notifications** (Firebase Cloud Messaging) run on **Android and
+  iOS only** — FCM has no Windows support, so push is simply skipped on
+  desktop; everything else works.
 
 ## What it does
 
@@ -55,36 +67,75 @@ lib/
 ```
 
 The `lib/` app, `pubspec.yaml`, and `assets/` are committed. The generated
-platform folders (`android/`, `ios/`) are **not** — regenerate them locally
-(below), which keeps the repo clean and avoids committing fragile,
-version-specific Gradle.
+platform folders (`android/`, `ios/`, `windows/`) are **not** — regenerate
+them locally (below), which keeps the repo clean and avoids committing
+fragile, version-specific build files.
 
 ## First-time setup
 
 1. **Install Flutter** (3.19+) and run once inside this folder to generate the
-   platform scaffolding:
+   scaffolding for all target platforms:
    ```bash
-   flutter create --org online.community365 --project-name community365 .
+   flutter create --org online.community365 --project-name community365 \
+     --platforms=android,ios,windows .
    flutter pub get
    ```
-2. **Android config** — apply `android_manifest_reference.xml` into
-   `android/app/src/main/AndroidManifest.xml` (INTERNET + notification
-   permissions, app label, `url_launcher` queries), and set the minimum SDK
-   in `android/app/build.gradle`:
-   ```gradle
-   defaultConfig {
-       applicationId "online.community365.app"
-       minSdkVersion 26
-       targetSdkVersion flutter.targetSdkVersion
-   }
+2. **Run** on whichever platform you have to hand:
+   ```bash
+   flutter run -d android     # or a connected device
+   flutter run -d ios         # on macOS with Xcode
+   flutter run -d windows     # on Windows with Visual Studio + Desktop C++
    ```
-3. **Firebase (push)** — create a Firebase project, add an Android app with
-   package `online.community365.app`, download `google-services.json` into
-   `android/app/`, and run `flutterfire configure` to generate
-   `lib/firebase_options.dart`. Until this is done the app runs fine but push
-   is disabled (it fails open — see `push_service.dart`). Then pass the
-   generated options to `Firebase.initializeApp()` in `main.dart`.
-4. **Run**: `flutter run`.
+
+### Android
+
+- Apply `android_manifest_reference.xml` into
+  `android/app/src/main/AndroidManifest.xml` (INTERNET + notification
+  permissions, app label, `url_launcher` queries), and set the minimum SDK in
+  `android/app/build.gradle`:
+  ```gradle
+  defaultConfig {
+      applicationId "online.community365.app"
+      minSdkVersion 26
+      targetSdkVersion flutter.targetSdkVersion
+  }
+  ```
+- Build for the Play Store: `flutter build appbundle`.
+
+### iOS (macOS + Xcode required)
+
+- Set the minimum iOS version to **13.0** in `ios/Podfile`
+  (`platform :ios, '13.0'`) and in the Xcode project's Deployment Target.
+- Set the bundle identifier to `online.community365.app` in Xcode, and select
+  your Apple Developer signing team.
+- `url_launcher` opens external `https` links by default; no extra
+  `LSApplicationQueriesSchemes` are needed for the podcast/YouTube/source
+  links, which are all `https`.
+- Build for the App Store: `flutter build ipa`.
+
+### Windows (Windows 10/11 + Visual Studio with the "Desktop development with
+C++" workload)
+
+- The offline cache uses the FFI SQLite engine, wired up automatically in
+  `main.dart` — no extra native setup.
+- Push notifications are skipped on Windows (FCM is mobile-only); the rest of
+  the app is fully functional.
+- Build a release: `flutter build windows` (output under
+  `build/windows/x64/runner/Release/`). Package with MSIX
+  (`msix_config` + `dart run msix:create`) for distribution if desired.
+
+### Firebase (push — Android and iOS only)
+
+- Create a Firebase project. Add an **Android** app (package
+  `online.community365.app`) and an **iOS** app (same bundle id).
+- Download `google-services.json` into `android/app/` and
+  `GoogleService-Info.plist` into `ios/Runner/`.
+- For iOS push, upload an **APNs authentication key** in the Firebase console
+  (Project settings → Cloud Messaging).
+- Run `flutterfire configure` to generate `lib/firebase_options.dart`, then
+  pass those options to `Firebase.initializeApp()` in `main.dart`.
+- Until Firebase is configured the app runs fine and push is simply inactive
+  (it fails open — see `push_service.dart`).
 
 ## API contract (Syndicate Pro `synpro/v1`)
 

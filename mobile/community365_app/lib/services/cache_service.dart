@@ -1,4 +1,5 @@
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/post.dart';
@@ -15,9 +16,11 @@ class CacheService {
 
   Future<Database> get _database async {
     if (_db != null) return _db!;
-    final dir = await getDatabasesPath();
+    // A per-platform writable location: works on Android, iOS, and desktop
+    // (getDatabasesPath is Android/iOS only).
+    final dir = await getApplicationSupportDirectory();
     _db = await openDatabase(
-      p.join(dir, _dbName),
+      p.join(dir.path, _dbName),
       version: 2,
       onCreate: (db, version) async {
         await _createPosts(db);

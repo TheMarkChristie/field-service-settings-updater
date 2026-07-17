@@ -1,7 +1,7 @@
 name: community365
 description: The 365 Community reader — blogs, events, podcasts, and videos from the community, with offline reading and category preferences.
 publish_to: "none"
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -20,7 +20,8 @@ dependencies:
   # Local persistence
   shared_preferences: ^2.2.3      # simple settings (offline limit, theme mode)
   flutter_secure_storage: ^9.2.2  # WordPress username + application password
-  sqflite: ^2.3.3                 # offline post cache
+  sqflite: ^2.3.3                 # offline post cache (Android/iOS)
+  sqflite_common_ffi: ^2.3.3      # SQLite engine for Windows/macOS/Linux
   path: ^1.9.0
   path_provider: ^2.1.3
 
