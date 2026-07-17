@@ -56,6 +56,10 @@ function community365_scripts() {
 	wp_enqueue_style( 'community365-style', get_stylesheet_uri(), array(), COMMUNITY365_VERSION );
 	wp_enqueue_script( 'community365-theme', get_template_directory_uri() . '/assets/js/theme.js', array(), COMMUNITY365_VERSION, true );
 
+	if ( is_front_page() ) {
+		wp_enqueue_script( 'community365-home', get_template_directory_uri() . '/assets/js/home.js', array(), COMMUNITY365_VERSION, true );
+	}
+
 	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 		wp_enqueue_script( 'comment-reply' );
 	}
@@ -127,3 +131,4 @@ add_filter( 'excerpt_more', 'community365_excerpt_more' );
 
 require get_template_directory() . '/inc/template-tags.php';
 require get_template_directory() . '/inc/customizer.php';
+require get_template_directory() . '/inc/home-slots.php';

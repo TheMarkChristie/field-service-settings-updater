@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 1.5.0
+Version: 2.0.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -1017,3 +1017,78 @@ table.c365-cal { width: 100%; border-collapse: collapse; margin: 0; table-layout
 .c365-home-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin: 1rem 0 2.5rem; align-items: start; }
 @media (max-width: 820px) { .c365-home-bottom { grid-template-columns: 1fr; } }
 .c365-next-event { margin: 0.8rem 0 0; color: var(--c365-text-soft); font-size: 0.92rem; }
+
+/* ---------------------------------------------------------------------------
+   Home slot components (v2.0): news block, media sliders, strips, upcoming
+--------------------------------------------------------------------------- */
+.c365-slot { margin: 2.4rem 0; }
+
+/* Tabs */
+.c365-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.c365-tab { border: 1px solid var(--c365-border); background: var(--c365-surface); color: var(--c365-text-soft); font: inherit; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.5rem 1.4rem; border-radius: 999px; cursor: pointer; }
+.c365-tab.is-active { background: var(--c365-text); border-color: var(--c365-text); color: var(--c365-bg); }
+.c365-tab-panel { display: none; }
+.c365-tab-panel.is-active { display: block; }
+
+/* News block */
+.c365-news { display: grid; grid-template-columns: 1fr 1.7fr 1fr; gap: 1.5rem; align-items: start; }
+.c365-news-left { display: grid; gap: 1.2rem; }
+.c365-news-thumb img { width: 100%; border-radius: 10px; display: block; aspect-ratio: 16 / 10; object-fit: cover; }
+.c365-news-card .c365-mini-meta { margin-top: 0.5rem; }
+.c365-news-right { display: grid; gap: 1rem; }
+@media (max-width: 1024px) {
+	.c365-news { grid-template-columns: 1fr 1fr; }
+	.c365-news-main { grid-column: 1 / -1; order: -1; }
+}
+@media (max-width: 640px) { .c365-news { grid-template-columns: 1fr; } }
+
+/* Media sliders (video + podcast) */
+.c365-media { display: grid; grid-template-columns: 2.6fr 1fr; gap: 1.25rem; align-items: start; }
+.c365-media-title { margin: 0.7rem 0 0; font-size: 1.05rem; }
+.c365-media-title a { color: var(--c365-text); text-decoration: none; }
+.c365-media-list { display: grid; gap: 0.6rem; max-height: 480px; overflow-y: auto; }
+.c365-media-item { display: flex; gap: 0.6rem; align-items: center; text-align: left; background: var(--c365-surface); border: 2px solid var(--c365-border); border-radius: 10px; padding: 0.45rem; cursor: pointer; font: inherit; color: var(--c365-text); }
+.c365-media-item.is-active { border-color: var(--c365-accent); }
+.c365-media-item-num { font-size: 0.75rem; font-weight: 800; color: var(--c365-text-soft); min-width: 1.1rem; }
+.c365-media-item-thumb img { width: 88px; height: 56px; object-fit: cover; border-radius: 6px; display: block; }
+.c365-media-item-title { font-size: 0.8rem; line-height: 1.3; font-weight: 600; }
+.c365-media-item-title em { display: block; font-style: normal; color: var(--c365-text-soft); font-size: 0.72rem; }
+@media (max-width: 900px) {
+	.c365-media { grid-template-columns: 1fr; }
+	.c365-media-list { max-height: none; grid-template-columns: 1fr 1fr; }
+}
+
+/* Podcast feature */
+.c365-podcast-feature { display: flex; gap: 1.25rem; align-items: center; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: var(--c365-radius); padding: 1.25rem; flex-wrap: wrap; }
+.c365-podcast-feature > img { width: 180px; height: 180px; object-fit: cover; border-radius: 12px; }
+.c365-podcast-feature-body { flex: 1; min-width: 240px; }
+.c365-podcast-feature-body audio { width: 100%; margin-top: 0.8rem; }
+.c365-new-badge { display: inline-block; background: var(--c365-accent); color: #fff; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; padding: 0.2rem 0.7rem; border-radius: 999px; margin-bottom: 0.4rem; }
+
+/* Post-blocks strip slider */
+.c365-strip-wrap { position: relative; }
+.c365-strip { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 0.5rem; scrollbar-width: none; }
+.c365-strip::-webkit-scrollbar { display: none; }
+.c365-strip-card { flex: 0 0 300px; scroll-snap-align: start; }
+.c365-strip-thumb { position: relative; display: block; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--c365-surface); }
+.c365-strip-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.c365-strip-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; background: var(--c365-accent); color: #fff; border: 0; border-radius: 8px; width: 2.2rem; height: 3.2rem; font-size: 1.1rem; cursor: pointer; }
+.c365-strip-prev { left: -0.6rem; }
+.c365-strip-next { right: -0.6rem; }
+
+.c365-block-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1.5rem; }
+.c365-block-col { display: grid; gap: 1rem; align-content: start; }
+.c365-block-col-heading { margin: 0; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.05em; border-bottom: 2px solid var(--c365-accent); padding-bottom: 0.3rem; }
+@media (max-width: 820px) { .c365-block-cols { grid-template-columns: 1fr; } }
+
+/* Events component */
+.c365-events-wide { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.5rem; align-items: start; }
+@media (max-width: 820px) { .c365-events-wide { grid-template-columns: 1fr; } }
+.c365-upcoming { display: grid; gap: 1rem; }
+.c365-upcoming-row { display: flex; gap: 1rem; background: var(--c365-surface); border: 1px solid var(--c365-border); border-radius: 12px; padding: 0.9rem 1.1rem; }
+.c365-upcoming-date { text-align: center; min-width: 3.2rem; background: var(--c365-accent); color: #fff; border-radius: 10px; padding: 0.45rem 0.3rem; height: fit-content; }
+.c365-upcoming-day { display: block; font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
+.c365-upcoming-mon { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.c365-upcoming-actions { margin: 0.5rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.c365-chip-btn { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 999px; background: var(--c365-accent-soft); color: var(--c365-accent); text-decoration: none; }
+.c365-chip-btn:hover { background: var(--c365-accent); color: #fff; text-decoration: none; }
