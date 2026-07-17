@@ -42,6 +42,10 @@ class Synpro_Settings {
 			'use_original_date'  => 1,           // Keep the original publish date.
 			'attribution'        => 1,           // Source link + permission note below content.
 			'canonical'          => 1,           // Q3: rel=canonical to the original.
+			'redirect_original'  => 1,           // Send blog-post visitors to the author's site.
+			'prune_enabled'      => 1,           // Auto-trash old low-interest imports.
+			'prune_years'        => 3,           // ...older than this many years...
+			'prune_views'        => 50,          // ...with fewer than this many views.
 		);
 	}
 
@@ -189,6 +193,10 @@ class Synpro_Settings {
 			'use_original_date'  => empty( $input['use_original_date'] ) ? 0 : 1,
 			'attribution'        => empty( $input['attribution'] ) ? 0 : 1,
 			'canonical'          => empty( $input['canonical'] ) ? 0 : 1,
+			'redirect_original'  => empty( $input['redirect_original'] ) ? 0 : 1,
+			'prune_enabled'      => empty( $input['prune_enabled'] ) ? 0 : 1,
+			'prune_years'        => min( 20, max( 1, absint( $input['prune_years'] ?? $defaults['prune_years'] ) ) ),
+			'prune_views'        => min( 100000, max( 0, absint( $input['prune_views'] ?? $defaults['prune_views'] ) ) ),
 		);
 	}
 
@@ -528,7 +536,29 @@ class Synpro_Settings {
 							<label>
 								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[canonical]" value="1" <?php checked( $s['canonical'] ); ?>>
 								<?php esc_html_e( 'Point rel="canonical" at the original article (recommended for SEO on syndicated content)', 'syndicate-pro' ); ?>
+							</label><br>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[redirect_original]" value="1" <?php checked( $s['redirect_original'] ); ?>>
+								<?php esc_html_e( 'Redirect visitors opening a syndicated blog post to the original article on the author\'s site (the view is counted first; editors and previews are never redirected)', 'syndicate-pro' ); ?>
 							</label>
+						</fieldset>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Content pruning', 'syndicate-pro' ); ?></th>
+					<td>
+						<fieldset>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[prune_enabled]" value="1" <?php checked( $s['prune_enabled'] ); ?>>
+								<?php esc_html_e( 'Automatically move old, low-interest imported content to the bin (runs daily)', 'syndicate-pro' ); ?>
+							</label>
+							<p>
+								<?php esc_html_e( 'Older than', 'syndicate-pro' ); ?>
+								<input type="number" min="1" max="20" style="width:70px" name="<?php echo esc_attr( self::OPTION ); ?>[prune_years]" value="<?php echo esc_attr( $s['prune_years'] ); ?>">
+								<?php esc_html_e( 'years with fewer than', 'syndicate-pro' ); ?>
+								<input type="number" min="0" max="100000" style="width:90px" name="<?php echo esc_attr( self::OPTION ); ?>[prune_views]" value="<?php echo esc_attr( $s['prune_views'] ); ?>">
+								<?php esc_html_e( 'views. Only imported content is pruned; manually written posts are never touched. Binned posts are recoverable for 30 days.', 'syndicate-pro' ); ?>
+							</p>
 						</fieldset>
 					</td>
 				</tr>

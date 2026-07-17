@@ -60,7 +60,7 @@ function community365_scripts() {
 		wp_enqueue_script( 'comment-reply' );
 	}
 
-	$accent = get_theme_mod( 'c365_accent_color', '#4f46e5' );
+	$accent = get_theme_mod( 'c365_accent_color', '#f97316' );
 	if ( $accent && preg_match( '/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $accent ) ) {
 		list( $r, $g, $b ) = community365_hex_to_rgb( $accent );
 		$css = sprintf(

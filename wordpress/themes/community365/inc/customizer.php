@@ -27,7 +27,7 @@ function community365_customize_register( $wp_customize ) {
 	$wp_customize->add_setting(
 		'c365_accent_color',
 		array(
-			'default'           => '#4f46e5',
+			'default'           => '#f97316',
 			'sanitize_callback' => 'sanitize_hex_color',
 			'transport'         => 'refresh',
 		)

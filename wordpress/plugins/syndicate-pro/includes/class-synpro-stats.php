@@ -33,6 +33,7 @@ class Synpro_Stats {
 	 */
 	public static function init() {
 		add_action( 'template_redirect', array( __CLASS__, 'count_view' ) );
+		add_action( 'synpro_daily_prune', array( __CLASS__, 'prune' ) );
 		add_action( 'show_user_profile', array( __CLASS__, 'render_profile_stats' ), 5 );
 		add_action( 'edit_user_profile', array( __CLASS__, 'render_profile_stats' ), 5 );
 	}
@@ -64,6 +65,51 @@ class Synpro_Stats {
 
 		update_post_meta( $post_id, '_synpro_views', (int) get_post_meta( $post_id, '_synpro_views', true ) + 1 );
 		update_post_meta( $post_id, self::month_key(), (int) get_post_meta( $post_id, self::month_key(), true ) + 1 );
+	}
+
+	/**
+	 * Daily pruning: move imported content older than the configured age
+	 * with fewer than the configured views to the bin (capped per run).
+	 * Manually written content (no _synpro_guid) is never touched.
+	 */
+	public static function prune() {
+		if ( ! Synpro_Settings::get( 'prune_enabled' ) ) {
+			return;
+		}
+		$years     = max( 1, (int) Synpro_Settings::get( 'prune_years' ) );
+		$min_views = (int) Synpro_Settings::get( 'prune_views' );
+
+		$candidates = get_posts(
+			array(
+				'post_type'      => self::COUNTED,
+				'post_status'    => 'publish',
+				'date_query'     => array( array( 'before' => $years . ' years ago' ) ),
+				'meta_key'       => '_synpro_guid', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_compare'   => 'EXISTS',
+				'posts_per_page' => 100,
+				'orderby'        => 'date',
+				'order'          => 'ASC',
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+
+		foreach ( $candidates as $post_id ) {
+			$views = (int) get_post_meta( $post_id, '_synpro_views', true );
+			if ( $views >= $min_views ) {
+				continue;
+			}
+			/**
+			 * Filter whether a low-interest old post is pruned.
+			 *
+			 * @param bool $prune   Default true.
+			 * @param int  $post_id Post ID.
+			 * @param int  $views   Its view count.
+			 */
+			if ( apply_filters( 'synpro_prune_post', true, $post_id, $views ) ) {
+				wp_trash_post( $post_id );
+			}
+		}
 	}
 
 	/**

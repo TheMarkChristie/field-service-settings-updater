@@ -19,6 +19,9 @@ class Synpro_Frontend {
 	public static function init() {
 		add_filter( 'the_content', array( __CLASS__, 'append_attribution' ), 20 );
 		add_filter( 'get_canonical_url', array( __CLASS__, 'canonical_url' ), 10, 2 );
+		// Priority 20: runs AFTER the view counter (priority 10), so pruning
+		// statistics still accumulate before the visitor leaves.
+		add_action( 'template_redirect', array( __CLASS__, 'maybe_redirect_original' ), 20 );
 	}
 
 	/**
@@ -118,6 +121,32 @@ class Synpro_Frontend {
 		}
 
 		return $content . "\n" . $attribution;
+	}
+
+	/**
+	 * Send visitors opening a syndicated blog post straight to the original
+	 * article on the author's site (302 so it stays reversible). The view
+	 * counter has already run; editors, previews, and ?noredirect=1 skip it.
+	 */
+	public static function maybe_redirect_original() {
+		if ( ! Synpro_Settings::get( 'redirect_original' ) ) {
+			return;
+		}
+		if ( ! is_singular( 'post' ) || is_preview() ) {
+			return;
+		}
+		if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+			return;
+		}
+		if ( isset( $_GET['noredirect'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		$source = get_post_meta( get_queried_object_id(), '_synpro_source_url', true );
+		if ( $source ) {
+			wp_redirect( esc_url_raw( $source ), 302 ); // phpcs:ignore WordPress.Security.SafeRedirect
+			exit;
+		}
 	}
 
 	/**

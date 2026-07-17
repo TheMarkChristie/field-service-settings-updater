@@ -3,8 +3,8 @@ Theme Name: Community 365
 Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
-Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, dark-mode support, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 1.3.0
+Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
+Version: 1.4.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -17,32 +17,21 @@ Tags: blog, news, one-column, custom-logo, custom-menu, featured-images, threade
 /* ---------------------------------------------------------------------------
    Design tokens
 --------------------------------------------------------------------------- */
+/* Core palette: black, orange, white. */
 :root {
-	--c365-accent: #4f46e5;        /* overridden by Customizer */
-	--c365-accent-soft: rgba(79, 70, 229, 0.12);
-	--c365-bg: #f6f7fb;
-	--c365-surface: #ffffff;
-	--c365-text: #1c2130;
-	--c365-text-soft: #5b6270;
-	--c365-border: #e4e7ef;
+	--c365-accent: #f97316;        /* overridden by Customizer */
+	--c365-accent-soft: rgba(249, 115, 22, 0.14);
+	--c365-bg: #0c0d12;
+	--c365-surface: #16181f;
+	--c365-text: #f2f3f7;
+	--c365-text-soft: #9aa1b2;
+	--c365-border: #262a36;
 	--c365-radius: 14px;
-	--c365-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px -12px rgba(16, 24, 40, 0.14);
-	--c365-shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.08), 0 16px 32px -12px rgba(16, 24, 40, 0.22);
+	--c365-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+	--c365-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.5), 0 16px 32px -12px rgba(0, 0, 0, 0.7);
 	--c365-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
 		Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
 	--c365-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--c365-bg: #12141c;
-		--c365-surface: #1b1e2a;
-		--c365-text: #e7e9f0;
-		--c365-text-soft: #9aa1b2;
-		--c365-border: #2a2e3d;
-		--c365-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-		--c365-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.5), 0 16px 32px -12px rgba(0, 0, 0, 0.7);
-	}
 }
 
 /* ---------------------------------------------------------------------------
@@ -755,7 +744,7 @@ button:hover, input[type="submit"]:hover { filter: brightness(1.08); }
 	text-decoration: none;
 }
 .c365-pill:hover { border-color: var(--c365-accent); color: var(--c365-accent); text-decoration: none; }
-.c365-pill.is-active { background: #16181f; border-color: #16181f; color: #fff; }
+.c365-pill.is-active { background: var(--c365-accent); border-color: var(--c365-accent); color: #fff; }
 
 /* Author search */
 .c365-author-search { margin: 0 0 1.25rem; }
@@ -828,7 +817,8 @@ dl.c365-event-details { margin: 1.25rem 0 1rem; }
 	margin: 0 0 1.5rem;
 }
 .c365-button-alt {
-	background: var(--c365-text);
+	background: #2f3442;
+	color: #fff !important;
 }
 .c365-button-ghost {
 	background: transparent;
