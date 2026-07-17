@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'COMMUNITY365_VERSION', '2.3.0' );
+define( 'COMMUNITY365_VERSION', '2.4.0' );
 
 /**
  * Theme setup.
@@ -37,6 +37,10 @@ function community365_setup() {
 	 * source-attribution UI, so the plugin should not append its fallback box.
 	 */
 	add_theme_support( 'synpro-attribution' );
+
+	// The theme styles the plugin's paid-content badge + disclosure banner
+	// itself (the plugin would otherwise inject fallback styles).
+	add_theme_support( 'synpro-paid' );
 
 	register_nav_menus(
 		array(

@@ -873,3 +873,46 @@ whole visual identity:
   server-side; headings scale relatively).
 - **Back-compat**: the legacy single `c365_accent_color` setting is
   honoured as the primary fallback for upgraded sites.
+
+## Part 11 — v2.5.0 addendum: paid (sponsored) posts with PayPal
+
+### 11.1 Model
+
+- Post meta: `_synpro_paid` (flag), `_synpro_paid_tier` (`standard` |
+  `featured`), `_synpro_featured_until` (expiry timestamp, stamped once —
+  re-saving never extends the window), `_synpro_paid_received` (payment
+  timestamp).
+- Settings (Syndicate Pro → Settings → Paid content): `paid_price` (£25),
+  `featured_price` (£100), `featured_category` (the category that drives
+  featured placement — the site owner controls features with categories),
+  `featured_days` (7), `paypal_email`.
+
+### 11.2 Behaviour
+
+- **Editor**: a *Paid content* side box on posts — paid checkbox, tier
+  radio with live prices, featured-until date, PayPal payment link
+  (copyable), and a *Payment received* checkbox (records the date).
+- **Featured lifecycle**: choosing the featured tier assigns the featured
+  category (post keeps its other categories) and stamps the expiry. The
+  existing daily cron removes expired posts from the featured category
+  (never leaving a post categoryless) and fires
+  `synpro_featured_expired`; the post then lives in the normal cycle.
+  The paid flag and disclosure never expire.
+- **Disclosure (non-negotiable, plugin-enforced)**:
+  - `post_thumbnail_html` filter overlays a **"Paid content" badge** on
+    the featured image everywhere it renders.
+  - `the_content` (priority 5) prepends a **disclosure banner** on the
+    post itself. The `synpro_paid_banner_html` filter can reword it, but
+    an empty result restores the default — the disclosure cannot be
+    filtered away.
+  - The plugin injects minimal fallback CSS on themes without
+    `add_theme_support( 'synpro-paid' )`; Community 365 declares support
+    and styles both (badge over image top-left; accent-bordered banner
+    with a "Paid content" pill, brand-token aware).
+- **PayPal**: Website Payments Standard "Buy Now" URLs —
+  `cmd=_xclick`, the configured business email, GBP amount by tier,
+  `item_number` = post ID for traceability. No API keys required.
+  Payment confirmation is manual (the *Payment received* checkbox); the
+  Posts list *Paid* column shows tier, featured-until, and an
+  *awaiting payment* warning. (A PayPal-webhook auto-confirmation is a
+  possible later upgrade.)

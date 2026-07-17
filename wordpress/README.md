@@ -6,8 +6,8 @@ required:
 
 | Package | Folder | What it does |
 |---|---|---|
-| **Syndicate Pro** (plugin, v2.4.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, front-end Submit Content and My Account pages, social auto-sharing, category fallback images, website digest subscribers, a REST API for the mobile app, admin dashboard and wp-admin widgets. |
-| **Community 365** (theme, v2.2.0) | `themes/community365` | Presentation: black/orange/white magazine design, an 8-slot configurable home page with six components, distinct layouts per content type, single-post sidebar (events calendar, advert, social, coffee), member author pages, header sponsor slot, digest subscribe form, branded login/registration screens, fully responsive for mobile and tablet. |
+| **Syndicate Pro** (plugin, v2.5.0) | `plugins/syndicate-pro` | The whole back end: member feed records (RSS and no-RSS web scraping), the 5-minute rotation, importing with de-duplication and full-text scrape, Events/Podcasts/Videos content types, post/social templates, member profiles, front-end Submit Content and My Account pages, paid/sponsored posts with PayPal payment links, social auto-sharing, category fallback images, website digest subscribers, a REST API for the mobile app, admin dashboard and wp-admin widgets. |
+| **Community 365** (theme, v2.4.0) | `themes/community365` | Presentation: black/orange/white magazine design (fully rebrandable: six-colour palette, fonts, logo + sponsor uploads), an 8-slot configurable home page with six components, distinct layouts per content type, single-post sidebar (events calendar, advert, social, coffee), member author pages, paid-content badges and banners, digest subscribe form, branded login/registration screens, fully responsive for mobile and tablet. |
 
 The full requirements are in [`docs/full-specification.md`](docs/full-specification.md).
 
@@ -155,6 +155,32 @@ Activation creates two front-end pages (add them to your menu):
   To let new members self-register, enable *Settings → General → Anyone
   can register* and set the default role to **Contributor** (submitting
   content requires Contributor or above).
+
+## Paid (sponsored) posts
+
+Any blog post can be sold as paid-for content, at two tiers (prices
+editable under **Syndicate Pro → Settings → Paid content**; defaults
+**£25** standard / **£100** featured):
+
+- Tick **"This is paid-for content"** in the post editor's *Paid content*
+  box and pick the tier. **Featured** posts are placed into your
+  designated featured category (chosen in Settings — point a home-page
+  slot at that category for their placement) and **drop out of it
+  automatically after 7 days** (configurable), returning to the normal
+  content cycle. The paid flag — and its disclosure — stays for good.
+- **Disclosure is enforced by the plugin, not the theme**: every paid
+  post shows a **"Paid content" badge over its featured image** wherever
+  the image appears (cards, sliders, archives) and a **disclosure banner
+  at the top of the post** when opened. A filter can reword the banner
+  but cannot remove it, and the plugin injects fallback styling on any
+  theme that doesn't provide its own.
+- **PayPal payments**: add your PayPal email in Settings and each paid
+  post's editor box shows a ready-made **PayPal payment link** for the
+  right amount in GBP, tagged with the post ID so it's traceable in your
+  PayPal activity — send it to the sponsor, then tick **"Payment
+  received"** (date recorded). The Posts list gains a *Paid* column
+  showing tier, featured-until date, and an **"awaiting payment"**
+  warning until you tick it.
 
 ## Mobile app API (Android)
 

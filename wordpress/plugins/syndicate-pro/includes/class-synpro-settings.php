@@ -46,6 +46,11 @@ class Synpro_Settings {
 			'prune_enabled'      => 1,           // Auto-trash old low-interest imports.
 			'prune_years'        => 3,           // ...older than this many years...
 			'prune_views'        => 50,          // ...with fewer than this many views.
+			'paid_price'         => 25,          // £ per standard paid post.
+			'featured_price'     => 100,         // £ per featured paid post.
+			'featured_category'  => 0,           // The category that drives featured placement.
+			'featured_days'      => 7,           // Days a featured post stays in that category.
+			'paypal_email'       => '',          // PayPal business email for payment links.
 		);
 	}
 
@@ -197,6 +202,11 @@ class Synpro_Settings {
 			'prune_enabled'      => empty( $input['prune_enabled'] ) ? 0 : 1,
 			'prune_years'        => min( 20, max( 1, absint( $input['prune_years'] ?? $defaults['prune_years'] ) ) ),
 			'prune_views'        => min( 100000, max( 0, absint( $input['prune_views'] ?? $defaults['prune_views'] ) ) ),
+			'paid_price'         => min( 100000, max( 0, absint( $input['paid_price'] ?? $defaults['paid_price'] ) ) ),
+			'featured_price'     => min( 100000, max( 0, absint( $input['featured_price'] ?? $defaults['featured_price'] ) ) ),
+			'featured_category'  => absint( $input['featured_category'] ?? 0 ),
+			'featured_days'      => min( 90, max( 1, absint( $input['featured_days'] ?? $defaults['featured_days'] ) ) ),
+			'paypal_email'       => sanitize_email( $input['paypal_email'] ?? '' ),
 		);
 	}
 
@@ -558,6 +568,43 @@ class Synpro_Settings {
 								<?php esc_html_e( 'years with fewer than', 'syndicate-pro' ); ?>
 								<input type="number" min="0" max="100000" style="width:90px" name="<?php echo esc_attr( self::OPTION ); ?>[prune_views]" value="<?php echo esc_attr( $s['prune_views'] ); ?>">
 								<?php esc_html_e( 'views. Only imported content is pruned; manually written posts are never touched. Binned posts are recoverable for 30 days.', 'syndicate-pro' ); ?>
+							</p>
+						</fieldset>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Paid content', 'syndicate-pro' ); ?></th>
+					<td>
+						<fieldset>
+							<p>
+								<?php esc_html_e( 'Standard paid post: £', 'syndicate-pro' ); ?>
+								<input type="number" min="0" max="100000" style="width:90px" name="<?php echo esc_attr( self::OPTION ); ?>[paid_price]" value="<?php echo esc_attr( $s['paid_price'] ); ?>">
+								&nbsp; <?php esc_html_e( 'Featured paid post: £', 'syndicate-pro' ); ?>
+								<input type="number" min="0" max="100000" style="width:90px" name="<?php echo esc_attr( self::OPTION ); ?>[featured_price]" value="<?php echo esc_attr( $s['featured_price'] ); ?>">
+							</p>
+							<p>
+								<?php esc_html_e( 'Featured category:', 'syndicate-pro' ); ?>
+								<?php
+								wp_dropdown_categories(
+									array(
+										'name'              => esc_attr( self::OPTION ) . '[featured_category]',
+										'selected'          => (int) $s['featured_category'],
+										'hide_empty'        => false,
+										'show_option_none'  => esc_html__( '— choose —', 'syndicate-pro' ),
+										'option_none_value' => 0,
+									)
+								);
+								?>
+								&nbsp; <?php esc_html_e( 'Featured for', 'syndicate-pro' ); ?>
+								<input type="number" min="1" max="90" style="width:70px" name="<?php echo esc_attr( self::OPTION ); ?>[featured_days]" value="<?php echo esc_attr( $s['featured_days'] ); ?>">
+								<?php esc_html_e( 'days, then the post drops out of that category into the normal cycle automatically.', 'syndicate-pro' ); ?>
+							</p>
+							<p>
+								<?php esc_html_e( 'PayPal email:', 'syndicate-pro' ); ?>
+								<input type="email" class="regular-text" name="<?php echo esc_attr( self::OPTION ); ?>[paypal_email]" value="<?php echo esc_attr( $s['paypal_email'] ); ?>" placeholder="payments@365community.online">
+							</p>
+							<p class="description">
+								<?php esc_html_e( 'Mark a post as paid on its edit screen (Paid content box). Paid posts always carry a "Paid content" badge over their image and a disclosure banner when opened — this cannot be styled away by accident. With a PayPal email set, the edit screen gives you a ready-made PayPal payment link for the right amount (tagged with the post ID so it shows up in your PayPal activity); tick "payment received" once it arrives. Point a home-page slot at the featured category to give featured posts their placement.', 'syndicate-pro' ); ?>
 							</p>
 						</fieldset>
 					</td>
