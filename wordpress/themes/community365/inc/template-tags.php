@@ -37,6 +37,9 @@ function community365_get_source( $post_id = null ) {
 
 	if ( ! $name ) {
 		$name = wp_parse_url( $url, PHP_URL_HOST );
+		if ( ! $name ) {
+			$name = $url; // Schemeless/odd source URL: show it rather than an empty badge.
+		}
 	}
 
 	return array(
@@ -326,7 +329,10 @@ function community365_events_calendar() {
 		}
 	}
 
-	$page_url = get_permalink();
+	// On archives/the front page get_permalink() would return whatever post
+	// the last loop left in the global — month arrows must stay on the page.
+	$page_url = is_singular() ? get_permalink() : home_url( add_query_arg( array() ) );
+	$page_url = remove_query_arg( 'cal', $page_url );
 	$prev     = add_query_arg( 'cal', gmdate( 'Y-m', strtotime( '-1 month', $first ) ), $page_url );
 	$next     = add_query_arg( 'cal', gmdate( 'Y-m', strtotime( '+1 month', $first ) ), $page_url );
 	?>

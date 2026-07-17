@@ -344,7 +344,11 @@ class Synpro_Feeds {
 			if ( preg_match( '~youtube\.com/channel/([A-Za-z0-9_-]+)~', $value, $m ) ) {
 				$value = $m[1];
 			}
-			return preg_replace( '/[^A-Za-z0-9_-]/', '', $value );
+			$value = preg_replace( '/[^A-Za-z0-9_-]/', '', $value );
+			// Channel IDs are exactly "UC" + 22 chars. Anything else (a
+			// mangled URL, an @handle) would silently 404 on every fetch —
+			// reject it so the member gets an error instead.
+			return preg_match( '/^UC[A-Za-z0-9_-]{22}$/', $value ) ? $value : '';
 		}
 		return esc_url_raw( $value );
 	}

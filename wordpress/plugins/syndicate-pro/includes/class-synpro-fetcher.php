@@ -429,6 +429,9 @@ class Synpro_Fetcher {
 	 * @return int Attachment ID, or 0 on failure.
 	 */
 	public static function sideload_image( $url, $post_id = 0, $desc = null ) {
+		if ( ! Synpro_Scraper::is_safe_remote_url( $url ) ) {
+			return 0; // Feed-supplied image URLs must not reach internal hosts.
+		}
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';

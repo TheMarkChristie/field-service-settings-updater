@@ -31,12 +31,17 @@ class Synpro_Source_Rss {
 			require_once ABSPATH . WPINC . '/feed.php';
 		}
 
+		$feed_url = Synpro_Feeds::resolved_url( $row );
+		if ( ! Synpro_Scraper::is_safe_remote_url( $feed_url ) ) {
+			return new WP_Error( 'synpro_unsafe_url', __( 'Feed URL points at a private or internal address.', 'syndicate-pro' ) );
+		}
+
 		// Keep the feed cache shorter than the 5-minute rotation.
 		$shorten = function () {
 			return 4 * MINUTE_IN_SECONDS;
 		};
 		add_filter( 'wp_feed_cache_transient_lifetime', $shorten );
-		$feed = fetch_feed( Synpro_Feeds::resolved_url( $row ) );
+		$feed = fetch_feed( $feed_url );
 		remove_filter( 'wp_feed_cache_transient_lifetime', $shorten );
 
 		if ( is_wp_error( $feed ) ) {

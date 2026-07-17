@@ -163,8 +163,18 @@ class Synpro_Emails {
 			return $by_views;
 		}
 
-		$have    = wp_list_pluck( $by_views, 'ID' );
-		$fill    = get_posts( $base + array( 'post__not_in' => array_merge( $exclude, $have ), 'posts_per_page' => $limit - count( $by_views ) ) );
+		$have = wp_list_pluck( $by_views, 'ID' );
+		// array_merge, not the + union: + would keep $base's original
+		// post__not_in and posts_per_page and re-select the same posts.
+		$fill = get_posts(
+			array_merge(
+				$base,
+				array(
+					'post__not_in'   => array_merge( $exclude, $have ),
+					'posts_per_page' => $limit - count( $by_views ),
+				)
+			)
+		);
 		return array_merge( $by_views, $fill );
 	}
 

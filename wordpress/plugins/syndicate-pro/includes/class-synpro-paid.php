@@ -174,7 +174,7 @@ class Synpro_Paid {
 				printf(
 					/* translators: %s: date. */
 					esc_html__( 'Featured until %s.', 'syndicate-pro' ),
-					esc_html( date_i18n( get_option( 'date_format', 'j F Y' ), $until ) )
+					esc_html( wp_date( get_option( 'date_format', 'j F Y' ), $until ) )
 				);
 				?>
 			</p>
@@ -187,12 +187,14 @@ class Synpro_Paid {
 			<hr>
 			<p>
 				<label>
+					<?php // The marker tells save() the checkbox was actually on this form — its absence must not delete the stored payment record. ?>
+					<input type="hidden" name="synpro_paid_received_present" value="1">
 					<input type="checkbox" name="synpro_paid_received" value="1" <?php checked( self::payment_received( $post->ID ) ); ?>>
 					<strong><?php esc_html_e( 'Payment received', 'syndicate-pro' ); ?></strong>
 					<?php
 					$received_on = (int) get_post_meta( $post->ID, '_synpro_paid_received', true );
 					if ( $received_on > 1 ) {
-						echo ' <span class="description">(' . esc_html( date_i18n( get_option( 'date_format', 'j M Y' ), $received_on ) ) . ')</span>';
+						echo ' <span class="description">(' . esc_html( wp_date( get_option( 'date_format', 'j M Y' ), $received_on ) ) . ')</span>';
 					}
 					?>
 				</label>
@@ -229,11 +231,12 @@ class Synpro_Paid {
 		}
 
 		if ( empty( $_POST['synpro_paid'] ) ) {
-			// Unmarking removes the flags but leaves the category placement to
-			// the editor — removing content someone paid for is their call.
+			// Unmarking removes the paid flags. The payment record and the
+			// featured-until stamp are kept: an accidental untick/retick must
+			// not wipe the money trail or restart the featured window, and
+			// expire_featured() cleans the stamp up in due course anyway.
 			delete_post_meta( $post_id, '_synpro_paid' );
 			delete_post_meta( $post_id, '_synpro_paid_tier' );
-			delete_post_meta( $post_id, '_synpro_featured_until' );
 			return;
 		}
 
@@ -241,11 +244,14 @@ class Synpro_Paid {
 		update_post_meta( $post_id, '_synpro_paid', 1 );
 		update_post_meta( $post_id, '_synpro_paid_tier', $tier );
 
-		// Payment tracking: store the timestamp the box was first ticked.
-		if ( empty( $_POST['synpro_paid_received'] ) ) {
-			delete_post_meta( $post_id, '_synpro_paid_received' );
-		} elseif ( ! self::payment_received( $post_id ) ) {
-			update_post_meta( $post_id, '_synpro_paid_received', time() );
+		// Payment tracking — only when the checkbox was actually rendered on
+		// the submitted form (its absence otherwise must not delete history).
+		if ( ! empty( $_POST['synpro_paid_received_present'] ) ) {
+			if ( empty( $_POST['synpro_paid_received'] ) ) {
+				delete_post_meta( $post_id, '_synpro_paid_received' );
+			} elseif ( ! self::payment_received( $post_id ) ) {
+				update_post_meta( $post_id, '_synpro_paid_received', time() );
+			}
 		}
 
 		if ( 'featured' === $tier ) {
@@ -258,8 +264,26 @@ class Synpro_Paid {
 				wp_set_post_categories( $post_id, array( $featured_cat ), true );
 			}
 		} else {
+			// Downgraded to standard: leave the featured category now —
+			// expire_featured() can't, once the stamp is gone.
 			delete_post_meta( $post_id, '_synpro_featured_until' );
+			self::remove_from_featured( $post_id );
 		}
+	}
+
+	/**
+	 * Take a post out of the featured category (keeping at least one
+	 * category — core falls back to the default category on empty).
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	protected static function remove_from_featured( $post_id ) {
+		$featured_cat = (int) Synpro_Settings::get( 'featured_category' );
+		if ( ! $featured_cat ) {
+			return;
+		}
+		$cats = array_diff( wp_get_post_categories( $post_id ), array( $featured_cat ) );
+		wp_set_post_categories( $post_id, array_values( $cats ) );
 	}
 
 	/**
@@ -292,6 +316,11 @@ class Synpro_Paid {
 	 * @return string
 	 */
 	public static function prepend_banner( $content ) {
+		// the_content also runs while core auto-generates excerpts — the
+		// banner there would eat the visible excerpt words on every card.
+		if ( doing_filter( 'get_the_excerpt' ) || doing_filter( 'wp_trim_excerpt' ) ) {
+			return $content;
+		}
 		$post_id = get_the_ID();
 		if ( ! $post_id || ! self::is_paid( $post_id ) ) {
 			return $content;
@@ -400,7 +429,7 @@ class Synpro_Paid {
 				printf(
 					/* translators: %s: date. */
 					esc_html__( 'Featured until %s', 'syndicate-pro' ),
-					esc_html( date_i18n( get_option( 'date_format', 'j M Y' ), $until ) )
+					esc_html( wp_date( get_option( 'date_format', 'j M Y' ), $until ) )
 				);
 			} else {
 				esc_html_e( 'Featured (ended)', 'syndicate-pro' );

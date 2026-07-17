@@ -44,7 +44,9 @@ function community365_components() {
  * @return mixed
  */
 function community365_slot( $n, $key, $default = '' ) {
-	return get_theme_mod( 'c365_s' . (int) $n . '_' . $key, $default );
+	$value = get_theme_mod( 'c365_s' . (int) $n . '_' . $key, $default );
+	// An emptied Customizer field means "use the component default" too.
+	return ( '' === $value ) ? $default : $value;
 }
 
 /**
@@ -225,7 +227,9 @@ function community365_home_slots_customize( $wp_customize ) {
 		$add( 'date', __( 'Date window', 'community365' ), 'select', $date_choices, 'any' );
 		$add( 'author', __( 'Only this author', 'community365' ), 'select', $author_choices, 0 );
 		$add( 'author_ex', __( 'Exclude author', 'community365' ), 'select', $author_ex_choices, 0 );
-		$add( 'count', __( 'Items (main)', 'community365' ), 'number', null, 6 );
+		// Default '' = each component's own default (sliders 5, popular 6,
+		// post blocks 8) — a number here overrides all of them.
+		$add( 'count', __( 'Items (main) — empty for the component default', 'community365' ), 'number', null, '' );
 
 		// News block sub-areas.
 		$add( 'cat_l', __( 'News: left column category', 'community365' ), 'select', $cat_choices, 0 );

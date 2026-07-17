@@ -20,6 +20,11 @@ $popular = community365_slot_query(
 		'order'          => 'DESC',
 	)
 );
+if ( ! $popular->have_posts() ) {
+	// No view counts yet (fresh site): fall back to newest so the
+	// default-active Popular tab is never an empty panel.
+	$popular = community365_slot_query( $n, array( 'posts_per_page' => 1 ) );
+}
 $recent  = community365_slot_query( $n, array( 'posts_per_page' => 1 ) );
 
 $right = community365_slot_query( $n, array(

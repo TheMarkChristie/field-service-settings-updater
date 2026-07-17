@@ -3,7 +3,7 @@
  * Plugin Name: Syndicate Pro
  * Plugin URI:  https://365community.online
  * Description: Community content engine. Every 5 minutes it rotates to the next member and checks their feed records — blog RSS, podcast RSS, YouTube channels, events feeds — creating posts, podcasts, videos, and events with the original title, image, and text, credited to that member with a link to the original source and a "republished with permission" note. New content is auto-shared to the community's LinkedIn, Bluesky, Mastodon, and X accounts. Members manage their own feeds and author-page profile. Built entirely on WordPress core — no other plugins required.
- * Version:     2.6.0
+ * Version:     2.6.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author:      365 Community
@@ -25,7 +25,7 @@ if ( defined( 'SYNPRO_VERSION' ) ) {
 	return;
 }
 
-define( 'SYNPRO_VERSION', '2.6.0' );
+define( 'SYNPRO_VERSION', '2.6.1' );
 define( 'SYNPRO_FILE', __FILE__ );
 define( 'SYNPRO_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SYNPRO_CRON_HOOK', 'synpro_syndicator_rotate' );
@@ -82,6 +82,11 @@ function synpro_syn_activate() {
 	// ride along in alloptions on every front-end request.
 	add_option( 'synpro_social_settings', array(), '', 'no' );
 	add_option( 'synpro_templates', array(), '', 'no' );
+
+	// Pre-create the settings option so the FIRST save fires the
+	// update_option hook (an add_option save would skip the interval
+	// reschedule in Synpro_Settings::maybe_reschedule).
+	add_option( Synpro_Settings::OPTION, Synpro_Settings::defaults() );
 
 	if ( ! wp_next_scheduled( SYNPRO_CRON_HOOK ) ) {
 		wp_schedule_event( time() + 60, Synpro_Settings::get( 'interval' ), SYNPRO_CRON_HOOK );

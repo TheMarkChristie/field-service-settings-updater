@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'COMMUNITY365_VERSION', '2.5.0' );
+define( 'COMMUNITY365_VERSION', '2.5.1' );
 
 /**
  * Theme setup.
@@ -243,6 +243,7 @@ function community365_login_styles() {
 	$surface = community365_shift( $bg, $dark ? 0.05 : -0.04 );
 	$border  = community365_shift( $bg, $dark ? 0.13 : -0.13 );
 	$text    = $dark ? '#f2f3f7' : '#16181f';
+	$on      = community365_luminance( $accent ) > 0.179 ? '#111111' : '#ffffff';
 	$logo    = '';
 	if ( has_custom_logo() ) {
 		$logo = wp_get_attachment_image_url( get_theme_mod( 'custom_logo' ), 'medium' );
@@ -273,6 +274,7 @@ function community365_login_styles() {
 		}
 		body.login .button-primary {
 			background: <?php echo esc_html( $accent ); ?>; border-color: <?php echo esc_html( $accent ); ?>;
+			color: <?php echo esc_html( $on ); ?>;
 			border-radius: 8px; text-shadow: none; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
 		}
 		body.login .button-primary:hover, body.login .button-primary:focus { background: <?php echo esc_html( $accent ); ?>; filter: brightness(1.12); border-color: <?php echo esc_html( $accent ); ?>; }

@@ -22,9 +22,44 @@ class Synpro_Scraper {
 	 * @param string $url URL.
 	 * @return string|WP_Error Response body.
 	 */
+	/**
+	 * Whether a member-supplied URL is safe to fetch server-side: http(s)
+	 * only, and the host must not resolve to a private, loopback, or
+	 * link-local address (SSRF guard — members control these URLs).
+	 *
+	 * @param string $url URL.
+	 * @return bool
+	 */
+	public static function is_safe_remote_url( $url ) {
+		$parts = wp_parse_url( (string) $url );
+		if ( empty( $parts['host'] ) || empty( $parts['scheme'] ) || ! in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true ) ) {
+			return false;
+		}
+		$host = $parts['host'];
+
+		// IPv6 literal (wp_parse_url strips the brackets).
+		if ( false !== strpos( $host, ':' ) ) {
+			return false === filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 )
+				? false
+				: (bool) filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+		}
+
+		// IPv4 literal, or a hostname we resolve first. (A DNS-rebind
+		// between this check and the fetch is theoretically possible; this
+		// guard blocks the practical direct-address attacks.)
+		$ip = filter_var( $host, FILTER_VALIDATE_IP ) ? $host : gethostbyname( $host . '.' );
+		if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			return (bool) filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+		}
+		return true; // Unresolvable host: let the HTTP layer fail it.
+	}
+
 	public static function http_get( $url ) {
 		if ( ! $url || 0 !== strpos( $url, 'http' ) ) {
 			return new WP_Error( 'synpro_bad_url', __( 'Not a fetchable URL.', 'syndicate-pro' ) );
+		}
+		if ( ! self::is_safe_remote_url( $url ) ) {
+			return new WP_Error( 'synpro_unsafe_url', __( 'URL points at a private or internal address.', 'syndicate-pro' ) );
 		}
 
 		$response = wp_remote_get(

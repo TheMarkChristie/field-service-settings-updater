@@ -945,3 +945,47 @@ For members without their own blog: a third auto-created member page,
   a Post and vice versa.
 - Theme v2.5.0 frames the light editor canvas inside the dark form and
   styles the file-upload control.
+
+## Part 13 — v2.6.1 / v2.5.1: full-codebase scan fixes
+
+A six-angle review (security, WordPress API correctness, feature logic,
+theme, lifecycle/settings, endpoint inventory) was run across the whole
+plugin and theme; every confirmed finding was fixed:
+
+**Security** — SSRF guard `Synpro_Scraper::is_safe_remote_url()` (http/s
+only; private/loopback/link-local addresses rejected) now protects all
+member-URL fetches (scraper, RSS fetch, image sideload); the write-a-post
+image upload is restricted to image mime types; the subscribe endpoint is
+rate-limited per IP and reports failures honestly (as does unsubscribe,
+which no longer claims success for an invalid token).
+
+**Correctness** — digest top-up no longer re-selects the same posts when
+fewer than 4 ranked blogs exist; YouTube submissions validate the channel
+ID (UC + 22 chars) instead of storing mangled URLs, and the submit form's
+URL field no longer blocks bare channel IDs; the paid-content banner is
+kept out of auto-generated excerpts; paid untick/retick can no longer
+erase the payment record or restart the featured window; featured →
+standard downgrades now leave the featured category; the REST /feed
+ignores sticky posts (page size, duplicates, and the anonymous 5-day
+window were all affected) and renders content in proper post context so
+the paid disclosure reaches the app; front-end-written posts keep their
+backslashes (wp_slash) and reject entity-only "empty" content; failed
+image uploads are reported to the member; page auto-creation retries
+after a failed insert and links are hidden for trashed pages; UTC
+timestamps now display in the site timezone (wp_date).
+
+**Lifecycle** — the daily-prune and weekly-digest cron events self-heal
+from the admin page like the rotation always did, and the first-ever
+Settings save now applies an interval change (add_option hook + option
+pre-created at activation).
+
+**Theme** — events-calendar month arrows stay on the current page instead
+of jumping to a stray permalink; the news block's Popular tab falls back
+to newest posts when no view counts exist yet; podcast episodes without
+audio are skipped by the slider; the login button and the fixed-colour
+type badges keep readable text under any chosen primary colour; source
+badges fall back to the raw URL when the host can't be parsed; the
+pre-slot-era home-page Customizer controls that no longer drove anything
+were removed (ticker + Join us toggles remain), hero controls are
+relabelled as blog-posts-page options, and slot item counts left empty
+now use each component's own default.

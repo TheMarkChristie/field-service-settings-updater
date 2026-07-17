@@ -134,7 +134,7 @@ function community365_customize_register( $wp_customize ) {
 		'c365_hero_heading',
 		array(
 			'label'       => __( 'Hero heading', 'community365' ),
-			'description' => __( 'Shown on the home page. Leave empty to use the site title.', 'community365' ),
+			'description' => __( 'Shown on the blog-posts page (when your reading settings use a separate posts page). The front page itself is built from the Home Slots. Leave empty to use the site title.', 'community365' ),
 			'section'     => 'c365_theme_options',
 			'type'        => 'text',
 		)
@@ -168,7 +168,7 @@ function community365_customize_register( $wp_customize ) {
 	$wp_customize->add_control(
 		'c365_show_hero',
 		array(
-			'label'   => __( 'Show hero section on the home page', 'community365' ),
+			'label'   => __( 'Show hero section on the blog-posts page', 'community365' ),
 			'section' => 'c365_theme_options',
 			'type'    => 'checkbox',
 		)
@@ -301,24 +301,14 @@ function community365_customize_register( $wp_customize ) {
 		)
 	);
 
-	// Category choices shared by all pickers (0 = all categories).
-	$c365_cat_choices = array( 0 => __( '— All categories —', 'community365' ) );
-	foreach ( get_categories( array( 'hide_empty' => false ) ) as $c365_cat ) {
-		$c365_cat_choices[ $c365_cat->term_id ] = $c365_cat->name . ' (' . $c365_cat->count . ')';
-	}
-
-	$c365_home_sections = array(
-		'ticker'    => __( 'Category ticker bar', 'community365' ),
-		'hero'      => __( 'Magazine hero (3 columns)', 'community365' ),
-		'spotlight' => __( 'Featured banner', 'community365' ),
-		'videos'    => __( 'Video spotlight', 'community365' ),
-		'latest'    => __( 'Latest articles', 'community365' ),
-		'blocks'    => __( 'Category blocks', 'community365' ),
-		'headlines' => __( 'Top headlines', 'community365' ),
-		'join'      => __( 'Join us (social bars)', 'community365' ),
-		'events'    => __( 'Events calendar', 'community365' ),
-	);
-	foreach ( $c365_home_sections as $c365_key => $c365_label ) {
+	// Only the ticker and Join us strip live outside the 8-slot system —
+	// everything else on the home page is configured per slot in the
+	// "Home Slot 1–8" sections. (The pre-slot section toggles and category
+	// pickers were removed: they no longer drove anything.)
+	foreach ( array(
+		'ticker' => __( 'Category ticker bar', 'community365' ),
+		'join'   => __( 'Join us (social bars + digest signup)', 'community365' ),
+	) as $c365_key => $c365_label ) {
 		$wp_customize->add_setting( 'c365_home_show_' . $c365_key, array( 'default' => true, 'sanitize_callback' => 'wp_validate_boolean' ) );
 		$wp_customize->add_control(
 			'c365_home_show_' . $c365_key,
@@ -330,42 +320,6 @@ function community365_customize_register( $wp_customize ) {
 			)
 		);
 	}
-
-	// Per-element category pickers.
-	$c365_home_cats = array(
-		'c365_home_left_cat'      => __( 'Hero left column — category', 'community365' ),
-		'c365_home_right_cat'     => __( 'Hero right column — category', 'community365' ),
-		'c365_home_spotlight_cat' => __( 'Featured banner — category', 'community365' ),
-		'c365_home_latest_cat'    => __( 'Latest articles — category', 'community365' ),
-		'c365_home_headlines_cat' => __( 'Top headlines — category', 'community365' ),
-		'c365_home_block_cat_1'   => __( 'Category block 1', 'community365' ),
-		'c365_home_block_cat_2'   => __( 'Category block 2', 'community365' ),
-		'c365_home_block_cat_3'   => __( 'Category block 3', 'community365' ),
-	);
-	foreach ( $c365_home_cats as $c365_key => $c365_label ) {
-		$wp_customize->add_setting( $c365_key, array( 'default' => 0, 'sanitize_callback' => 'absint' ) );
-		$wp_customize->add_control(
-			$c365_key,
-			array(
-				'label'   => $c365_label,
-				'section' => 'c365_home_options',
-				'type'    => 'select',
-				'choices' => $c365_cat_choices,
-			)
-		);
-	}
-
-	// Video spotlight heading.
-	$wp_customize->add_setting( 'c365_home_video_heading', array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ) );
-	$wp_customize->add_control(
-		'c365_home_video_heading',
-		array(
-			'label'       => __( 'Video spotlight heading', 'community365' ),
-			'description' => __( 'e.g. "How about a session from Scottish Summit?" Leave empty for "Latest videos".', 'community365' ),
-			'section'     => 'c365_home_options',
-			'type'        => 'text',
-		)
-	);
 
 	// Follower-count labels for the Join us bars (URLs come from the sidebar settings).
 	for ( $i = 1; $i <= 3; $i++ ) {

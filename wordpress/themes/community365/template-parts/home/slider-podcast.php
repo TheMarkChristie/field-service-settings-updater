@@ -19,6 +19,11 @@ if ( ! $episodes->have_posts() ) {
 $items = array();
 while ( $episodes->have_posts() ) {
 	$episodes->the_post();
+	// No audio URL = nothing to play; a dead player and un-swappable
+	// buttons would result. Skip, matching the video slider.
+	if ( ! get_post_meta( get_the_ID(), '_synpro_audio_url', true ) ) {
+		continue;
+	}
 	$items[] = array(
 		'audio'    => get_post_meta( get_the_ID(), '_synpro_audio_url', true ),
 		'title'    => get_the_title(),

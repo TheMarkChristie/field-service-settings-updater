@@ -136,6 +136,8 @@ class Synpro_Subscribers {
 		$out .= '<button type="submit">' . esc_html__( 'Subscribe', 'syndicate-pro' ) . '</button>';
 		if ( isset( $_GET['synpro_subscribed'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$out .= '<p class="synpro-subscribe-done">' . esc_html__( 'You’re subscribed — see you in the next digest!', 'syndicate-pro' ) . '</p>';
+		} elseif ( isset( $_GET['synpro_sub_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$out .= '<p class="synpro-subscribe-done">' . esc_html__( 'That didn’t work — please check the address and try again in a minute.', 'syndicate-pro' ) . '</p>';
 		}
 		$out .= '</form>';
 		return $out;
@@ -152,12 +154,22 @@ class Synpro_Subscribers {
 			wp_safe_redirect( home_url( '/' ) );
 			exit;
 		}
-		$email = isset( $_POST['synpro_email'] ) ? sanitize_email( wp_unslash( $_POST['synpro_email'] ) ) : '';
-		if ( $email ) {
-			self::add( $email );
-		}
 		$back = wp_get_referer() ? wp_get_referer() : home_url( '/' );
-		wp_safe_redirect( add_query_arg( 'synpro_subscribed', '1', $back ) );
+		$back = remove_query_arg( array( 'synpro_subscribed', 'synpro_sub_error' ), $back );
+
+		// Light rate limit: one signup per IP per minute (script deterrent).
+		$ip_key = 'synpro_sub_' . md5( isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		if ( get_transient( $ip_key ) ) {
+			wp_safe_redirect( add_query_arg( 'synpro_sub_error', '1', $back ) );
+			exit;
+		}
+
+		$email = isset( $_POST['synpro_email'] ) ? sanitize_email( wp_unslash( $_POST['synpro_email'] ) ) : '';
+		$added = $email && self::add( $email );
+		if ( $added ) {
+			set_transient( $ip_key, 1, MINUTE_IN_SECONDS );
+		}
+		wp_safe_redirect( add_query_arg( $added ? 'synpro_subscribed' : 'synpro_sub_error', '1', $back ) );
 		exit;
 	}
 
@@ -166,14 +178,22 @@ class Synpro_Subscribers {
 	 */
 	public static function handle_unsubscribe() {
 		global $wpdb;
-		$token = isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( $token ) {
-			$wpdb->delete( self::table(), array( 'token' => $token ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$token   = isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$removed = $token ? (int) $wpdb->delete( self::table(), array( 'token' => $token ), array( '%s' ) ) : 0; // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+		if ( $removed ) {
+			wp_die(
+				esc_html__( 'You have been unsubscribed from the weekly digest.', 'syndicate-pro' ),
+				esc_html__( 'Unsubscribed', 'syndicate-pro' ),
+				array( 'response' => 200 )
+			);
 		}
+		// Don't claim success for a mangled or already-used link — the
+		// reader would think they'd unsubscribed while still on the list.
 		wp_die(
-			esc_html__( 'You have been unsubscribed from the weekly digest.', 'syndicate-pro' ),
-			esc_html__( 'Unsubscribed', 'syndicate-pro' ),
-			array( 'response' => 200 )
+			esc_html__( 'This unsubscribe link is invalid or was already used. If you still receive the digest, reply to it and we’ll remove you by hand.', 'syndicate-pro' ),
+			esc_html__( 'Link not recognised', 'syndicate-pro' ),
+			array( 'response' => 404 )
 		);
 	}
 

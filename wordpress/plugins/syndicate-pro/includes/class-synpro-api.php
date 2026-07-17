@@ -81,11 +81,15 @@ class Synpro_Api {
 	 * @return WP_REST_Response
 	 */
 	public static function feed( $request ) {
-		$args = array(
-			'post_type'      => 'post',
-			'post_status'    => 'publish',
-			'posts_per_page' => min( 50, max( 1, (int) $request['per_page'] ) ),
-			'paged'          => max( 1, (int) $request['page'] ),
+		$paged = max( 1, (int) $request['page'] );
+		$args  = array(
+			'post_type'           => 'post',
+			'post_status'         => 'publish',
+			'posts_per_page'      => min( 50, max( 1, (int) $request['per_page'] ) ),
+			'paged'               => $paged,
+			// Stickies would be prepended on page 1 (breaking the page size),
+			// duplicated on later pages, and bypass the anonymous date window.
+			'ignore_sticky_posts' => true,
 		);
 
 		if ( is_user_logged_in() ) {
@@ -100,14 +104,19 @@ class Synpro_Api {
 
 		$query = new WP_Query( $args );
 		$items = array();
-		foreach ( $query->posts as $post ) {
+		// Set up real post context per item so the_content filters that rely
+		// on get_the_ID() — including the paid-content disclosure — apply.
+		global $post;
+		foreach ( $query->posts as $post ) { // phpcs:ignore WordPress.WP.GlobalVariablesOverride
+			setup_postdata( $post );
 			$items[] = self::format_post( $post );
 		}
+		wp_reset_postdata();
 
 		return rest_ensure_response(
 			array(
 				'items'       => $items,
-				'page'        => (int) $request['page'],
+				'page'        => $paged,
 				'total_pages' => (int) $query->max_num_pages,
 				'logged_in'   => is_user_logged_in(),
 			)

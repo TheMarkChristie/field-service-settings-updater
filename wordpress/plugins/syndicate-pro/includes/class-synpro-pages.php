@@ -44,7 +44,7 @@ class Synpro_Pages {
 	 */
 	public static function page_url( $slug ) {
 		$ids = (array) get_option( 'synpro_pages_created', array() );
-		if ( empty( $ids[ $slug ] ) ) {
+		if ( empty( $ids[ $slug ] ) || 'publish' !== get_post_status( (int) $ids[ $slug ] ) ) {
 			return '';
 		}
 		$url = get_permalink( (int) $ids[ $slug ] );
@@ -158,7 +158,8 @@ class Synpro_Pages {
 
 				<p class="synpro-field">
 					<label for="synpro-submit-url" id="synpro-submit-url-label"><?php echo esc_html( $prompts['blog']['label'] ); ?></label>
-					<input type="url" id="synpro-submit-url" name="synpro_url" required placeholder="<?php echo esc_attr( $prompts['blog']['placeholder'] ); ?>">
+					<?php // type=text, not url: the YouTube option takes a bare channel ID, which browser URL validation would reject. The server validates per type. ?>
+				<input type="text" inputmode="url" id="synpro-submit-url" name="synpro_url" required placeholder="<?php echo esc_attr( $prompts['blog']['placeholder'] ); ?>">
 					<span class="synpro-help" id="synpro-submit-url-help"><?php echo esc_html( $prompts['blog']['help'] ); ?></span>
 				</p>
 
@@ -369,6 +370,9 @@ class Synpro_Pages {
 		<div class="synpro-page synpro-write">
 			<?php if ( isset( $_GET['synpro_written'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 				<p class="synpro-notice synpro-notice-ok"><?php esc_html_e( 'Thanks — your post has been submitted for approval! A site admin will review it, and it goes live (and out to our social channels) once approved.', 'syndicate-pro' ); ?></p>
+				<?php if ( isset( $_GET['synpro_image_error'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+					<p class="synpro-notice synpro-notice-err"><?php esc_html_e( 'Heads up: your image couldn’t be uploaded (too large, or not a JPG/PNG/WebP/GIF). The post was submitted without it — the category image will be used instead.', 'syndicate-pro' ); ?></p>
+				<?php endif; ?>
 			<?php elseif ( isset( $_GET['synpro_write_error'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 				<p class="synpro-notice synpro-notice-err"><?php esc_html_e( 'Your post needs at least a title and some content — please try again.', 'syndicate-pro' ); ?></p>
 			<?php endif; ?>
@@ -483,19 +487,26 @@ class Synpro_Pages {
 		$title   = isset( $_POST['synpro_title'] ) ? sanitize_text_field( wp_unslash( $_POST['synpro_title'] ) ) : '';
 		$content = isset( $_POST['synpro_content'] ) ? wp_kses_post( wp_unslash( $_POST['synpro_content'] ) ) : '';
 
-		if ( '' === $title || '' === trim( wp_strip_all_tags( $content ) ) ) {
+		// "Empty" must catch TinyMCE's <p>&nbsp;</p> too — decode entities
+		// and trim non-breaking spaces before judging.
+		$plain = trim( html_entity_decode( wp_strip_all_tags( $content ), ENT_QUOTES ), " \t\n\r\0\x0B\xC2\xA0" );
+		if ( '' === $title || '' === $plain ) {
 			wp_safe_redirect( add_query_arg( 'synpro_write_error', '1', $back ) );
 			exit;
 		}
 
+		// wp_insert_post expects slashed data (it unslashes internally) —
+		// without wp_slash, member-typed backslashes would be stripped.
 		$post_id = wp_insert_post(
-			array(
-				'post_type'     => 'post',
-				'post_status'   => 'pending',
-				'post_author'   => $user_id,
-				'post_title'    => $title,
-				'post_content'  => $content,
-				'post_category' => isset( $_POST['synpro_categories'] ) ? array_map( 'absint', (array) $_POST['synpro_categories'] ) : array(),
+			wp_slash(
+				array(
+					'post_type'     => 'post',
+					'post_status'   => 'pending',
+					'post_author'   => $user_id,
+					'post_title'    => $title,
+					'post_content'  => $content,
+					'post_category' => isset( $_POST['synpro_categories'] ) ? array_map( 'absint', (array) $_POST['synpro_categories'] ) : array(),
+				)
 			)
 		);
 		if ( ! $post_id || is_wp_error( $post_id ) ) {
@@ -507,13 +518,30 @@ class Synpro_Pages {
 		// and means no source attribution or redirect is ever applied.
 		update_post_meta( $post_id, '_synpro_onsite', 1 );
 
-		// Optional featured image upload.
+		// Optional featured image upload. Restricted to images (Contributors
+		// don't normally hold upload_files — this form deliberately grants a
+		// narrow, image-only version of it, tied to their own pending post).
+		$image_failed = false;
 		if ( ! empty( $_FILES['synpro_image']['name'] ) ) {
 			require_once ABSPATH . 'wp-admin/includes/media.php';
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 			require_once ABSPATH . 'wp-admin/includes/image.php';
-			$attachment_id = media_handle_upload( 'synpro_image', $post_id );
-			if ( ! is_wp_error( $attachment_id ) ) {
+			$attachment_id = media_handle_upload(
+				'synpro_image',
+				$post_id,
+				array(),
+				array(
+					'mimes' => array(
+						'jpg|jpeg|jpe' => 'image/jpeg',
+						'png'          => 'image/png',
+						'webp'         => 'image/webp',
+						'gif'          => 'image/gif',
+					),
+				)
+			);
+			if ( is_wp_error( $attachment_id ) ) {
+				$image_failed = true;
+			} else {
 				set_post_thumbnail( $post_id, $attachment_id );
 			}
 		}
@@ -536,7 +564,7 @@ class Synpro_Pages {
 			)
 		);
 
-		wp_safe_redirect( add_query_arg( 'synpro_written', '1', $back ) );
+		wp_safe_redirect( add_query_arg( $image_failed ? array( 'synpro_written' => '1', 'synpro_image_error' => '1' ) : array( 'synpro_written' => '1' ), $back ) );
 		exit;
 	}
 
@@ -562,7 +590,7 @@ class Synpro_Pages {
 				$ids[ $slug ] = $existing->ID;
 				continue;
 			}
-			$ids[ $slug ] = wp_insert_post(
+			$page_id = wp_insert_post(
 				array(
 					'post_type'    => 'page',
 					'post_status'  => 'publish',
@@ -571,6 +599,11 @@ class Synpro_Pages {
 					'post_content' => $page[1],
 				)
 			);
+			// Record only real IDs — a failed insert must retry next
+			// activation, not be remembered as "handled".
+			if ( $page_id && ! is_wp_error( $page_id ) ) {
+				$ids[ $slug ] = $page_id;
+			}
 		}
 		update_option( 'synpro_pages_created', $ids );
 	}

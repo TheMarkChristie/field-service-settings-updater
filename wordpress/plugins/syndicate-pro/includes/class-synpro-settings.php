@@ -25,6 +25,19 @@ class Synpro_Settings {
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
 		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) );
 		add_action( 'update_option_' . self::OPTION, array( __CLASS__, 'maybe_reschedule' ), 10, 2 );
+		// A first-ever save creates the option (add, not update) — catch that
+		// path too so an interval chosen on the very first save takes effect.
+		add_action( 'add_option_' . self::OPTION, array( __CLASS__, 'on_first_save' ), 10, 2 );
+	}
+
+	/**
+	 * First-ever save of the settings option: apply the interval.
+	 *
+	 * @param string $option Option name (unused).
+	 * @param mixed  $value  Saved value.
+	 */
+	public static function on_first_save( $option, $value ) {
+		self::maybe_reschedule( self::defaults(), (array) $value );
 	}
 
 	/**
@@ -274,11 +287,18 @@ class Synpro_Settings {
 			return;
 		}
 
-		// Self-heal: if the rotation event vanished (cron cleanup plugin,
-		// failed reschedule), restore it when an admin opens this page —
-		// saving unchanged settings would not fire the update hook.
+		// Self-heal: if any recurring event vanished (cron cleanup plugin,
+		// failed reschedule, update-in-place from a version predating the
+		// hook), restore it when an admin opens this page — saving unchanged
+		// settings would not fire the update hook.
 		if ( ! wp_next_scheduled( SYNPRO_CRON_HOOK ) ) {
 			wp_schedule_event( time() + 60, self::get( 'interval' ), SYNPRO_CRON_HOOK );
+		}
+		if ( class_exists( 'Synpro_Emails' ) && ! wp_next_scheduled( Synpro_Emails::CRON_HOOK ) ) {
+			wp_schedule_event( time() + HOUR_IN_SECONDS, 'weekly', Synpro_Emails::CRON_HOOK );
+		}
+		if ( ! wp_next_scheduled( 'synpro_daily_prune' ) ) {
+			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'synpro_daily_prune' );
 		}
 
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
