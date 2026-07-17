@@ -46,13 +46,17 @@ class ApiClient {
   }
 
   /// Fetch a page of a content type. Logged-in members get their chosen
-  /// categories; anonymous users get the last 5 days of everything.
-  Future<FeedPage> feed(String type, {int page = 1}) async {
-    final uri = Uri.parse('${Config.apiBase}/feed').replace(queryParameters: {
+  /// categories; anonymous users get the last 5 days of everything. A
+  /// non-empty [search] queries across all time and categories.
+  Future<FeedPage> feed(String type, {int page = 1, String search = ''}) async {
+    final params = {
       'type': type,
       'page': '$page',
       'per_page': '${Config.pageSize}',
-    });
+    };
+    if (search.trim().isNotEmpty) params['search'] = search.trim();
+    final uri =
+        Uri.parse('${Config.apiBase}/feed').replace(queryParameters: params);
     final res = await _http.get(uri, headers: await _headers());
     final json = _decode(res);
     final items = (json['items'] as List<dynamic>? ?? [])

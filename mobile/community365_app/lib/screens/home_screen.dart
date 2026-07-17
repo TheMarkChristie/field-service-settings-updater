@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../config.dart';
 import '../services/auth_service.dart';
+import 'bookmarks_screen.dart';
 import 'categories_screen.dart';
 import 'feed_tab.dart';
 import 'login_screen.dart';
+import 'search_screen.dart';
 import 'settings_screen.dart';
 
 /// The shell: four content tabs plus account/categories/settings actions.
@@ -38,6 +40,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Search',
+            icon: const Icon(Icons.search),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SearchScreen())),
+          ),
+          IconButton(
+            tooltip: 'Saved',
+            icon: const Icon(Icons.bookmark_border),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BookmarksScreen())),
+          ),
           if (auth.isLoggedIn)
             IconButton(
               tooltip: 'My categories',
@@ -45,17 +59,23 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const CategoriesScreen())),
             ),
-          IconButton(
-            tooltip: auth.isLoggedIn ? 'Account' : 'Sign in',
-            icon: Icon(auth.isLoggedIn ? Icons.person : Icons.login),
-            onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const LoginScreen())),
-          ),
-          IconButton(
-            tooltip: 'Settings',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen())),
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            icon: Icon(auth.isLoggedIn ? Icons.person : Icons.more_vert),
+            onSelected: (value) {
+              final route = value == 'account'
+                  ? const LoginScreen()
+                  : const SettingsScreen();
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => route));
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'account',
+                child: Text(auth.isLoggedIn ? 'Account' : 'Sign in'),
+              ),
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+            ],
           ),
         ],
       ),

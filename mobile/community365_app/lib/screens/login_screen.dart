@@ -43,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final ok = await api.verifyCredentials();
       if (!ok) {
         await auth.signOut();
+        if (!mounted) return;
         setState(() =>
             _error = 'Those credentials weren’t accepted. Please try again.');
         return;
@@ -50,9 +51,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) Navigator.of(context).pop();
     } on ApiException catch (e) {
       await auth.signOut();
+      if (!mounted) return;
       setState(() => _error = e.message);
     } catch (_) {
       await auth.signOut();
+      if (!mounted) return;
       setState(() => _error = 'Couldn’t reach the server. Check your connection.');
     } finally {
       if (mounted) setState(() => _busy = false);

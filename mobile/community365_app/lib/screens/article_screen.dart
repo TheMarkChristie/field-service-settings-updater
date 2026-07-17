@@ -2,23 +2,70 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/post.dart';
+import '../services/cache_service.dart';
 import '../theme.dart';
 
 /// Native reader for one item. Blog/podcast/video/event share a layout;
 /// type-specific extras (event details, external media buttons, source
 /// attribution, paid disclosure) are added where relevant.
-class ArticleScreen extends StatelessWidget {
+class ArticleScreen extends StatefulWidget {
   final Post post;
   const ArticleScreen({super.key, required this.post});
+
+  @override
+  State<ArticleScreen> createState() => _ArticleScreenState();
+}
+
+class _ArticleScreenState extends State<ArticleScreen> {
+  bool _bookmarked = false;
+  bool _bookmarkLoaded = false;
+
+  Post get post => widget.post;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<CacheService>().isBookmarked(post.id, post.type).then((v) {
+      if (mounted) setState(() {
+        _bookmarked = v;
+        _bookmarkLoaded = true;
+      });
+    });
+  }
+
+  Future<void> _toggleBookmark() async {
+    final cache = context.read<CacheService>();
+    if (_bookmarked) {
+      await cache.removeBookmark(post.id, post.type);
+    } else {
+      await cache.addBookmark(post);
+    }
+    if (mounted) setState(() => _bookmarked = !_bookmarked);
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(_kind(post.type))),
+      appBar: AppBar(
+        title: Text(_kind(post.type)),
+        actions: [
+          IconButton(
+            tooltip: _bookmarked ? 'Remove from saved' : 'Save',
+            icon: Icon(_bookmarked ? Icons.bookmark : Icons.bookmark_border),
+            onPressed: _bookmarkLoaded ? _toggleBookmark : null,
+          ),
+          IconButton(
+            tooltip: 'Open in browser',
+            icon: const Icon(Icons.open_in_new),
+            onPressed: post.link.isEmpty ? null : () => _open(post.link),
+          ),
+        ],
+      ),
       body: ListView(
         children: [
           if (post.hasImage)

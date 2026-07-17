@@ -10,6 +10,7 @@ import '../models/post.dart';
 class CacheService {
   static const _dbName = 'community365_cache.db';
   static const _table = 'posts';
+  static const _bookmarks = 'bookmarks';
   Database? _db;
 
   Future<Database> get _database async {
@@ -17,25 +18,51 @@ class CacheService {
     final dir = await getDatabasesPath();
     _db = await openDatabase(
       p.join(dir, _dbName),
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE $_table (
-            id INTEGER NOT NULL,
-            type TEXT NOT NULL,
-            title TEXT, excerpt TEXT, content TEXT, date TEXT,
-            link TEXT, source_url TEXT, image TEXT, author TEXT,
-            paid INTEGER DEFAULT 0, categories TEXT,
-            audio_url TEXT, duration TEXT, video_id TEXT,
-            event_start TEXT, event_end TEXT, event_location TEXT, event_url TEXT,
-            cached_at INTEGER NOT NULL,
-            PRIMARY KEY (id, type)
-          )
-        ''');
-        await db.execute('CREATE INDEX idx_type ON $_table (type, cached_at)');
+        await _createPosts(db);
+        await _createBookmarks(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) await _createBookmarks(db);
       },
     );
     return _db!;
+  }
+
+  Future<void> _createPosts(Database db) async {
+    await db.execute('''
+      CREATE TABLE $_table (
+        id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT, excerpt TEXT, content TEXT, date TEXT,
+        link TEXT, source_url TEXT, image TEXT, author TEXT,
+        paid INTEGER DEFAULT 0, categories TEXT,
+        audio_url TEXT, duration TEXT, video_id TEXT,
+        event_start TEXT, event_end TEXT, event_location TEXT, event_url TEXT,
+        cached_at INTEGER NOT NULL,
+        PRIMARY KEY (id, type)
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_type ON $_table (type, cached_at)');
+  }
+
+  Future<void> _createBookmarks(Database db) async {
+    // Same columns as $_table plus saved_at; kept separate so the offline
+    // cache trim never removes something the member deliberately saved.
+    await db.execute('''
+      CREATE TABLE $_bookmarks (
+        id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT, excerpt TEXT, content TEXT, date TEXT,
+        link TEXT, source_url TEXT, image TEXT, author TEXT,
+        paid INTEGER DEFAULT 0, categories TEXT,
+        audio_url TEXT, duration TEXT, video_id TEXT,
+        event_start TEXT, event_end TEXT, event_location TEXT, event_url TEXT,
+        saved_at INTEGER NOT NULL,
+        PRIMARY KEY (id, type)
+      )
+    ''');
   }
 
   /// Replace the cached items for a type with a fresh set, newest first,
@@ -106,7 +133,44 @@ class CacheService {
     }
   }
 
-  /// Wipe everything (Settings → clear offline content).
+  /// Save a post to bookmarks.
+  Future<void> addBookmark(Post post) async {
+    final db = await _database;
+    final row = post.toCacheRow()..remove('cached_at');
+    row['saved_at'] = DateTime.now().millisecondsSinceEpoch;
+    await db.insert(_bookmarks, row,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// Remove a bookmark.
+  Future<void> removeBookmark(int id, String type) async {
+    final db = await _database;
+    await db.delete(_bookmarks,
+        where: 'id = ? AND type = ?', whereArgs: [id, type]);
+  }
+
+  /// Whether a post is bookmarked.
+  Future<bool> isBookmarked(int id, String type) async {
+    final db = await _database;
+    final rows = await db.query(
+      _bookmarks,
+      columns: ['id'],
+      where: 'id = ? AND type = ?',
+      whereArgs: [id, type],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  /// All bookmarks, newest-saved first.
+  Future<List<Post>> bookmarks() async {
+    final db = await _database;
+    final rows = await db.query(_bookmarks, orderBy: 'saved_at DESC');
+    return rows.map(Post.fromCacheRow).toList();
+  }
+
+  /// Wipe the offline cache (Settings → clear offline content). Bookmarks
+  /// are deliberately kept — they're the member's own saved list.
   Future<void> clear() async {
     final db = await _database;
     await db.delete(_table);

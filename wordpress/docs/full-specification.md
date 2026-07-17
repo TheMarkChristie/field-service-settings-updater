@@ -1029,3 +1029,19 @@ bootstrap.
   banner in the theme footer, with Customizer controls (enable, text, and
   a privacy-policy page link). Accessible (role=dialog, focusable button,
   brand-token styled).
+
+## Part 16 — v2.10.0 + app: search, bookmarks, review fixes
+
+- **Search** — the REST `/feed` accepts a `search` param (WP_Query `s`),
+  searching across all time and categories regardless of login. The app
+  gains a debounced search screen that queries all four types and merges
+  results newest-first.
+- **Bookmarks** — the app keeps a local `bookmarks` table (separate from
+  the offline cache, so clearing the cache never removes saved items);
+  every article has a save toggle, and a Saved screen lists them.
+- Home app bar reorganised: Search, Saved, My categories, and an
+  account/settings menu.
+- Review fixes (Flutter): `CardThemeData` for Flutter 3.29+, and
+  `mounted` guards on post-await `setState` in the login and categories
+  screens. The new PHP (push/SMTP/opt-in/API) passed review with no
+  findings.

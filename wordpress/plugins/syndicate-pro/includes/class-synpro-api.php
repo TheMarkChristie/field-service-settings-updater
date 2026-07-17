@@ -43,6 +43,7 @@ class Synpro_Api {
 					'page'     => array( 'default' => 1, 'sanitize_callback' => 'absint' ),
 					'per_page' => array( 'default' => 20, 'sanitize_callback' => 'absint' ),
 					'type'     => array( 'default' => 'post', 'sanitize_callback' => 'sanitize_key' ),
+					'search'   => array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
 				),
 			)
 		);
@@ -94,7 +95,13 @@ class Synpro_Api {
 			'ignore_sticky_posts' => true,
 		);
 
-		if ( is_user_logged_in() ) {
+		$search = trim( (string) $request['search'] );
+		if ( '' !== $search ) {
+			// A search looks across all time and all categories, regardless
+			// of login state — the date window / category filter would just
+			// hide results the member is explicitly looking for.
+			$args['s'] = $search;
+		} elseif ( is_user_logged_in() ) {
 			// Category preference applies to blog posts (the only type that
 			// uses the standard category taxonomy). Other types return the
 			// member's recent items unfiltered.

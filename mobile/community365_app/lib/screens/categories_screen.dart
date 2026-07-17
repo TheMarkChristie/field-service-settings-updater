@@ -34,6 +34,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     try {
       final cats = await api.categories();
       final prefs = await api.getPreferences();
+      if (!mounted) return;
       setState(() {
         _categories = cats;
         _selected = prefs.toSet();
@@ -41,11 +42,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         _loading = false;
       });
     } on ApiException catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.message;
         _loading = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _error = 'Couldn’t load categories. Check your connection.';
         _loading = false;
