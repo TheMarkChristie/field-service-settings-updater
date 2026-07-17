@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'COMMUNITY365_VERSION', '2.5.1' );
+define( 'COMMUNITY365_VERSION', '2.5.2' );
 
 /**
  * Theme setup.
@@ -299,6 +299,25 @@ function community365_login_headertext() {
 	return get_bloginfo( 'name' );
 }
 add_filter( 'login_headertext', 'community365_login_headertext' );
+
+/**
+ * [events_calendar] — the monthly events calendar (same widget as the
+ * sidebar and home slot) for use in any page or post. Month navigation
+ * (?cal=YYYY-MM) stays on whichever page hosts the shortcode.
+ *
+ * @return string
+ */
+function community365_events_calendar_shortcode() {
+	if ( ! function_exists( 'community365_events_calendar' ) ) {
+		return '';
+	}
+	ob_start();
+	echo '<div class="c365-cal-wrap">';
+	community365_events_calendar();
+	echo '</div>';
+	return ob_get_clean();
+}
+add_shortcode( 'events_calendar', 'community365_events_calendar_shortcode' );
 
 require get_template_directory() . '/inc/template-tags.php';
 require get_template_directory() . '/inc/customizer.php';
