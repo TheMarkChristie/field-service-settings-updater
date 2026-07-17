@@ -3,24 +3,28 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 /// New-content push via Firebase Cloud Messaging.
 ///
-/// The app subscribes to broadcast topics; the Syndicate Pro plugin (or
-/// a small server hook) publishes to those topics when new content is
-/// published. Topic-based push needs no per-device token management on
-/// the WordPress side. Members can mute categories they don't follow.
+/// The app subscribes to broadcast topics; the Syndicate Pro plugin
+/// publishes to those topics (FCM HTTP v1) when new content is
+/// published — the `new_content` topic reaches everyone, and each
+/// `cat_<id>` topic reaches members who follow that category. No
+/// per-device token management is needed on the WordPress side.
 ///
 /// Firebase must be configured first (google-services.json +
 /// firebase_options.dart); until then [init] no-ops gracefully so the
 /// rest of the app runs.
 class PushService {
-  static const _topicAll = 'all_content';
+  static const topicAll = 'new_content';
 
   bool _ready = false;
+  bool get isReady => _ready;
 
   Future<void> init() async {
     try {
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission();
-      await messaging.subscribeToTopic(_topicAll);
+      // Everyone hears about new content by default; the Settings toggle
+      // and per-category follows refine this.
+      await messaging.subscribeToTopic(topicAll);
       _ready = true;
       if (kDebugMode) {
         FirebaseMessaging.onMessage.listen((m) {
@@ -30,6 +34,17 @@ class PushService {
     } catch (e) {
       // Firebase not configured yet — the app still works without push.
       if (kDebugMode) debugPrint('Push disabled: $e');
+    }
+  }
+
+  /// Turn the general "new content" notifications on or off.
+  Future<void> setAllContent(bool on) async {
+    if (!_ready) return;
+    final messaging = FirebaseMessaging.instance;
+    if (on) {
+      await messaging.subscribeToTopic(topicAll);
+    } else {
+      await messaging.unsubscribeFromTopic(topicAll);
     }
   }
 

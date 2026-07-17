@@ -134,6 +134,7 @@ class Synpro_Settings {
 		register_setting( 'synpro_social', Synpro_Social::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_social' ) ) );
 		register_setting( 'synpro_templates', self::TEMPLATES_OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_templates' ) ) );
 		register_setting( 'synpro_emails', Synpro_Emails::OPTION, array( 'sanitize_callback' => array( 'Synpro_Emails', 'sanitize' ) ) );
+		register_setting( 'synpro_app', Synpro_Push::OPTION, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_push' ) ) );
 	}
 
 	/**
@@ -316,6 +317,7 @@ class Synpro_Settings {
 					'templates' => __( 'Templates', 'syndicate-pro' ),
 					'social'    => __( 'Social sharing', 'syndicate-pro' ),
 					'emails'    => __( 'Emails', 'syndicate-pro' ),
+					'app'       => __( 'Mobile app', 'syndicate-pro' ),
 				);
 				foreach ( $tabs as $key => $label ) {
 					printf(
@@ -337,6 +339,8 @@ class Synpro_Settings {
 				self::render_social_tab();
 			} elseif ( 'emails' === $tab ) {
 				self::render_emails_tab();
+			} elseif ( 'app' === $tab ) {
+				self::render_app_tab();
 			} else {
 				self::render_dashboard_tab();
 			}
@@ -778,6 +782,99 @@ class Synpro_Settings {
 			<?php submit_button(); ?>
 		</form>
 		<?php
+	}
+
+	/**
+	 * Mobile app tab: REST API status + Firebase push configuration.
+	 */
+	protected static function render_app_tab() {
+		$option = Synpro_Push::OPTION;
+		$s      = Synpro_Push::settings();
+		$ready  = Synpro_Push::is_ready();
+
+		// Test-send result notice.
+		if ( isset( $_GET['synpro_push'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( 'ok' === $_GET['synpro_push'] ) {
+				echo '<div class="notice notice-success"><p>' . esc_html__( 'Test notification sent.', 'syndicate-pro' ) . '</p></div>';
+			} else {
+				$msg = isset( $_GET['msg'] ) ? sanitize_text_field( wp_unslash( $_GET['msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				echo '<div class="notice notice-error"><p>' . esc_html__( 'Test failed: ', 'syndicate-pro' ) . esc_html( $msg ) . '</p></div>';
+			}
+		}
+		?>
+		<h2><?php esc_html_e( 'REST API', 'syndicate-pro' ); ?></h2>
+		<p class="description" style="max-width:760px;">
+			<?php esc_html_e( 'The 365 Community mobile app reads content through this site’s REST API. Members sign in with a WordPress Application Password (Users → Profile → Application Passwords); anonymous users get the last 5 days of everything.', 'syndicate-pro' ); ?>
+		</p>
+		<table class="form-table" role="presentation">
+			<tr>
+				<th><?php esc_html_e( 'Feed endpoint', 'syndicate-pro' ); ?></th>
+				<td><code><?php echo esc_html( rest_url( 'synpro/v1/feed' ) ); ?></code></td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Categories / preferences', 'syndicate-pro' ); ?></th>
+				<td><code><?php echo esc_html( rest_url( 'synpro/v1/categories' ) ); ?></code> · <code><?php echo esc_html( rest_url( 'synpro/v1/preferences' ) ); ?></code></td>
+			</tr>
+		</table>
+
+		<h2><?php esc_html_e( 'Push notifications (Firebase)', 'syndicate-pro' ); ?></h2>
+		<p class="description" style="max-width:760px;">
+			<?php esc_html_e( 'Notify the app when new content is published. Create a Firebase project, then paste its Project ID and a service-account JSON key (Firebase Console → Project settings → Service accounts → Generate new private key). The key is a secret and is stored securely.', 'syndicate-pro' ); ?>
+			<?php if ( $ready ) : ?>
+				<strong style="color:#1a7f37;"><?php esc_html_e( 'Push is configured.', 'syndicate-pro' ); ?></strong>
+			<?php endif; ?>
+		</p>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'synpro_app' ); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th><?php esc_html_e( 'Enabled', 'syndicate-pro' ); ?></th>
+					<td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[enabled]" value="1" <?php checked( $s['enabled'] ); ?>> <?php esc_html_e( 'Send a push notification when new content is published', 'syndicate-pro' ); ?></label></td>
+				</tr>
+				<tr>
+					<th><label for="synpro-fcm-project"><?php esc_html_e( 'Firebase project ID', 'syndicate-pro' ); ?></label></th>
+					<td><input type="text" class="regular-text" id="synpro-fcm-project" name="<?php echo esc_attr( $option ); ?>[project_id]" value="<?php echo esc_attr( $s['project_id'] ); ?>" placeholder="my-project-1234"></td>
+				</tr>
+				<tr>
+					<th><label for="synpro-fcm-sa"><?php esc_html_e( 'Service-account JSON', 'syndicate-pro' ); ?></label></th>
+					<td>
+						<textarea class="large-text code" rows="6" id="synpro-fcm-sa" name="<?php echo esc_attr( $option ); ?>[service_account]" placeholder="<?php echo $s['service_account'] ? esc_attr__( '•••••• stored — paste again to replace', 'syndicate-pro' ) : '{ &quot;type&quot;: &quot;service_account&quot;, ... }'; ?>"></textarea>
+						<p class="description"><?php esc_html_e( 'Leave blank to keep the stored key. The app subscribes to a “new_content” topic (everyone) plus a “cat_<id>” topic for each category a member follows.', 'syndicate-pro' ); ?></p>
+					</td>
+				</tr>
+			</table>
+			<?php submit_button(); ?>
+		</form>
+
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:-1rem;">
+			<input type="hidden" name="action" value="synpro_push_test">
+			<?php wp_nonce_field( 'synpro_push_test' ); ?>
+			<?php submit_button( __( 'Send test notification', 'syndicate-pro' ), 'secondary', 'submit', false ); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Sanitise push settings. A blank service-account field keeps the
+	 * stored key (so saving the form never wipes the secret).
+	 *
+	 * @param array $input Raw input.
+	 * @return array
+	 */
+	public static function sanitize_push( $input ) {
+		$input  = (array) $input;
+		$stored = Synpro_Push::settings();
+
+		$sa = isset( $input['service_account'] ) ? trim( (string) $input['service_account'] ) : '';
+		if ( '' === $sa ) {
+			$sa = $stored['service_account'];
+		}
+
+		return array(
+			'enabled'         => empty( $input['enabled'] ) ? 0 : 1,
+			'project_id'      => isset( $input['project_id'] ) ? sanitize_text_field( $input['project_id'] ) : '',
+			'service_account' => $sa,
+		);
 	}
 
 	/**
