@@ -28,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
-    final type = Config.contentTypes[_index];
 
     return Scaffold(
       appBar: AppBar(
@@ -91,9 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
         ],
       ),
-      floatingActionButton: type.key == 'post'
-          ? null
-          : null, // reserved for future compose/quick actions
     );
   }
 }

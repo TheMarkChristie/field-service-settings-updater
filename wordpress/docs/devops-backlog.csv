@@ -1,0 +1,127 @@
+Work Item Type,Title 1,Title 2,Title 3,Description,Acceptance Criteria,Tags
+Epic,Content Syndication Engine,,,,,365-Community
+Feature,,Member feed records,,,,Syndicate-Pro
+User Story,,,US-001 Manage my content sources,"As a Member, I want to register any number of content sources (blog RSS, web page with no RSS, podcast RSS, YouTube channel, events feed) mapped to categories, so that my content is pulled onto the site automatically.","- Add, edit, pause, delete feed records from profile and the Submit Content page
+- Each record has type, URL/identifier, target categories, full-text toggle
+- YouTube record accepts a UC channel ID or URL; invalid ID rejected clearly
+- Web-page (no RSS) record accepts a listing-page URL
+- Only Contributor-and-above can manage feeds",Syndicate-Pro
+User Story,,,US-002 Round-robin fetch every 5 minutes,"As a Site Admin, I want the system to check one member's feeds every 5 minutes in rotation, so that new content appears promptly without overloading any source.","- Scheduled task runs every 5 minutes and advances to the next member
+- Rotation pointer persists and wraps all eligible members
+- Interval configurable; changing it reschedules the task
+- Schedule self-heals if the event is lost",Syndicate-Pro
+Feature,,Importing and de-duplication,,,,Syndicate-Pro
+User Story,,,US-003 Import new items faithfully,"As a Member, I want new items imported with their original title, image, full text, and date under my name, so that my work is represented accurately and credited.","- Keeps original title, sideloaded image, body, date; authored by the member
+- Ends with source link and republished-with-permission note; canonical to original
+- Lands in the feed record's categories
+- Up to 5 new items per feed per run (configurable)
+- YouTube Shorts skipped",Syndicate-Pro
+User Story,,,US-004 Never duplicate existing content,"As a Site Admin, I want imported items matched against existing content by identifier and title, so that six years of existing posts are never duplicated.","- Item present by GUID or matching title is not re-imported
+- Legacy post matched by title gets the GUID stamped on
+- De-dup considers trashed items so removed imports don't return",Syndicate-Pro
+User Story,,,US-005 Backfill history on first fetch,"As a Member, I want my full back-catalogue imported the first time a feed is checked, so that my existing content is available immediately.","- First fetch imports full history, uncapped by the per-run limit
+- Social sharing and push suppressed during backfill
+- Admin can Run historic per feed and Run all historic (no social)",Syndicate-Pro
+Feature,,Source handling and resilience,,,,Syndicate-Pro
+User Story,,,US-006 Full-text and no-RSS scraping,"As a Member whose feed only carries summaries or has no feed, I want the system to fetch the full article, so that the complete post is republished.","- Full-text toggle fetches the article page and extracts the full body when more complete
+- No-RSS source discovers new links from a listing page and scrapes each article
+- Outbound fetches of member URLs blocked from private/internal addresses",Syndicate-Pro
+User Story,,,US-007 Category fallback image,"As a Site Admin, I want a category's image used when an imported post has none, so that every card has a picture.","- Featured image resolves: item image, then first content image, then category image, then none
+- Category image set per category, downloaded once and reused",Syndicate-Pro
+User Story,,,US-008 Alert on failing feeds,"As a Site Admin, I want an email after a feed fails several times, so that I can fix broken sources.","- After 5 consecutive failures the admin is emailed with feed and last error
+- Other feeds unaffected
+- Failing feeds listed on the dashboard, worst first",Syndicate-Pro
+Epic,Content Types & Presentation,,,,,365-Community
+Feature,,Content types and layouts,,,,Community-365-Theme
+User Story,,,US-009 Dedicated content types,"As a Visitor, I want events, podcasts, and videos as their own content types with appropriate layouts, so that each reads the way it should.","- Own archives at /events/, /podcasts/, /videos/
+- Blog full article; video title+embed+description; podcast player+notes; event name/date/location/organiser/actions
+- Events archive lists upcoming first, past after
+- Privacy-friendly video embeds; podcast duration shown",Community-365-Theme
+User Story,,,US-010 Configurable home page,"As a Site Admin, I want an 8-slot home page where each slot is a chosen component with its own filters, so that I control the front page without code.","- Each of 8 slots assignable: news block, YouTube slider, popular, podcast slider, events calendar, post blocks
+- Every component supports category include/exclude, date window, author include/exclude, counts
+- Sliders play in place; empty items skipped
+- Fully responsive",Community-365-Theme
+User Story,,,US-011 Single-post sidebar,"As a Visitor, I want a sticky sidebar with an events calendar, advert, social buttons, and coffee link, so that I can explore and support the community.","- Monthly events calendar with linked event days and month navigation
+- Configurable advert (image+link or HTML) marked sponsored
+- Three social buttons and coffee link configurable; one master toggle",Community-365-Theme
+Epic,Member Experience & Contribution,,,,,365-Community
+Feature,,Front-end member pages,,,,Syndicate-Pro;Community-365-Theme
+User Story,,,US-012 Submit a content source (front end),"As a Member, I want a front-end page to add a source by choosing type, categories, and a URL, so that I can contribute without the admin area.","- Logged-out visitors see a styled log-in/register prompt
+- URL label/placeholder/help change with the selected type
+- Submitting adds a feed record and lists existing sources with status",Syndicate-Pro;Community-365-Theme
+User Story,,,US-013 Write a post on the site with approval,"As a Member without a blog, I want to write a post that goes for admin approval, so that I can contribute original content.","- Front-end editor: title, rich-text body, categories, optional image (images only)
+- Saved as pending; admin emailed a review link
+- Empty/whitespace-only submissions rejected
+- On approval behaves like any post; no source attribution or redirect",Syndicate-Pro;Community-365-Theme
+User Story,,,US-014 Manage my profile and author page (front end),"As a Member, I want to manage my name, bio, photos, links, and author-page sections, so that I control my public presence.","- Front-end My Account edits the same fields as admin via the same validated save
+- Toggle blog/podcast/video/event/links/bio sections and digest preference
+- Profile photo replaces the default avatar site-wide",Syndicate-Pro;Community-365-Theme
+User Story,,,"US-015 Branded sign-in, registration, and reset","As a Visitor, I want the login, registration, and password screens styled to the site, so that joining feels part of the brand.","- Login/registration/lost-password use the site colours and logo
+- Button and field colours stay readable under any palette
+- Self-registration enable-able with a default publishing role",Community-365-Theme
+User Story,,,US-016 Member stats on profile,"As a Member, I want to see my content's view stats, so that I know how my posts perform.","- Views counted per post (all-time and per month)
+- Profile shows views this month, all-time, published count, top 3 read",Syndicate-Pro
+Epic,Monetisation (Paid Content),,,,,365-Community
+Feature,,Paid content,,,,Syndicate-Pro
+User Story,,,US-017 Mark a post as paid at a tier,"As a Site Admin, I want to mark a post paid at a standard or featured tier with configurable prices, so that I can monetise placement.","- Standard (default GBP 25) or Featured (default GBP 100); prices configurable
+- Featured joins the featured category and leaves after configurable days (default 7); paid status remains
+- Downgrading Featured to Standard removes featured placement immediately",Syndicate-Pro
+User Story,,,US-018 Always disclose paid content,"As a Visitor, I want paid content clearly labelled, so that I know when placement was paid for.","- Paid post shows a Paid content badge over its image everywhere and a banner when opened
+- Disclosure cannot be removed by configuration and persists after the featured window
+- Badge and banner appear in the app too",Syndicate-Pro;Community-365-Theme
+User Story,,,US-019 Take payment via PayPal,"As a Site Admin, I want a per-post PayPal link and a way to record receipt, so that I can invoice and track sponsors.","- With a PayPal email set, each paid post shows a correct-amount link tagged with the post ID
+- Payment-received control records the date; posts list shows tier, featured-until, outstanding indicator",Syndicate-Pro
+Epic,Community Communications,,,,,365-Community
+Feature,,Social auto-sharing,,,,Syndicate-Pro
+User Story,,,US-020 Auto-share new content to social accounts,"As a Site Admin, I want new content announced on LinkedIn, Bluesky, Mastodon, and X, so that it reaches followers automatically.","- On publish (not backfill) an announcement queues per enabled network with title/handle/excerpt/link/hashtags/image
+- Templates editable per type and network; shared once per network with retries
+- Members credited by @handle when profile links provide one
+- Credentials admin-only and stored securely",Syndicate-Pro
+Feature,,Email,,,,Syndicate-Pro
+User Story,,,US-021 Welcome email on first post,"As a Member, I want a welcome email when my first content goes live, so that I feel acknowledged and learn the site.","- Sent once ever when a member's first item publishes
+- Editable subject/body with placeholders; can be disabled",Syndicate-Pro
+User Story,,,US-022 Weekly digest,"As a Subscriber, I want a weekly digest of the best new content, so that I keep up without visiting daily.","- Top 4 blogs, top video, top podcast, newest event; never repeats sent items
+- Recipients: members not opted out plus confirmed subscribers; one-click unsubscribe
+- Custom HTML template supported; quiet weeks skipped",Syndicate-Pro
+User Story,,,US-023 Website subscribe with double opt-in,"As a Visitor, I want to subscribe on the website and confirm by email, so that only I can add my address.","- Spam-protected, rate-limited form sends a confirmation email; only confirmed get the digest
+- Response never reveals whether an address is already subscribed
+- Admins see confirmed vs pending counts",Syndicate-Pro;Community-365-Theme
+User Story,,,US-024 Reliable email delivery (SMTP),"As a Site Admin, I want to send email through authenticated SMTP, so that digests reach inboxes not spam.","- Host/port/encryption/auth/from configurable; password stored securely and never shown
+- When enabled all site email uses SMTP; when disabled default mail is used",Syndicate-Pro
+Epic,Mobile App (Android),,,,,365-Community
+Feature,,App reading,,,,Android-App
+User Story,,,US-025 Browse four content types,"As an App User, I want to browse blogs, events, podcasts, and videos, so that I can read the community on my phone.","- Four tabs with pull-to-refresh and infinite scroll
+- Item shows image, type, date, title, excerpt, author; paid items disclosed
+- Targets Android 8.0+",Android-App
+User Story,,,US-026 Sign in and follow categories,"As an App User, I want to sign in and choose followed categories, so that my feed and downloads match my interests.","- Sign-in via WordPress username + application password over HTTPS; stored in secure store
+- Signed-in see followed categories; anonymous see last 5 days of everything
+- Preferences saved to the member's profile via the API",Android-App;Syndicate-Pro
+User Story,,,US-027 Read offline,"As an App User, I want to keep the latest items offline with a size I choose, so that I can read with no signal.","- Latest N per section (10/25/50/100/200) kept locally and shown offline
+- Lowering the limit trims stored items; a control clears offline content",Android-App
+User Story,,,US-028 Native reader and external media,"As an App User, I want posts to read natively and media to open in the right app, so that reading is fast and playback is best.","- Title, image, body render natively; source links open the original
+- Podcasts and videos open externally (browser/YouTube/podcast app)
+- Events show date, location, tickets action",Android-App
+User Story,,,US-029 Search and save in the app,"As an App User, I want to search all content and save items, so that I can find and keep what matters.","- Search queries all four types, merged newest-first
+- Any item saved to a local list that survives clearing the offline cache",Android-App
+User Story,,,US-030 Push notifications for new content,"As an App User, I want a notification when new content lands in my categories, so that I don't miss it.","- New content pushes to a general topic and the post's category topics; imports never notify
+- Category followers notified for those; general topic can be turned off
+- Admin configures push securely and can send a test",Android-App;Syndicate-Pro
+Epic,"Branding, Search & Site Chrome",,,,,365-Community
+Feature,,Branding and search,,,,Community-365-Theme
+User Story,,,US-031 Full branding control,"As a Site Admin, I want to set logos, a six-colour palette, and fonts, so that the site matches our brand without code.","- Website logo and header sponsor (label, logo, link) uploadable
+- Six roles configurable: primary, secondary, tertiary, hyperlink, hyperlink-visited, background; other colours derive and stay accessible
+- Font family and base size selectable; defaults meet contrast",Community-365-Theme
+User Story,,,US-032 Site search across all content types,"As a Visitor, I want to search the site and find blogs, events, podcasts, and videos, so that I can locate content quickly.","- Header search control reveals a field; results render as cards with pagination
+- Search covers all four content types
+- Standalone events calendar available as a shortcode",Community-365-Theme;Syndicate-Pro
+Epic,"Operations, Compliance & Lifecycle",,,,,365-Community
+Feature,,Operations and compliance,,,,Syndicate-Pro;Community-365-Theme
+User Story,,,US-033 Admin dashboard widgets,"As a Site Admin, I want widgets for top posters, failing feeds, and unverified members, so that I can manage the community.","- Top 10 posters this month, failing feeds worst-first, members never logged in or updated",Syndicate-Pro
+User Story,,,US-034 Redirect syndicated posts to the original,"As a Site Admin, I want visitors on a syndicated blog post redirected to the author's site after the view is counted, so that authors get their traffic.",- Syndicated blog posts redirect to the original; view counted first; editors/previews/override exempt; toggleable,Syndicate-Pro
+User Story,,,US-035 Auto-prune stale low-interest content,"As a Site Admin, I want old low-view imports binned, so that the site stays fresh.","- Daily: imported content older than configured years with fewer than configured views is binned (default 3y/50); capped, recoverable, never manual content; toggleable",Syndicate-Pro
+User Story,,,US-036 Cookie/consent banner,"As a Site Admin, I want a dismissible cookie banner linking to our policy, so that we meet consent expectations.","- Configurable banner (enable, text, policy-page link) shows once, remembered per device, accessible",Community-365-Theme
+User Story,,,"US-037 Clean install, upgrade, and uninstall","As a Site Admin, I want the platform to install, upgrade, and uninstall cleanly, so that operations are safe.","- Activation creates tables, pages, types, schedules with no errors; schema upgrades preserve data
+- Uninstall removes settings/tables/user syndication data but keeps imported content and media
+- Secrets not autoloaded and never exposed via the settings API",Syndicate-Pro
+User Story,,,US-038 Deployment and staging verification,"As a Site Admin, I want a documented install/config/go-live/rollback procedure with a staging checklist, so that I can launch confidently.","- Runbook covers install, config, SMTP/DNS, app+push bootstrap, staging checklist, go-live, rollback
+- Platform verified on a staging copy of live content before production",Syndicate-Pro;Community-365-Theme;Android-App

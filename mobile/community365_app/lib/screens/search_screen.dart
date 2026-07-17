@@ -45,6 +45,7 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {
         _results = [];
         _searched = false;
+        _error = null;
       });
       return;
     }

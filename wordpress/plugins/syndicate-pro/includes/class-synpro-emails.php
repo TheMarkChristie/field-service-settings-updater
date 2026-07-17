@@ -1,7 +1,7 @@
 <?php
 /**
  * Member emails: the welcome email (sent when a member's first piece of
- * content goes live) and the weekly digest (top 10 blog posts of the week).
+ * content goes live) and the weekly digest (top blogs, video, podcast, and newest event).
  *
  * Templates are editable under Syndication → Emails. Members can opt out
  * of the digest on their profile.
@@ -237,7 +237,7 @@ class Synpro_Emails {
 	}
 
 	/* -----------------------------------------------------------------------
-	 * Weekly digest (top 10 blogs of the week)
+	 * Weekly digest (top 4 blogs + top video + top podcast + newest event)
 	 * -------------------------------------------------------------------- */
 
 	/**
