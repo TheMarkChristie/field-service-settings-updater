@@ -276,6 +276,10 @@ class PRX3_Ballot_Lifecycle {
 
 	/**
 	 * Compute and publish the result (FO-206 AC2/AC3, FO-207, FO-208).
+	 *
+	 * @param int   $ballot_id Ballot.
+	 * @param array $tallies   Tallies snapshotted at close.
+	 * @param int   $needed    Members required for quorum.
 	 */
 	private static function publish_result( $ballot_id, $tallies, $needed ) {
 		$options = (array) get_post_meta( $ballot_id, '_prx3_options', true );

@@ -105,11 +105,25 @@ class PRX3_REST_API {
 		}
 	}
 
+	/**
+	 * The two throttle keys for a sign-in attempt: per IP and per target
+	 * username.
+	 *
+	 * @param string $username Attempted username.
+	 * @return string[]
+	 */
 	private static function login_keys( $username ) {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'noip';
 		return array( 'ip_' . md5( $ip ), 'user_' . md5( strtolower( $username ) ) );
 	}
 
+	/**
+	 * Per-user per-minute rate limit on write routes (T32 hardening).
+	 *
+	 * @param string $key        Route bucket name.
+	 * @param int    $per_minute Allowed requests per minute.
+	 * @return true|WP_Error
+	 */
 	private static function rate_limit( $key, $per_minute = 20 ) {
 		$user_id = get_current_user_id();
 		$bucket  = 'prx3_rl_' . $key . '_' . $user_id . '_' . gmdate( 'YmdHi' );
@@ -121,6 +135,10 @@ class PRX3_REST_API {
 		return true;
 	}
 
+	/**
+	 * Register every prx3/v1 route: auth, profile, ballots, ideas,
+	 * questions, meetings, matches, chat, library, and decisions.
+	 */
 	public static function routes() {
 		$ns = 'prx3/v1';
 

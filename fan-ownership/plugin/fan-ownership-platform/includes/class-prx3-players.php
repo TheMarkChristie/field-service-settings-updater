@@ -83,6 +83,12 @@ class PRX3_Players {
 		);
 	}
 
+	/**
+	 * Save the player details meta.
+	 *
+	 * @param int     $post_id Player post ID.
+	 * @param WP_Post $post    Player post object.
+	 */
 	public static function save_meta( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_player_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_player_nonce'] ), 'prx3_player_meta' ) ) {
 			return;
@@ -116,8 +122,8 @@ class PRX3_Players {
 					'post_type'      => 'prx3_player',
 					'post_status'    => 'publish',
 					'posts_per_page' => 50,
-					'meta_key'       => '_prx3_active',
-					'meta_value'     => '1',
+					'meta_key'       => '_prx3_active', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded active-roster lookup, capped at 50.
+					'meta_value'     => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 					'orderby'        => 'title',
 					'order'          => 'ASC',
 					'no_found_rows'  => true,
@@ -131,6 +137,9 @@ class PRX3_Players {
 	/**
 	 * POTM is open from the moment the match is live until 30 minutes
 	 * after it is marked ended.
+	 *
+	 * @param int $match_id Match post ID.
+	 * @return bool
 	 */
 	public static function potm_open( $match_id ) {
 		$state = PRX3_Match_Centre::live_state( $match_id );
