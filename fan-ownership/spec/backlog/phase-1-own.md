@@ -6,7 +6,8 @@ exclusive content, on a platform with the right roles, gating, and safety
 switches from day one.
 
 Epics: A. Platform foundations · B. Join and buy · C. Recognition ·
-D. Onboarding, comms and account · E. Content foundations
+D. Onboarding, comms and account · E. Content foundations ·
+F. Legal agreements
 
 ---
 
@@ -227,3 +228,66 @@ Acceptance criteria:
 2. Figures reconcile exactly with the share register and payment records.
 3. Analytics collection is privacy-first, first-party, and disclosed in the privacy notice (T27).
 4. Dashboard access is restricted to staff and board roles.
+
+---
+
+## Epic F — Legal agreements
+
+### FO-121 Accept and sign the Shareholders' Agreement
+As the club, I want every person acquiring shares — by purchase or gift redemption — to read, accept, and personally sign the current Shareholders' Agreement before the shares are theirs, so that every owner is bound by the club's conduct and morality provisions with evidence that stands up.
+Traceability: P97, P98, P26, P49. Estimate: Design 1 / Build 1 / Develop 2.5 / Test 1.5
+
+Acceptance criteria:
+1. Share purchase and gift redemption cannot complete without the person ticking acceptance of the current agreement version and drawing their signature; either missing blocks the transaction with a clear message.
+2. The agreement is one click away from the acceptance point, opens without losing the transaction in progress, and states its version.
+3. Every acceptance is recorded permanently: version accepted, date and time, IP address, context (purchase, gift redemption, or re-acceptance), order reference where applicable, and the drawn signature.
+4. The signature is captured on any device — touch, stylus, or mouse — and a member can clear and redraw it before submitting.
+5. When the club publishes a new agreement version, existing owners are prompted on their account until they read, re-accept, and re-sign; the new acceptance is recorded alongside the old, never replacing it.
+6. A member who has not re-accepted the current version retains their shares and voting rights; re-acceptance is chased, not enforced by lockout, unless the board directs otherwise.
+
+Test script:
+1. Add shares to the basket and attempt checkout with the acceptance box unticked — expect checkout blocked with a message naming the agreement.
+2. Tick the box but leave the signature blank — expect checkout blocked asking for a signature.
+3. Draw a signature, clear it, redraw it, and complete checkout — expect payment to succeed and an acceptance record holding version, date, IP, context "checkout", the order reference, and the signature.
+4. Redeem a gift code without a signature — expect redemption blocked and the gift code still valid.
+5. Redeem the same code with acceptance and signature — expect shares granted and an acceptance record with context "gift redemption".
+6. Bump the agreement version in settings and sign in as an existing owner — expect a re-acceptance prompt on the account page; re-sign and confirm a second acceptance record exists with context "re-acceptance" while the first record is unchanged.
+7. Confirm voting and content access were unaffected while the re-acceptance prompt was outstanding.
+
+### FO-122 My executed copy, stamped and countersigned
+As an owner, I want a personalised executed copy of the Shareholders' Agreement — the full text with my signature, my name and owner number, the date, the club stamp, and a board member's countersignature — that I can print or save as PDF, so that I hold the same document a paper shareholder would.
+Traceability: P97, P98, P92. Estimate: Design 1 / Build 1 / Develop 2 / Test 1
+
+Acceptance criteria:
+1. Every owner with a recorded acceptance can open their executed copy from their account; it shows the full agreement text and an execution block with their drawn signature, name, owner number, acceptance date, and context.
+2. The execution block carries the club stamp and the countersignature of the club's nominated board signatory with their name and role; both the stamp and the signatory's signature are club-configurable images, and the signatory's name and role are configurable text.
+3. The copy is printable and saves cleanly to PDF from the browser.
+4. If the owner's accepted version is older than the current published version, the copy says so and directs them to re-accept.
+5. An owner can open only their own executed copy; board members and administrators can open any owner's copy.
+6. A signed-out visitor is asked to sign in; an account with no recorded acceptance sees a clear explanation instead of a broken page.
+
+Test script:
+1. As an owner who accepted at checkout, open the executed copy from the account page — expect the full agreement text, the owner's signature, name, owner number, and acceptance date, the club stamp, and the board countersignature with name and role.
+2. Print-preview the page — expect a clean document with the print button hidden.
+3. Change the uploaded stamp and signatory images in settings and reload — expect the copy to reflect the new images without code changes.
+4. Bump the agreement version and reopen the copy — expect a visible note that a newer version exists with a pointer to re-accept.
+5. As owner A, request owner B's copy — expect refusal; repeat as a board member — expect owner B's copy to open.
+6. Open the copy signed out — expect a sign-in prompt; open it as a member with no acceptance — expect an explanatory message.
+
+### FO-123 Board register of owner signatures
+As a board member, I want a board-only register of every owner's agreement signature and acceptance history, so that the club can evidence who is bound by which version and act on the gaps.
+Traceability: P98, P82, T29. Estimate: Design 0.5 / Build 0.5 / Develop 1.5 / Test 1
+
+Acceptance criteria:
+1. The register lists every member with a recorded acceptance: owner number, name, email, accepted version, number of acceptances, most recent acceptance date and context, and their signature image.
+2. Members whose accepted version is out of date are visibly flagged.
+3. Each row links to that owner's executed copy.
+4. The register is accessible only to board-level access; it is not exported by any bulk tool, and it carries a visible personal-data handling warning.
+5. A member's acceptance history and whether a signature is held are included in their personal data export; erasure removes the signature image while the acceptance record itself is retained with the share register as the contractual legal minimum (FO-117).
+
+Test script:
+1. Open the register as a board member — expect all accepting owners listed with owner number, version, acceptance count, last acceptance, and signature thumbnail.
+2. Bump the agreement version — expect all owners flagged out of date until they re-accept.
+3. Follow a row's link — expect that owner's executed copy.
+4. Attempt access as a non-board staff account and as a member — expect refusal both times.
+5. Run a personal data export for an accepting member — expect their acceptance history and a signature-held indicator included; erase a test account — expect the signature image removed while the acceptance record remains as the retained legal minimum.

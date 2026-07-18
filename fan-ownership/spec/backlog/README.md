@@ -10,9 +10,9 @@ in the specification and the solution design produced at build time.
 
 | Phase | Theme | Backlog | Stories | Outcome |
 |-------|-------|---------|---------|---------|
-| 1 | Own | `phase-1-own.md` | FO-101 to FO-120 | A supporter anywhere in the world becomes a paying owner and feels it: shares, certificate, badge, onboarding, first exclusive content |
+| 1 | Own | `phase-1-own.md` | FO-101 to FO-123 | A supporter anywhere in the world becomes a paying owner and feels it: shares, certificate, badge, onboarding, first exclusive content, and a signed Shareholders' Agreement |
 | 2 | Decide | `phase-2-decide.md` | FO-201 to FO-229 | Owners run the club: ballots, ideas, questions, meetings, financials, decision register, forum, chapters, and the full board layer |
-| 3 | Watch | `phase-3-watch.md` | FO-301 to FO-315 | Owners watch the club from anywhere: native apps, live match streams, chat, minute-by-minute, replays, and the weekly show |
+| 3 | Watch | `phase-3-watch.md` | FO-301 to FO-318 | Owners watch the club from anywhere: native apps, live match streams, chat, minute-by-minute, replays, the weekly show, and live player-of-the-match voting |
 
 ## Sequencing and dependencies
 

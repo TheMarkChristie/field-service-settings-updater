@@ -30,6 +30,9 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-118 Exclusive content | Done | `prx3_exclusive` CPT + teaser meta + gating | |
 | FO-119 Editorial workflow | Done | `class-prx3-editorial.php` — author≠approver enforcement at publish, manager gate on sensitive, audited approvals | |
 | FO-120 Dashboard v1 | Done | `admin/class-prx3-dashboard.php` — owners vs 1,000 target, shares by holding, revenue from register, gifts, surrenders | |
+| FO-121 Accept & sign the SHA | Done | `class-prx3-agreements.php` + `prx3-signature.js` — checkout/gift/re-accept all require tick + drawn signature (validated PNG), append-only acceptance log (version/at/IP/context/order/signed), version-bump re-accept banner, no lockout while outstanding | Agreement text itself awaits solicitor (operations handbook draft) |
+| FO-122 Executed copy | Done | `/my-agreement/` — full page text + execution block: member signature/name/owner #/date, club stamp (`brand_club_stamp_id`), board countersignature (Legal settings), print-to-PDF, stale-version note, self-only access with board/admin override | |
+| FO-123 Board signatures register | Done | Board Workspace → Owner Signatures — owner #, version (out-of-date flag), acceptance count/date/context, signature thumbnail, link to executed copy, `prx3_board` capability, personal-data warning; exporter includes acceptances, eraser removes signature image and retains the log | |
 
 ## Phase 2 — Decide
 
@@ -84,6 +87,9 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-313 Matchday health | Partial | Kill switches, delayed-stream member messaging, replay/stream failure alerts, Sentry hooks | UptimeRobot/status page are external services to configure; pre-kickoff checklist lives in the runbook |
 | FO-314 Documentation | Not built | — | The five-document suite (admin guide, matchday runbook, dev docs, API reference, volunteer handbooks) is the next writing task |
 | FO-315 Full dashboard | Partial | Membership/revenue/ballot-health/community/moderation/stalled-decisions | Stream concurrents + episode completion need the analytics/Cloudflare data feeds |
+| FO-316 The squad | Partial | `class-prx3-players.php` — `prx3_player` CPT at `/squad/` (number, position, active flag, featured-image photo), staff-only editing, active-only poll options | Honours (POTM/month wins) stored in meta; front-end profile rendering of honours is theme-template build-out |
+| FO-317 Player of the match live | Done | Opens on match live, closes 30 min after `_prx3_ended_at`, one changeable vote per member, live tallies, roster validation, auto winner + push + player honours on ballot tick; REST GET/POST `/matches/{id}/potm` | Web/app poll UI consumes the REST routes; native screen is scheduled app build-out |
+| FO-318 Player of the month | Done | Last-7-days window, one changeable vote per member, per-month archive option, auto winner + push on daily tick; REST GET/POST `/potm-month` | Same UI note as FO-317 |
 
 ## Cross-cutting requirements
 
@@ -95,7 +101,8 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 34 · Partial 18 · Operational 1 · Not built 1 (documentation suite).
+Done 39 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+documentation suite — the first guides now exist in `docs/guides/`).
 The two most important follow-ups: (1) automated tests on checkout and
 ballot tallying before launch, (2) the documentation suite. The board
 video embed (FO-228) and remaining app screens are scheduled build-out,

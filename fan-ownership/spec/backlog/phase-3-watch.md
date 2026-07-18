@@ -5,7 +5,7 @@ match streams with chat and minute-by-minute updates, away audio, replays
 within the hour, and the weekly show — with matchday operations to keep it
 all up when it matters.
 
-Epics: L. Native apps · M. Match Centre · N. Video library · O. Matchday operations
+Epics: L. Native apps · M. Match Centre · N. Video library · O. Matchday operations · P. Player engagement
 
 ---
 
@@ -172,3 +172,61 @@ Acceptance criteria:
 1. The dashboard adds stream concurrents and peaks, replay and episode viewing, forum and chapter activity, ideas and questions throughput, and moderation queue depth to the Phase 1 membership and revenue view.
 2. Ballot health remains prominent: live turnout against quorum for every open ballot.
 3. All figures respect the privacy-first analytics commitment (T27).
+
+---
+
+## Epic P — Player engagement
+
+### FO-316 The squad
+As the club, I want a maintained roster of players with number, position, and an active flag, so that player voting and match coverage always work from the current squad whatever the sport.
+Traceability: P96, P90, T46. Estimate: Design 0.5 / Build 0.5 / Develop 1 / Test 0.5
+
+Acceptance criteria:
+1. Staff can add, edit, retire, and reinstate players with name, squad number, position, photo, and an active flag; positions are free text so any sport's roles fit.
+2. Only active players appear as voting options; retiring a player removes them from future polls without touching past results.
+3. Each player has a public profile page listing their details and any player-of-the-match and player-of-the-month honours.
+4. Roster management requires a staff role; members cannot alter the squad.
+
+Test script:
+1. Add a player with number, position, and photo — expect them on the squad listing and in the next poll's options.
+2. Retire the player — expect them gone from open and future polls while past wins remain on their profile.
+3. Reinstate them — expect them back in the next poll.
+4. Attempt to edit the roster as a member — expect refusal.
+
+### FO-317 Player of the match, voted live
+As an owner watching the match, I want to vote for my player of the match while the game is on and see the live standing, so that the award is the fans' and the wait for the result is part of matchday.
+Traceability: P94, P96, T14. Estimate: Design 1 / Build 1 / Develop 2.5 / Test 1.5
+
+Acceptance criteria:
+1. The vote opens automatically when the match goes live and closes 30 minutes after the match ends; outside that window voting is refused with the poll's status shown.
+2. Every member gets exactly one vote regardless of shareholding — this is an engagement poll, deliberately distinct from share-weighted governance ballots — and may change it while the poll is open.
+3. Live tallies are visible to voters while the poll runs, alongside the stream on web and apps.
+4. Only the active squad (FO-316) can receive votes; an invalid selection is refused.
+5. When the poll closes, the winner is declared automatically, announced by push notification (respecting notification preferences), recorded on the match, and added to the player's honours.
+6. Non-members can see that the vote exists but cannot cast one.
+
+Test script:
+1. Before the match is live, attempt to vote — expect refusal with status.
+2. Set the match live, vote as a member, then vote again for a different player — expect one counted vote reflecting the change and live tallies updating.
+3. Vote for a retired or invalid player — expect refusal.
+4. Cast votes from two member accounts with different shareholdings — expect each to count exactly once.
+5. End the match; within the 30-minute window vote again — expect it accepted; after the window — expect refusal.
+6. After close, confirm the winner is declared without staff action, the push notification is sent, and the win appears on the player's profile and the match record.
+7. Attempt to vote signed out — expect a sign-in route, not a counted vote.
+
+### FO-318 Player of the month
+As an owner, I want to vote for our player of the month at the end of each month and see the club announce the winner, so that sustained form gets the fans' recognition, not just single nights.
+Traceability: P95, P96, T14. Estimate: Design 0.5 / Build 0.5 / Develop 2 / Test 1
+
+Acceptance criteria:
+1. The month's poll opens automatically for the final seven days of each calendar month across the active squad and closes when the month ends.
+2. One vote per member, changeable while the poll is open, with live standings visible to voters.
+3. The winner is declared automatically at month end, announced by push notification, archived against that month, and added to the player's honours.
+4. Past monthly winners remain visible as an honours archive.
+5. Outside the voting window, the poll shows when voting next opens.
+
+Test script:
+1. During the last seven days of a month, vote as a member and change the vote — expect one counted, changeable vote and live standings.
+2. Before the window, attempt to vote — expect refusal with the opening date shown.
+3. Roll the month over — expect the winner archived for that month, announced by push, and shown on the player's profile.
+4. Check the archive — expect previous months' winners listed and unchanged by roster edits.
