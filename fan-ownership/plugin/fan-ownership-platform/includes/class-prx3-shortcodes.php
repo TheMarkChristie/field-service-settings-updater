@@ -532,9 +532,9 @@ class PRX3_Shortcodes {
 
 		$tiles = array(
 			array( __( 'My shares', 'fan-ownership' ), sprintf( '%d / %d', $shares, prx3_max_shares() ), __( 'each share is one vote', 'fan-ownership' ), $account ),
-			array( __( 'My voting power', 'fan-ownership' ), (string) $shares, __( 'votes on every ballot', 'fan-ownership' ), '' ),
-			array( __( 'Ballots open now', 'fan-ownership' ), (string) count( $open ), $open ? __( 'your vote is needed below', 'fan-ownership' ) : __( 'nothing waiting on you', 'fan-ownership' ), '' ),
-			array( __( 'Ticket discount', 'fan-ownership' ), $disc['matchday'] . '%', sprintf( /* translators: %d percent. */ __( 'season tickets %d%%', 'fan-ownership' ), $disc['season'] ), '' ),
+			array( __( 'My voting power', 'fan-ownership' ), (string) $shares, __( 'votes on every ballot', 'fan-ownership' ), $account ),
+			array( __( 'Ballots open now', 'fan-ownership' ), (string) count( $open ), $open ? __( 'your vote is needed below', 'fan-ownership' ) : __( 'nothing waiting on you', 'fan-ownership' ), $open ? '#prx3-ballots' : '' ),
+			array( __( 'Ticket discount', 'fan-ownership' ), $disc['matchday'] . '%', sprintf( /* translators: %d percent. */ __( 'season tickets %d%%', 'fan-ownership' ), $disc['season'] ), $account ),
 		);
 		$out  .= '<div class="prx3-tiles">';
 		foreach ( $tiles as $tile ) {
@@ -547,7 +547,7 @@ class PRX3_Shortcodes {
 		}
 		$out .= '</div>';
 		if ( $open ) {
-			$out .= '<h3>' . esc_html( sprintf( /* translators: %d count. */ _n( '%d ballot needs your vote', '%d ballots need your vote', count( $open ), 'fan-ownership' ), count( $open ) ) ) . '</h3>';
+			$out .= '<h3 id="prx3-ballots">' . esc_html( sprintf( /* translators: %d count. */ _n( '%d ballot needs your vote', '%d ballots need your vote', count( $open ), 'fan-ownership' ), count( $open ) ) ) . '</h3>';
 			foreach ( $open as $ballot ) {
 				$out .= self::render_ballot_card( $ballot->ID );
 			}

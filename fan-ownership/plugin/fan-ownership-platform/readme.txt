@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.8
+Stable tag: 0.1.9
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,15 @@ club badge plugin integrate through documented contracts.
    numbers, and integrations.
 
 == Changelog ==
+
+= 0.1.9 =
+* Fix: the Club Dashboard was unreachable for administrators after
+  moving under Board - the Board menu and Dashboard submenu now hang
+  on the shared tally-view capability while all board content stays
+  behind the board-only wall; dashboard scripts load again and every
+  tile is clickable (active owners, gifts, and surrenders gained
+  destinations). Member dashboard tiles now link to the account page
+  and jump to open ballots.
 
 = 0.1.8 =
 * Ready-made Claude connection under Settings > API & Integrations:

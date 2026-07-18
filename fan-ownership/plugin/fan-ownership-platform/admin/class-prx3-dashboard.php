@@ -62,7 +62,7 @@ class PRX3_Dashboard {
 			'prx3-board',
 			__( 'Club Dashboard', 'fan-ownership' ),
 			__( 'Dashboard', 'fan-ownership' ),
-			'prx3_board',
+			'prx3_view_tally',
 			'prx3-dashboard',
 			array( __CLASS__, 'render' )
 		);
@@ -74,8 +74,8 @@ class PRX3_Dashboard {
 	public static function render_owners_home() {
 		echo '<div class="wrap"><h1>' . esc_html__( 'Owners', 'fan-ownership' ) . '</h1>';
 		echo '<p>' . esc_html__( 'Everything the members see and do lives in this menu: ballots, ideas, questions, meetings, the video library, documents, behind-the-scenes posts, the decision register, chapters, the Match Centre, the squad, and the commitments calendar.', 'fan-ownership' ) . '</p>';
-		if ( current_user_can( 'prx3_board' ) ) {
-			echo '<p>' . esc_html__( 'The Club Dashboard is in the Board menu.', 'fan-ownership' ) . '</p>';
+		if ( self::can_view() ) {
+			echo '<p><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=prx3-dashboard' ) ) . '">' . esc_html__( 'Open the Club Dashboard (Board menu)', 'fan-ownership' ) . '</a></p>';
 		}
 		echo '</div>';
 	}
@@ -309,9 +309,9 @@ class PRX3_Dashboard {
 			echo '<span class="prx3-tile-note">' . esc_html__( 'set a financial target in Settings → Targets to track progress', 'fan-ownership' ) . '</span>';
 		}
 		echo '</a>';
-		self::tile( 'active', __( 'Active owners', 'fan-ownership' ), (string) $d['active'], '', __( 'quorum denominator (12 months)', 'fan-ownership' ) );
-		self::tile( 'gifts', __( 'Gifts unredeemed', 'fan-ownership' ), (string) $d['gifts'], '', __( 'codes never expire', 'fan-ownership' ) );
-		self::tile( 'surrenders', __( 'Surrender events', 'fan-ownership' ), (string) $d['surrenders'] );
+		self::tile( 'active', __( 'Active owners', 'fan-ownership' ), (string) $d['active'], $d['links']['owners'], __( 'quorum denominator (12 months)', 'fan-ownership' ) );
+		self::tile( 'gifts', __( 'Gifts unredeemed', 'fan-ownership' ), (string) $d['gifts'], admin_url( 'admin.php?page=prx3-settings-shares' ), __( 'codes never expire', 'fan-ownership' ) );
+		self::tile( 'surrenders', __( 'Surrender events', 'fan-ownership' ), (string) $d['surrenders'], $d['links']['owners'] );
 
 		// Holdings distribution mini-chart (drawn by JS, table fallback below).
 		echo '<div class="prx3-tile prx3-tile--chart" data-tile="dist">';
