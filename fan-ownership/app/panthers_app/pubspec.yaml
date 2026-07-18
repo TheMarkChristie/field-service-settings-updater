@@ -1,0 +1,27 @@
+name: panthers_app
+description: "The fan ownership app: Boardroom voting, Match Centre, Panthers TV. Consumes the WordPress plugin's fop/v1 API."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+# Minimum OS floor per spec T67: iOS 15 / Android 8 (set in platform folders
+# when `flutter create .` generates them — see README).
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  flutter_secure_storage: ^9.0.0   # JWT storage (T6)
+  url_launcher: ^6.2.0             # Web checkout link-out (T33)
+  firebase_core: ^3.0.0            # FCM push (T14) — configure per project
+  firebase_messaging: ^15.0.0
+  sentry_flutter: ^8.0.0           # Error tracking (T56)
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
