@@ -99,13 +99,13 @@ named gaps), **Operational** (satisfied by process/services, not code),
 - **Kill switches (T74)**: registration, checkout, voting, forum, chat, streams, meetings, ideas, questions — all honoured at both web and API layers.
 - **Data residency/GDPR (T29/T30)**: exporter/eraser/retention implemented; residency is a hosting choice.
 - **Rebrand-proofing (T46)**: club name/colours from config everywhere member-facing; app reads identity from `/me`.
-- **Straight-to-production risk (T34)**: automated-test suite for money/vote paths (T35) is **not yet written** — flagged as the top follow-up before real money or binding ballots run.
+- **Straight-to-production risk (T34)**: the automated money/vote-path suite (T35) now exists — `plugin/fan-ownership-platform/tests/` (`php tests/run-tests.php`, 88 assertions over the ladder, cap, register, ballot casting/weighting/secrecy, agreement signatures/versioning, and sync matching rules). Wire it into the reviewed-PR pipeline (T55) so it gates every deploy.
 
 ## Honest summary
 
 Done 41 · Partial 19 · Operational 1 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
-The two most important follow-ups: (1) automated tests on checkout and
-ballot tallying before launch, (2) the documentation suite. The board
+The most important follow-ups: (1) run the money/vote test suite in CI
+on every pull request, (2) the remainder of the documentation suite. The board
 video embed (FO-228) and remaining app screens are scheduled build-out,
 consistent with the phasing decisions.

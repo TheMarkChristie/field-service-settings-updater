@@ -180,7 +180,7 @@ class PRX3_Agreements {
 		if ( $signature ) {
 			update_user_meta( $user_id, 'prx3_sha_signature', $signature );
 		}
-		$log   = (array) get_user_meta( $user_id, 'prx3_sha_acceptances', true );
+		$log   = array_values( array_filter( (array) get_user_meta( $user_id, 'prx3_sha_acceptances', true ) ) );
 		$log[] = array(
 			'version' => self::version(),
 			'at'      => prx3_now(),

@@ -3,6 +3,8 @@
 	<description>WordPress Coding Standards for the Fan Ownership Platform plugin.</description>
 
 	<file>.</file>
+	<!-- The test harness shims WordPress core functions by design. -->
+	<exclude-pattern>tests/*</exclude-pattern>
 	<arg name="extensions" value="php"/>
 	<arg value="sp"/>
 

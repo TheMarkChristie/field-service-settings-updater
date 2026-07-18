@@ -1,0 +1,463 @@
+<?php
+/**
+ * Test bootstrap: a dependency-free WordPress shim layer so the money
+ * and vote paths (T35) run under test without a WordPress install.
+ * Run via: php tests/run-tests.php
+ *
+ * @package FanOwnershipPlatform
+ */
+
+error_reporting( E_ALL );
+define( 'ABSPATH', __DIR__ . '/' );
+define( 'MINUTE_IN_SECONDS', 60 );
+define( 'HOUR_IN_SECONDS', 3600 );
+define( 'DAY_IN_SECONDS', 86400 );
+
+/* ---------------- Test state ---------------- */
+
+function prx3_test_reset() {
+	$GLOBALS['prx3_t'] = array(
+		'options'   => array(),
+		'user_meta' => array(),
+		'post_meta' => array(),
+		'users'     => array(),
+		'caps'      => array(),
+		'actions'   => array(),
+		'hooks'     => array(),
+		'audit'     => array(),
+		'current'   => 0,
+	);
+	$GLOBALS['wpdb'] = new PRX3_Fake_WPDB();
+	$_POST           = array();
+}
+
+class PRX3_Test_User {
+	public $ID;
+	public $user_email;
+	public $user_registered = '2026-01-01 00:00:00';
+	public $first_name      = 'Test';
+	public $last_name;
+	public $display_name;
+	public $roles = array();
+	public function __construct( $id, $fields ) {
+		$this->ID           = $id;
+		$this->user_email   = "user{$id}@example.test";
+		$this->last_name    = "User{$id}";
+		$this->display_name = "Test User{$id}";
+		foreach ( $fields as $key => $value ) {
+			$this->$key = $value;
+		}
+	}
+	public function add_role( $role ) {
+		$this->roles[] = $role;
+	}
+	public function remove_role( $role ) {
+		$this->roles = array_values( array_diff( $this->roles, array( $role ) ) );
+	}
+	public function set_role( $role ) {
+		$this->roles = $role ? array( $role ) : array();
+	}
+}
+
+function prx3_test_user( $id, $fields = array() ) {
+	$user                              = new PRX3_Test_User( $id, $fields );
+	$GLOBALS['prx3_t']['users'][ $id ] = $user;
+	return $user;
+}
+
+/* ---------------- WP function shims ---------------- */
+
+function get_option( $key, $default_value = false ) {
+	return array_key_exists( $key, $GLOBALS['prx3_t']['options'] ) ? $GLOBALS['prx3_t']['options'][ $key ] : $default_value;
+}
+function update_option( $key, $value, $autoload = null ) {
+	$GLOBALS['prx3_t']['options'][ $key ] = $value;
+	return true;
+}
+function delete_option( $key ) {
+	unset( $GLOBALS['prx3_t']['options'][ $key ] );
+	return true;
+}
+
+function get_user_meta( $user_id, $key, $single = false ) {
+	$store = isset( $GLOBALS['prx3_t']['user_meta'][ $user_id ][ $key ] ) ? $GLOBALS['prx3_t']['user_meta'][ $user_id ][ $key ] : null;
+	if ( null === $store ) {
+		return $single ? '' : array();
+	}
+	return $single ? $store : array( $store );
+}
+function update_user_meta( $user_id, $key, $value ) {
+	$GLOBALS['prx3_t']['user_meta'][ $user_id ][ $key ] = $value;
+	return true;
+}
+function delete_user_meta( $user_id, $key ) {
+	unset( $GLOBALS['prx3_t']['user_meta'][ $user_id ][ $key ] );
+	return true;
+}
+
+function get_post_meta( $post_id, $key, $single = false ) {
+	$store = isset( $GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] ) ? $GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] : null;
+	if ( null === $store ) {
+		return $single ? '' : array();
+	}
+	return $single ? $store : array( $store );
+}
+function update_post_meta( $post_id, $key, $value ) {
+	$GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] = $value;
+	return true;
+}
+
+function get_userdata( $user_id ) {
+	return isset( $GLOBALS['prx3_t']['users'][ $user_id ] ) ? $GLOBALS['prx3_t']['users'][ $user_id ] : false;
+}
+function get_user_by( $field, $value ) {
+	foreach ( $GLOBALS['prx3_t']['users'] as $user ) {
+		if ( 'email' === $field && 0 === strcasecmp( $user->user_email, $value ) ) {
+			return $user;
+		}
+		if ( ( 'id' === $field || 'ID' === $field ) && (int) $value === (int) $user->ID ) {
+			return $user;
+		}
+	}
+	return false;
+}
+function get_users( $args = array() ) {
+	$out = array();
+	foreach ( $GLOBALS['prx3_t']['users'] as $user ) {
+		if ( isset( $args['meta_key'], $args['meta_value'] ) ) {
+			$meta = get_user_meta( $user->ID, $args['meta_key'], true );
+			if ( (string) $meta !== (string) $args['meta_value'] ) {
+				continue;
+			}
+		}
+		$out[] = ( isset( $args['fields'] ) && 'ID' === $args['fields'] ) ? $user->ID : $user;
+		if ( isset( $args['number'] ) && $args['number'] > 0 && count( $out ) >= $args['number'] ) {
+			break;
+		}
+	}
+	return $out;
+}
+function user_can( $user, $cap ) {
+	$id = is_object( $user ) ? $user->ID : (int) $user;
+	return ! empty( $GLOBALS['prx3_t']['caps'][ $id ][ $cap ] );
+}
+function current_user_can( $cap ) {
+	return user_can( $GLOBALS['prx3_t']['current'], $cap );
+}
+function get_current_user_id() {
+	return $GLOBALS['prx3_t']['current'];
+}
+function is_user_logged_in() {
+	return (bool) $GLOBALS['prx3_t']['current'];
+}
+
+function add_action( $hook, $cb = null, $priority = 10, $args = 1 ) {
+	$GLOBALS['prx3_t']['hooks'][ $hook ][] = $cb;
+}
+function add_filter( $hook, $cb = null, $priority = 10, $args = 1 ) {
+	$GLOBALS['prx3_t']['hooks'][ $hook ][] = $cb;
+}
+function do_action( $hook, ...$args ) {
+	$GLOBALS['prx3_t']['actions'][] = array( $hook, $args );
+	foreach ( (array) ( isset( $GLOBALS['prx3_t']['hooks'][ $hook ] ) ? $GLOBALS['prx3_t']['hooks'][ $hook ] : array() ) as $cb ) {
+		if ( is_callable( $cb ) ) {
+			call_user_func_array( $cb, $args );
+		}
+	}
+}
+function apply_filters( $hook, $value, ...$args ) {
+	foreach ( (array) ( isset( $GLOBALS['prx3_t']['hooks'][ $hook ] ) ? $GLOBALS['prx3_t']['hooks'][ $hook ] : array() ) as $cb ) {
+		if ( is_callable( $cb ) ) {
+			$value = call_user_func_array( $cb, array_merge( array( $value ), $args ) );
+		}
+	}
+	return $value;
+}
+
+// phpcs-style i18n/escaping shims: identity is fine under test.
+function __( $text, $domain = null ) {
+	return $text;
+}
+function esc_html__( $text, $domain = null ) {
+	return $text;
+}
+function esc_attr__( $text, $domain = null ) {
+	return $text;
+}
+function esc_html( $text ) {
+	return $text;
+}
+function esc_attr( $text ) {
+	return $text;
+}
+function esc_url( $url ) {
+	return $url;
+}
+function esc_url_raw( $url ) {
+	return $url;
+}
+function wp_kses_post( $text ) {
+	return $text;
+}
+
+function sanitize_key( $key ) {
+	return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) );
+}
+function sanitize_text_field( $text ) {
+	return trim( preg_replace( '/[\r\n\t ]+/', ' ', wp_strip_all_tags( (string) $text ) ) );
+}
+function sanitize_email( $email ) {
+	return filter_var( (string) $email, FILTER_VALIDATE_EMAIL ) ? (string) $email : '';
+}
+function wp_strip_all_tags( $text ) {
+	return strip_tags( (string) $text );
+}
+function wp_unslash( $value ) {
+	return $value;
+}
+function absint( $n ) {
+	return abs( (int) $n );
+}
+function wp_json_encode( $value ) {
+	return json_encode( $value );
+}
+function number_format_i18n( $number, $decimals = 0 ) {
+	return number_format( (float) $number, $decimals );
+}
+function current_time( $type ) {
+	return 'mysql' === $type ? gmdate( 'Y-m-d H:i:s' ) : time();
+}
+function wp_cache_delete( $key, $group = '' ) {
+	return true;
+}
+function wp_generate_password( $length = 12, $special = true, $extra = false ) {
+	return substr( str_shuffle( str_repeat( 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 3 ) ), 0, $length );
+}
+function rest_ensure_response( $value ) {
+	return $value;
+}
+function register_rest_route( ...$args ) {
+	return true;
+}
+function home_url( $path = '' ) {
+	return 'https://example.test' . $path;
+}
+function admin_url( $path = '' ) {
+	return 'https://example.test/wp-admin/' . $path;
+}
+function wp_remote_post( $url, $args = array() ) {
+	$GLOBALS['prx3_t']['http'][] = array( $url, $args );
+	$code = isset( $GLOBALS['prx3_t']['http_response_code'] ) ? $GLOBALS['prx3_t']['http_response_code'] : 200;
+	return array( 'response' => array( 'code' => $code ) );
+}
+function wp_remote_retrieve_response_code( $response ) {
+	return isset( $response['response']['code'] ) ? $response['response']['code'] : 0;
+}
+
+class WP_Error {
+	public $code;
+	public $message;
+	public $data;
+	public function __construct( $code = '', $message = '', $data = null ) {
+		$this->code    = $code;
+		$this->message = $message;
+		$this->data    = $data;
+	}
+	public function get_error_code() {
+		return $this->code;
+	}
+	public function get_error_message() {
+		return $this->message;
+	}
+}
+function is_wp_error( $thing ) {
+	return $thing instanceof WP_Error;
+}
+
+/** Minimal request double for REST route callbacks. */
+class PRX3_Test_Request {
+	private $json;
+	private $params;
+	private $headers;
+	public function __construct( $json = array(), $params = array(), $headers = array() ) {
+		$this->json    = $json;
+		$this->params  = $params;
+		$this->headers = $headers;
+	}
+	public function get_json_params() {
+		return $this->json;
+	}
+	public function get_param( $key ) {
+		return isset( $this->params[ $key ] ) ? $this->params[ $key ] : null;
+	}
+	public function get_header( $key ) {
+		return isset( $this->headers[ $key ] ) ? $this->headers[ $key ] : '';
+	}
+}
+
+/* ---------------- Fake wpdb (ballot votes + register + options seq) ---------------- */
+
+class PRX3_Fake_WPDB {
+	public $prefix  = 'wp_';
+	public $options = 'wp_options';
+	public $rows    = array(); // table => rows.
+	private $auto   = array();
+
+	public function prepare( $sql, ...$args ) {
+		if ( 1 === count( $args ) && is_array( $args[0] ) ) {
+			$args = $args[0];
+		}
+		foreach ( $args as $arg ) {
+			$replacement = is_numeric( $arg ) ? (string) $arg : "'" . $arg . "'";
+			$sql         = preg_replace( '/%[dsf]/', $replacement, $sql, 1 );
+		}
+		return $sql;
+	}
+
+	public function insert( $table, $data, $formats = null ) {
+		if ( false !== strpos( $table, 'prx3_ballot_votes' ) ) {
+			foreach ( $this->table( $table ) as $row ) {
+				if ( (int) $row['ballot_id'] === (int) $data['ballot_id'] && (int) $row['user_id'] === (int) $data['user_id'] ) {
+					return false; // Unique key (ballot, user).
+				}
+			}
+		}
+		$this->auto[ $table ]    = isset( $this->auto[ $table ] ) ? $this->auto[ $table ] + 1 : 1;
+		$data['id']              = $this->auto[ $table ];
+		$this->rows[ $table ][]  = $data;
+		return 1;
+	}
+
+	public function update( $table, $data, $where, $formats = null, $where_formats = null ) {
+		foreach ( $this->table( $table ) as $i => $row ) {
+			$hit = true;
+			foreach ( $where as $key => $value ) {
+				if ( (string) $row[ $key ] !== (string) $value ) {
+					$hit = false;
+				}
+			}
+			if ( $hit ) {
+				$this->rows[ $table ][ $i ] = array_merge( $row, $data );
+			}
+		}
+		return 1;
+	}
+
+	public function query( $sql ) {
+		if ( false !== strpos( $sql, 'prx3_owner_seq' ) ) {
+			$seq = (int) get_option( 'prx3_owner_seq_test', 0 ) + 1;
+			update_option( 'prx3_owner_seq_test', $seq );
+		}
+		return 1;
+	}
+
+	public function get_var( $sql ) {
+		if ( false !== strpos( $sql, 'prx3_owner_seq' ) ) {
+			return (string) get_option( 'prx3_owner_seq_test', 0 );
+		}
+		return null;
+	}
+
+	public function get_row( $sql, $output = OBJECT ) {
+		if ( preg_match( '/prx3_ballot_votes WHERE ballot_id = (\d+) AND user_id = (\d+)/', $sql, $m ) ) {
+			foreach ( $this->table( $this->prefix . 'prx3_ballot_votes' ) as $row ) {
+				if ( (int) $row['ballot_id'] === (int) $m[1] && (int) $row['user_id'] === (int) $m[2] ) {
+					return ARRAY_A === $output ? $row : (object) $row;
+				}
+			}
+		}
+		return null;
+	}
+
+	public function get_results( $sql, $output = OBJECT ) {
+		if ( preg_match( '/SUM\(weight\).*prx3_ballot_votes WHERE ballot_id = (\d+) GROUP BY choice/s', $sql, $m ) ) {
+			$groups = array();
+			foreach ( $this->table( $this->prefix . 'prx3_ballot_votes' ) as $row ) {
+				if ( (int) $row['ballot_id'] !== (int) $m[1] ) {
+					continue;
+				}
+				$choice = (int) $row['choice'];
+				if ( ! isset( $groups[ $choice ] ) ) {
+					$groups[ $choice ] = array(
+						'choice'  => $choice,
+						'votes'   => 0,
+						'members' => 0,
+					);
+				}
+				$groups[ $choice ]['votes']   += (int) $row['weight'];
+				$groups[ $choice ]['members'] += 1;
+			}
+			return array_values( $groups );
+		}
+		if ( preg_match( '/prx3_ballot_votes WHERE user_id = (\d+)/', $sql, $m ) ) {
+			$out = array();
+			foreach ( $this->table( $this->prefix . 'prx3_ballot_votes' ) as $row ) {
+				if ( (int) $row['user_id'] === (int) $m[1] ) {
+					$out[] = ARRAY_A === $output ? $row : (object) $row;
+				}
+			}
+			return $out;
+		}
+		return array();
+	}
+
+	private function table( $table ) {
+		return isset( $this->rows[ $table ] ) ? $this->rows[ $table ] : array();
+	}
+}
+define( 'OBJECT', 'OBJECT' );
+define( 'ARRAY_A', 'ARRAY_A' );
+
+/* ---------------- Module shims (collaborators not under test) ---------------- */
+
+class PRX3_Audit {
+	public static function log( $event, $message ) {
+		$GLOBALS['prx3_t']['audit'][] = array( $event, $message );
+	}
+}
+class PRX3_Register {
+	public static $records = array();
+	public static function record( $user_id, $event, $shares, $source, $context = array() ) {
+		self::$records[] = compact( 'user_id', 'event', 'shares', 'source', 'context' );
+	}
+}
+class PRX3_Onboarding {
+	public static function mark_complete( $user_id, $step ) {}
+}
+class PRX3_Badges {
+	public static function member_badges( $user_id ) {
+		return (array) get_user_meta( $user_id, 'prx3_badges', true );
+	}
+}
+
+// Patch WP_User double methods used by grant/surrender.
+function prx3_test_add_user_role_methods() {}
+
+/* ---------------- Load the code under test ---------------- */
+
+prx3_test_reset();
+
+$prx3_base = dirname( __DIR__ );
+require $prx3_base . '/includes/helpers.php';
+require $prx3_base . '/includes/class-prx3-shares.php';
+require $prx3_base . '/includes/class-prx3-ballots.php';
+require $prx3_base . '/includes/class-prx3-agreements.php';
+require $prx3_base . '/includes/class-prx3-sync.php';
+
+/* ---------------- Assertions ---------------- */
+
+$GLOBALS['prx3_test_results'] = array();
+
+function t_ok( $cond, $label ) {
+	$GLOBALS['prx3_test_results'][] = array( (bool) $cond, $label );
+	if ( ! $cond ) {
+		fwrite( STDERR, "  FAIL: {$label}\n" );
+	}
+}
+function t_eq( $actual, $expected, $label ) {
+	$pass = $actual === $expected;
+	t_ok( $pass, $pass ? $label : $label . ' — got ' . var_export( $actual, true ) . ', expected ' . var_export( $expected, true ) );
+}
+function t_error_code( $thing, $code, $label ) {
+	t_ok( is_wp_error( $thing ) && $thing->get_error_code() === $code, $label . ( is_wp_error( $thing ) ? '' : ' — no error returned' ) );
+}
