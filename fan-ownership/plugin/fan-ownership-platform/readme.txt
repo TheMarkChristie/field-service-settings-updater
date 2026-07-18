@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.5
+Stable tag: 0.1.6
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,13 @@ club badge plugin integrate through documented contracts.
    numbers, and integrations.
 
 == Changelog ==
+
+= 0.1.6 =
+* New key-gated Data API (off by default) for trusted automation:
+  insert/update platform content with meta and terms, import members
+  with share grants through the money path (cap, age gate, register),
+  update allow-listed settings, and a schema discovery route. Every
+  write audited; core post types and non-platform meta refused.
 
 = 0.1.5 =
 * Post-type audit completed: data columns extended to meetings

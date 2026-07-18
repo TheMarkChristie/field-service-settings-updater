@@ -212,6 +212,12 @@ so the recommended options were applied — revisit any of these on request.
 |---|---|---|
 | P103 | Post-type audit | Every platform post type stays a WordPress post (revisions, drafts, capabilities, editor for the prose part) but its **list screen shows the data it stores** via admin columns. Data-first types got full column sets: ballots (state/type/turnout/closes↕), matches (kick-off↕/opponent/status/POTM), players (number↕/position/active/wins), chapters (city/lead/members/status), meetings (starts↕/RSVPs+AGM), board votes (outcome/votes cast). Hybrid types got their key facts: ideas (support vs threshold), questions (answered), decisions (decided/delivery), videos+exclusives (type/teaser), documents (type), board papers (transparency). Content-only types deliberately left plain: board meetings, board threads, vault docs (prose is the record; vault views are watermarked). Truly tabular data was never posts and stays in custom tables/options: share register, ballot votes, audit, match events, chat, gifts, commitments, sync queues |
 
+## Decisions — round 9: the Data API (P104)
+
+| # | Topic | Decision |
+|---|---|---|
+| P104 | Data API | A **key-gated write API** (`prx3/v1/data/*`: schema/content/members/settings) so trusted automation (Claude, imports, scheduled jobs) can insert data. Off by default; `X-Prx3-Data-Key` auth; batches capped at 100; every write audited. Guard rails: platform post types only, meta restricted to the `_prx3_` prefix (core meta like capabilities refused), member share grants go **through the money path** (cap, age gate, owner numbers, register record with source label), settings allow-listed with API keys never self-rotating, board-only types excluded |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

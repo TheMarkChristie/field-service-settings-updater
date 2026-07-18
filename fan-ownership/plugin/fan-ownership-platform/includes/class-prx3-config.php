@@ -78,6 +78,8 @@ class PRX3_Config {
 			'sha_page_id'                        => 0,
 			'sha_version'                        => '1.0',
 			'terms_page_id'                      => 0,
+			'data_api_enabled'                   => 0,
+			'data_api_key'                       => '',
 			'sync_enabled'                       => 0,
 			'sync_api_key'                       => '',
 			'sync_webhook_url'                   => '',

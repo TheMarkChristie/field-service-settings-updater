@@ -254,6 +254,51 @@ function wp_remote_retrieve_response_code( $response ) {
 	return isset( $response['response']['code'] ) ? $response['response']['code'] : 0;
 }
 
+$GLOBALS['prx3_t_posts'] = array();
+function wp_insert_post( $args, $wp_error = false ) {
+	static $next = 1000;
+	$id                            = ++$next;
+	$args['ID']                    = $id;
+	$GLOBALS['prx3_t_posts'][ $id ] = $args;
+	return $id;
+}
+function wp_update_post( $args, $wp_error = false ) {
+	$id = (int) ( $args['ID'] ?? 0 );
+	if ( ! isset( $GLOBALS['prx3_t_posts'][ $id ] ) ) {
+		return new WP_Error( 'invalid_post', 'Invalid post ID.' );
+	}
+	$GLOBALS['prx3_t_posts'][ $id ] = array_merge( $GLOBALS['prx3_t_posts'][ $id ], $args );
+	return $id;
+}
+function get_post_type( $id ) {
+	return $GLOBALS['prx3_t_posts'][ (int) $id ]['post_type'] ?? false;
+}
+function get_permalink( $id ) {
+	return 'https://example.test/?p=' . (int) $id;
+}
+function taxonomy_exists( $taxonomy ) {
+	return false;
+}
+function wp_set_object_terms( $post_id, $terms, $taxonomy ) {
+	return array();
+}
+function sanitize_user( $username, $strict = false ) {
+	return preg_replace( '/[^a-z0-9._@-]/i', '', (string) $username );
+}
+function wp_insert_user( $args ) {
+	static $next = 500;
+	$id   = ++$next;
+	$user = prx3_test_user(
+		$id,
+		array(
+			'user_email'   => $args['user_email'],
+			'display_name' => $args['display_name'] ?? $args['user_email'],
+		)
+	);
+	$user->roles = array( $args['role'] ?? 'subscriber' );
+	return $id;
+}
+
 class WP_Error {
 	public $code;
 	public $message;
@@ -439,10 +484,12 @@ prx3_test_reset();
 
 $prx3_base = dirname( __DIR__ );
 require $prx3_base . '/includes/helpers.php';
+require $prx3_base . '/includes/class-prx3-config.php';
 require $prx3_base . '/includes/class-prx3-shares.php';
 require $prx3_base . '/includes/class-prx3-ballots.php';
 require $prx3_base . '/includes/class-prx3-agreements.php';
 require $prx3_base . '/includes/class-prx3-sync.php';
+require $prx3_base . '/includes/api/class-prx3-data-api.php';
 
 /* ---------------- Assertions ---------------- */
 

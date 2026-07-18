@@ -134,6 +134,8 @@ class PRX3_Admin {
 				'cf_stream_key_pem'   => array( __( 'Stream signing key (PEM)', 'fan-ownership' ), 'textarea' ),
 				'fcm_server_key'      => array( __( 'Firebase FCM server key', 'fan-ownership' ), 'password' ),
 				'chat_blocklist'      => array( __( 'Chat word filter (one per line)', 'fan-ownership' ), 'textarea' ),
+				'data_api_enabled'    => array( __( 'Data API enabled (1 = on; write access for trusted automation)', 'fan-ownership' ), 'number' ),
+				'data_api_key'        => array( __( 'Data API key (sent as X-Prx3-Data-Key)', 'fan-ownership' ), 'password' ),
 				'sync_enabled'        => array( __( 'Power Platform sync enabled (1 = on)', 'fan-ownership' ), 'number' ),
 				'sync_api_key'        => array( __( 'Sync API key (Power Automate sends this as X-Prx3-Api-Key)', 'fan-ownership' ), 'password' ),
 				'sync_webhook_url'    => array( __( 'Outbound webhook URL (Power Automate HTTP trigger)', 'fan-ownership' ), 'text' ),

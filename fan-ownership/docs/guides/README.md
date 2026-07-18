@@ -9,6 +9,7 @@ covers setup, day-to-day operation, and troubleshooting for one area.
 | `shareholders-agreement-guide.md` | Club admins, board | Publishing the agreement, signatures, executed copies, the club stamp and countersignature, version bumps, the board signatures register, data protection |
 | `player-voting-guide.md` | Club staff, app developers | Squad management, live player-of-the-match voting, player of the month, announcements, API endpoints |
 | `power-platform-sync-guide.md` | Club admins, Power Platform makers | Dataverse sync setup, what flows in each direction, field ownership, matching rules, the review queue |
+| `data-api-guide.md` | Club admins, automation | The key-gated write API: inserting content, importing members through the money path, updating settings, guard rails |
 
 Still to write (tracked as FO-314): full admin guide, matchday runbook,
 developer docs, API reference, volunteer handbooks.
