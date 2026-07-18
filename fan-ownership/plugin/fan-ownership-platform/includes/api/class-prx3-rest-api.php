@@ -517,6 +517,7 @@ class PRX3_REST_API {
 						'no_found_rows'  => true,
 					);
 					if ( $request['type'] ) {
+						// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Bounded library filter (30 posts) by video type for the app feed.
 						$args['tax_query'] = array(
 							array(
 								'taxonomy' => 'prx3_video_type',
@@ -592,6 +593,13 @@ class PRX3_REST_API {
 		);
 	}
 
+	/**
+	 * A ballot as the apps consume it, with tallies only when permitted
+	 * (FO-203).
+	 *
+	 * @param int $ballot_id Ballot post ID.
+	 * @return array
+	 */
 	private static function ballot_payload( $ballot_id ) {
 		$state   = PRX3_Ballots::state( $ballot_id );
 		$mine    = PRX3_Ballots::member_choice( $ballot_id, get_current_user_id() );

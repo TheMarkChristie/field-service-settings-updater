@@ -156,6 +156,9 @@ class PRX3_Players {
 	/**
 	 * Cast/revise a POTM vote: one per member, live results.
 	 *
+	 * @param int $match_id  Match post ID.
+	 * @param int $user_id   Voting member's user ID.
+	 * @param int $player_id Player post ID voted for.
 	 * @return array|WP_Error
 	 */
 	public static function potm_vote( $match_id, $user_id, $player_id ) {
@@ -180,6 +183,10 @@ class PRX3_Players {
 
 	/**
 	 * Live POTM tallies (engagement poll — results visible while open).
+	 *
+	 * @param int $match_id Match post ID.
+	 * @param int $user_id  Optional. Requesting user ID, for 'my_vote'. Default 0.
+	 * @return array
 	 */
 	public static function potm_results( $match_id, $user_id = 0 ) {
 		$votes = (array) get_post_meta( $match_id, '_prx3_potm_votes', true );
@@ -214,7 +221,7 @@ class PRX3_Players {
 				'post_status'    => 'publish',
 				'posts_per_page' => 10,
 				'no_found_rows'  => true,
-				'meta_query'     => array(
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded poll-closing sweep on the 5-minute tick, capped at 10 matches.
 					array(
 						'key'   => '_prx3_ended',
 						'value' => '1',
@@ -271,10 +278,22 @@ class PRX3_Players {
 		return (int) gmdate( 'j' ) > (int) gmdate( 't' ) - 7;
 	}
 
+	/**
+	 * Key for the current month's poll.
+	 *
+	 * @return string 'Y-m' month key.
+	 */
 	public static function month_key() {
 		return gmdate( 'Y-m' );
 	}
 
+	/**
+	 * Cast/revise a Player of the Month vote: one per member.
+	 *
+	 * @param int $user_id   Voting member's user ID.
+	 * @param int $player_id Player post ID voted for.
+	 * @return array|WP_Error Month results on success.
+	 */
 	public static function month_vote( $user_id, $player_id ) {
 		if ( ! prx3_is_owner( $user_id ) ) {
 			return new WP_Error( 'prx3_owner_only', __( 'Only owners can vote for player of the month.', 'fan-ownership' ) );

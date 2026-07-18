@@ -346,6 +346,11 @@ class PRX3_Ballot_Lifecycle {
 
 	/**
 	 * Board casting vote lands (called from PRX3_Board): finish the tie.
+	 *
+	 * @param int    $ballot_id      Ballot.
+	 * @param int    $winning_choice Option index the board's casting vote chose.
+	 * @param string $reasoning      The board's published reasoning.
+	 * @return true|WP_Error True on publication; error if not awaiting a casting vote.
 	 */
 	public static function resolve_tie( $ballot_id, $winning_choice, $reasoning ) {
 		$result = get_post_meta( $ballot_id, '_prx3_result', true );
@@ -378,6 +383,10 @@ class PRX3_Ballot_Lifecycle {
 
 	/**
 	 * Notify the ballot's electorate by email + push (governance category).
+	 *
+	 * @param int    $ballot_id Ballot.
+	 * @param string $subject   Message subject.
+	 * @param string $body      Message body.
 	 */
 	private static function notify_electorate( $ballot_id, $subject, $body ) {
 		$electorate = array_keys( (array) get_post_meta( $ballot_id, '_prx3_electorate', true ) );
