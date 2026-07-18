@@ -206,6 +206,12 @@ so the recommended options were applied — revisit any of these on request.
 | P101 | Mechanism | **REST + signed webhooks + custom connector**: plugin REST API (`/sync/members` paged delta, `/sync/register` append-only feed, `/sync/upsert`, `/sync/review`) authenticated by `X-Prx3-Api-Key`; outbound events queued and delivered to a Power Automate HTTP trigger with HMAC-SHA256 `X-Prx3-Signature`, 8-try retry, capped outbox; hourly delta-pull flow as the safety net; Swagger 2.0 custom connector packaged for makers |
 | P102 | Matching rules | **Cross-reference ID → verified email → owner number**, exact matches only. No fuzzy matching, no auto-create, no auto-merge: no-match, ambiguous, and link-conflict records queue for human review in Fan Ownership → CRM Sync, resolved by link-and-apply or discard, both audited. Dataverse upserts by `prx3_WPUserFK` alternate key so sync can never create duplicates |
 
+## Decisions — round 8: post types as data tables (P103)
+
+| # | Topic | Decision |
+|---|---|---|
+| P103 | Post-type audit | Every platform post type stays a WordPress post (revisions, drafts, capabilities, editor for the prose part) but its **list screen shows the data it stores** via admin columns. Data-first types got full column sets: ballots (state/type/turnout/closes↕), matches (kick-off↕/opponent/status/POTM), players (number↕/position/active/wins), chapters (city/lead/members/status), meetings (starts↕/RSVPs+AGM), board votes (outcome/votes cast). Hybrid types got their key facts: ideas (support vs threshold), questions (answered), decisions (decided/delivery), videos+exclusives (type/teaser), documents (type), board papers (transparency). Content-only types deliberately left plain: board meetings, board threads, vault docs (prose is the record; vault views are watermarked). Truly tabular data was never posts and stays in custom tables/options: share register, ballot votes, audit, match events, chat, gifts, commitments, sync queues |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

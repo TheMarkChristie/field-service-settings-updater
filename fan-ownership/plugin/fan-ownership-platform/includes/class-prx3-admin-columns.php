@@ -50,39 +50,56 @@ class PRX3_Admin_Columns {
 	 */
 	private static function defs() {
 		return array(
-			'prx3_ballot'    => array(
+			'prx3_ballot'      => array(
 				'prx3_state'   => array( __( 'State', 'fan-ownership' ), 'ballot_state', '' ),
 				'prx3_kind'    => array( __( 'Type', 'fan-ownership' ), 'ballot_kind', '' ),
 				'prx3_turnout' => array( __( 'Turnout', 'fan-ownership' ), 'ballot_turnout', '' ),
 				'prx3_window'  => array( __( 'Closes', 'fan-ownership' ), 'ballot_window', 'prx3_closes' ),
 			),
-			'prx3_idea'      => array(
+			'prx3_idea'        => array(
 				'prx3_support' => array( __( 'Support', 'fan-ownership' ), 'idea_support', '' ),
 			),
-			'prx3_question'  => array(
+			'prx3_question'    => array(
 				'prx3_answer' => array( __( 'Answered', 'fan-ownership' ), 'question_answered', '' ),
 			),
-			'prx3_meeting'   => array(
+			'prx3_meeting'     => array(
 				'prx3_start' => array( __( 'Starts', 'fan-ownership' ), 'meeting_start', 'prx3_start' ),
+				'prx3_rsvps' => array( __( 'RSVPs', 'fan-ownership' ), 'meeting_rsvps', '' ),
 			),
-			'prx3_video'     => array(
+			'prx3_document'    => array(
+				'prx3_dtype' => array( __( 'Document type', 'fan-ownership' ), 'document_type', '' ),
+			),
+			'prx3_chapter'     => array(
+				'prx3_city'    => array( __( 'City', 'fan-ownership' ), 'chapter_city', '' ),
+				'prx3_lead'    => array( __( 'Lead', 'fan-ownership' ), 'chapter_lead', '' ),
+				'prx3_members' => array( __( 'Members', 'fan-ownership' ), 'chapter_members', '' ),
+				'prx3_cstatus' => array( __( 'Status', 'fan-ownership' ), 'chapter_status', '' ),
+			),
+			'prx3_board_vote'  => array(
+				'prx3_voutcome' => array( __( 'Outcome', 'fan-ownership' ), 'board_vote_outcome', '' ),
+				'prx3_vcast'    => array( __( 'Votes cast', 'fan-ownership' ), 'board_vote_cast', '' ),
+			),
+			'prx3_board_paper' => array(
+				'prx3_released' => array( __( 'Transparency', 'fan-ownership' ), 'board_paper_released', '' ),
+			),
+			'prx3_video'       => array(
 				'prx3_vtype'  => array( __( 'Type', 'fan-ownership' ), 'video_type', '' ),
 				'prx3_teaser' => array( __( 'Teaser', 'fan-ownership' ), 'teaser_flag', '' ),
 			),
-			'prx3_exclusive' => array(
+			'prx3_exclusive'   => array(
 				'prx3_teaser' => array( __( 'Teaser', 'fan-ownership' ), 'teaser_flag', '' ),
 			),
-			'prx3_decision'  => array(
+			'prx3_decision'    => array(
 				'prx3_decided' => array( __( 'Decided', 'fan-ownership' ), 'decision_decided', '' ),
 				'prx3_status'  => array( __( 'Delivery', 'fan-ownership' ), 'decision_status', '' ),
 			),
-			'prx3_match'     => array(
+			'prx3_match'       => array(
 				'prx3_kickoff'  => array( __( 'Kick-off', 'fan-ownership' ), 'match_kickoff', 'prx3_kickoff' ),
 				'prx3_opponent' => array( __( 'Opponent', 'fan-ownership' ), 'match_opponent', '' ),
 				'prx3_mstate'   => array( __( 'Status', 'fan-ownership' ), 'match_state', '' ),
 				'prx3_potm'     => array( __( 'Player of the Match', 'fan-ownership' ), 'match_potm', '' ),
 			),
-			'prx3_player'    => array(
+			'prx3_player'      => array(
 				'prx3_number'   => array( __( 'No.', 'fan-ownership' ), 'player_number', 'prx3_number' ),
 				'prx3_position' => array( __( 'Position', 'fan-ownership' ), 'player_position', '' ),
 				'prx3_active'   => array( __( 'Active', 'fan-ownership' ), 'player_active', '' ),
@@ -240,6 +257,111 @@ class PRX3_Admin_Columns {
 	private static function meeting_start( $post_id ) {
 		$start = (string) get_post_meta( $post_id, '_prx3_meeting_start', true );
 		return $start ? prx3_format_datetime( $start ) : '—';
+	}
+
+	/**
+	 * RSVP count, flagged when the meeting is the AGM.
+	 *
+	 * @param int $post_id Meeting.
+	 * @return string
+	 */
+	private static function meeting_rsvps( $post_id ) {
+		$count = count( array_filter( (array) get_post_meta( $post_id, '_prx3_attendees', true ) ) );
+		return $count . ( get_post_meta( $post_id, '_prx3_is_agm', true ) ? ' — ' . __( 'AGM', 'fan-ownership' ) : '' );
+	}
+
+	/**
+	 * Document type terms (monthly summary, annual accounts…).
+	 *
+	 * @param int $post_id Document.
+	 * @return string
+	 */
+	private static function document_type( $post_id ) {
+		$terms = get_the_terms( $post_id, 'prx3_document_type' );
+		return $terms && ! is_wp_error( $terms ) ? implode( ', ', wp_list_pluck( $terms, 'name' ) ) : '—';
+	}
+
+	/**
+	 * Chapter home city.
+	 *
+	 * @param int $post_id Chapter.
+	 * @return string
+	 */
+	private static function chapter_city( $post_id ) {
+		$city = (string) get_post_meta( $post_id, '_prx3_chapter_city', true );
+		return $city ? $city : '—';
+	}
+
+	/**
+	 * Chapter lead's display name.
+	 *
+	 * @param int $post_id Chapter.
+	 * @return string
+	 */
+	private static function chapter_lead( $post_id ) {
+		$lead = get_userdata( (int) get_post_meta( $post_id, '_prx3_chapter_lead', true ) );
+		return $lead ? $lead->display_name : '—';
+	}
+
+	/**
+	 * Chapter member count.
+	 *
+	 * @param int $post_id Chapter.
+	 * @return string
+	 */
+	private static function chapter_members( $post_id ) {
+		return (string) count( array_filter( (array) get_post_meta( $post_id, '_prx3_chapter_members', true ) ) );
+	}
+
+	/**
+	 * Chapter lifecycle: affirmed, lapsed, or derecognised.
+	 *
+	 * @param int $post_id Chapter.
+	 * @return string
+	 */
+	private static function chapter_status( $post_id ) {
+		if ( get_post_meta( $post_id, '_prx3_derecognised', true ) ) {
+			return __( 'Derecognised', 'fan-ownership' );
+		}
+		if ( get_post_meta( $post_id, '_prx3_lapsed', true ) ) {
+			return __( 'Lapsed', 'fan-ownership' );
+		}
+		$affirmed = (string) get_post_meta( $post_id, '_prx3_affirmed_at', true );
+		return $affirmed ? sprintf( /* translators: %s date. */ __( 'Affirmed %s', 'fan-ownership' ), prx3_format_datetime( $affirmed ) ) : __( 'Awaiting affirmation', 'fan-ownership' );
+	}
+
+	/**
+	 * Board vote outcome once every eligible director has voted.
+	 *
+	 * @param int $post_id Board vote.
+	 * @return string
+	 */
+	private static function board_vote_outcome( $post_id ) {
+		$outcome = get_post_meta( $post_id, '_prx3_board_outcome', true );
+		if ( is_array( $outcome ) && ! empty( $outcome['outcome'] ) ) {
+			$outcome = $outcome['outcome'];
+		}
+		return $outcome && is_string( $outcome ) ? ucfirst( $outcome ) : __( 'Open', 'fan-ownership' );
+	}
+
+	/**
+	 * Directors who have voted so far.
+	 *
+	 * @param int $post_id Board vote.
+	 * @return string
+	 */
+	private static function board_vote_cast( $post_id ) {
+		return (string) count( array_filter( (array) get_post_meta( $post_id, '_prx3_board_votes', true ) ) );
+	}
+
+	/**
+	 * Whether the paper has been released to the owner-facing register.
+	 *
+	 * @param int $post_id Board paper.
+	 * @return string
+	 */
+	private static function board_paper_released( $post_id ) {
+		return get_post_meta( $post_id, '_prx3_released_as', true ) ? __( 'Released to owners', 'fan-ownership' ) : __( 'Board only', 'fan-ownership' );
 	}
 
 	/**
