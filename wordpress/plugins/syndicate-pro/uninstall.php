@@ -50,6 +50,7 @@ $meta_keys = array(
 	'synpro_cover_url',
 	'synpro_tagline',
 	'synpro_link_website',
+	'synpro_link_mvp',
 	'synpro_link_blog',
 	'synpro_link_linkedin',
 	'synpro_link_twitter',

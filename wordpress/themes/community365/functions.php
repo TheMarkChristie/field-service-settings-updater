@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'COMMUNITY365_VERSION', '2.7.1' );
+define( 'COMMUNITY365_VERSION', '2.7.2' );
 
 /**
  * Theme setup.

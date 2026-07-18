@@ -145,6 +145,7 @@ function community365_author_links( $user_id ) {
 	$fields = class_exists( 'Synpro_Profile' ) ? Synpro_Profile::link_fields() : array(
 		'synpro_link_website'  => __( 'Website', 'community365' ),
 		'synpro_link_blog'     => __( 'Blog', 'community365' ),
+		'synpro_link_mvp'      => __( 'Microsoft MVP profile', 'community365' ),
 		'synpro_link_linkedin' => __( 'LinkedIn', 'community365' ),
 		'synpro_link_twitter'  => __( 'X / Twitter', 'community365' ),
 		'synpro_link_bluesky'  => __( 'Bluesky', 'community365' ),

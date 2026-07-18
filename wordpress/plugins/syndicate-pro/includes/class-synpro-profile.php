@@ -49,6 +49,7 @@ class Synpro_Profile {
 		return array(
 			'synpro_link_website'  => __( 'Website', 'syndicate-pro' ),
 			'synpro_link_blog'     => __( 'Blog', 'syndicate-pro' ),
+			'synpro_link_mvp'      => __( 'Microsoft MVP profile', 'syndicate-pro' ),
 			'synpro_link_linkedin' => __( 'LinkedIn', 'syndicate-pro' ),
 			'synpro_link_twitter'  => __( 'X / Twitter', 'syndicate-pro' ),
 			'synpro_link_bluesky'  => __( 'Bluesky', 'syndicate-pro' ),
