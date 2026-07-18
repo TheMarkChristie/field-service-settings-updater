@@ -7,7 +7,9 @@
  * Contents: cover (badge, name, tagline), logo suite on light and dark
  * with download links, colour swatches with hex/RGB and the print specs
  * (CMYK/Pantone), typography specimen of the uploaded brand font,
- * naming rules, usage notes, social handles, and the brand contact.
+ * naming rules, current kit and kit history (home and away), photography
+ * style, incorrect-usage examples, usage notes, social handles, and the
+ * brand contact.
  *
  * @package FanOwnershipPlatform
  */
@@ -99,6 +101,7 @@ class PRX3_Brand {
 	.chip { display: inline-block; width: 3.2rem; height: 2rem; border-radius: 4px; border: 1px solid #999; vertical-align: middle; }
 	.specimen { font-size: 2rem; line-height: 1.3; margin: .8rem 0; }
 	.muted { color: #555; font-size: .9rem; }
+	.tile.dont { border: 2px solid #b00020; }
 	.noprint { position: fixed; top: 1rem; right: 1rem; }
 	.noprint button { padding: .6rem 1.2rem; font: inherit; cursor: pointer; }
 	@media print { .noprint { display: none; } .page { padding: 1.5rem 0; } a { color: inherit; text-decoration: none; } }
@@ -181,6 +184,102 @@ class PRX3_Brand {
 	<?php endif; ?>
 	<p class="muted"><?php esc_html_e( 'Digital fallback stack: system-ui, sans-serif.', 'fan-ownership' ); ?></p>
 </section>
+
+		<?php
+		$current_kits = array(
+			array( __( 'Home kit', 'fan-ownership' ), prx3_brand_asset( 'kit_home' ) ),
+			array( __( 'Away kit', 'fan-ownership' ), prx3_brand_asset( 'kit_away' ) ),
+			array( __( 'Third / alternate kit', 'fan-ownership' ), prx3_brand_asset( 'kit_third' ) ),
+		);
+		$has_kits     = array_filter( array_column( $current_kits, 1 ) );
+		$history_home = prx3_brand_gallery( 'kit_history_home' );
+		$history_away = prx3_brand_gallery( 'kit_history_away' );
+		?>
+		<?php if ( $has_kits || $history_home || $history_away ) : ?>
+<section class="page">
+	<h2><?php esc_html_e( 'Kit', 'fan-ownership' ); ?></h2>
+			<?php if ( $has_kits ) : ?>
+	<div class="grid">
+				<?php foreach ( $current_kits as $kit ) : ?>
+					<?php if ( $kit[1] ) : ?>
+			<figure class="tile on-light" style="margin:0;">
+				<div class="swatch-area"><img src="<?php echo esc_url( $kit[1] ); ?>" alt="<?php echo esc_attr( $kit[0] ); ?>"></div>
+				<figcaption><?php echo esc_html( $kit[0] ); ?><br><a href="<?php echo esc_url( $kit[1] ); ?>" class="muted"><?php esc_html_e( 'Download', 'fan-ownership' ); ?></a></figcaption>
+			</figure>
+			<?php endif; ?>
+		<?php endforeach; ?>
+	</div>
+	<?php endif; ?>
+			<?php if ( prx3_setting( 'brand_kit_notes', '' ) ) : ?>
+				<?php echo wp_kses_post( wpautop( esc_html( prx3_setting( 'brand_kit_notes', '' ) ) ) ); ?>
+	<?php endif; ?>
+
+			<?php if ( $history_home ) : ?>
+	<h2 style="margin-top:2.5rem;"><?php esc_html_e( 'Kit history — home', 'fan-ownership' ); ?></h2>
+	<div class="grid">
+				<?php foreach ( $history_home as $kit ) : ?>
+			<figure class="tile on-light" style="margin:0;">
+				<div class="swatch-area"><img src="<?php echo esc_url( $kit['url'] ); ?>" alt="<?php echo esc_attr( $kit['label'] ); ?>"></div>
+				<figcaption><?php echo esc_html( $kit['label'] ); ?></figcaption>
+			</figure>
+		<?php endforeach; ?>
+	</div>
+	<?php endif; ?>
+
+			<?php if ( $history_away ) : ?>
+	<h2 style="margin-top:2.5rem;"><?php esc_html_e( 'Kit history — away', 'fan-ownership' ); ?></h2>
+	<div class="grid">
+				<?php foreach ( $history_away as $kit ) : ?>
+			<figure class="tile on-light" style="margin:0;">
+				<div class="swatch-area"><img src="<?php echo esc_url( $kit['url'] ); ?>" alt="<?php echo esc_attr( $kit['label'] ); ?>"></div>
+				<figcaption><?php echo esc_html( $kit['label'] ); ?></figcaption>
+			</figure>
+		<?php endforeach; ?>
+	</div>
+	<?php endif; ?>
+</section>
+<?php endif; ?>
+
+		<?php
+		$photography = prx3_brand_gallery( 'photography' );
+		$donts       = prx3_brand_gallery( 'dont' );
+		?>
+		<?php if ( $photography || $donts || prx3_setting( 'brand_photography_notes', '' ) || prx3_setting( 'brand_dont_notes', '' ) ) : ?>
+<section class="page">
+			<?php if ( $photography || prx3_setting( 'brand_photography_notes', '' ) ) : ?>
+	<h2><?php esc_html_e( 'Photography style', 'fan-ownership' ); ?></h2>
+				<?php if ( prx3_setting( 'brand_photography_notes', '' ) ) : ?>
+					<?php echo wp_kses_post( wpautop( esc_html( prx3_setting( 'brand_photography_notes', '' ) ) ) ); ?>
+	<?php endif; ?>
+	<div class="grid">
+				<?php foreach ( $photography as $photo ) : ?>
+			<figure class="tile on-light" style="margin:0;">
+				<div class="swatch-area" style="height:11rem;"><img src="<?php echo esc_url( $photo['url'] ); ?>" alt="<?php echo esc_attr( $photo['label'] ); ?>" style="max-height:10rem;object-fit:cover;"></div>
+					<?php
+					if ( $photo['label'] ) :
+						?>
+						<figcaption><?php echo esc_html( $photo['label'] ); ?></figcaption><?php endif; ?>
+			</figure>
+		<?php endforeach; ?>
+	</div>
+	<?php endif; ?>
+
+			<?php if ( $donts || prx3_setting( 'brand_dont_notes', '' ) ) : ?>
+	<h2 style="margin-top:2.5rem;"><?php esc_html_e( 'Incorrect usage — never do this', 'fan-ownership' ); ?></h2>
+				<?php if ( prx3_setting( 'brand_dont_notes', '' ) ) : ?>
+					<?php echo wp_kses_post( wpautop( esc_html( prx3_setting( 'brand_dont_notes', '' ) ) ) ); ?>
+	<?php endif; ?>
+	<div class="grid">
+				<?php foreach ( $donts as $dont ) : ?>
+			<figure class="tile on-light dont" style="margin:0;">
+				<div class="swatch-area"><img src="<?php echo esc_url( $dont['url'] ); ?>" alt="<?php echo esc_attr( $dont['label'] ); ?>"></div>
+				<figcaption><span aria-hidden="true" style="color:#b00020;font-weight:700;">✕</span> <?php echo esc_html( $dont['label'] ); ?></figcaption>
+			</figure>
+		<?php endforeach; ?>
+	</div>
+	<?php endif; ?>
+</section>
+<?php endif; ?>
 
 <section class="page">
 	<h2><?php esc_html_e( 'Usage', 'fan-ownership' ); ?></h2>

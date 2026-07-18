@@ -59,6 +59,31 @@ function prx3_brand_asset( $key ) {
 }
 
 /**
+ * A brand gallery: a multi-select media field stored as comma-separated
+ * attachment IDs. Each image's caption (or title) is its label — e.g. a
+ * historic kit's season "2019-20".
+ *
+ * @param string $key Gallery key without the brand_/_ids wrapping.
+ * @return array<int,array{url:string,label:string}>
+ */
+function prx3_brand_gallery( $key ) {
+	$ids = array_filter( array_map( 'absint', explode( ',', (string) prx3_setting( 'brand_' . sanitize_key( $key ) . '_ids', '' ) ) ) );
+	$out = array();
+	foreach ( $ids as $attachment_id ) {
+		$url = wp_get_attachment_url( $attachment_id );
+		if ( ! $url ) {
+			continue;
+		}
+		$caption = wp_get_attachment_caption( $attachment_id );
+		$out[]   = array(
+			'url'   => $url,
+			'label' => $caption ? $caption : get_the_title( $attachment_id ),
+		);
+	}
+	return $out;
+}
+
+/**
  * The full brand pack for consumers (API /me, emails, certificates).
  *
  * @return array<string,mixed>

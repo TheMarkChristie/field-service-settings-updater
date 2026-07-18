@@ -132,6 +132,21 @@ class PRX3_Admin {
 						echo '<option value="' . esc_attr( $sport_key ) . '" ' . selected( $value, $sport_key, false ) . '>' . esc_html( $sport['label'] ) . '</option>';
 					}
 					echo '</select>';
+				} elseif ( 'gallery' === $def[1] ) {
+					$ids = array_filter( array_map( 'absint', explode( ',', (string) $value ) ) );
+					echo '<div class="prx3-media-field">';
+					echo '<input type="hidden" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( implode( ',', $ids ) ) . '">';
+					echo '<span class="prx3-media-preview">';
+					foreach ( array_slice( $ids, 0, 6 ) as $gallery_id ) {
+						echo wp_kses_post( wp_get_attachment_image( $gallery_id, array( 40, 40 ) ) );
+					}
+					if ( $ids ) {
+						echo ' <em>' . esc_html( sprintf( /* translators: %d image count. */ __( '%d selected', 'fan-ownership' ), count( $ids ) ) ) . '</em>';
+					}
+					echo '</span> ';
+					echo '<button type="button" class="button prx3-media-pick" data-multiple="1" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Choose images', 'fan-ownership' ) . '</button> ';
+					echo '<button type="button" class="button prx3-media-clear" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Clear', 'fan-ownership' ) . '</button>';
+					echo '</div>';
 				} elseif ( 'media' === $def[1] ) {
 					$attachment_id = (int) $value;
 					$preview       = $attachment_id ? wp_get_attachment_image( $attachment_id, array( 60, 60 ) ) : '';
@@ -181,11 +196,13 @@ class PRX3_Admin {
 					return;
 				}
 				if (!pick) { return; }
-				var frame = wp.media({ title: 'Brand asset', multiple: false });
+				var multiple = pick.getAttribute('data-multiple') === '1';
+				var frame = wp.media({ title: 'Brand asset', multiple: multiple });
 				frame.on('select', function () {
-					var attachment = frame.state().get('selection').first().toJSON();
+					var selection = frame.state().get('selection').toJSON();
+					var attachment = selection[0];
 					var target = document.getElementById(pick.getAttribute('data-target'));
-					if (target) { target.value = attachment.id; }
+					if (target) { target.value = multiple ? selection.map(function (a) { return a.id; }).join(',') : attachment.id; }
 					var preview = pick.closest('.prx3-media-field').querySelector('.prx3-media-preview');
 					if (preview && attachment.sizes && attachment.sizes.thumbnail) {
 						preview.innerHTML = '<img src=\"' + attachment.sizes.thumbnail.url + '\" style=\"max-height:60px\" alt=\"\">';
@@ -212,6 +229,8 @@ class PRX3_Admin {
 				$raw = wp_unslash( $_POST[ $key ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				if ( 'media' === $def[1] ) {
 					prx3_update_setting( $key, absint( $raw ) );
+				} elseif ( 'gallery' === $def[1] ) {
+					prx3_update_setting( $key, implode( ',', array_filter( array_map( 'absint', explode( ',', (string) $raw ) ) ) ) );
 				} elseif ( 'sport' === $def[1] ) {
 					$sport = sanitize_key( $raw );
 					prx3_update_setting( $key, array_key_exists( $sport, PRX3_Config::sports() ) ? $sport : 'generic' );
