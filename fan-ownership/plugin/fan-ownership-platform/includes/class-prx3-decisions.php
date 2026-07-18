@@ -171,6 +171,12 @@ class PRX3_Decisions {
 		);
 	}
 
+	/**
+	 * Persist the implementation status, owner, and update note.
+	 *
+	 * @param int     $post_id Decision post ID.
+	 * @param WP_Post $post    The post being saved (unused).
+	 */
 	public static function save_meta( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_decision_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_decision_nonce'] ), 'prx3_decision_meta' ) ) {
 			return;
