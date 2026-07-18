@@ -4,7 +4,7 @@ Theme URI: https://365community.online
 Author: 365 Community
 Author URI: https://365community.online
 Description: A clean, fast magazine theme built for blog syndication sites. Designed to pair with the 365 Community Syndicator plugin — it shows "originally published at" source badges on aggregated posts, has a card-based home page, a black/orange/white design, and an accent colour you can change in the Customizer. No external fonts or scripts.
-Version: 2.7.2
+Version: 2.8.0
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -770,18 +770,32 @@ button:hover, input[type="submit"]:hover { filter: brightness(1.08); }
 	font-size: 0.95rem;
 	max-width: 52ch;
 }
-.c365-profile-card .c365-author-links { margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.c365-profile-card .c365-link-chip {
-	padding: 0.3rem 0.8rem;
-	border-radius: 7px;
-	background: rgba(255, 255, 255, 0.08);
-	border: 1px solid rgba(255, 255, 255, 0.14);
-	color: #dfe3ee;
-	font-size: 0.78rem;
-	font-weight: 600;
+/* Author link icons: circular icon buttons (custom upload or built-in SVG) */
+.c365-author-links { margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.c365-link-chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--c365-surface);
+	border: 1px solid var(--c365-border);
+	color: var(--c365-text-soft);
 	text-decoration: none;
+	transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
 }
-.c365-profile-card .c365-link-chip:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.c365-link-chip:hover { color: var(--c365-on-accent, #fff); background: var(--c365-accent); border-color: var(--c365-accent); }
+.c365-link-chip .c365-ico { width: 20px; height: 20px; display: block; }
+.c365-link-img { width: 20px; height: 20px; object-fit: contain; display: block; }
+
+/* Inside the dark profile card the buttons sit on the cover image */
+.c365-profile-card .c365-link-chip {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.16);
+	color: #dfe3ee;
+}
+.c365-profile-card .c365-link-chip:hover { background: var(--c365-accent); border-color: var(--c365-accent); color: var(--c365-on-accent, #fff); }
 .c365-profile-stats { margin-left: auto; text-align: right; flex-shrink: 0; }
 .c365-profile-stats div + div { margin-top: 0.7rem; }
 .c365-profile-num { display: block; font-size: 1.35rem; font-weight: 800; color: #fff; }

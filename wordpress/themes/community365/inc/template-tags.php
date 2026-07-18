@@ -158,7 +158,7 @@ function community365_author_links( $user_id ) {
 	foreach ( $fields as $key => $label ) {
 		$url = get_user_meta( $user_id, $key, true );
 		if ( $url ) {
-			$links[ $label ] = $url;
+			$links[ $key ] = array( 'label' => $label, 'url' => $url );
 		}
 	}
 	if ( ! $links ) {
@@ -166,14 +166,57 @@ function community365_author_links( $user_id ) {
 	}
 
 	echo '<div class="c365-author-links">';
-	foreach ( $links as $label => $url ) {
+	foreach ( $links as $key => $link ) {
 		printf(
-			'<a class="c365-link-chip" href="%1$s" rel="external noopener me" target="_blank">%2$s</a>',
-			esc_url( $url ),
-			esc_html( $label )
+			'<a class="c365-link-chip" href="%1$s" rel="external noopener me" target="_blank" title="%2$s" aria-label="%2$s">%3$s<span class="screen-reader-text">%2$s</span></a>',
+			esc_url( $link['url'] ),
+			esc_attr( $link['label'] ),
+			community365_link_icon( $key ) // phpcs:ignore WordPress.Security.EscapeOutput -- controlled markup (custom img is esc_url'd, defaults are static SVG).
 		);
 	}
 	echo '</div>';
+}
+
+/**
+ * The icon markup for an author-page link: a site-owner custom upload if
+ * one is set for this link type, otherwise the built-in icon.
+ *
+ * @param string $key Link meta key (e.g. synpro_link_twitter).
+ * @return string HTML.
+ */
+function community365_link_icon( $key ) {
+	$short  = str_replace( 'synpro_link_', '', $key );
+	$custom = get_theme_mod( 'c365_link_icon_' . $short, '' );
+	if ( $custom ) {
+		return sprintf( '<img class="c365-link-img" src="%s" alt="" width="20" height="20" loading="lazy">', esc_url( $custom ) );
+	}
+	return community365_default_link_icon( $short );
+}
+
+/**
+ * The bundled default icon for a link type (Feather-style line icons,
+ * monochrome, inheriting the current text colour). Falls back to a
+ * generic link glyph for unknown types.
+ *
+ * @param string $short Short link key (website, twitter, …).
+ * @return string Inline SVG.
+ */
+function community365_default_link_icon( $short ) {
+	$icons = array(
+		'website'  => '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+		'blog'     => '<path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/>',
+		'mvp'      => '<circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.12"/>',
+		'linkedin' => '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>',
+		'twitter'  => '<path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>',
+		'bluesky'  => '<path d="M12 10.8C10.4 7.5 6.9 5.2 5 5.2c-1.4 0-2 1-2 2.6 0 1.9 1.4 4.8 3.9 5.7-2.4.1-3.9 1.1-3.9 3 0 1.4 1 2.3 2.4 2.3 2.4 0 4.6-2.9 6.6-6.1 2 3.2 4.2 6.1 6.6 6.1 1.4 0 2.4-.9 2.4-2.3 0-1.9-1.5-2.9-3.9-3 2.5-.9 3.9-3.8 3.9-5.7 0-1.6-.6-2.6-2-2.6-1.9 0-5.4 2.3-7 5.6z"/>',
+		'github'   => '<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>',
+		'youtube'  => '<path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor" stroke="none"/>',
+		'mastodon' => '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+	);
+	$inner = isset( $icons[ $short ] )
+		? $icons[ $short ]
+		: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>';
+	return '<svg class="c365-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $inner . '</svg>';
 }
 
 /**

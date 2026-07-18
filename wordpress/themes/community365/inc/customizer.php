@@ -192,6 +192,47 @@ function community365_customize_register( $wp_customize ) {
 		)
 	);
 
+	// ------------------------------------------------------------------
+	// Author link icons — the button image used for each profile link.
+	// Built-in icons ship for every type; upload a PNG to override one.
+	// ------------------------------------------------------------------
+	$wp_customize->add_section(
+		'c365_link_icons',
+		array(
+			'title'       => __( 'Author link icons', 'community365' ),
+			'description' => __( 'Every link type has a built-in icon. To use your own, upload a square image (transparent PNG, ~48×48px) for that link — it overrides the built-in one on every author page.', 'community365' ),
+			'priority'    => 34,
+		)
+	);
+	$c365_icon_fields = class_exists( 'Synpro_Profile' )
+		? Synpro_Profile::link_fields()
+		: array(
+			'synpro_link_website'  => __( 'Website', 'community365' ),
+			'synpro_link_blog'     => __( 'Blog', 'community365' ),
+			'synpro_link_mvp'      => __( 'Microsoft MVP profile', 'community365' ),
+			'synpro_link_linkedin' => __( 'LinkedIn', 'community365' ),
+			'synpro_link_twitter'  => __( 'X / Twitter', 'community365' ),
+			'synpro_link_bluesky'  => __( 'Bluesky', 'community365' ),
+			'synpro_link_github'   => __( 'GitHub', 'community365' ),
+			'synpro_link_youtube'  => __( 'YouTube', 'community365' ),
+			'synpro_link_mastodon' => __( 'Mastodon', 'community365' ),
+		);
+	foreach ( $c365_icon_fields as $c365_icon_key => $c365_icon_label ) {
+		$c365_icon_short = str_replace( 'synpro_link_', '', $c365_icon_key );
+		$wp_customize->add_setting( 'c365_link_icon_' . $c365_icon_short, array( 'default' => '', 'sanitize_callback' => 'esc_url_raw' ) );
+		$wp_customize->add_control(
+			new WP_Customize_Image_Control(
+				$wp_customize,
+				'c365_link_icon_' . $c365_icon_short,
+				array(
+					/* translators: %s: link type name. */
+					'label'   => sprintf( __( '%s icon', 'community365' ), $c365_icon_label ),
+					'section' => 'c365_link_icons',
+				)
+			)
+		);
+	}
+
 	// Cookie / consent banner.
 	$wp_customize->add_setting( 'c365_cookie_enabled', array( 'default' => true, 'sanitize_callback' => 'wp_validate_boolean' ) );
 	$wp_customize->add_control(

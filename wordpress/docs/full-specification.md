@@ -1101,3 +1101,21 @@ and degrade gracefully:
 
 Per-platform bootstrap (project generation, iOS APNs, Windows toolchain,
 minimum versions) is documented in the app README.
+
+## Part 20 — theme v2.8.0: author link icons
+
+Author-page profile links now render as **icon buttons** instead of text
+chips:
+
+- A built-in, monochrome (currentColor) icon ships for every link type
+  (website, blog, Microsoft MVP, LinkedIn, X/Twitter, Bluesky, GitHub,
+  YouTube, Mastodon) plus a generic link glyph fallback — Feather-style
+  line icons, no external requests.
+- A new Customizer section, **Author link icons**, offers a per-type
+  **custom image upload** (`c365_link_icon_<type>`); an uploaded PNG
+  overrides the built-in icon on every author page. The controls are
+  built from the plugin's link fields, so the MVP link (and any future
+  link) get an icon slot automatically.
+- Chips are circular icon buttons with accessible labels (title +
+  aria-label + screen-reader text); they highlight in the accent colour
+  on hover.
