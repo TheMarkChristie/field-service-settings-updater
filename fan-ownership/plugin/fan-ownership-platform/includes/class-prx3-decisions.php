@@ -82,6 +82,10 @@ class PRX3_Decisions {
 
 	/**
 	 * Dated status updates (FO-218 AC2).
+	 *
+	 * @param int    $decision_id Decision post ID.
+	 * @param string $status      New status; must be one of STATUSES.
+	 * @param string $note        Update note shown in the register.
 	 */
 	public static function add_update( $decision_id, $status, $note ) {
 		if ( ! in_array( $status, self::STATUSES, true ) ) {
@@ -111,7 +115,7 @@ class PRX3_Decisions {
 				'post_status'    => 'publish',
 				'posts_per_page' => -1,
 				'no_found_rows'  => true,
-				'meta_query'     => array(
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded lifecycle sweep over open register entries.
 					array(
 						'key'     => '_prx3_decision_status',
 						'value'   => array( 'planned', 'in-progress', 'blocked' ),
@@ -139,6 +143,9 @@ class PRX3_Decisions {
 		}
 	}
 
+	/**
+	 * Register the implementation meta box on the decision editor.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_decision_status',
