@@ -84,9 +84,16 @@ class PRX3_Gifts {
 		if ( ! empty( $gifts[ $code ]['voided'] ) ) {
 			self::back( __( 'That gift code is no longer valid because its payment was reversed. Contact the club if this is unexpected.', 'fan-ownership' ) );
 		}
-		$user_id = get_current_user_id();
-		if ( empty( $_POST['prx3_sha_accept'] ) && PRX3_Agreements::agreement_url() ) {
-			self::back( __( 'Please read and accept the Shareholders\' Agreement to redeem shares — tick the box under the gift code field.', 'fan-ownership' ) );
+		$user_id       = get_current_user_id();
+		$sha_signature = '';
+		if ( PRX3_Agreements::agreement_url() ) {
+			if ( empty( $_POST['prx3_sha_accept'] ) ) {
+				self::back( __( 'Please read and accept the Shareholders\' Agreement to redeem shares — tick the box under the gift code field.', 'fan-ownership' ) );
+			}
+			$sha_signature = PRX3_Agreements::posted_signature();
+			if ( ! $sha_signature ) {
+				self::back( __( 'Please sign in the signature box — your signature goes on your executed copy of the Shareholders\' Agreement.', 'fan-ownership' ) );
+			}
 		}
 		if ( ! get_user_meta( $user_id, 'prx3_adult_confirmed', true ) ) {
 			self::back( __( 'You must confirm you are 18 or over before holding shares. Update your account first — your gift code remains valid.', 'fan-ownership' ) );
@@ -104,7 +111,7 @@ class PRX3_Gifts {
 		if ( is_wp_error( $granted ) ) {
 			self::back( $granted->get_error_message() . ' ' . __( 'Your gift code remains valid.', 'fan-ownership' ) );
 		}
-		PRX3_Agreements::record_acceptance( $user_id, 'gift_redemption' );
+		PRX3_Agreements::record_acceptance( $user_id, 'gift_redemption', 0, $sha_signature );
 		$gifts[ $code ]['redeemed']    = time();
 		$gifts[ $code ]['redeemed_by'] = $user_id;
 		update_option( 'prx3_gift_codes', $gifts, false );

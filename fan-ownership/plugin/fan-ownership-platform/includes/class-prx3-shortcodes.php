@@ -110,6 +110,7 @@ class PRX3_Shortcodes {
 				);
 				?>
 			</label></p>
+				<?php PRX3_Agreements::signature_field(); ?>
 			<?php endif; ?>
 			<p><button type="submit" class="prx3-button"><?php esc_html_e( 'Redeem my shares', 'fan-ownership' ); ?></button></p>
 			<?php if ( ! is_user_logged_in() ) : ?>

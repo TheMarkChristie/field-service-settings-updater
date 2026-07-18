@@ -129,6 +129,7 @@ add_action( 'plugins_loaded', 'prx3_boot' );
 function prx3_assets() {
 	wp_register_style( 'prx3', PRX3_URL . 'assets/css/prx3.css', array(), PRX3_VERSION );
 	wp_register_script( 'prx3', PRX3_URL . 'assets/js/prx3.js', array(), PRX3_VERSION, true );
+	wp_register_script( 'prx3-signature', PRX3_URL . 'assets/js/prx3-signature.js', array(), PRX3_VERSION, true );
 	wp_localize_script(
 		'prx3',
 		'prx3Config',
@@ -170,6 +171,18 @@ function prx3_brand_head() {
 	}
 }
 add_action( 'wp_head', 'prx3_brand_head', 5 );
+
+/**
+ * One-off rewrite flush when endpoints change on an upgraded install
+ * (bump the schema string whenever a rewrite rule is added).
+ */
+function prx3_maybe_flush_rewrites() {
+	if ( 'v2-my-agreement' !== get_option( 'prx3_rewrites' ) ) {
+		flush_rewrite_rules();
+		update_option( 'prx3_rewrites', 'v2-my-agreement', false );
+	}
+}
+add_action( 'init', 'prx3_maybe_flush_rewrites', 99 );
 
 register_activation_hook( __FILE__, 'prx3_activate' );
 register_deactivation_hook( __FILE__, 'prx3_deactivate' );

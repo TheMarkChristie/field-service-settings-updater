@@ -63,11 +63,15 @@ class PRX3_Admin {
 				'brand_social_handles'      => array( __( 'Official social handles (one per line)', 'fan-ownership' ), 'textarea' ),
 				'brand_contact'             => array( __( 'Brand queries contact (email)', 'fan-ownership' ), 'text' ),
 				'brand_usage_notes'         => array( __( 'Brand usage notes (clear space, minimum sizes, do/do-not)', 'fan-ownership' ), 'textarea' ),
+				'brand_club_stamp_id'       => array( __( 'Club stamp (placed on executed documents)', 'fan-ownership' ), 'media' ),
 			),
 			'legal'        => array(
-				'sha_page_id'   => array( __( 'Shareholders\' Agreement page ID (the supplied document)', 'fan-ownership' ), 'number' ),
-				'sha_version'   => array( __( 'Shareholders\' Agreement version (bump to require re-acceptance)', 'fan-ownership' ), 'text' ),
-				'terms_page_id' => array( __( 'Terms of Membership page ID', 'fan-ownership' ), 'number' ),
+				'sha_page_id'                => array( __( 'Shareholders\' Agreement page ID (the supplied document)', 'fan-ownership' ), 'number' ),
+				'sha_version'                => array( __( 'Shareholders\' Agreement version (bump to require re-acceptance)', 'fan-ownership' ), 'text' ),
+				'terms_page_id'              => array( __( 'Terms of Membership page ID', 'fan-ownership' ), 'number' ),
+				'sha_signatory_name'         => array( __( 'Board signatory name (countersigns executed copies)', 'fan-ownership' ), 'text' ),
+				'sha_signatory_role'         => array( __( 'Board signatory role (e.g. Director)', 'fan-ownership' ), 'text' ),
+				'sha_signatory_signature_id' => array( __( 'Board signatory signature image', 'fan-ownership' ), 'media' ),
 			),
 			'ticketing'    => array(
 				'ticketing_provider'                 => array( __( 'Ticketing provider name', 'fan-ownership' ), 'text' ),

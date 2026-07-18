@@ -183,7 +183,7 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | P92 | Brand pack | All brand assets are **uploadable via the Media Library**: badge, inverted badge, monochrome badges (dark/light), social media badge, SVG badge, wordmark, favicon, app icon, email header, and brand font file — plus primary/secondary/third colours with **print specs (CMYK/Pantone)**, primary + secondary font names, tagline/motto, legal/short names, abbreviation, founded year, social handles, brand contact, and usage notes. Drives site CSS variables + @font-face, favicon, email template, certificates, the app theme via `/me`, and a **printable supplier brand pack at /brand-pack/** (print-to-PDF: cover, logo suite on light/dark with downloads, colour table, type specimen, naming rules, usage, contact) |
 | P93 | Prefix | Platform prefix is `prx3` (PROXIMO 3 standard), replacing the earlier `fop` |
 
-## Decisions — round 6: engagement voting & legal documents (P94–P97)
+## Decisions — round 6: engagement voting & legal documents (P94–P98)
 
 | # | Topic | Decision |
 |---|---|---|
@@ -191,6 +191,7 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | P95 | Player of the Month | Members vote in the **last 7 days of each month** across the active roster; winner archived per month and announced by push. Same one-member-one-vote rule as P94 |
 | P96 | Player profiles | `prx3_player` CPT (squad number, position, active flag) under `/squad/` powers both polls and the Match Centre; roster is club-maintained, sport-agnostic |
 | P97 | Shareholders' Agreement | A versioned **Shareholders' Agreement with morality/conduct clauses** is a condition of becoming a shareholder: ticked acceptance required at share checkout AND gift redemption; every acceptance recorded permanently (version, timestamp, IP, context, order). New versions banner existing owners for re-acceptance. Draft with clauses covering violence/discrimination, criminal offences, disrepute, democracy manipulation, access misuse, and brand misuse is in the operations handbook — **solicitor must settle it before checkout opens** |
+| P98 | Executed copies | Every acceptance is **signed**: the member draws their signature (finger/stylus/mouse) at checkout, gift redemption, and re-acceptance — mandatory, validated PNG. A personalised **executed copy** at `/my-agreement/` shows the full agreement text plus an execution block: member signature, name, owner number, date, the **club stamp** (uploadable brand asset), and the configured **board signatory's countersignature** (name, role, signature image — Legal settings). Print-to-PDF for the member's personal copy. All owner signatures and the acceptance history live in a **board-only "Owner Signatures" register** inside the Board Workspace (personal data, board eyes only) |
 
 ## Technical decisions — round 2 (T51–T75)
 

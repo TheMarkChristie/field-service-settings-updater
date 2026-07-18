@@ -6,6 +6,13 @@ keeps a versioned record of every acceptance: version, date, IP, order).
 Published as a page on the club site; members can print/save a copy at
 any time and are re-prompted when a new version is issued.
 
+Execution: the member draws their signature at acceptance (mandatory).
+The platform issues a personalised executed copy showing the agreement
+text, the member's signature, name, owner number and date, the club
+stamp, and the countersignature of the club's nominated board signatory
+— printable to PDF. All member signatures and the acceptance history
+are held in a board-only signatures register.
+
 ## 1. Parties and purpose
 Between [LEGAL NAME] Ltd (the Club) and each person acquiring shares
 (the Member). Purpose: to govern the relationship between the Club and
