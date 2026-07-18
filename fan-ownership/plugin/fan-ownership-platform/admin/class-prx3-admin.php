@@ -38,11 +38,41 @@ class PRX3_Admin {
 		);
 		add_submenu_page(
 			'prx3-settings',
-			__( 'Fan Ownership Settings', 'fan-ownership' ),
-			__( 'Settings', 'fan-ownership' ),
+			__( 'Feature Switches', 'fan-ownership' ),
+			__( 'Features', 'fan-ownership' ),
 			'prx3_admin',
 			'prx3-settings',
 			array( __CLASS__, 'render' )
+		);
+		foreach ( self::sections() as $section => $def ) {
+			add_submenu_page(
+				'prx3-settings',
+				$def[0],
+				$def[0],
+				'prx3_admin',
+				$def[1],
+				function () use ( $section ) {
+					self::render_section( $section );
+				}
+			);
+		}
+	}
+
+	/**
+	 * Section registry: fields() key => [submenu label, page slug].
+	 *
+	 * @return array
+	 */
+	private static function sections() {
+		return array(
+			'club'         => array( __( 'Club', 'fan-ownership' ), 'prx3-settings-club' ),
+			'brand pack'   => array( __( 'Brand Pack', 'fan-ownership' ), 'prx3-settings-brand' ),
+			'legal'        => array( __( 'Legal', 'fan-ownership' ), 'prx3-settings-legal' ),
+			'ticketing'    => array( __( 'Ticketing', 'fan-ownership' ), 'prx3-settings-ticketing' ),
+			'shares'       => array( __( 'Shares & Checkout', 'fan-ownership' ), 'prx3-settings-shares' ),
+			'targets'      => array( __( 'Targets', 'fan-ownership' ), 'prx3-settings-targets' ),
+			'governance'   => array( __( 'Governance', 'fan-ownership' ), 'prx3-settings-governance' ),
+			'integrations' => array( __( 'API & Integrations', 'fan-ownership' ), 'prx3-settings-api' ),
 		);
 	}
 
@@ -165,82 +195,114 @@ class PRX3_Admin {
 		}
 		echo '</p>';
 
+		echo '<h2>' . esc_html__( 'Settings sections', 'fan-ownership' ) . '</h2><ul class="ul-disc">';
+		foreach ( self::sections() as $def ) {
+			echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=' . $def[1] ) ) . '">' . esc_html( $def[0] ) . '</a></li>';
+		}
+		echo '</ul></div>';
+	}
+
+	/**
+	 * Render one settings section as its own page, with the section's
+	 * exports and tools beneath the form.
+	 *
+	 * @param string $section Section key from fields().
+	 */
+	public static function render_section( $section ) {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		$label = self::sections()[ $section ][0] ?? ucfirst( $section );
+		echo '<div class="wrap"><h1>' . esc_html( sprintf( /* translators: %s section. */ __( 'Settings — %s', 'fan-ownership' ), $label ) ) . '</h1>';
+		if ( isset( $_GET['saved'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only notice.
+			echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings saved.', 'fan-ownership' ) . '</p></div>';
+		}
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'prx3_save_settings' );
 		echo '<input type="hidden" name="action" value="prx3_save_settings">';
-		foreach ( self::fields() as $section => $fields ) {
-			echo '<h2>' . esc_html( ucfirst( $section ) ) . '</h2><table class="form-table" role="presentation">';
-			foreach ( $fields as $key => $def ) {
-				$value = prx3_setting( $key, PRX3_Config::defaults()[ $key ] ?? '' );
-				echo '<tr><th scope="row"><label for="prx3_' . esc_attr( $key ) . '">' . esc_html( $def[0] ) . '</label></th><td>';
-				if ( 'textarea' === $def[1] ) {
-					echo '<textarea class="large-text" rows="3" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">' . esc_textarea( (string) $value ) . '</textarea>';
-				} elseif ( 'sport' === $def[1] ) {
-					echo '<select id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">';
-					foreach ( PRX3_Config::sports() as $sport_key => $sport ) {
-						echo '<option value="' . esc_attr( $sport_key ) . '" ' . selected( $value, $sport_key, false ) . '>' . esc_html( $sport['label'] ) . '</option>';
-					}
-					echo '</select>';
-				} elseif ( 'richtext' === $def[1] ) {
-					wp_editor(
-						(string) $value,
-						'prx3_' . $key,
-						array(
-							'textarea_name' => $key,
-							'textarea_rows' => 6,
-							'media_buttons' => false,
-						)
-					);
-				} elseif ( 'gallery' === $def[1] ) {
-					$ids = array_filter( array_map( 'absint', explode( ',', (string) $value ) ) );
-					echo '<div class="prx3-media-field">';
-					echo '<input type="hidden" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( implode( ',', $ids ) ) . '">';
-					echo '<span class="prx3-media-preview">';
-					foreach ( array_slice( $ids, 0, 6 ) as $gallery_id ) {
-						echo wp_kses_post( wp_get_attachment_image( $gallery_id, array( 40, 40 ) ) );
-					}
-					if ( $ids ) {
-						echo ' <em>' . esc_html( sprintf( /* translators: %d image count. */ __( '%d selected', 'fan-ownership' ), count( $ids ) ) ) . '</em>';
-					}
-					echo '</span> ';
-					echo '<button type="button" class="button prx3-media-pick" data-multiple="1" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Choose images', 'fan-ownership' ) . '</button> ';
-					echo '<button type="button" class="button prx3-media-clear" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Clear', 'fan-ownership' ) . '</button>';
-					echo '</div>';
-				} elseif ( 'media' === $def[1] ) {
-					$attachment_id = (int) $value;
-					$preview       = $attachment_id ? wp_get_attachment_image( $attachment_id, array( 60, 60 ) ) : '';
-					echo '<div class="prx3-media-field">';
-					echo '<input type="hidden" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $attachment_id ? $attachment_id : '' ) . '">';
-					echo '<span class="prx3-media-preview">' . wp_kses_post( $preview ) . '</span> ';
-					echo '<button type="button" class="button prx3-media-pick" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Upload / choose', 'fan-ownership' ) . '</button> ';
-					echo '<button type="button" class="button prx3-media-clear" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Clear', 'fan-ownership' ) . '</button>';
-					if ( $attachment_id && ! $preview ) {
-						echo ' <a href="' . esc_url( (string) wp_get_attachment_url( $attachment_id ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'View file', 'fan-ownership' ) . '</a>';
-					}
-					echo '</div>';
-				} else {
-					$type = 'password' === $def[1] ? 'password' : 'text';
-					echo '<input type="' . esc_attr( $type ) . '" class="regular-text" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( (string) $value ) . '">';
+		echo '<input type="hidden" name="prx3_redirect" value="' . esc_attr( self::sections()[ $section ][1] ?? 'prx3-settings' ) . '">';
+		$fields = self::fields()[ $section ] ?? array();
+		echo '<table class="form-table" role="presentation">';
+		foreach ( $fields as $key => $def ) {
+			$value = prx3_setting( $key, PRX3_Config::defaults()[ $key ] ?? '' );
+			echo '<tr><th scope="row"><label for="prx3_' . esc_attr( $key ) . '">' . esc_html( $def[0] ) . '</label></th><td>';
+			if ( 'textarea' === $def[1] ) {
+				echo '<textarea class="large-text" rows="3" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">' . esc_textarea( (string) $value ) . '</textarea>';
+			} elseif ( 'sport' === $def[1] ) {
+				echo '<select id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">';
+				foreach ( PRX3_Config::sports() as $sport_key => $sport ) {
+					echo '<option value="' . esc_attr( $sport_key ) . '" ' . selected( $value, $sport_key, false ) . '>' . esc_html( $sport['label'] ) . '</option>';
 				}
-				echo '</td></tr>';
+				echo '</select>';
+			} elseif ( 'richtext' === $def[1] ) {
+				wp_editor(
+					(string) $value,
+					'prx3_' . $key,
+					array(
+						'textarea_name' => $key,
+						'textarea_rows' => 6,
+						'media_buttons' => false,
+					)
+				);
+			} elseif ( 'gallery' === $def[1] ) {
+				$ids = array_filter( array_map( 'absint', explode( ',', (string) $value ) ) );
+				echo '<div class="prx3-media-field">';
+				echo '<input type="hidden" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( implode( ',', $ids ) ) . '">';
+				echo '<span class="prx3-media-preview">';
+				foreach ( array_slice( $ids, 0, 6 ) as $gallery_id ) {
+					echo wp_kses_post( wp_get_attachment_image( $gallery_id, array( 40, 40 ) ) );
+				}
+				if ( $ids ) {
+					echo ' <em>' . esc_html( sprintf( /* translators: %d image count. */ __( '%d selected', 'fan-ownership' ), count( $ids ) ) ) . '</em>';
+				}
+				echo '</span> ';
+				echo '<button type="button" class="button prx3-media-pick" data-multiple="1" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Choose images', 'fan-ownership' ) . '</button> ';
+				echo '<button type="button" class="button prx3-media-clear" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Clear', 'fan-ownership' ) . '</button>';
+				echo '</div>';
+			} elseif ( 'media' === $def[1] ) {
+				$attachment_id = (int) $value;
+				$preview       = $attachment_id ? wp_get_attachment_image( $attachment_id, array( 60, 60 ) ) : '';
+				echo '<div class="prx3-media-field">';
+				echo '<input type="hidden" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $attachment_id ? $attachment_id : '' ) . '">';
+				echo '<span class="prx3-media-preview">' . wp_kses_post( $preview ) . '</span> ';
+				echo '<button type="button" class="button prx3-media-pick" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Upload / choose', 'fan-ownership' ) . '</button> ';
+				echo '<button type="button" class="button prx3-media-clear" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Clear', 'fan-ownership' ) . '</button>';
+				if ( $attachment_id && ! $preview ) {
+					echo ' <a href="' . esc_url( (string) wp_get_attachment_url( $attachment_id ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'View file', 'fan-ownership' ) . '</a>';
+				}
+				echo '</div>';
+			} else {
+				$type = 'password' === $def[1] ? 'password' : 'text';
+				echo '<input type="' . esc_attr( $type ) . '" class="regular-text" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( (string) $value ) . '">';
 			}
-			echo '</table>';
+			echo '</td></tr>';
 		}
+		echo '</table>';
 		echo '<p><button class="button button-primary">' . esc_html__( 'Save settings', 'fan-ownership' ) . '</button></p></form>';
 
-		echo '<h2>' . esc_html__( 'Share register', 'fan-ownership' ) . '</h2>';
-		echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_register' ), 'prx3_export_register' ) ) . '">' . esc_html__( 'Export register of members (CSV)', 'fan-ownership' ) . '</a> ';
-		echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_ticketing' ), 'prx3_export_ticketing' ) ) . '">' . esc_html(
-			sprintf(
-				/* translators: %s ticketing provider. */
-				__( 'Export %s discount codes (CSV)', 'fan-ownership' ),
-				PRX3_Ticketing::provider()
-			)
-		) . '</a></p>';
-		echo '<h2>' . esc_html__( 'Printable brand pack', 'fan-ownership' ) . '</h2>';
-		echo '<p><a class="button" href="' . esc_url( home_url( '/brand-pack/' ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'View printable brand pack (print to PDF to supply it)', 'fan-ownership' ) . '</a></p>';
+		if ( 'shares' === $section ) {
+			echo '<h2>' . esc_html__( 'Share register', 'fan-ownership' ) . '</h2>';
+			echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_register' ), 'prx3_export_register' ) ) . '">' . esc_html__( 'Export register of members (CSV)', 'fan-ownership' ) . '</a></p>';
+		}
+		if ( 'ticketing' === $section ) {
+			echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_ticketing' ), 'prx3_export_ticketing' ) ) . '">' . esc_html( sprintf( /* translators: %s ticketing provider. */ __( 'Export %s discount codes (CSV)', 'fan-ownership' ), PRX3_Ticketing::provider() ) ) . '</a></p>';
+		}
+		if ( 'brand pack' === $section ) {
+			echo '<p><a class="button" href="' . esc_url( home_url( '/brand-pack/' ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'View printable brand pack (print to PDF to supply it)', 'fan-ownership' ) . '</a></p>';
+		}
 		echo '</div>';
+		foreach ( self::fields()[ $section ] ?? array() as $def ) {
+			if ( in_array( $def[1], array( 'media', 'gallery' ), true ) ) {
+				self::media_picker_js();
+				break;
+			}
+		}
+	}
 
+	/**
+	 * The Media Library picker script for media and gallery fields.
+	 */
+	private static function media_picker_js() {
 		// Media Library pickers for the brand pack fields.
 		wp_enqueue_media();
 		wp_add_inline_script(
@@ -306,7 +368,9 @@ class PRX3_Admin {
 			}
 		}
 		PRX3_Audit::log( 'settings_saved', 'Platform settings updated' );
-		wp_safe_redirect( admin_url( 'admin.php?page=prx3-settings&saved=1' ) );
+		$slug  = isset( $_POST['prx3_redirect'] ) ? sanitize_key( wp_unslash( $_POST['prx3_redirect'] ) ) : 'prx3-settings';
+		$valid = array_merge( array( 'prx3-settings' ), wp_list_pluck( self::sections(), 1 ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . ( in_array( $slug, $valid, true ) ? $slug : 'prx3-settings' ) . '&saved=1' ) );
 		exit;
 	}
 }

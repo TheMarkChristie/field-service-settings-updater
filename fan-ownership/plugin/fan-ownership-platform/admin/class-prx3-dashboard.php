@@ -29,9 +29,16 @@ class PRX3_Dashboard {
 	}
 
 	/**
-	 * Register the Owners top-level menu. The club dashboard is its
-	 * landing page; every member-facing content type attaches beneath it
-	 * via show_in_menu.
+	 * Admin page hook for the dashboard, set at registration.
+	 *
+	 * @var string
+	 */
+	private static $hook = '';
+
+	/**
+	 * Register the Owners top-level menu (content home; every
+	 * member-facing content type attaches beneath it via show_in_menu)
+	 * and the Club Dashboard as a Board submenu.
 	 */
 	public static function menu() {
 		add_menu_page(
@@ -39,18 +46,38 @@ class PRX3_Dashboard {
 			__( 'Owners', 'fan-ownership' ),
 			'edit_posts',
 			'prx3-owners',
-			array( __CLASS__, 'render' ),
+			array( __CLASS__, 'render_owners_home' ),
 			'dashicons-groups',
 			3
 		);
 		add_submenu_page(
 			'prx3-owners',
-			__( 'Club Dashboard', 'fan-ownership' ),
-			__( 'Dashboard', 'fan-ownership' ),
+			__( 'Owners', 'fan-ownership' ),
+			__( 'Overview', 'fan-ownership' ),
 			'edit_posts',
 			'prx3-owners',
+			array( __CLASS__, 'render_owners_home' )
+		);
+		self::$hook = (string) add_submenu_page(
+			'prx3-board',
+			__( 'Club Dashboard', 'fan-ownership' ),
+			__( 'Dashboard', 'fan-ownership' ),
+			'prx3_board',
+			'prx3-dashboard',
 			array( __CLASS__, 'render' )
 		);
+	}
+
+	/**
+	 * The Owners landing: where each working area lives.
+	 */
+	public static function render_owners_home() {
+		echo '<div class="wrap"><h1>' . esc_html__( 'Owners', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html__( 'Everything the members see and do lives in this menu: ballots, ideas, questions, meetings, the video library, documents, behind-the-scenes posts, the decision register, chapters, the Match Centre, the squad, and the commitments calendar.', 'fan-ownership' ) . '</p>';
+		if ( current_user_can( 'prx3_board' ) ) {
+			echo '<p>' . esc_html__( 'The Club Dashboard is in the Board menu.', 'fan-ownership' ) . '</p>';
+		}
+		echo '</div>';
 	}
 
 	/**
@@ -59,7 +86,7 @@ class PRX3_Dashboard {
 	 * @param string $hook Current admin page hook suffix.
 	 */
 	public static function assets( $hook ) {
-		if ( 'toplevel_page_prx3-owners' !== $hook ) {
+		if ( ! self::$hook || $hook !== self::$hook ) {
 			return;
 		}
 		wp_enqueue_style( 'prx3-dashboard', PRX3_URL . 'assets/css/prx3-dashboard.css', array(), PRX3_VERSION );
@@ -245,7 +272,7 @@ class PRX3_Dashboard {
 	 */
 	public static function render() {
 		if ( ! self::can_view() ) {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Owners', 'fan-ownership' ) . '</h1><p>' . esc_html__( 'Club figures are visible to staff and board roles. Use the menu on the left for ballots, content, and the squad.', 'fan-ownership' ) . '</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Club Dashboard', 'fan-ownership' ) . '</h1><p>' . esc_html__( 'Club figures are visible to staff and board roles.', 'fan-ownership' ) . '</p></div>';
 			return;
 		}
 		$d = self::data();
