@@ -35,13 +35,16 @@ class FOP_Ideas {
 		if ( ! $title ) {
 			return new WP_Error( 'fop_title', __( 'Give your idea a title.', 'fan-ownership' ) );
 		}
-		$post_id = wp_insert_post( array(
-			'post_type'    => 'fop_idea',
-			'post_status'  => 'pending',
-			'post_title'   => sanitize_text_field( $title ),
-			'post_content' => sanitize_textarea_field( $rationale ),
-			'post_author'  => $user_id,
-		), true );
+		$post_id = wp_insert_post(
+			array(
+				'post_type'    => 'fop_idea',
+				'post_status'  => 'pending',
+				'post_title'   => sanitize_text_field( $title ),
+				'post_content' => sanitize_textarea_field( $rationale ),
+				'post_author'  => $user_id,
+			),
+			true
+		);
 		if ( is_wp_error( $post_id ) ) {
 			return $post_id;
 		}
@@ -80,7 +83,11 @@ class FOP_Ideas {
 		if ( $supporting && count( $supporters ) >= $threshold && ! get_post_meta( $idea_id, '_fop_ballot_drafted', true ) ) {
 			self::auto_draft_ballot( $idea_id );
 		}
-		return array( 'count' => count( $supporters ), 'supporting' => $supporting, 'threshold' => $threshold );
+		return array(
+			'count'      => count( $supporters ),
+			'supporting' => $supporting,
+			'threshold'  => $threshold,
+		);
 	}
 
 	/**
@@ -96,13 +103,15 @@ class FOP_Ideas {
 	 */
 	private static function auto_draft_ballot( $idea_id ) {
 		$idea      = get_post( $idea_id );
-		$ballot_id = wp_insert_post( array(
-			'post_type'    => 'fop_ballot',
-			'post_status'  => 'draft',
-			'post_title'   => sprintf( /* translators: %s idea title. */ __( 'Fan proposal: %s', 'fan-ownership' ), $idea->post_title ),
-			'post_content' => $idea->post_content,
-			'post_author'  => $idea->post_author,
-		) );
+		$ballot_id = wp_insert_post(
+			array(
+				'post_type'    => 'fop_ballot',
+				'post_status'  => 'draft',
+				'post_title'   => sprintf( /* translators: %s idea title. */ __( 'Fan proposal: %s', 'fan-ownership' ), $idea->post_title ),
+				'post_content' => $idea->post_content,
+				'post_author'  => $idea->post_author,
+			)
+		);
 		if ( ! $ballot_id || is_wp_error( $ballot_id ) ) {
 			return;
 		}
@@ -117,13 +126,18 @@ class FOP_Ideas {
 		FOP_Audit::log( 'idea_threshold', sprintf( 'Idea %d reached threshold; ballot %d auto-drafted', $idea_id, $ballot_id ) );
 
 		// Notify governance staff.
-		foreach ( get_users( array( 'role__in' => array( 'fop_governance_officer', 'fop_owner_admin', 'administrator' ), 'fields' => 'all' ) ) as $staff ) {
+		foreach ( get_users(
+			array(
+				'role__in' => array( 'fop_governance_officer', 'fop_owner_admin', 'administrator' ),
+				'fields'   => 'all',
+			)
+		) as $staff ) {
 			FOP_Comms::send(
 				$staff->user_email,
 				__( 'Fan idea reached the ballot threshold', 'fan-ownership' ),
 				sprintf(
 					/* translators: 1: idea title, 2: edit link. */
-					__( "\"%1\$s\" has reached the support threshold. A draft ballot has been created — legality-check it and schedule it (declining to schedule requires a published reason): %2\$s", 'fan-ownership' ),
+					__( '"%1$s" has reached the support threshold. A draft ballot has been created — legality-check it and schedule it (declining to schedule requires a published reason): %2$s', 'fan-ownership' ),
 					$idea->post_title,
 					admin_url( 'post.php?post=' . $ballot_id . '&action=edit' )
 				),
@@ -137,7 +151,7 @@ class FOP_Ideas {
 				FOP_Comms::send(
 					$user->user_email,
 					__( 'An idea you support is heading to a ballot', 'fan-ownership' ),
-					sprintf( /* translators: %s idea title. */ __( "\"%s\" reached the support threshold and will be put to a vote of all owners.", 'fan-ownership' ), $idea->post_title ),
+					sprintf( /* translators: %s idea title. */ __( '"%s" reached the support threshold and will be put to a vote of all owners.', 'fan-ownership' ), $idea->post_title ),
 					'governance'
 				);
 			}
@@ -160,7 +174,13 @@ class FOP_Ideas {
 			update_post_meta( $idea_id, '_fop_declined_reason', sanitize_textarea_field( $reason ) );
 		}
 		$history   = (array) get_post_meta( $idea_id, '_fop_status_history', true );
-		$history[] = array( 'from' => $old, 'to' => $status, 'at' => time(), 'by' => get_current_user_id(), 'reason' => $reason );
+		$history[] = array(
+			'from'   => $old,
+			'to'     => $status,
+			'at'     => time(),
+			'by'     => get_current_user_id(),
+			'reason' => $reason,
+		);
 		update_post_meta( $idea_id, '_fop_status_history', $history );
 
 		foreach ( array_unique( array_merge( array( (int) get_post_field( 'post_author', $idea_id ) ), array_map( 'intval', (array) get_post_meta( $idea_id, '_fop_supporters', true ) ) ) ) as $uid ) {
@@ -169,7 +189,7 @@ class FOP_Ideas {
 				FOP_Comms::send(
 					$user->user_email,
 					sprintf( /* translators: %s idea title. */ __( 'Idea update: %s', 'fan-ownership' ), get_the_title( $idea_id ) ),
-					sprintf( /* translators: 1: title, 2: status. */ __( "\"%1\$s\" is now: %2\$s.%3\$s", 'fan-ownership' ), get_the_title( $idea_id ), $status, $reason ? "\n\n" . $reason : '' ),
+					sprintf( /* translators: 1: title, 2: status. */ __( '"%1$s" is now: %2$s.%3$s', 'fan-ownership' ), get_the_title( $idea_id ), $status, $reason ? "\n\n" . $reason : '' ),
 					'governance'
 				);
 			}
@@ -177,22 +197,31 @@ class FOP_Ideas {
 	}
 
 	public static function meta_box() {
-		add_meta_box( 'fop_idea_status', __( 'Idea Status', 'fan-ownership' ), function ( $post ) {
-			wp_nonce_field( 'fop_idea_status', 'fop_idea_nonce' );
-			$status = get_post_meta( $post->ID, '_fop_idea_status', true );
-			echo '<select name="fop_idea_status" class="widefat">';
-			foreach ( self::STATUSES as $s ) {
-				echo '<option value="' . esc_attr( $s ) . '" ' . selected( $status, $s, false ) . '>' . esc_html( $s ) . '</option>';
-			}
-			echo '</select>';
-			echo '<p><label>' . esc_html__( 'Reason (required when declining)', 'fan-ownership' ) . '</label><textarea class="widefat" name="fop_idea_reason"></textarea></p>';
-			echo '<p>' . esc_html( sprintf(
-				/* translators: 1: supporters, 2: threshold. */
-				__( 'Support: %1$d of %2$d needed for an automatic ballot.', 'fan-ownership' ),
-				count( (array) get_post_meta( $post->ID, '_fop_supporters', true ) ),
-				self::threshold_count()
-			) ) . '</p>';
-		}, 'fop_idea', 'side', 'high' );
+		add_meta_box(
+			'fop_idea_status',
+			__( 'Idea Status', 'fan-ownership' ),
+			function ( $post ) {
+				wp_nonce_field( 'fop_idea_status', 'fop_idea_nonce' );
+				$status = get_post_meta( $post->ID, '_fop_idea_status', true );
+				echo '<select name="fop_idea_status" class="widefat">';
+				foreach ( self::STATUSES as $s ) {
+					echo '<option value="' . esc_attr( $s ) . '" ' . selected( $status, $s, false ) . '>' . esc_html( $s ) . '</option>';
+				}
+				echo '</select>';
+				echo '<p><label>' . esc_html__( 'Reason (required when declining)', 'fan-ownership' ) . '</label><textarea class="widefat" name="fop_idea_reason"></textarea></p>';
+				echo '<p>' . esc_html(
+					sprintf(
+					/* translators: 1: supporters, 2: threshold. */
+						__( 'Support: %1$d of %2$d needed for an automatic ballot.', 'fan-ownership' ),
+						count( (array) get_post_meta( $post->ID, '_fop_supporters', true ) ),
+						self::threshold_count()
+					)
+				) . '</p>';
+			},
+			'fop_idea',
+			'side',
+			'high'
+		);
 	}
 
 	public static function save_status( $post_id, $post ) {

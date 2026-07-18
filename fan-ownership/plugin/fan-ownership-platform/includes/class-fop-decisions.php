@@ -20,12 +20,14 @@ class FOP_Decisions {
 	 * FO-218 AC1: every passed ballot enters the register automatically.
 	 */
 	public static function create_from_ballot( $ballot_id, $winning_option, $extra = array() ) {
-		$decision_id = wp_insert_post( array(
-			'post_type'    => 'fop_decision',
-			'post_status'  => 'publish',
-			'post_title'   => sprintf( /* translators: 1: ballot title, 2: option. */ __( '%1$s — decided: %2$s', 'fan-ownership' ), get_the_title( $ballot_id ), $winning_option ),
-			'post_content' => wp_kses_post( get_post_field( 'post_content', $ballot_id ) ),
-		) );
+		$decision_id = wp_insert_post(
+			array(
+				'post_type'    => 'fop_decision',
+				'post_status'  => 'publish',
+				'post_title'   => sprintf( /* translators: 1: ballot title, 2: option. */ __( '%1$s — decided: %2$s', 'fan-ownership' ), get_the_title( $ballot_id ), $winning_option ),
+				'post_content' => wp_kses_post( get_post_field( 'post_content', $ballot_id ) ),
+			)
+		);
 		if ( ! $decision_id || is_wp_error( $decision_id ) ) {
 			return 0;
 		}
@@ -43,12 +45,14 @@ class FOP_Decisions {
 	 * Board decision released to the register (P84 selective disclosure).
 	 */
 	public static function create_from_board( $title, $body, $reasoning ) {
-		$decision_id = wp_insert_post( array(
-			'post_type'    => 'fop_decision',
-			'post_status'  => 'publish',
-			'post_title'   => sanitize_text_field( $title ),
-			'post_content' => wp_kses_post( $body ),
-		) );
+		$decision_id = wp_insert_post(
+			array(
+				'post_type'    => 'fop_decision',
+				'post_status'  => 'publish',
+				'post_title'   => sanitize_text_field( $title ),
+				'post_content' => wp_kses_post( $body ),
+			)
+		);
 		if ( $decision_id && ! is_wp_error( $decision_id ) ) {
 			update_post_meta( $decision_id, '_fop_decision_status', 'planned' );
 			update_post_meta( $decision_id, '_fop_board_decision', 1 );
@@ -67,7 +71,12 @@ class FOP_Decisions {
 		}
 		update_post_meta( $decision_id, '_fop_decision_status', $status );
 		$updates   = (array) get_post_meta( $decision_id, '_fop_updates', true );
-		$updates[] = array( 'at' => fop_now(), 'by' => get_current_user_id(), 'status' => $status, 'note' => sanitize_textarea_field( $note ) );
+		$updates[] = array(
+			'at'     => fop_now(),
+			'by'     => get_current_user_id(),
+			'status' => $status,
+			'note'   => sanitize_textarea_field( $note ),
+		);
 		update_post_meta( $decision_id, '_fop_updates', $updates );
 		update_post_meta( $decision_id, '_fop_last_update', time() );
 	}
@@ -78,16 +87,24 @@ class FOP_Decisions {
 	 */
 	public static function flag_stalled() {
 		$stale_days = (int) fop_setting( 'decision_stale_days', 60 );
-		$open       = get_posts( array(
-			'post_type'      => 'fop_decision',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'no_found_rows'  => true,
-			'meta_query'     => array( array( 'key' => '_fop_decision_status', 'value' => array( 'planned', 'in-progress', 'blocked' ), 'compare' => 'IN' ) ),
-		) );
+		$open       = get_posts(
+			array(
+				'post_type'      => 'fop_decision',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'no_found_rows'  => true,
+				'meta_query'     => array(
+					array(
+						'key'     => '_fop_decision_status',
+						'value'   => array( 'planned', 'in-progress', 'blocked' ),
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
 		foreach ( $open as $decision ) {
-			$last = (int) get_post_meta( $decision->ID, '_fop_last_update', true );
-			$last = $last ? $last : strtotime( get_post_meta( $decision->ID, '_fop_decided_at', true ) );
+			$last    = (int) get_post_meta( $decision->ID, '_fop_last_update', true );
+			$last    = $last ? $last : strtotime( get_post_meta( $decision->ID, '_fop_decided_at', true ) );
 			$stalled = $last && ( time() - $last ) > $stale_days * DAY_IN_SECONDS;
 			$was     = (bool) get_post_meta( $decision->ID, '_fop_stalled', true );
 			update_post_meta( $decision->ID, '_fop_stalled', $stalled ? 1 : '' );
@@ -105,21 +122,28 @@ class FOP_Decisions {
 	}
 
 	public static function meta_box() {
-		add_meta_box( 'fop_decision_status', __( 'Implementation', 'fan-ownership' ), function ( $post ) {
-			wp_nonce_field( 'fop_decision_meta', 'fop_decision_nonce' );
-			$status = get_post_meta( $post->ID, '_fop_decision_status', true );
-			$owner  = get_post_meta( $post->ID, '_fop_accountable', true );
-			echo '<p><label>' . esc_html__( 'Status', 'fan-ownership' ) . '</label> <select name="fop_decision_status">';
-			foreach ( self::STATUSES as $s ) {
-				echo '<option value="' . esc_attr( $s ) . '" ' . selected( $status, $s, false ) . '>' . esc_html( $s ) . '</option>';
-			}
-			echo '</select></p>';
-			echo '<p><label>' . esc_html__( 'Accountable owner (name/role)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_accountable" value="' . esc_attr( $owner ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'Update note', 'fan-ownership' ) . '</label><textarea class="widefat" rows="3" name="fop_update_note"></textarea></p>';
-			if ( get_post_meta( $post->ID, '_fop_stalled', true ) ) {
-				echo '<p><strong>' . esc_html__( 'Flagged as stalled.', 'fan-ownership' ) . '</strong></p>';
-			}
-		}, 'fop_decision', 'side', 'high' );
+		add_meta_box(
+			'fop_decision_status',
+			__( 'Implementation', 'fan-ownership' ),
+			function ( $post ) {
+				wp_nonce_field( 'fop_decision_meta', 'fop_decision_nonce' );
+				$status = get_post_meta( $post->ID, '_fop_decision_status', true );
+				$owner  = get_post_meta( $post->ID, '_fop_accountable', true );
+				echo '<p><label>' . esc_html__( 'Status', 'fan-ownership' ) . '</label> <select name="fop_decision_status">';
+				foreach ( self::STATUSES as $s ) {
+					echo '<option value="' . esc_attr( $s ) . '" ' . selected( $status, $s, false ) . '>' . esc_html( $s ) . '</option>';
+				}
+				echo '</select></p>';
+				echo '<p><label>' . esc_html__( 'Accountable owner (name/role)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_accountable" value="' . esc_attr( $owner ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'Update note', 'fan-ownership' ) . '</label><textarea class="widefat" rows="3" name="fop_update_note"></textarea></p>';
+				if ( get_post_meta( $post->ID, '_fop_stalled', true ) ) {
+					echo '<p><strong>' . esc_html__( 'Flagged as stalled.', 'fan-ownership' ) . '</strong></p>';
+				}
+			},
+			'fop_decision',
+			'side',
+			'high'
+		);
 	}
 
 	public static function save_meta( $post_id, $post ) {
@@ -135,7 +159,7 @@ class FOP_Decisions {
 		}
 		$status = isset( $_POST['fop_decision_status'] ) ? sanitize_key( $_POST['fop_decision_status'] ) : '';
 		$note   = isset( $_POST['fop_update_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['fop_update_note'] ) ) : '';
-		if ( $status && ( $status !== get_post_meta( $post_id, '_fop_decision_status', true ) || $note ) ) {
+		if ( $status && ( get_post_meta( $post_id, '_fop_decision_status', true ) !== $status || $note ) ) {
 			self::add_update( $post_id, $status, $note );
 		}
 	}

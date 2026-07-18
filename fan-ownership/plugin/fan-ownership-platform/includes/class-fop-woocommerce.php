@@ -41,7 +41,7 @@ class FOP_WooCommerce {
 	}
 
 	private static function is_share_product( $product_id ) {
-		return $product_id && (int) $product_id === self::share_product_id();
+		return $product_id && self::share_product_id() === (int) $product_id;
 	}
 
 	/**
@@ -70,19 +70,25 @@ class FOP_WooCommerce {
 		}
 		$held = fop_shares( $user_id );
 		if ( $held >= fop_max_shares() ) {
-			wc_add_notice( sprintf(
+			wc_add_notice(
+				sprintf(
 				/* translators: %d cap. */
-				__( 'You already hold the maximum of %d shares. Thank you for going all in.', 'fan-ownership' ),
-				fop_max_shares()
-			), 'error' );
+					__( 'You already hold the maximum of %d shares. Thank you for going all in.', 'fan-ownership' ),
+					fop_max_shares()
+				),
+				'error'
+			);
 			return false;
 		}
 		if ( $held + $quantity > fop_max_shares() ) {
-			wc_add_notice( sprintf(
+			wc_add_notice(
+				sprintf(
 				/* translators: %d remaining. */
-				__( 'You can buy up to %d more share(s).', 'fan-ownership' ),
-				fop_max_shares() - $held
-			), 'error' );
+					__( 'You can buy up to %d more share(s).', 'fan-ownership' ),
+					fop_max_shares() - $held
+				),
+				'error'
+			);
 			return false;
 		}
 		return $passed;
@@ -159,7 +165,10 @@ class FOP_WooCommerce {
 				$user_id,
 				$qty,
 				'purchase',
-				array( 'order' => $order_id, 'consideration' => (float) $item->get_total() )
+				array(
+					'order'         => $order_id,
+					'consideration' => (float) $item->get_total(),
+				)
 			);
 			if ( is_wp_error( $granted ) ) {
 				$order->add_order_note( 'Fan Ownership: ' . $granted->get_error_message() );
@@ -182,12 +191,14 @@ class FOP_WooCommerce {
 		if ( ! $fingerprint || ! $user_id ) {
 			return;
 		}
-		$existing = get_users( array(
-			'meta_key'   => 'fop_payment_fingerprint',
-			'meta_value' => $fingerprint,
-			'fields'     => 'ID',
-			'exclude'    => array( $user_id ),
-		) );
+		$existing = get_users(
+			array(
+				'meta_key'   => 'fop_payment_fingerprint',
+				'meta_value' => $fingerprint,
+				'fields'     => 'ID',
+				'exclude'    => array( $user_id ),
+			)
+		);
 		update_user_meta( $user_id, 'fop_payment_fingerprint', $fingerprint );
 		if ( $existing ) {
 			$suspects = array_map( 'intval', (array) get_user_meta( $user_id, 'fop_duplicate_suspects', true ) );

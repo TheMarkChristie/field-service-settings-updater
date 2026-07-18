@@ -19,11 +19,17 @@ class FOP_Ballot_Lifecycle {
 
 	public static function init() {
 		add_action( 'fop_ballot_tick', array( __CLASS__, 'tick' ) );
+		// 5-minute heartbeat is required for timely ballot open/close (FO-206);
+		// the tick is cheap when nothing is due.
+		// phpcs:ignore WordPress.WP.CronInterval.ChangeDetected, WordPress.WP.CronInterval.CronSchedulesInterval
 		add_filter( 'cron_schedules', array( __CLASS__, 'five_minutes' ) );
 	}
 
 	public static function five_minutes( $schedules ) {
-		$schedules['fop_5min'] = array( 'interval' => 300, 'display' => 'Every 5 minutes (Fan Ownership)' );
+		$schedules['fop_5min'] = array(
+			'interval' => 300,
+			'display'  => 'Every 5 minutes (Fan Ownership)',
+		);
 		return $schedules;
 	}
 
@@ -63,7 +69,7 @@ class FOP_Ballot_Lifecycle {
 				continue;
 			}
 			self::open_ballot( $ballot->ID );
-			$open_now++;
+			++$open_now;
 		}
 	}
 
@@ -88,7 +94,7 @@ class FOP_Ballot_Lifecycle {
 			__( 'Voting is open', 'fan-ownership' ),
 			sprintf(
 				/* translators: 1: ballot title, 2: close date. */
-				__( "\"%1\$s\" is open for your vote. Voting closes %2\$s.", 'fan-ownership' ),
+				__( '"%1$s" is open for your vote. Voting closes %2$s.', 'fan-ownership' ),
 				get_the_title( $ballot_id ),
 				fop_format_datetime( get_post_meta( $ballot_id, '_fop_closes', true ) )
 			)
@@ -116,11 +122,16 @@ class FOP_Ballot_Lifecycle {
 			foreach ( $non_voters as $uid ) {
 				$user = get_userdata( $uid );
 				if ( $user ) {
-					FOP_Comms::send( $user->user_email, $subject, sprintf(
+					FOP_Comms::send(
+						$user->user_email,
+						$subject,
+						sprintf(
 						/* translators: %s ballot title. */
-						__( "\"%s\" closes within 24 hours and your vote has not been cast yet.", 'fan-ownership' ),
-						get_the_title( $ballot->ID )
-					), 'governance' );
+							__( '"%s" closes within 24 hours and your vote has not been cast yet.', 'fan-ownership' ),
+							get_the_title( $ballot->ID )
+						),
+						'governance'
+					);
 				}
 			}
 			FOP_Comms::push( $non_voters, $subject, get_the_title( $ballot->ID ), 'governance', get_permalink( $ballot->ID ) );
@@ -147,7 +158,14 @@ class FOP_Ballot_Lifecycle {
 	public static function close_ballot( $ballot_id ) {
 		// FO-206 AC4: audit snapshot before results.
 		$tallies = FOP_Ballots::tallies( $ballot_id, true );
-		update_post_meta( $ballot_id, '_fop_close_snapshot', array( 'at' => fop_now(), 'tallies' => $tallies ) );
+		update_post_meta(
+			$ballot_id,
+			'_fop_close_snapshot',
+			array(
+				'at'      => fop_now(),
+				'tallies' => $tallies,
+			)
+		);
 		FOP_Audit::log( 'ballot_close_snapshot', sprintf( 'Ballot %d snapshot at close', $ballot_id ), $tallies );
 
 		$denominator = (int) get_post_meta( $ballot_id, '_fop_quorum_denominator', true );
@@ -179,7 +197,7 @@ class FOP_Ballot_Lifecycle {
 				__( 'Ballot re-opened — quorum was missed', 'fan-ownership' ),
 				sprintf(
 					/* translators: 1: title, 2: needed. */
-					__( "\"%1\$s\" did not reach the %2\$d-member quorum, so it has re-opened for a final 7 days. If quorum is missed again, the board will decide and publish its reasoning.", 'fan-ownership' ),
+					__( '"%1$s" did not reach the %2$d-member quorum, so it has re-opened for a final 7 days. If quorum is missed again, the board will decide and publish its reasoning.', 'fan-ownership' ),
 					get_the_title( $ballot_id ),
 					$needed
 				)
@@ -188,12 +206,16 @@ class FOP_Ballot_Lifecycle {
 		}
 		// Second failure: unresolved, flagged for a board decision (FO-225).
 		update_post_meta( $ballot_id, '_fop_state', 'unresolved' );
-		update_post_meta( $ballot_id, '_fop_result', array(
-			'outcome'  => 'unresolved',
-			'tallies'  => $tallies,
-			'needed'   => $needed,
-			'closed'   => fop_now(),
-		) );
+		update_post_meta(
+			$ballot_id,
+			'_fop_result',
+			array(
+				'outcome' => 'unresolved',
+				'tallies' => $tallies,
+				'needed'  => $needed,
+				'closed'  => fop_now(),
+			)
+		);
 		FOP_Board::open_action( 'failed_quorum', $ballot_id, sprintf( 'Ballot %d failed quorum twice — board decision required', $ballot_id ) );
 		self::notify_electorate(
 			$ballot_id,
@@ -214,10 +236,10 @@ class FOP_Ballot_Lifecycle {
 		$votes   = $tallies['votes'];
 		$total   = max( 1, (int) $tallies['total_votes'] );
 		arsort( $votes );
-		$ranked  = array_keys( $votes );
-		$top     = (int) $ranked[0];
-		$second  = isset( $ranked[1] ) ? (int) $ranked[1] : null;
-		$tie     = null !== $second && $votes[ $top ] === $votes[ $second ];
+		$ranked = array_keys( $votes );
+		$top    = (int) $ranked[0];
+		$second = isset( $ranked[1] ) ? (int) $ranked[1] : null;
+		$tie    = null !== $second && $votes[ $top ] === $votes[ $second ];
 
 		$result = array(
 			'tallies'   => $tallies,
@@ -280,10 +302,14 @@ class FOP_Ballot_Lifecycle {
 		if ( ! is_array( $result ) || 'tie_pending_board' !== ( $result['outcome'] ?? '' ) ) {
 			return new WP_Error( 'fop_not_tied', __( 'This ballot is not awaiting a casting vote.', 'fan-ownership' ) );
 		}
-		$options            = (array) get_post_meta( $ballot_id, '_fop_options', true );
-		$result['outcome']  = 'passed';
-		$result['winning']  = (int) $winning_choice;
-		$result['tie']      = array( 'casting_vote' => true, 'reasoning' => $reasoning, 'at' => fop_now() );
+		$options           = (array) get_post_meta( $ballot_id, '_fop_options', true );
+		$result['outcome'] = 'passed';
+		$result['winning'] = (int) $winning_choice;
+		$result['tie']     = array(
+			'casting_vote' => true,
+			'reasoning'    => $reasoning,
+			'at'           => fop_now(),
+		);
 		update_post_meta( $ballot_id, '_fop_result', $result );
 		update_post_meta( $ballot_id, '_fop_state', 'published' );
 		FOP_Decisions::create_from_ballot( $ballot_id, $options[ (int) $winning_choice ], array( 'casting_vote' => $reasoning ) );
@@ -306,7 +332,13 @@ class FOP_Ballot_Lifecycle {
 	private static function notify_electorate( $ballot_id, $subject, $body ) {
 		$electorate = array_keys( (array) get_post_meta( $ballot_id, '_fop_electorate', true ) );
 		if ( ! $electorate ) {
-			$electorate = get_users( array( 'role' => 'fan_owner', 'fields' => 'ID', 'number' => -1 ) );
+			$electorate = get_users(
+				array(
+					'role'   => 'fan_owner',
+					'fields' => 'ID',
+					'number' => -1,
+				)
+			);
 		}
 		foreach ( $electorate as $uid ) {
 			$user = get_userdata( $uid );

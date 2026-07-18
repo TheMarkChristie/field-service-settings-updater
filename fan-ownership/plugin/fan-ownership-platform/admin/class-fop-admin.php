@@ -29,13 +29,13 @@ class FOP_Admin {
 
 	private static function fields() {
 		return array(
-			'club'        => array(
+			'club'         => array(
 				'club_name'       => array( __( 'Club name', 'fan-ownership' ), 'text' ),
 				'club_primary'    => array( __( 'Primary colour', 'fan-ownership' ), 'text' ),
 				'club_accent'     => array( __( 'Accent colour', 'fan-ownership' ), 'text' ),
 				'currency_symbol' => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
 			),
-			'shares'      => array(
+			'shares'       => array(
 				'share_base_price'  => array( __( 'Share 1 price', 'fan-ownership' ), 'number' ),
 				'share_tier_growth' => array( __( 'Tier growth (0.25 = +25% per share)', 'fan-ownership' ), 'number' ),
 				'max_shares'        => array( __( 'Maximum shares per member', 'fan-ownership' ), 'number' ),
@@ -45,14 +45,14 @@ class FOP_Admin {
 				'invoice_prefix'    => array( __( 'Invoice prefix', 'fan-ownership' ), 'text' ),
 				'launch_moment'     => array( __( 'Public launch moment (Founders cutoff, e.g. 2026-09-01 12:00)', 'fan-ownership' ), 'text' ),
 			),
-			'governance'  => array(
-				'quorum_percent'     => array( __( 'Quorum % of active owners', 'fan-ownership' ), 'number' ),
-				'constitutional_pct' => array( __( 'Constitutional supermajority %', 'fan-ownership' ), 'number' ),
-				'idea_threshold_pct' => array( __( 'Idea support threshold %', 'fan-ownership' ), 'number' ),
-				'ballot_window_days' => array( __( 'Default ballot window (days)', 'fan-ownership' ), 'number' ),
-				'max_live_ballots'   => array( __( 'Max live ballots', 'fan-ownership' ), 'number' ),
-				'board_chair_id'     => array( __( 'Board chair user ID (casting vote in board votes)', 'fan-ownership' ), 'number' ),
-				'question_sla_days'  => array( __( 'Question answer target (days)', 'fan-ownership' ), 'number' ),
+			'governance'   => array(
+				'quorum_percent'      => array( __( 'Quorum % of active owners', 'fan-ownership' ), 'number' ),
+				'constitutional_pct'  => array( __( 'Constitutional supermajority %', 'fan-ownership' ), 'number' ),
+				'idea_threshold_pct'  => array( __( 'Idea support threshold %', 'fan-ownership' ), 'number' ),
+				'ballot_window_days'  => array( __( 'Default ballot window (days)', 'fan-ownership' ), 'number' ),
+				'max_live_ballots'    => array( __( 'Max live ballots', 'fan-ownership' ), 'number' ),
+				'board_chair_id'      => array( __( 'Board chair user ID (casting vote in board votes)', 'fan-ownership' ), 'number' ),
+				'question_sla_days'   => array( __( 'Question answer target (days)', 'fan-ownership' ), 'number' ),
 				'decision_stale_days' => array( __( 'Decision stalled after (days)', 'fan-ownership' ), 'number' ),
 			),
 			'integrations' => array(

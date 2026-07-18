@@ -34,14 +34,22 @@ class FOP_Financials {
 		if ( $day < (int) fop_setting( 'financial_due_day', 14 ) || get_option( 'fop_fin_flag_' . gmdate( 'Y-m' ) ) ) {
 			return;
 		}
-		$published = get_posts( array(
-			'post_type'      => 'fop_document',
-			'post_status'    => 'publish',
-			'posts_per_page' => 1,
-			'no_found_rows'  => true,
-			'date_query'     => array( array( 'after' => gmdate( 'Y-m-01' ) ) ),
-			'tax_query'      => array( array( 'taxonomy' => 'fop_document_type', 'field' => 'slug', 'terms' => array( 'monthly-summary' ) ) ),
-		) );
+		$published = get_posts(
+			array(
+				'post_type'      => 'fop_document',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'no_found_rows'  => true,
+				'date_query'     => array( array( 'after' => gmdate( 'Y-m-01' ) ) ),
+				'tax_query'      => array(
+					array(
+						'taxonomy' => 'fop_document_type',
+						'field'    => 'slug',
+						'terms'    => array( 'monthly-summary' ),
+					),
+				),
+			)
+		);
 		if ( $published ) {
 			return;
 		}
@@ -98,35 +106,70 @@ class FOP_Financials {
 		$from = $year . '-01-01 00:00:00';
 		$to   = $year . '-12-31 23:59:59';
 
-		$ballots = get_posts( array(
-			'post_type'      => 'fop_ballot',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'no_found_rows'  => true,
-			'meta_query'     => array( array( 'key' => '_fop_state', 'value' => array( 'published', 'unresolved' ), 'compare' => 'IN' ) ),
-			'date_query'     => array( array( 'after' => $from, 'before' => $to ) ),
-		) );
-		$decisions = get_posts( array( 'post_type' => 'fop_decision', 'post_status' => 'publish', 'posts_per_page' => -1, 'no_found_rows' => true ) );
+		$ballots   = get_posts(
+			array(
+				'post_type'      => 'fop_ballot',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'no_found_rows'  => true,
+				'meta_query'     => array(
+					array(
+						'key'     => '_fop_state',
+						'value'   => array( 'published', 'unresolved' ),
+						'compare' => 'IN',
+					),
+				),
+				'date_query'     => array(
+					array(
+						'after'  => $from,
+						'before' => $to,
+					),
+				),
+			)
+		);
+		$decisions = get_posts(
+			array(
+				'post_type'      => 'fop_decision',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'no_found_rows'  => true,
+			)
+		);
 		$by_status = array();
 		foreach ( $decisions as $d ) {
-			$s = get_post_meta( $d->ID, '_fop_decision_status', true );
+			$s               = get_post_meta( $d->ID, '_fop_decision_status', true );
 			$by_status[ $s ] = ( $by_status[ $s ] ?? 0 ) + 1;
 		}
 		global $wpdb;
-		$new_owners = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(DISTINCT user_id) FROM {$wpdb->prefix}fop_share_register WHERE event = 'acquisition' AND recorded_at BETWEEN %s AND %s",
-			$from,
-			$to
-		) );
+		$new_owners = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT user_id) FROM {$wpdb->prefix}fop_share_register WHERE event = 'acquisition' AND recorded_at BETWEEN %s AND %s",
+				$from,
+				$to
+			)
+		);
 		return array(
-			'year'        => $year,
-			'ballots'     => array_map( function ( $b ) {
-				return array( 'title' => $b->post_title, 'result' => get_post_meta( $b->ID, '_fop_result', true ) );
-			}, $ballots ),
-			'decisions'   => $by_status,
-			'new_owners'  => $new_owners,
-			'total_owners' => count( get_users( array( 'role' => 'fan_owner', 'fields' => 'ID' ) ) ),
-			'target'      => 1000,
+			'year'         => $year,
+			'ballots'      => array_map(
+				function ( $b ) {
+					return array(
+						'title'  => $b->post_title,
+						'result' => get_post_meta( $b->ID, '_fop_result', true ),
+					);
+				},
+				$ballots
+			),
+			'decisions'    => $by_status,
+			'new_owners'   => $new_owners,
+			'total_owners' => count(
+				get_users(
+					array(
+						'role'   => 'fan_owner',
+						'fields' => 'ID',
+					)
+				)
+			),
+			'target'       => 1000,
 		);
 	}
 }

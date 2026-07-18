@@ -38,7 +38,10 @@ class FOP_Certificates {
 		update_user_meta( $user_id, 'fop_certificates', $history );
 
 		$codes            = get_option( 'fop_verify_codes', array() );
-		$codes[ $verify ] = array( 'user' => $user_id, 'index' => count( $history ) - 1 );
+		$codes[ $verify ] = array(
+			'user'  => $user_id,
+			'index' => count( $history ) - 1,
+		);
 		update_option( 'fop_verify_codes', $codes, false );
 
 		$user = get_userdata( $user_id );
@@ -93,10 +96,10 @@ class FOP_Certificates {
 		if ( ! $cert ) {
 			wp_die( esc_html__( 'This certificate is no longer on record.', 'fan-ownership' ), 404 );
 		}
-		$current    = fop_shares( $user_id );
+		$current     = fop_shares( $user_id );
 		$surrendered = 0 === $current && ! user_can( $user_id, 'fop_member' );
-		$show_name  = (bool) get_user_meta( $user_id, 'fop_verify_show_name', true );
-		$user       = get_userdata( $user_id );
+		$show_name   = (bool) get_user_meta( $user_id, 'fop_verify_show_name', true );
+		$user        = get_userdata( $user_id );
 
 		echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'
 			. esc_html__( 'Certificate verification', 'fan-ownership' ) . ' — ' . esc_html( fop_club_name() ) . '</title></head><body style="font-family:system-ui;max-width:40rem;margin:3rem auto;padding:0 1rem;">';

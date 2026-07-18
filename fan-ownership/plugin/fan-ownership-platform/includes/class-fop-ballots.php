@@ -67,7 +67,12 @@ class FOP_Ballots {
 			// FO-202 AC2: revision replaces the final choice, exactly once counted.
 			$wpdb->update(
 				$table,
-				array( 'choice' => $choice, 'weight' => $weight, 'cast_at' => fop_now(), 'revised' => (int) $existing->revised + 1 ),
+				array(
+					'choice'  => $choice,
+					'weight'  => $weight,
+					'cast_at' => fop_now(),
+					'revised' => (int) $existing->revised + 1,
+				),
 				array( 'id' => $existing->id ),
 				array( '%d', '%d', '%s', '%d' ),
 				array( '%d' )
@@ -76,7 +81,14 @@ class FOP_Ballots {
 		} else {
 			$inserted = $wpdb->insert(
 				$table,
-				array( 'ballot_id' => $ballot_id, 'user_id' => $user_id, 'choice' => $choice, 'weight' => $weight, 'cast_at' => fop_now(), 'revised' => 0 ),
+				array(
+					'ballot_id' => $ballot_id,
+					'user_id'   => $user_id,
+					'choice'    => $choice,
+					'weight'    => $weight,
+					'cast_at'   => fop_now(),
+					'revised'   => 0,
+				),
 				array( '%d', '%d', '%d', '%d', '%s', '%d' )
 			);
 			if ( false === $inserted ) {
@@ -88,7 +100,10 @@ class FOP_Ballots {
 			FOP_Onboarding::mark_complete( $user_id, 'voted' );
 		}
 		fop_touch_activity( $user_id );
-		return array( 'weight' => $weight, 'revised' => $revised );
+		return array(
+			'weight'  => $weight,
+			'revised' => $revised,
+		);
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -115,12 +130,16 @@ class FOP_Ballots {
 			return new WP_Error( 'fop_secret', __( 'This is a secret ballot — results are revealed when it closes.', 'fan-ownership' ) );
 		}
 		global $wpdb;
-		$rows = $wpdb->get_results(
+		$rows    = $wpdb->get_results(
 			$wpdb->prepare( "SELECT choice, SUM(weight) AS votes, COUNT(*) AS members FROM {$wpdb->prefix}fop_ballot_votes WHERE ballot_id = %d GROUP BY choice", $ballot_id ),
 			ARRAY_A
 		);
 		$options = (array) get_post_meta( $ballot_id, '_fop_options', true );
-		$out     = array( 'votes' => array_fill( 0, count( $options ), 0 ), 'members' => 0, 'total_votes' => 0 );
+		$out     = array(
+			'votes'       => array_fill( 0, count( $options ), 0 ),
+			'members'     => 0,
+			'total_votes' => 0,
+		);
 		foreach ( $rows as $row ) {
 			$out['votes'][ (int) $row['choice'] ] = (int) $row['votes'];
 			$out['members']                      += (int) $row['members'];
@@ -155,27 +174,31 @@ class FOP_Ballots {
 	 * Open ballots (max 2 by rule), and the queue behind them. FO-201 AC2.
 	 */
 	public static function open_ballots() {
-		return get_posts( array(
-			'post_type'      => 'fop_ballot',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'meta_key'       => '_fop_state',
-			'meta_value'     => 'open',
-			'orderby'        => 'meta_value',
-			'no_found_rows'  => true,
-		) );
+		return get_posts(
+			array(
+				'post_type'      => 'fop_ballot',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_key'       => '_fop_state',
+				'meta_value'     => 'open',
+				'orderby'        => 'meta_value',
+				'no_found_rows'  => true,
+			)
+		);
 	}
 
 	public static function scheduled_ballots() {
-		return get_posts( array(
-			'post_type'      => 'fop_ballot',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'meta_key'       => '_fop_state',
-			'meta_value'     => 'scheduled',
-			'orderby'        => 'meta_value_datetime',
-			'no_found_rows'  => true,
-		) );
+		return get_posts(
+			array(
+				'post_type'      => 'fop_ballot',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_key'       => '_fop_state',
+				'meta_value'     => 'scheduled',
+				'orderby'        => 'meta_value_datetime',
+				'no_found_rows'  => true,
+			)
+		);
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -213,12 +236,14 @@ class FOP_Ballots {
 		echo '<input type="datetime-local" id="fop_opens" name="fop_opens" value="' . esc_attr( $opens ? gmdate( 'Y-m-d\TH:i', strtotime( $opens ) ) : '' ) . '" ' . esc_attr( $dis ) . '>';
 		echo ' <label for="fop_closes"><strong>' . esc_html__( 'Closes', 'fan-ownership' ) . '</strong></label> ';
 		echo '<input type="datetime-local" id="fop_closes" name="fop_closes" value="' . esc_attr( $closes ? gmdate( 'Y-m-d\TH:i', strtotime( $closes ) ) : '' ) . '" ' . esc_attr( $dis ) . '></p>';
-		echo '<p class="description">' . esc_html( sprintf(
+		echo '<p class="description">' . esc_html(
+			sprintf(
 			/* translators: 1: window days, 2: max live. */
-			__( 'Leave "closes" empty for the default %1$d-day window. At most %2$d ballots run at once — later ballots queue automatically.', 'fan-ownership' ),
-			(int) fop_setting( 'ballot_window_days', 7 ),
-			(int) fop_setting( 'max_live_ballots', 2 )
-		) ) . '</p>';
+				__( 'Leave "closes" empty for the default %1$d-day window. At most %2$d ballots run at once — later ballots queue automatically.', 'fan-ownership' ),
+				(int) fop_setting( 'ballot_window_days', 7 ),
+				(int) fop_setting( 'max_live_ballots', 2 )
+			)
+		) . '</p>';
 		echo '<p><label for="fop_board_rec"><strong>' . esc_html__( 'Board recommendation (optional, shown as the board position)', 'fan-ownership' ) . '</strong></label>';
 		echo '<textarea class="widefat" rows="2" id="fop_board_rec" name="fop_board_rec">' . esc_textarea( $rec ) . '</textarea></p>';
 
@@ -229,12 +254,14 @@ class FOP_Ballots {
 				foreach ( $options as $i => $label ) {
 					echo '<li>' . esc_html( $label ) . ' — <strong>' . (int) $tallies['votes'][ $i ] . '</strong></li>';
 				}
-				echo '</ul><p>' . esc_html( sprintf(
+				echo '</ul><p>' . esc_html(
+					sprintf(
 					/* translators: 1: members voted, 2: quorum needed. */
-					__( '%1$d members have voted. Quorum requires %2$d.', 'fan-ownership' ),
-					(int) $tallies['members'],
-					(int) ceil( (int) get_post_meta( $post->ID, '_fop_quorum_denominator', true ) * (int) fop_setting( 'quorum_percent', 25 ) / 100 )
-				) ) . '</p>';
+						__( '%1$d members have voted. Quorum requires %2$d.', 'fan-ownership' ),
+						(int) $tallies['members'],
+						(int) ceil( (int) get_post_meta( $post->ID, '_fop_quorum_denominator', true ) * (int) fop_setting( 'quorum_percent', 25 ) / 100 )
+					)
+				) . '</p>';
 			}
 		}
 	}
@@ -260,9 +287,9 @@ class FOP_Ballots {
 		$type = isset( $_POST['fop_type'] ) && 'constitutional' === $_POST['fop_type'] ? 'constitutional' : 'standard';
 		update_post_meta( $post_id, '_fop_type', $type );
 
-		$opens  = isset( $_POST['fop_opens'] ) ? sanitize_text_field( wp_unslash( $_POST['fop_opens'] ) ) : '';
-		$closes = isset( $_POST['fop_closes'] ) ? sanitize_text_field( wp_unslash( $_POST['fop_closes'] ) ) : '';
-		$opens_ts = $opens ? strtotime( $opens ) : time();
+		$opens     = isset( $_POST['fop_opens'] ) ? sanitize_text_field( wp_unslash( $_POST['fop_opens'] ) ) : '';
+		$closes    = isset( $_POST['fop_closes'] ) ? sanitize_text_field( wp_unslash( $_POST['fop_closes'] ) ) : '';
+		$opens_ts  = $opens ? strtotime( $opens ) : time();
 		$closes_ts = $closes ? strtotime( $closes ) : $opens_ts + (int) fop_setting( 'ballot_window_days', 7 ) * DAY_IN_SECONDS;
 		update_post_meta( $post_id, '_fop_opens', gmdate( 'Y-m-d H:i:s', $opens_ts ) );
 		update_post_meta( $post_id, '_fop_closes', gmdate( 'Y-m-d H:i:s', $closes_ts ) );

@@ -37,13 +37,29 @@ class FOP_Media {
 		if ( ! $key_id || ! $jwk_pem ) {
 			return $cf_uid; // Unsigned dev fallback; production configures signing keys.
 		}
-		$header  = self::b64( wp_json_encode( array( 'alg' => 'RS256', 'kid' => $key_id ) ) );
-		$payload = self::b64( wp_json_encode( array(
-			'sub'      => $cf_uid,
-			'kid'      => $key_id,
-			'exp'      => time() + 4 * HOUR_IN_SECONDS,
-			'accessRules' => array( array( 'type' => 'any', 'action' => 'allow' ) ),
-		) ) );
+		$header    = self::b64(
+			wp_json_encode(
+				array(
+					'alg' => 'RS256',
+					'kid' => $key_id,
+				)
+			)
+		);
+		$payload   = self::b64(
+			wp_json_encode(
+				array(
+					'sub'         => $cf_uid,
+					'kid'         => $key_id,
+					'exp'         => time() + 4 * HOUR_IN_SECONDS,
+					'accessRules' => array(
+						array(
+							'type'   => 'any',
+							'action' => 'allow',
+						),
+					),
+				)
+			)
+		);
 		$signature = '';
 		if ( function_exists( 'openssl_sign' ) && openssl_sign( $header . '.' . $payload, $signature, $jwk_pem, OPENSSL_ALGO_SHA256 ) ) {
 			return $header . '.' . $payload . '.' . self::b64( $signature );
@@ -52,6 +68,8 @@ class FOP_Media {
 	}
 
 	private static function b64( $data ) {
+		// Base64url per Cloudflare Stream signed-token format, not obfuscation.
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		return rtrim( strtr( base64_encode( $data ), '+/', '-_' ), '=' );
 	}
 
@@ -76,11 +94,16 @@ class FOP_Media {
 			if ( $attempts >= 4 ) {
 				// One hour without a recording: alert, never fail silently.
 				foreach ( get_users( array( 'role__in' => array( 'fop_content_editor', 'fop_owner_admin', 'administrator' ) ) ) as $staff ) {
-					FOP_Comms::send( $staff->user_email, __( 'Replay auto-publish failed', 'fan-ownership' ), sprintf(
+					FOP_Comms::send(
+						$staff->user_email,
+						__( 'Replay auto-publish failed', 'fan-ownership' ),
+						sprintf(
 						/* translators: %s match. */
-						__( 'The replay for "%s" has not appeared within the hour. Check the stream recording and publish manually.', 'fan-ownership' ),
-						get_the_title( $match_id )
-					), 'governance' );
+							__( 'The replay for "%s" has not appeared within the hour. Check the stream recording and publish manually.', 'fan-ownership' ),
+							get_the_title( $match_id )
+						),
+						'governance'
+					);
 				}
 				return;
 			}
@@ -88,11 +111,13 @@ class FOP_Media {
 			return;
 		}
 
-		$video_id = wp_insert_post( array(
-			'post_type'   => 'fop_video',
-			'post_status' => 'publish',
-			'post_title'  => sprintf( /* translators: %s match title. */ __( 'Full match replay: %s', 'fan-ownership' ), get_the_title( $match_id ) ),
-		) );
+		$video_id = wp_insert_post(
+			array(
+				'post_type'   => 'fop_video',
+				'post_status' => 'publish',
+				'post_title'  => sprintf( /* translators: %s match title. */ __( 'Full match replay: %s', 'fan-ownership' ), get_the_title( $match_id ) ),
+			)
+		);
 		if ( $video_id && ! is_wp_error( $video_id ) ) {
 			update_post_meta( $video_id, '_fop_cf_uid', $recording_uid );
 			update_post_meta( $video_id, '_fop_match', $match_id );
@@ -113,7 +138,10 @@ class FOP_Media {
 		}
 		$response = wp_remote_get(
 			sprintf( 'https://api.cloudflare.com/client/v4/accounts/%s/stream/live_inputs/%s/videos', rawurlencode( $account ), rawurlencode( $live_input_uid ) ),
-			array( 'headers' => array( 'Authorization' => 'Bearer ' . $token ), 'timeout' => 10 )
+			array(
+				'headers' => array( 'Authorization' => 'Bearer ' . $token ),
+				'timeout' => 10,
+			)
 		);
 		if ( is_wp_error( $response ) ) {
 			return '';
@@ -142,11 +170,18 @@ class FOP_Media {
 	}
 
 	public static function meta_box() {
-		add_meta_box( 'fop_video_source', __( 'Video Source', 'fan-ownership' ), function ( $post ) {
-			wp_nonce_field( 'fop_video_meta', 'fop_video_nonce' );
-			echo '<p><label>' . esc_html__( 'Cloudflare Stream UID', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_cf_uid" value="' . esc_attr( get_post_meta( $post->ID, '_fop_cf_uid', true ) ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'OR self-hosted media URL (object storage, member-gated CDN)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_media_url" value="' . esc_attr( get_post_meta( $post->ID, '_fop_media_url', true ) ) . '"></p>';
-		}, 'fop_video', 'normal', 'high' );
+		add_meta_box(
+			'fop_video_source',
+			__( 'Video Source', 'fan-ownership' ),
+			function ( $post ) {
+				wp_nonce_field( 'fop_video_meta', 'fop_video_nonce' );
+				echo '<p><label>' . esc_html__( 'Cloudflare Stream UID', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_cf_uid" value="' . esc_attr( get_post_meta( $post->ID, '_fop_cf_uid', true ) ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'OR self-hosted media URL (object storage, member-gated CDN)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_media_url" value="' . esc_attr( get_post_meta( $post->ID, '_fop_media_url', true ) ) . '"></p>';
+			},
+			'fop_video',
+			'normal',
+			'high'
+		);
 	}
 
 	public static function save_meta( $post_id, $post ) {

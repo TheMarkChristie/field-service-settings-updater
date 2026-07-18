@@ -20,12 +20,20 @@ class FOP_Onboarding {
 	 * (FO-115 AC3). Steps stop early once completed.
 	 */
 	public static function start_journey( $user_id ) {
-		update_user_meta( $user_id, 'fop_onboarding', array(
-			'started'   => time(),
-			'dismissed' => 0,
-			'completed' => array(),
-		) );
-		foreach ( array( 1 => DAY_IN_SECONDS, 2 => 3 * DAY_IN_SECONDS, 3 => 6 * DAY_IN_SECONDS ) as $step => $delay ) {
+		update_user_meta(
+			$user_id,
+			'fop_onboarding',
+			array(
+				'started'   => time(),
+				'dismissed' => 0,
+				'completed' => array(),
+			)
+		);
+		foreach ( array(
+			1 => DAY_IN_SECONDS,
+			2 => 3 * DAY_IN_SECONDS,
+			3 => 6 * DAY_IN_SECONDS,
+		) as $step => $delay ) {
 			wp_schedule_single_event( time() + $delay, 'fop_onboarding_step', array( $user_id, $step ) );
 		}
 	}
@@ -46,7 +54,7 @@ class FOP_Onboarding {
 			1 => array(
 				'done_key' => 'voted',
 				'subject'  => __( 'Cast your first vote', 'fan-ownership' ),
-				'body'     => __( "Your ownership comes with a voice. There is a starter ballot waiting in the Boardroom — cast your first vote and see how the club decides things together.", 'fan-ownership' ),
+				'body'     => __( 'Your ownership comes with a voice. There is a starter ballot waiting in the Boardroom — cast your first vote and see how the club decides things together.', 'fan-ownership' ),
 			),
 			2 => array(
 				'done_key' => 'visited_boardroom',
@@ -84,8 +92,8 @@ class FOP_Onboarding {
 			wp_die( esc_html__( 'Please sign in.', 'fan-ownership' ) );
 		}
 		check_admin_referer( 'fop_dismiss_onboarding' );
-		$state = get_user_meta( get_current_user_id(), 'fop_onboarding', true );
-		$state = is_array( $state ) ? $state : array();
+		$state              = get_user_meta( get_current_user_id(), 'fop_onboarding', true );
+		$state              = is_array( $state ) ? $state : array();
 		$state['dismissed'] = time();
 		update_user_meta( get_current_user_id(), 'fop_onboarding', $state );
 		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );

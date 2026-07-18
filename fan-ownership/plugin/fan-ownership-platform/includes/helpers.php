@@ -10,13 +10,13 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Get a platform setting (identity, prices, toggles) with default.
  *
- * @param string $key     Setting key.
- * @param mixed  $default Default.
+ * @param string $key           Setting key.
+ * @param mixed  $default_value Fallback when unset.
  * @return mixed
  */
-function fop_setting( $key, $default = '' ) {
+function fop_setting( $key, $default_value = '' ) {
 	$settings = get_option( 'fop_settings', array() );
-	return isset( $settings[ $key ] ) && '' !== $settings[ $key ] ? $settings[ $key ] : $default;
+	return isset( $settings[ $key ] ) && '' !== $settings[ $key ] ? $settings[ $key ] : $default_value;
 }
 
 /**
@@ -147,11 +147,11 @@ function fop_active_owner_count( $since_timestamp = null ) {
 	$since = $since_timestamp ? $since_timestamp : strtotime( '-12 months' );
 	$query = new WP_User_Query(
 		array(
-			'role'       => 'fan_owner',
+			'role'        => 'fan_owner',
 			'count_total' => true,
-			'fields'     => 'ID',
-			'number'     => 1,
-			'meta_query' => array(
+			'fields'      => 'ID',
+			'number'      => 1,
+			'meta_query'  => array(
 				array(
 					'key'     => 'fop_last_active',
 					'value'   => $since,

@@ -42,12 +42,15 @@ class FOP_Chapters {
 			return new WP_Error( 'fop_city', __( 'Tell us where the chapter is.', 'fan-ownership' ) );
 		}
 		$title      = sprintf( '%s — %s', fop_club_name(), $city );
-		$chapter_id = wp_insert_post( array(
-			'post_type'   => 'fop_chapter',
-			'post_status' => 'pending',
-			'post_title'  => $title,
-			'post_author' => $lead_id,
-		), true );
+		$chapter_id = wp_insert_post(
+			array(
+				'post_type'   => 'fop_chapter',
+				'post_status' => 'pending',
+				'post_title'  => $title,
+				'post_author' => $lead_id,
+			),
+			true
+		);
 		if ( is_wp_error( $chapter_id ) ) {
 			return $chapter_id;
 		}
@@ -75,7 +78,10 @@ class FOP_Chapters {
 			$in        = true;
 		}
 		update_post_meta( $chapter_id, '_fop_chapter_members', $members );
-		return array( 'count' => count( $members ), 'member' => $in );
+		return array(
+			'count'  => count( $members ),
+			'member' => $in,
+		);
 	}
 
 	/**
@@ -83,7 +89,14 @@ class FOP_Chapters {
 	 * archivable; de-recognition recorded.
 	 */
 	public static function flag_lapsed() {
-		$chapters = get_posts( array( 'post_type' => 'fop_chapter', 'post_status' => 'publish', 'posts_per_page' => -1, 'no_found_rows' => true ) );
+		$chapters = get_posts(
+			array(
+				'post_type'      => 'fop_chapter',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'no_found_rows'  => true,
+			)
+		);
 		foreach ( $chapters as $chapter ) {
 			$affirmed = (int) get_post_meta( $chapter->ID, '_fop_affirmed_at', true );
 			if ( $affirmed && time() - $affirmed > YEAR_IN_SECONDS ) {
@@ -91,11 +104,16 @@ class FOP_Chapters {
 				$lead = get_userdata( (int) get_post_meta( $chapter->ID, '_fop_chapter_lead', true ) );
 				if ( $lead && ! get_post_meta( $chapter->ID, '_fop_lapse_notified', true ) ) {
 					update_post_meta( $chapter->ID, '_fop_lapse_notified', 1 );
-					FOP_Comms::send( $lead->user_email, __( 'Chapter re-affirmation due', 'fan-ownership' ), sprintf(
+					FOP_Comms::send(
+						$lead->user_email,
+						__( 'Chapter re-affirmation due', 'fan-ownership' ),
+						sprintf(
 						/* translators: %s chapter. */
-						__( '"%s" is due its annual re-affirmation. Confirm the chapter is still active from your chapter page.', 'fan-ownership' ),
-						$chapter->post_title
-					), 'governance' );
+							__( '"%s" is due its annual re-affirmation. Confirm the chapter is still active from your chapter page.', 'fan-ownership' ),
+							$chapter->post_title
+						),
+						'governance'
+					);
 				}
 			}
 		}
@@ -105,25 +123,45 @@ class FOP_Chapters {
 		if ( ! current_user_can( 'fop_admin' ) && ! current_user_can( 'fop_governance' ) ) {
 			return new WP_Error( 'fop_denied', __( 'Not allowed.', 'fan-ownership' ) );
 		}
-		wp_update_post( array( 'ID' => $chapter_id, 'post_status' => 'private' ) );
-		update_post_meta( $chapter_id, '_fop_derecognised', array( 'at' => time(), 'by' => get_current_user_id(), 'reason' => sanitize_text_field( $reason ) ) );
+		wp_update_post(
+			array(
+				'ID'          => $chapter_id,
+				'post_status' => 'private',
+			)
+		);
+		update_post_meta(
+			$chapter_id,
+			'_fop_derecognised',
+			array(
+				'at'     => time(),
+				'by'     => get_current_user_id(),
+				'reason' => sanitize_text_field( $reason ),
+			)
+		);
 		FOP_Audit::log( 'chapter_derecognised', sprintf( 'Chapter %d de-recognised: %s', $chapter_id, $reason ) );
 		return true;
 	}
 
 	public static function meta_box() {
-		add_meta_box( 'fop_chapter_details', __( 'Chapter', 'fan-ownership' ), function ( $post ) {
-			wp_nonce_field( 'fop_chapter_meta', 'fop_chapter_nonce' );
-			$lead = get_userdata( (int) get_post_meta( $post->ID, '_fop_chapter_lead', true ) );
-			echo '<p>' . esc_html__( 'City/region:', 'fan-ownership' ) . ' <strong>' . esc_html( get_post_meta( $post->ID, '_fop_chapter_city', true ) ) . '</strong></p>';
-			echo '<p>' . esc_html__( 'Lead:', 'fan-ownership' ) . ' ' . esc_html( $lead ? $lead->display_name : '—' ) . '</p>';
-			echo '<p>' . esc_html( sprintf( /* translators: %d members. */ __( 'Members: %d', 'fan-ownership' ), count( (array) get_post_meta( $post->ID, '_fop_chapter_members', true ) ) ) ) . '</p>';
-			echo '<p>' . esc_html__( 'Last affirmed:', 'fan-ownership' ) . ' ' . esc_html( date_i18n( get_option( 'date_format' ), (int) get_post_meta( $post->ID, '_fop_affirmed_at', true ) ) ) . '</p>';
-			if ( get_post_meta( $post->ID, '_fop_lapsed', true ) ) {
-				echo '<p><strong>' . esc_html__( 'Lapsed — awaiting re-affirmation.', 'fan-ownership' ) . '</strong></p>';
-			}
-			echo '<p><label><input type="checkbox" name="fop_affirm" value="1"> ' . esc_html__( 'Record re-affirmation now', 'fan-ownership' ) . '</label></p>';
-		}, 'fop_chapter', 'side', 'high' );
+		add_meta_box(
+			'fop_chapter_details',
+			__( 'Chapter', 'fan-ownership' ),
+			function ( $post ) {
+				wp_nonce_field( 'fop_chapter_meta', 'fop_chapter_nonce' );
+				$lead = get_userdata( (int) get_post_meta( $post->ID, '_fop_chapter_lead', true ) );
+				echo '<p>' . esc_html__( 'City/region:', 'fan-ownership' ) . ' <strong>' . esc_html( get_post_meta( $post->ID, '_fop_chapter_city', true ) ) . '</strong></p>';
+				echo '<p>' . esc_html__( 'Lead:', 'fan-ownership' ) . ' ' . esc_html( $lead ? $lead->display_name : '—' ) . '</p>';
+				echo '<p>' . esc_html( sprintf( /* translators: %d members. */ __( 'Members: %d', 'fan-ownership' ), count( (array) get_post_meta( $post->ID, '_fop_chapter_members', true ) ) ) ) . '</p>';
+				echo '<p>' . esc_html__( 'Last affirmed:', 'fan-ownership' ) . ' ' . esc_html( date_i18n( get_option( 'date_format' ), (int) get_post_meta( $post->ID, '_fop_affirmed_at', true ) ) ) . '</p>';
+				if ( get_post_meta( $post->ID, '_fop_lapsed', true ) ) {
+					echo '<p><strong>' . esc_html__( 'Lapsed — awaiting re-affirmation.', 'fan-ownership' ) . '</strong></p>';
+				}
+				echo '<p><label><input type="checkbox" name="fop_affirm" value="1"> ' . esc_html__( 'Record re-affirmation now', 'fan-ownership' ) . '</label></p>';
+			},
+			'fop_chapter',
+			'side',
+			'high'
+		);
 	}
 
 	public static function save_meta( $post_id, $post ) {

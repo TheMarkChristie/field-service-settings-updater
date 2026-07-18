@@ -24,7 +24,8 @@ class FOP_Register {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$charset = $wpdb->get_charset_collate();
 
-		dbDelta( "CREATE TABLE {$wpdb->prefix}fop_share_register (
+		dbDelta(
+			"CREATE TABLE {$wpdb->prefix}fop_share_register (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			recorded_at DATETIME NOT NULL,
 			user_id BIGINT UNSIGNED NOT NULL,
@@ -37,11 +38,13 @@ class FOP_Register {
 			PRIMARY KEY (id),
 			KEY user_id (user_id),
 			KEY event (event)
-		) $charset;" );
+		) $charset;"
+		);
 
 		dbDelta( FOP_Audit::table_sql( $charset, $wpdb->prefix ) );
 
-		dbDelta( "CREATE TABLE {$wpdb->prefix}fop_ballot_votes (
+		dbDelta(
+			"CREATE TABLE {$wpdb->prefix}fop_ballot_votes (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			ballot_id BIGINT UNSIGNED NOT NULL,
 			user_id BIGINT UNSIGNED NOT NULL,
@@ -52,9 +55,11 @@ class FOP_Register {
 			PRIMARY KEY (id),
 			UNIQUE KEY ballot_user (ballot_id, user_id),
 			KEY ballot_id (ballot_id)
-		) $charset;" );
+		) $charset;"
+		);
 
-		dbDelta( "CREATE TABLE {$wpdb->prefix}fop_match_events (
+		dbDelta(
+			"CREATE TABLE {$wpdb->prefix}fop_match_events (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			match_id BIGINT UNSIGNED NOT NULL,
 			client_key VARCHAR(64) NOT NULL,
@@ -68,9 +73,11 @@ class FOP_Register {
 			PRIMARY KEY (id),
 			UNIQUE KEY match_client (match_id, client_key),
 			KEY match_id (match_id)
-		) $charset;" );
+		) $charset;"
+		);
 
-		dbDelta( "CREATE TABLE {$wpdb->prefix}fop_chat_messages (
+		dbDelta(
+			"CREATE TABLE {$wpdb->prefix}fop_chat_messages (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			room VARCHAR(64) NOT NULL,
 			user_id BIGINT UNSIGNED NOT NULL,
@@ -81,7 +88,8 @@ class FOP_Register {
 			removed_by BIGINT UNSIGNED NULL,
 			PRIMARY KEY (id),
 			KEY room_id (room, id)
-		) $charset;" );
+		) $charset;"
+		);
 	}
 
 	/**
@@ -130,19 +138,22 @@ class FOP_Register {
 		fputcsv( $out, array( 'Entry', 'Recorded at', 'Member name', 'Email', 'Owner number', 'Event', 'Shares', 'Holding after', 'Source', 'Consideration', 'Context' ) );
 		foreach ( $rows as $row ) {
 			$user = get_userdata( (int) $row['user_id'] );
-			fputcsv( $out, array(
-				$row['id'],
-				$row['recorded_at'],
-				$user ? $user->display_name : ( 'ERASED #' . $row['user_id'] ),
-				$user ? $user->user_email : '',
-				$user ? FOP_Shares::owner_number( $user->ID ) : '',
-				$row['event'],
-				$row['shares'],
-				$row['holding_after'],
-				$row['source'],
-				$row['consideration'],
-				$row['context'],
-			) );
+			fputcsv(
+				$out,
+				array(
+					$row['id'],
+					$row['recorded_at'],
+					$user ? $user->display_name : ( 'ERASED #' . $row['user_id'] ),
+					$user ? $user->user_email : '',
+					$user ? FOP_Shares::owner_number( $user->ID ) : '',
+					$row['event'],
+					$row['shares'],
+					$row['holding_after'],
+					$row['source'],
+					$row['consideration'],
+					$row['context'],
+				)
+			);
 		}
 		fclose( $out ); // phpcs:ignore
 		exit;

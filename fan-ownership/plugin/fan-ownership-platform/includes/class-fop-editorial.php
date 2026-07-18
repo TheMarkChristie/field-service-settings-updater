@@ -45,11 +45,9 @@ class FOP_Editorial {
 		if ( $governed && $post_id ) {
 			$approved_by = (int) get_post_meta( $post_id, '_fop_approved_by', true );
 			$author      = (int) ( $data['post_author'] ?? 0 );
-			// AC2: author cannot self-approve; approval must exist and differ.
-			if ( ! $approved_by || $approved_by === get_current_user_id() && $approved_by === $author ) {
-				if ( ! $approved_by || $approved_by === $author ) {
-					$data['post_status'] = 'pending';
-				}
+			// AC2: an approval must exist and the approver cannot be the author.
+			if ( ! $approved_by || $approved_by === $author ) {
+				$data['post_status'] = 'pending';
 			}
 		}
 		// Sensitive footage: manager gate (P70/P68).
@@ -76,7 +74,7 @@ class FOP_Editorial {
 			if ( $approved_by ) {
 				$approver = get_userdata( $approved_by );
 				echo '<p>' . esc_html( sprintf( /* translators: %s approver. */ __( 'Approved by %s.', 'fan-ownership' ), $approver ? $approver->display_name : '#' . $approved_by ) ) . '</p>';
-			} elseif ( current_user_can( 'fop_second_approve' ) && (int) $post->post_author !== get_current_user_id() ) {
+			} elseif ( current_user_can( 'fop_second_approve' ) && get_current_user_id() !== (int) $post->post_author ) {
 				$url = wp_nonce_url( admin_url( 'admin-post.php?action=fop_approve_item&post=' . $post->ID ), 'fop_approve_' . $post->ID );
 				echo '<p><a class="button button-primary" href="' . esc_url( $url ) . '">' . esc_html__( 'Approve for publication', 'fan-ownership' ) . '</a></p>';
 			} else {
@@ -117,7 +115,7 @@ class FOP_Editorial {
 		$post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
 		check_admin_referer( 'fop_approve_' . $post_id );
 		$post = get_post( $post_id );
-		if ( ! $post || ! current_user_can( 'fop_second_approve' ) || (int) $post->post_author === get_current_user_id() ) {
+		if ( ! $post || ! current_user_can( 'fop_second_approve' ) || get_current_user_id() === (int) $post->post_author ) {
 			wp_die( esc_html__( 'A second person (not the author) must approve this item.', 'fan-ownership' ) );
 		}
 		update_post_meta( $post_id, '_fop_approved_by', get_current_user_id() );

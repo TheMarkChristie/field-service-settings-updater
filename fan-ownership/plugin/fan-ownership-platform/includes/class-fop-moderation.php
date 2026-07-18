@@ -82,37 +82,58 @@ class FOP_Moderation {
 			return new WP_Error( 'fop_user', __( 'Member not found.', 'fan-ownership' ) );
 		}
 		$history   = (array) get_user_meta( $target, 'fop_sanctions', true );
-		$history[] = array( 'step' => $step, 'reason' => $reason, 'by' => get_current_user_id(), 'at' => time(), 'days' => $days );
+		$history[] = array(
+			'step'   => $step,
+			'reason' => $reason,
+			'by'     => get_current_user_id(),
+			'at'     => time(),
+			'days'   => $days,
+		);
 		update_user_meta( $target, 'fop_sanctions', $history );
 
 		switch ( $step ) {
 			case 'warn':
-				FOP_Comms::send( $user->user_email, __( 'Code of conduct warning', 'fan-ownership' ), sprintf(
+				FOP_Comms::send(
+					$user->user_email,
+					__( 'Code of conduct warning', 'fan-ownership' ),
+					sprintf(
 					/* translators: %s reason. */
-					__( "This is a formal warning under the club's code of conduct.\n\nReason: %s\n\nA further breach may suspend your posting rights.", 'fan-ownership' ),
-					$reason
-				), 'governance' );
+						__( "This is a formal warning under the club's code of conduct.\n\nReason: %s\n\nA further breach may suspend your posting rights.", 'fan-ownership' ),
+						$reason
+					),
+					'governance'
+				);
 				break;
 			case 'mute':
 				update_user_meta( $target, 'fop_muted_until', time() + $days * DAY_IN_SECONDS );
-				FOP_Comms::send( $user->user_email, __( 'Posting rights suspended', 'fan-ownership' ), sprintf(
+				FOP_Comms::send(
+					$user->user_email,
+					__( 'Posting rights suspended', 'fan-ownership' ),
+					sprintf(
 					/* translators: 1: days, 2: reason. */
-					__( "Your posting and submission rights are suspended for %1\$d days under the code of conduct.\n\nReason: %2\$s\n\nYour voting and viewing rights are unaffected.", 'fan-ownership' ),
-					$days,
-					$reason
-				), 'governance' );
+						__( "Your posting and submission rights are suspended for %1\$d days under the code of conduct.\n\nReason: %2\$s\n\nYour voting and viewing rights are unaffected.", 'fan-ownership' ),
+						$days,
+						$reason
+					),
+					'governance'
+				);
 				break;
 			case 'expel':
-				$held = FOP_Shares::surrender_all( $target, 'expelled', array( 'reason' => $reason ) );
+				$held     = FOP_Shares::surrender_all( $target, 'expelled', array( 'reason' => $reason ) );
 				$sessions = WP_Session_Tokens::get_instance( $target );
 				$sessions->destroy_all();
 				$user->set_role( '' );
-				FOP_Comms::send( $user->user_email, __( 'Membership ended', 'fan-ownership' ), sprintf(
+				FOP_Comms::send(
+					$user->user_email,
+					__( 'Membership ended', 'fan-ownership' ),
+					sprintf(
 					/* translators: 1: reason, 2: shares. */
-					__( "Your membership has been ended under the code of conduct and your %2\$d share(s) surrendered to the club, as the terms of membership provide.\n\nReason: %1\$s", 'fan-ownership' ),
-					$reason,
-					$held
-				), 'governance' );
+						__( "Your membership has been ended under the code of conduct and your %2\$d share(s) surrendered to the club, as the terms of membership provide.\n\nReason: %1\$s", 'fan-ownership' ),
+						$reason,
+						$held
+					),
+					'governance'
+				);
 				break;
 			default:
 				return new WP_Error( 'fop_step', __( 'Unknown sanction.', 'fan-ownership' ) );

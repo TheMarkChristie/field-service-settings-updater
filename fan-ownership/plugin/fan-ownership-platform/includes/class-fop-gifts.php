@@ -22,15 +22,15 @@ class FOP_Gifts {
 	 * @param string   $recipient_email Optional recipient email for delivery.
 	 */
 	public static function issue( $order, $shares, $recipient_email = '' ) {
-		$code = strtoupper( wp_generate_password( 12, false, false ) );
-		$gift = array(
-			'code'      => $code,
-			'shares'    => (int) $shares,
-			'order'     => $order->get_id(),
-			'buyer'     => $order->get_user_id(),
-			'issued_at' => time(),
-			'redeemed'  => 0,
-			'recipient' => sanitize_email( $recipient_email ),
+		$code           = strtoupper( wp_generate_password( 12, false, false ) );
+		$gift           = array(
+			'code'          => $code,
+			'shares'        => (int) $shares,
+			'order'         => $order->get_id(),
+			'buyer'         => $order->get_user_id(),
+			'issued_at'     => time(),
+			'redeemed'      => 0,
+			'recipient'     => sanitize_email( $recipient_email ),
 			'consideration' => (float) $order->get_total(),
 		);
 		$gifts          = get_option( 'fop_gift_codes', array() );
@@ -89,7 +89,11 @@ class FOP_Gifts {
 			$user_id,
 			(int) $gifts[ $code ]['shares'],
 			'gift',
-			array( 'gift_code' => $code, 'order' => $gifts[ $code ]['order'], 'consideration' => $gifts[ $code ]['consideration'] )
+			array(
+				'gift_code'     => $code,
+				'order'         => $gifts[ $code ]['order'],
+				'consideration' => $gifts[ $code ]['consideration'],
+			)
 		);
 		if ( is_wp_error( $granted ) ) {
 			self::back( $granted->get_error_message() . ' ' . __( 'Your gift code remains valid.', 'fan-ownership' ) );
@@ -110,9 +114,14 @@ class FOP_Gifts {
 	 */
 	public static function unredeemed_for( $user_id ) {
 		$gifts = get_option( 'fop_gift_codes', array() );
-		return array_values( array_filter( $gifts, function ( $g ) use ( $user_id ) {
-			return (int) $g['buyer'] === (int) $user_id && empty( $g['redeemed'] );
-		} ) );
+		return array_values(
+			array_filter(
+				$gifts,
+				function ( $g ) use ( $user_id ) {
+					return (int) $g['buyer'] === (int) $user_id && empty( $g['redeemed'] );
+				}
+			)
+		);
 	}
 
 	private static function back( $message ) {

@@ -132,11 +132,13 @@ class FOP_Access {
 			$teaser = get_post_meta( get_the_ID(), '_fop_teaser', true );
 			$html   = $teaser ? '<div class="fop-teaser">' . wp_kses_post( wpautop( $teaser ) ) . '</div>' : '';
 			$html  .= '<div class="fop-notice fop-notice--join"><p>'
-				. esc_html( sprintf(
+				. esc_html(
+					sprintf(
 					/* translators: %s club name. */
-					__( 'The full version is exclusive to %s owners.', 'fan-ownership' ),
-					fop_club_name()
-				) )
+						__( 'The full version is exclusive to %s owners.', 'fan-ownership' ),
+						fop_club_name()
+					)
+				)
 				. '</p><p><a class="fop-button" href="' . esc_url( self::join_url() ) . '">'
 				. esc_html__( 'Become an owner', 'fan-ownership' ) . '</a> <a class="fop-button fop-button--secondary" href="'
 				. esc_url( wp_login_url( get_permalink() ) ) . '">' . esc_html__( 'Log in', 'fan-ownership' ) . '</a></p></div>';

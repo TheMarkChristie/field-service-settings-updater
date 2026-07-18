@@ -33,61 +33,85 @@ class FOP_Roles {
 	 * Create roles on activation.
 	 */
 	public static function install() {
-		add_role( 'fan_owner', __( 'Fan Owner', 'fan-ownership' ), array(
-			'read'       => true,
-			'fop_member' => true,
-		) );
+		add_role(
+			'fan_owner',
+			__( 'Fan Owner', 'fan-ownership' ),
+			array(
+				'read'       => true,
+				'fop_member' => true,
+			)
+		);
 
-		add_role( 'fop_content_editor', __( 'Content Editor', 'fan-ownership' ), array(
-			'read'             => true,
-			'fop_member'       => true,
-			'fop_edit_content' => true,
-			'upload_files'     => true,
-			'edit_posts'       => true,
-			'edit_others_posts' => true,
-			'publish_posts'    => true,
-			'edit_published_posts' => true,
-			'delete_posts'     => true,
-		) );
+		add_role(
+			'fop_content_editor',
+			__( 'Content Editor', 'fan-ownership' ),
+			array(
+				'read'                 => true,
+				'fop_member'           => true,
+				'fop_edit_content'     => true,
+				'upload_files'         => true,
+				'edit_posts'           => true,
+				'edit_others_posts'    => true,
+				'publish_posts'        => true,
+				'edit_published_posts' => true,
+				'delete_posts'         => true,
+			)
+		);
 
-		add_role( 'fop_governance_officer', __( 'Governance Officer', 'fan-ownership' ), array(
-			'read'            => true,
-			'fop_member'      => true,
-			'fop_governance'  => true,
-			'fop_view_tally'  => true,
-			'edit_posts'      => true,
-			'publish_posts'   => true,
-			'edit_published_posts' => true,
-		) );
+		add_role(
+			'fop_governance_officer',
+			__( 'Governance Officer', 'fan-ownership' ),
+			array(
+				'read'                 => true,
+				'fop_member'           => true,
+				'fop_governance'       => true,
+				'fop_view_tally'       => true,
+				'edit_posts'           => true,
+				'publish_posts'        => true,
+				'edit_published_posts' => true,
+			)
+		);
 
-		add_role( 'fop_moderator', __( 'Moderator', 'fan-ownership' ), array(
-			'read'         => true,
-			'fop_member'   => true,
-			'fop_moderate' => true,
-		) );
+		add_role(
+			'fop_moderator',
+			__( 'Moderator', 'fan-ownership' ),
+			array(
+				'read'         => true,
+				'fop_member'   => true,
+				'fop_moderate' => true,
+			)
+		);
 
-		add_role( 'fop_board_member', __( 'Board Member', 'fan-ownership' ), array(
-			'read'           => true,
-			'fop_member'     => true,
-			'fop_board'      => true,
-			'fop_view_tally' => true,
-		) );
+		add_role(
+			'fop_board_member',
+			__( 'Board Member', 'fan-ownership' ),
+			array(
+				'read'           => true,
+				'fop_member'     => true,
+				'fop_board'      => true,
+				'fop_view_tally' => true,
+			)
+		);
 
 		// Owner-Admin capabilities ride on administrator plus a dedicated role
 		// for club staff who administer without full WP admin.
-		add_role( 'fop_owner_admin', __( 'Owner-Admin', 'fan-ownership' ), array(
-			'read'               => true,
-			'fop_member'         => true,
-			'fop_admin'          => true,
-			'fop_governance'     => true,
-			'fop_edit_content'   => true,
-			'fop_moderate'       => true,
-			'fop_view_tally'     => true,
-			'fop_second_approve' => true,
-			'list_users'         => true,
-			'edit_users'         => true,
-			'upload_files'       => true,
-		) );
+		add_role(
+			'fop_owner_admin',
+			__( 'Owner-Admin', 'fan-ownership' ),
+			array(
+				'read'               => true,
+				'fop_member'         => true,
+				'fop_admin'          => true,
+				'fop_governance'     => true,
+				'fop_edit_content'   => true,
+				'fop_moderate'       => true,
+				'fop_view_tally'     => true,
+				'fop_second_approve' => true,
+				'list_users'         => true,
+				'edit_users'         => true,
+				'upload_files'       => true,
+			)
+		);
 
 		$admin = get_role( 'administrator' );
 		if ( $admin ) {

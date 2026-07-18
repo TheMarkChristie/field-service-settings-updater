@@ -84,21 +84,29 @@ class FOP_Post_Types {
 			);
 		}
 
-		register_taxonomy( 'fop_video_type', 'fop_video', array(
-			'public'            => true,
-			'hierarchical'      => true,
-			'show_admin_column' => true,
-			'show_in_rest'      => false,
-			'labels'            => array( 'name' => __( 'Video Types', 'fan-ownership' ) ),
-			'rewrite'           => array( 'slug' => 'owners/video-type' ),
-		) );
-		register_taxonomy( 'fop_document_type', 'fop_document', array(
-			'public'            => true,
-			'hierarchical'      => true,
-			'show_admin_column' => true,
-			'show_in_rest'      => false,
-			'labels'            => array( 'name' => __( 'Document Types', 'fan-ownership' ) ),
-			'rewrite'           => array( 'slug' => 'owners/document-type' ),
-		) );
+		register_taxonomy(
+			'fop_video_type',
+			'fop_video',
+			array(
+				'public'            => true,
+				'hierarchical'      => true,
+				'show_admin_column' => true,
+				'show_in_rest'      => false,
+				'labels'            => array( 'name' => __( 'Video Types', 'fan-ownership' ) ),
+				'rewrite'           => array( 'slug' => 'owners/video-type' ),
+			)
+		);
+		register_taxonomy(
+			'fop_document_type',
+			'fop_document',
+			array(
+				'public'            => true,
+				'hierarchical'      => true,
+				'show_admin_column' => true,
+				'show_in_rest'      => false,
+				'labels'            => array( 'name' => __( 'Document Types', 'fan-ownership' ) ),
+				'rewrite'           => array( 'slug' => 'owners/document-type' ),
+			)
+		);
 	}
 }

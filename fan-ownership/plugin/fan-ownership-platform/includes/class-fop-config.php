@@ -24,22 +24,22 @@ class FOP_Config {
 	 */
 	public static function defaults() {
 		return array(
-			'club_name'          => 'Perth Panthers',
-			'club_crest_id'      => 0,
-			'club_primary'       => '#1a1a2e',
-			'club_accent'        => '#e2b007',
-			'currency_symbol'    => '£',
-			'share_base_price'   => 50.0,
-			'share_tier_growth'  => 0.25,
-			'max_shares'         => 10,
-			'launch_moment'      => '', // Founders cutoff (P56): ISO datetime of public launch.
-			'quorum_percent'     => 25,
-			'constitutional_pct' => 75,
-			'idea_threshold_pct' => 5,
-			'ballot_window_days' => 7,
-			'max_live_ballots'   => 2,
-			'min_age_confirm'    => 18,
-			'active_window_months' => 12,
+			'club_name'                          => 'Perth Panthers',
+			'club_crest_id'                      => 0,
+			'club_primary'                       => '#1a1a2e',
+			'club_accent'                        => '#e2b007',
+			'currency_symbol'                    => '£',
+			'share_base_price'                   => 50.0,
+			'share_tier_growth'                  => 0.25,
+			'max_shares'                         => 10,
+			'launch_moment'                      => '', // Founders cutoff (P56): ISO datetime of public launch.
+			'quorum_percent'                     => 25,
+			'constitutional_pct'                 => 75,
+			'idea_threshold_pct'                 => 5,
+			'ballot_window_days'                 => 7,
+			'max_live_ballots'                   => 2,
+			'min_age_confirm'                    => 18,
+			'active_window_months'               => 12,
 			'matchday_ticket_discount_per_share' => 5,
 			'season_ticket_discount_per_share'   => 10,
 		);
@@ -60,8 +60,8 @@ class FOP_Config {
 			wp_die( esc_html__( 'Unknown feature.', 'fan-ownership' ) );
 		}
 
-		$switches = get_option( 'fop_kill_switches', array() );
-		$turning_off = empty( $switches[ $feature ]['off'] );
+		$switches             = get_option( 'fop_kill_switches', array() );
+		$turning_off          = empty( $switches[ $feature ]['off'] );
 		$switches[ $feature ] = array(
 			'off'    => $turning_off,
 			'by'     => get_current_user_id(),

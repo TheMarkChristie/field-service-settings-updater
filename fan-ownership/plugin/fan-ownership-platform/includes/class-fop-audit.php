@@ -69,9 +69,9 @@ class FOP_Audit {
 			$where[]  = 'actor = %d';
 			$params[] = (int) $args['actor'];
 		}
-		$limit  = isset( $args['limit'] ) ? (int) $args['limit'] : 100;
-		$offset = isset( $args['offset'] ) ? (int) $args['offset'] : 0;
-		$sql    = 'SELECT * FROM ' . $wpdb->prefix . 'fop_audit WHERE ' . implode( ' AND ', $where ) . ' ORDER BY id DESC LIMIT %d OFFSET %d';
+		$limit    = isset( $args['limit'] ) ? (int) $args['limit'] : 100;
+		$offset   = isset( $args['offset'] ) ? (int) $args['offset'] : 0;
+		$sql      = 'SELECT * FROM ' . $wpdb->prefix . 'fop_audit WHERE ' . implode( ' AND ', $where ) . ' ORDER BY id DESC LIMIT %d OFFSET %d';
 		$params[] = $limit;
 		$params[] = $offset;
 		return $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared

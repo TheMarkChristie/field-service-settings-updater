@@ -111,7 +111,15 @@ class FOP_Shares {
 		if ( $held < 1 ) {
 			return new WP_Error( 'fop_none', __( 'No shares to transfer.', 'fan-ownership' ) );
 		}
-		$granted = self::grant_shares( $to_user, $held, 'admin', array( 'transfer' => 'death', 'from' => $from_user ) );
+		$granted = self::grant_shares(
+			$to_user,
+			$held,
+			'admin',
+			array(
+				'transfer' => 'death',
+				'from'     => $from_user,
+			)
+		);
 		if ( is_wp_error( $granted ) ) {
 			return $granted;
 		}

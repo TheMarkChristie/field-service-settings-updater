@@ -49,11 +49,20 @@ class FOP_Chat {
 		$held = self::hits_word_filter( $body );
 		$wpdb->insert(
 			$wpdb->prefix . 'fop_chat_messages',
-			array( 'room' => $room, 'user_id' => $user_id, 'body' => $body, 'created_at' => fop_now(), 'held' => $held ? 1 : 0 ),
+			array(
+				'room'       => $room,
+				'user_id'    => $user_id,
+				'body'       => $body,
+				'created_at' => fop_now(),
+				'held'       => $held ? 1 : 0,
+			),
 			array( '%s', '%d', '%s', '%s', '%d' )
 		);
 		fop_touch_activity( $user_id );
-		return array( 'id' => (int) $wpdb->insert_id, 'held' => $held );
+		return array(
+			'id'   => (int) $wpdb->insert_id,
+			'held' => $held,
+		);
 	}
 
 	/**
@@ -72,17 +81,20 @@ class FOP_Chat {
 			),
 			ARRAY_A
 		);
-		return array_map( function ( $row ) {
-			$author = get_userdata( (int) $row['user_id'] );
-			$name   = $author ? $author->display_name : __( 'Former member', 'fan-ownership' );
-			if ( $author && user_can( $author, 'fop_board' ) ) {
-				$name .= ' ' . __( '[Board]', 'fan-ownership' );
-			} elseif ( $author && ( user_can( $author, 'fop_admin' ) || user_can( $author, 'fop_edit_content' ) || user_can( $author, 'fop_governance' ) ) ) {
-				$name .= ' ' . __( '[Club]', 'fan-ownership' );
-			}
-			$row['author'] = $name;
-			return $row;
-		}, $rows );
+		return array_map(
+			function ( $row ) {
+				$author = get_userdata( (int) $row['user_id'] );
+				$name   = $author ? $author->display_name : __( 'Former member', 'fan-ownership' );
+				if ( $author && user_can( $author, 'fop_board' ) ) {
+						$name .= ' ' . __( '[Board]', 'fan-ownership' );
+				} elseif ( $author && ( user_can( $author, 'fop_admin' ) || user_can( $author, 'fop_edit_content' ) || user_can( $author, 'fop_governance' ) ) ) {
+					$name .= ' ' . __( '[Club]', 'fan-ownership' );
+				}
+				$row['author'] = $name;
+				return $row;
+			},
+			$rows
+		);
 	}
 
 	/* -------- Moderation tools (FO-306 AC2, T63) -------- */
@@ -98,7 +110,14 @@ class FOP_Chat {
 		}
 		switch ( $action ) {
 			case 'delete':
-				$wpdb->update( $wpdb->prefix . 'fop_chat_messages', array( 'removed' => 1, 'removed_by' => $moderator_id ), array( 'id' => (int) $message_id ) );
+				$wpdb->update(
+					$wpdb->prefix . 'fop_chat_messages',
+					array(
+						'removed'    => 1,
+						'removed_by' => $moderator_id,
+					),
+					array( 'id' => (int) $message_id )
+				);
 				break;
 			case 'release':
 				$wpdb->update( $wpdb->prefix . 'fop_chat_messages', array( 'held' => 0 ), array( 'id' => (int) $message_id ) );
@@ -123,8 +142,8 @@ class FOP_Chat {
 		if ( ! user_can( $moderator_id, 'fop_moderate' ) && ! user_can( $moderator_id, 'fop_admin' ) ) {
 			return new WP_Error( 'fop_denied', __( 'Moderators only.', 'fan-ownership' ) );
 		}
-		$modes                            = get_option( 'fop_chat_slow', array() );
-		$modes[ sanitize_key( $room ) ]   = max( 0, min( 300, (int) $seconds ) );
+		$modes                          = get_option( 'fop_chat_slow', array() );
+		$modes[ sanitize_key( $room ) ] = max( 0, min( 300, (int) $seconds ) );
 		update_option( 'fop_chat_slow', $modes, false );
 		return true;
 	}

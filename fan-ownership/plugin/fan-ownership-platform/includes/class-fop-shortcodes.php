@@ -219,9 +219,11 @@ class FOP_Shortcodes {
 			$html .= '<p><input type="radio" id="' . esc_attr( $id ) . '" name="fop_choice" value="' . (int) $i . '" ' . checked( $mine ? (int) $mine['choice'] : -1, $i, false ) . ' required> <label for="' . esc_attr( $id ) . '">' . esc_html( $option ) . '</label></p>';
 		}
 		$html .= '</fieldset><button type="submit" class="fop-button">'
-			. esc_html( $mine
+			. esc_html(
+				$mine
 				? __( 'Change my vote', 'fan-ownership' )
-				: sprintf( /* translators: %d votes. */ _n( 'Cast my %d vote', 'Cast my %d votes', $weight, 'fan-ownership' ), $weight ) )
+				: sprintf( /* translators: %d votes. */ _n( 'Cast my %d vote', 'Cast my %d votes', $weight, 'fan-ownership' ), $weight )
+			)
 			. '</button>';
 		$html .= '<p class="fop-ballot__note">' . esc_html__( 'Secret ballot: results are revealed the moment voting closes. You can change your vote until then.', 'fan-ownership' ) . '</p>';
 		$html .= '<p class="fop-feedback" role="status" aria-live="polite"></p></form></article>';
@@ -240,7 +242,14 @@ class FOP_Shortcodes {
 		echo '<form class="fop-form" data-fop-submit="ideas"><p><label for="fop-idea-title">' . esc_html__( 'Your idea', 'fan-ownership' ) . '</label><input id="fop-idea-title" type="text" name="title" required maxlength="140"></p>';
 		echo '<p><label for="fop-idea-body">' . esc_html__( 'Why it would make the club better', 'fan-ownership' ) . '</label><textarea id="fop-idea-body" name="body" rows="3"></textarea></p>';
 		echo '<p><button class="fop-button" type="submit">' . esc_html__( 'Propose it', 'fan-ownership' ) . '</button></p><p class="fop-feedback" role="status" aria-live="polite"></p></form>';
-		foreach ( get_posts( array( 'post_type' => 'fop_idea', 'post_status' => 'publish', 'posts_per_page' => 30, 'no_found_rows' => true ) ) as $idea ) {
+		foreach ( get_posts(
+			array(
+				'post_type'      => 'fop_idea',
+				'post_status'    => 'publish',
+				'posts_per_page' => 30,
+				'no_found_rows'  => true,
+			)
+		) as $idea ) {
 			$count = count( (array) get_post_meta( $idea->ID, '_fop_supporters', true ) );
 			echo '<article class="fop-card"><h3>' . esc_html( $idea->post_title ) . '</h3>';
 			echo '<p><span class="fop-badge">' . esc_html( (string) get_post_meta( $idea->ID, '_fop_idea_status', true ) ) . '</span> ';
@@ -259,7 +268,14 @@ class FOP_Shortcodes {
 		echo '<div data-fop-app="questions"><h2>' . esc_html__( 'Ask the club', 'fan-ownership' ) . '</h2>';
 		echo '<form class="fop-form" data-fop-submit="questions"><p><label for="fop-q-title">' . esc_html__( 'Your question', 'fan-ownership' ) . '</label><input id="fop-q-title" type="text" name="title" required maxlength="200"></p>';
 		echo '<p><button class="fop-button" type="submit">' . esc_html__( 'Submit question', 'fan-ownership' ) . '</button></p><p class="fop-feedback" role="status" aria-live="polite"></p></form>';
-		foreach ( get_posts( array( 'post_type' => 'fop_question', 'post_status' => 'publish', 'posts_per_page' => 30, 'no_found_rows' => true ) ) as $q ) {
+		foreach ( get_posts(
+			array(
+				'post_type'      => 'fop_question',
+				'post_status'    => 'publish',
+				'posts_per_page' => 30,
+				'no_found_rows'  => true,
+			)
+		) as $q ) {
 			$answer = get_post_meta( $q->ID, '_fop_answer', true );
 			$video  = get_post_meta( $q->ID, '_fop_video_answer', true );
 			echo '<article class="fop-card"><h3>' . esc_html( $q->post_title ) . '</h3>';
@@ -300,7 +316,14 @@ class FOP_Shortcodes {
 		self::enqueue();
 		ob_start();
 		echo '<div><h2>' . esc_html__( 'The decision register', 'fan-ownership' ) . '</h2><p>' . esc_html__( 'Every passed ballot and every released board decision, tracked until done.', 'fan-ownership' ) . '</p>';
-		foreach ( get_posts( array( 'post_type' => 'fop_decision', 'post_status' => 'publish', 'posts_per_page' => 100, 'no_found_rows' => true ) ) as $decision ) {
+		foreach ( get_posts(
+			array(
+				'post_type'      => 'fop_decision',
+				'post_status'    => 'publish',
+				'posts_per_page' => 100,
+				'no_found_rows'  => true,
+			)
+		) as $decision ) {
 			$status  = get_post_meta( $decision->ID, '_fop_decision_status', true );
 			$stalled = get_post_meta( $decision->ID, '_fop_stalled', true );
 			echo '<article class="fop-card"><h3>' . esc_html( $decision->post_title ) . '</h3>';
@@ -352,10 +375,21 @@ class FOP_Shortcodes {
 		if ( ! fop_is_owner() ) {
 			return self::gate();
 		}
-		$atts  = shortcode_atts( array( 'type' => '' ), $atts );
-		$args  = array( 'post_type' => 'fop_video', 'post_status' => 'publish', 'posts_per_page' => 24, 'no_found_rows' => true );
+		$atts = shortcode_atts( array( 'type' => '' ), $atts );
+		$args = array(
+			'post_type'      => 'fop_video',
+			'post_status'    => 'publish',
+			'posts_per_page' => 24,
+			'no_found_rows'  => true,
+		);
 		if ( $atts['type'] ) {
-			$args['tax_query'] = array( array( 'taxonomy' => 'fop_video_type', 'field' => 'slug', 'terms' => sanitize_key( $atts['type'] ) ) );
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'fop_video_type',
+					'field'    => 'slug',
+					'terms'    => sanitize_key( $atts['type'] ),
+				),
+			);
 		}
 		ob_start();
 		echo '<div class="fop-videos">';
@@ -397,10 +431,10 @@ class FOP_Shortcodes {
 	public static function board_directory() {
 		$out = '<div class="fop-board-directory"><h2>' . esc_html__( 'The board', 'fan-ownership' ) . '</h2>';
 		foreach ( get_users( array( 'role' => 'fop_board_member' ) ) as $director ) {
-			$out .= '<article class="fop-card"><h3>' . esc_html( $director->display_name ) . ' <span class="fop-badge">' . esc_html__( 'Board', 'fan-ownership' ) . '</span></h3>';
-			$out .= '<p>' . esc_html( get_user_meta( $director->ID, 'description', true ) ) . '</p>';
+			$out      .= '<article class="fop-card"><h3>' . esc_html( $director->display_name ) . ' <span class="fop-badge">' . esc_html__( 'Board', 'fan-ownership' ) . '</span></h3>';
+			$out      .= '<p>' . esc_html( get_user_meta( $director->ID, 'description', true ) ) . '</p>';
 			$conflicts = get_user_meta( $director->ID, 'fop_conflicts', true );
-			$out .= '<p><strong>' . esc_html__( 'Declared interests:', 'fan-ownership' ) . '</strong> ' . esc_html( $conflicts ? $conflicts : __( 'None declared', 'fan-ownership' ) ) . '</p></article>';
+			$out      .= '<p><strong>' . esc_html__( 'Declared interests:', 'fan-ownership' ) . '</strong> ' . esc_html( $conflicts ? $conflicts : __( 'None declared', 'fan-ownership' ) ) . '</p></article>';
 		}
 		return $out . '</div>';
 	}

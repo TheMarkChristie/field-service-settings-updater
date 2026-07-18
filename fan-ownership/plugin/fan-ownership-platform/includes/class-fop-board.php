@@ -133,8 +133,11 @@ class FOP_Board {
 			wp_safe_redirect( admin_url( 'admin.php?page=fop-board&recused=1' ) );
 			exit;
 		}
-		$votes = (array) get_post_meta( $vote_id, '_fop_board_votes', true );
-		$votes[ $user_id ] = array( 'position' => $position, 'at' => time() ); // Open within the board (P83).
+		$votes             = (array) get_post_meta( $vote_id, '_fop_board_votes', true );
+		$votes[ $user_id ] = array(
+			'position' => $position,
+			'at'       => time(),
+		); // Open within the board (P83).
 		update_post_meta( $vote_id, '_fop_board_votes', $votes );
 		self::maybe_minute_outcome( $vote_id );
 		wp_safe_redirect( admin_url( 'admin.php?page=fop-board' ) );
@@ -157,7 +160,12 @@ class FOP_Board {
 	 * the vote breakdown; a level vote falls to the chair (P83).
 	 */
 	private static function maybe_minute_outcome( $vote_id ) {
-		$directors = get_users( array( 'role' => 'fop_board_member', 'fields' => 'ID' ) );
+		$directors = get_users(
+			array(
+				'role'   => 'fop_board_member',
+				'fields' => 'ID',
+			)
+		);
 		$recused   = array_map( 'intval', (array) get_post_meta( $vote_id, '_fop_recused_users', true ) );
 		$eligible  = array_diff( array_map( 'intval', $directors ), $recused );
 		$votes     = (array) get_post_meta( $vote_id, '_fop_board_votes', true );
@@ -171,13 +179,17 @@ class FOP_Board {
 		if ( 'level' === $outcome && $chair && isset( $votes[ $chair ] ) ) {
 			$outcome = 'for' === $votes[ $chair ]['position'] ? 'carried-on-chair-casting-vote' : 'defeated-on-chair-casting-vote';
 		}
-		update_post_meta( $vote_id, '_fop_board_outcome', array(
-			'outcome' => $outcome,
-			'for'     => $for,
-			'against' => $against,
-			'abstain' => count( $votes ) - $for - $against,
-			'minuted' => fop_now(),
-		) );
+		update_post_meta(
+			$vote_id,
+			'_fop_board_outcome',
+			array(
+				'outcome' => $outcome,
+				'for'     => $for,
+				'against' => $against,
+				'abstain' => count( $votes ) - $for - $against,
+				'minuted' => fop_now(),
+			)
+		);
 		FOP_Audit::log( 'board_vote_minuted', sprintf( 'Board vote %d: %s (%d for, %d against)', $vote_id, $outcome, $for, $against ) );
 	}
 
@@ -229,7 +241,11 @@ class FOP_Board {
 			wp_die( esc_html__( 'Choose the item and the observer.', 'fan-ownership' ) );
 		}
 		$grants   = (array) get_post_meta( $item_id, '_fop_observers', true );
-		$grants[] = array( 'user' => $observer, 'by' => get_current_user_id(), 'expires' => time() + $days * DAY_IN_SECONDS );
+		$grants[] = array(
+			'user'    => $observer,
+			'by'      => get_current_user_id(),
+			'expires' => time() + $days * DAY_IN_SECONDS,
+		);
 		update_post_meta( $item_id, '_fop_observers', $grants );
 		FOP_Audit::log( 'observer_grant', sprintf( 'Observer %d granted item %d for %d days', $observer, $item_id, $days ) );
 		wp_safe_redirect( admin_url( 'admin.php?page=fop-board' ) );
@@ -274,12 +290,16 @@ class FOP_Board {
 			wp_die( esc_html__( 'This area is restricted.', 'fan-ownership' ), 403 );
 		}
 		FOP_Audit::log( 'vault_view', sprintf( 'Vault document %d viewed', $post_id ), array( 'document' => $post_id ) );
-		add_filter( 'the_content', function ( $content ) use ( $user ) {
-			$stamp = sprintf( '%s — %s', $user->display_name, date_i18n( get_option( 'date_format' ) . ' H:i' ) );
-			return '<div class="fop-vault" style="position:relative;">'
+		add_filter(
+			'the_content',
+			function ( $content ) use ( $user ) {
+				$stamp = sprintf( '%s — %s', $user->display_name, date_i18n( get_option( 'date_format' ) . ' H:i' ) );
+				return '<div class="fop-vault" style="position:relative;">'
 				. '<div aria-hidden="true" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:.12;transform:rotate(-24deg);font-size:2rem;">' . esc_html( $stamp ) . '</div>'
 				. $content . '<p><em>' . esc_html__( 'View-only. This document cannot be downloaded; every view is logged.', 'fan-ownership' ) . '</em></p></div>';
-		}, 99 );
+			},
+			99
+		);
 	}
 
 	/* ---------------- Workspace home (admin screen) ---------------- */

@@ -29,13 +29,16 @@ class FOP_Questions {
 		if ( ! $title ) {
 			return new WP_Error( 'fop_title', __( 'Please write your question.', 'fan-ownership' ) );
 		}
-		$post_id = wp_insert_post( array(
-			'post_type'    => 'fop_question',
-			'post_status'  => 'pending',
-			'post_title'   => sanitize_text_field( $title ),
-			'post_content' => sanitize_textarea_field( $detail ),
-			'post_author'  => $user_id,
-		), true );
+		$post_id = wp_insert_post(
+			array(
+				'post_type'    => 'fop_question',
+				'post_status'  => 'pending',
+				'post_title'   => sanitize_text_field( $title ),
+				'post_content' => sanitize_textarea_field( $detail ),
+				'post_author'  => $user_id,
+			),
+			true
+		);
 		if ( is_wp_error( $post_id ) ) {
 			return $post_id;
 		}
@@ -60,7 +63,10 @@ class FOP_Questions {
 		}
 		update_post_meta( $question_id, '_fop_upvotes', $votes );
 		fop_touch_activity( $user_id );
-		return array( 'count' => count( $votes ), 'upvoted' => $on );
+		return array(
+			'count'   => count( $votes ),
+			'upvoted' => $on,
+		);
 	}
 
 	/**
@@ -100,20 +106,30 @@ class FOP_Questions {
 	 */
 	public static function flag_overdue() {
 		$target_days = (int) fop_setting( 'question_sla_days', 14 );
-		$overdue     = get_posts( array(
-			'post_type'      => 'fop_question',
-			'post_status'    => 'publish',
-			'posts_per_page' => 50,
-			'date_query'     => array( array( 'before' => $target_days . ' days ago' ) ),
-			'meta_query'     => array( array( 'key' => '_fop_answer', 'compare' => 'NOT EXISTS' ) ),
-			'no_found_rows'  => true,
-		) );
+		$overdue     = get_posts(
+			array(
+				'post_type'      => 'fop_question',
+				'post_status'    => 'publish',
+				'posts_per_page' => 50,
+				'date_query'     => array( array( 'before' => $target_days . ' days ago' ) ),
+				'meta_query'     => array(
+					array(
+						'key'     => '_fop_answer',
+						'compare' => 'NOT EXISTS',
+					),
+				),
+				'no_found_rows'  => true,
+			)
+		);
 		if ( ! $overdue ) {
 			return;
 		}
-		$lines = array_map( function ( $q ) {
-			return '- ' . $q->post_title . ' (' . admin_url( 'post.php?post=' . $q->ID . '&action=edit' ) . ')';
-		}, $overdue );
+		$lines = array_map(
+			function ( $q ) {
+				return '- ' . $q->post_title . ' (' . admin_url( 'post.php?post=' . $q->ID . '&action=edit' ) . ')';
+			},
+			$overdue
+		);
 		foreach ( get_users( array( 'role__in' => array( 'fop_governance_officer', 'fop_owner_admin', 'administrator' ) ) ) as $staff ) {
 			FOP_Comms::send(
 				$staff->user_email,
@@ -125,14 +141,21 @@ class FOP_Questions {
 	}
 
 	public static function meta_box() {
-		add_meta_box( 'fop_question_answer', __( "The Club's Answer", 'fan-ownership' ), function ( $post ) {
-			wp_nonce_field( 'fop_question_meta', 'fop_question_nonce' );
-			echo '<p><label>' . esc_html__( 'Written answer', 'fan-ownership' ) . '</label>';
-			echo '<textarea class="widefat" rows="5" name="fop_answer">' . esc_textarea( get_post_meta( $post->ID, '_fop_answer', true ) ) . '</textarea></p>';
-			echo '<p><label><input type="checkbox" name="fop_selected_for_video" ' . checked( get_post_meta( $post->ID, '_fop_selected_for_video', true ), '1', false ) . '> ' . esc_html__( 'Selected for the monthly Q&A video', 'fan-ownership' ) . '</label></p>';
-			echo '<p><label>' . esc_html__( 'Link to the video answer', 'fan-ownership' ) . '</label>';
-			echo '<input type="url" class="widefat" name="fop_video_answer" value="' . esc_attr( get_post_meta( $post->ID, '_fop_video_answer', true ) ) . '"></p>';
-			echo '<p>' . esc_html( sprintf( /* translators: %d upvotes. */ __( 'Upvotes: %d', 'fan-ownership' ), count( (array) get_post_meta( $post->ID, '_fop_upvotes', true ) ) ) ) . '</p>';
-		}, 'fop_question', 'normal', 'high' );
+		add_meta_box(
+			'fop_question_answer',
+			__( "The Club's Answer", 'fan-ownership' ),
+			function ( $post ) {
+				wp_nonce_field( 'fop_question_meta', 'fop_question_nonce' );
+				echo '<p><label>' . esc_html__( 'Written answer', 'fan-ownership' ) . '</label>';
+				echo '<textarea class="widefat" rows="5" name="fop_answer">' . esc_textarea( get_post_meta( $post->ID, '_fop_answer', true ) ) . '</textarea></p>';
+				echo '<p><label><input type="checkbox" name="fop_selected_for_video" ' . checked( get_post_meta( $post->ID, '_fop_selected_for_video', true ), '1', false ) . '> ' . esc_html__( 'Selected for the monthly Q&A video', 'fan-ownership' ) . '</label></p>';
+				echo '<p><label>' . esc_html__( 'Link to the video answer', 'fan-ownership' ) . '</label>';
+				echo '<input type="url" class="widefat" name="fop_video_answer" value="' . esc_attr( get_post_meta( $post->ID, '_fop_video_answer', true ) ) . '"></p>';
+				echo '<p>' . esc_html( sprintf( /* translators: %d upvotes. */ __( 'Upvotes: %d', 'fan-ownership' ), count( (array) get_post_meta( $post->ID, '_fop_upvotes', true ) ) ) ) . '</p>';
+			},
+			'fop_question',
+			'normal',
+			'high'
+		);
 	}
 }

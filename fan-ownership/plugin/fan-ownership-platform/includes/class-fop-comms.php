@@ -85,16 +85,28 @@ class FOP_Comms {
 			wp_die( esc_html__( 'Please sign in.', 'fan-ownership' ) );
 		}
 		check_admin_referer( 'fop_save_prefs' );
-		$prefs = array( 'email' => array(), 'push' => array() );
+		$prefs = array(
+			'email' => array(),
+			'push'  => array(),
+		);
 		foreach ( self::CATEGORIES as $cat ) {
 			$prefs['email'][ $cat ] = ! empty( $_POST[ 'email_' . $cat ] );
 			$prefs['push'][ $cat ]  = ! empty( $_POST[ 'push_' . $cat ] );
 		}
 		update_user_meta( get_current_user_id(), 'fop_comms_prefs', $prefs );
-		update_user_meta( get_current_user_id(), 'fop_prefs_consent_log', array_merge(
-			(array) get_user_meta( get_current_user_id(), 'fop_prefs_consent_log', true ),
-			array( array( 'at' => time(), 'prefs' => $prefs ) )
-		) );
+		update_user_meta(
+			get_current_user_id(),
+			'fop_prefs_consent_log',
+			array_merge(
+				(array) get_user_meta( get_current_user_id(), 'fop_prefs_consent_log', true ),
+				array(
+					array(
+						'at'    => time(),
+						'prefs' => $prefs,
+					),
+				)
+			)
+		);
 		wp_safe_redirect( add_query_arg( 'fop_saved', 1, wp_get_referer() ? wp_get_referer() : home_url() ) );
 		exit;
 	}
@@ -112,7 +124,13 @@ class FOP_Comms {
 	 */
 	public static function push( $user_ids, $title, $body, $category, $deeplink = '' ) {
 		$server_key = fop_setting( 'fcm_server_key', '' );
-		$user_ids   = $user_ids ? $user_ids : get_users( array( 'role' => 'fan_owner', 'fields' => 'ID', 'number' => -1 ) );
+		$user_ids   = $user_ids ? $user_ids : get_users(
+			array(
+				'role'   => 'fan_owner',
+				'fields' => 'ID',
+				'number' => -1,
+			)
+		);
 		$queued     = 0;
 		foreach ( $user_ids as $uid ) {
 			if ( 'governance' !== $category && ! self::user_wants( $uid, $category, 'push' ) ) {
@@ -121,7 +139,7 @@ class FOP_Comms {
 			$tokens = (array) get_user_meta( $uid, 'fop_push_tokens', true );
 			foreach ( array_filter( $tokens ) as $token ) {
 				self::fcm_send( $server_key, $token, $title, $body, $deeplink );
-				$queued++;
+				++$queued;
 			}
 		}
 		return $queued;
@@ -139,11 +157,16 @@ class FOP_Comms {
 					'Authorization' => 'key=' . $server_key,
 					'Content-Type'  => 'application/json',
 				),
-				'body'    => wp_json_encode( array(
-					'to'           => $token,
-					'notification' => array( 'title' => $title, 'body' => $body ),
-					'data'         => array( 'deeplink' => $deeplink ),
-				) ),
+				'body'    => wp_json_encode(
+					array(
+						'to'           => $token,
+						'notification' => array(
+							'title' => $title,
+							'body'  => $body,
+						),
+						'data'         => array( 'deeplink' => $deeplink ),
+					)
+				),
 			)
 		);
 	}

@@ -37,14 +37,35 @@ class FOP_Privacy {
 		$user = get_user_by( 'email', $email );
 		$data = array();
 		if ( $user ) {
-			$items = array(
-				array( 'name' => __( 'Owner number', 'fan-ownership' ), 'value' => FOP_Shares::owner_number( $user->ID ) ),
-				array( 'name' => __( 'Shares held', 'fan-ownership' ), 'value' => fop_shares( $user->ID ) ),
-				array( 'name' => __( 'Badges', 'fan-ownership' ), 'value' => implode( ', ', (array) FOP_Badges::member_badges( $user->ID ) ) ),
-				array( 'name' => __( 'Share register history', 'fan-ownership' ), 'value' => wp_json_encode( FOP_Register::history( $user->ID ) ) ),
-				array( 'name' => __( 'Communication preferences', 'fan-ownership' ), 'value' => wp_json_encode( get_user_meta( $user->ID, 'fop_comms_prefs', true ) ) ),
-				array( 'name' => __( 'Consent log', 'fan-ownership' ), 'value' => wp_json_encode( get_user_meta( $user->ID, 'fop_prefs_consent_log', true ) ) ),
-				array( 'name' => __( 'Ballot participation (your own votes)', 'fan-ownership' ), 'value' => wp_json_encode( FOP_Ballots::member_vote_history( $user->ID ) ) ),
+			$items  = array(
+				array(
+					'name'  => __( 'Owner number', 'fan-ownership' ),
+					'value' => FOP_Shares::owner_number( $user->ID ),
+				),
+				array(
+					'name'  => __( 'Shares held', 'fan-ownership' ),
+					'value' => fop_shares( $user->ID ),
+				),
+				array(
+					'name'  => __( 'Badges', 'fan-ownership' ),
+					'value' => implode( ', ', (array) FOP_Badges::member_badges( $user->ID ) ),
+				),
+				array(
+					'name'  => __( 'Share register history', 'fan-ownership' ),
+					'value' => wp_json_encode( FOP_Register::history( $user->ID ) ),
+				),
+				array(
+					'name'  => __( 'Communication preferences', 'fan-ownership' ),
+					'value' => wp_json_encode( get_user_meta( $user->ID, 'fop_comms_prefs', true ) ),
+				),
+				array(
+					'name'  => __( 'Consent log', 'fan-ownership' ),
+					'value' => wp_json_encode( get_user_meta( $user->ID, 'fop_prefs_consent_log', true ) ),
+				),
+				array(
+					'name'  => __( 'Ballot participation (your own votes)', 'fan-ownership' ),
+					'value' => wp_json_encode( FOP_Ballots::member_vote_history( $user->ID ) ),
+				),
 			);
 			$data[] = array(
 				'group_id'    => 'fop_membership',
@@ -53,7 +74,10 @@ class FOP_Privacy {
 				'data'        => $items,
 			);
 		}
-		return array( 'data' => $data, 'done' => true );
+		return array(
+			'data' => $data,
+			'done' => true,
+		);
 	}
 
 	public static function register_eraser( $erasers ) {
@@ -76,7 +100,12 @@ class FOP_Privacy {
 			}
 			FOP_Audit::log( 'privacy_erase', sprintf( 'Personal data erased for user %d (register/ballot legal minimum retained)', $user->ID ) );
 		}
-		return array( 'items_removed' => true, 'items_retained' => true, 'messages' => array( __( 'Share register and formal ballot records are retained as the legal minimum.', 'fan-ownership' ) ), 'done' => true );
+		return array(
+			'items_removed'  => true,
+			'items_retained' => true,
+			'messages'       => array( __( 'Share register and formal ballot records are retained as the legal minimum.', 'fan-ownership' ) ),
+			'done'           => true,
+		);
 	}
 
 	/**
@@ -118,7 +147,13 @@ class FOP_Privacy {
 		$cutoff = gmdate( 'Y-m-d H:i:s', strtotime( '-' . (int) fop_setting( 'chat_retention_months', 12 ) . ' months' ) );
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}fop_chat_messages WHERE created_at < %s", $cutoff ) );
 		// Closed accounts past the retention window lose remaining meta.
-		$closed = get_users( array( 'meta_key' => 'fop_account_closed', 'fields' => 'ID', 'number' => 200 ) );
+		$closed = get_users(
+			array(
+				'meta_key' => 'fop_account_closed',
+				'fields'   => 'ID',
+				'number'   => 200,
+			)
+		);
 		foreach ( $closed as $uid ) {
 			$closed_at = (int) get_user_meta( $uid, 'fop_account_closed', true );
 			if ( $closed_at && $closed_at < strtotime( '-' . (int) fop_setting( 'closed_retention_months', 24 ) . ' months' ) ) {

@@ -43,7 +43,10 @@ class FOP_Meetings {
 		}
 		update_post_meta( $meeting_id, '_fop_attendees', $attendees );
 		fop_touch_activity( $user_id );
-		return array( 'count' => count( $attendees ), 'attending' => $going );
+		return array(
+			'count'     => count( $attendees ),
+			'attending' => $going,
+		);
 	}
 
 	/**
@@ -62,16 +65,25 @@ class FOP_Meetings {
 	 * Upcoming published meetings, soonest first.
 	 */
 	public static function upcoming( $limit = 10 ) {
-		return get_posts( array(
-			'post_type'      => 'fop_meeting',
-			'post_status'    => 'publish',
-			'posts_per_page' => $limit,
-			'meta_key'       => '_fop_meeting_start',
-			'orderby'        => 'meta_value',
-			'order'          => 'ASC',
-			'meta_query'     => array( array( 'key' => '_fop_meeting_start', 'value' => fop_now(), 'compare' => '>=', 'type' => 'DATETIME' ) ),
-			'no_found_rows'  => true,
-		) );
+		return get_posts(
+			array(
+				'post_type'      => 'fop_meeting',
+				'post_status'    => 'publish',
+				'posts_per_page' => $limit,
+				'meta_key'       => '_fop_meeting_start',
+				'orderby'        => 'meta_value',
+				'order'          => 'ASC',
+				'meta_query'     => array(
+					array(
+						'key'     => '_fop_meeting_start',
+						'value'   => fop_now(),
+						'compare' => '>=',
+						'type'    => 'DATETIME',
+					),
+				),
+				'no_found_rows'  => true,
+			)
+		);
 	}
 
 	/**
@@ -98,7 +110,14 @@ class FOP_Meetings {
 		if ( ! $token ) {
 			return;
 		}
-		$users = get_users( array( 'meta_key' => 'fop_ics_token', 'meta_value' => $token, 'fields' => 'ID', 'number' => 1 ) );
+		$users = get_users(
+			array(
+				'meta_key'   => 'fop_ics_token',
+				'meta_value' => $token,
+				'fields'     => 'ID',
+				'number'     => 1,
+			)
+		);
 		if ( ! $users || ! fop_is_owner( $users[0] ) ) {
 			wp_die( esc_html__( 'Calendar link not recognised.', 'fan-ownership' ), 404 );
 		}
@@ -108,7 +127,7 @@ class FOP_Meetings {
 		foreach ( self::upcoming( 50 ) as $meeting ) {
 			$start = strtotime( get_post_meta( $meeting->ID, '_fop_meeting_start', true ) );
 			$end   = $start + HOUR_IN_SECONDS;
-			echo "BEGIN:VEVENT\r\nUID:fop-meeting-" . (int) $meeting->ID . "@" . esc_html( wp_parse_url( home_url(), PHP_URL_HOST ) ) . "\r\n";
+			echo "BEGIN:VEVENT\r\nUID:fop-meeting-" . (int) $meeting->ID . '@' . esc_html( wp_parse_url( home_url(), PHP_URL_HOST ) ) . "\r\n";
 			echo 'DTSTART:' . esc_html( gmdate( 'Ymd\THis\Z', $start ) ) . "\r\n";
 			echo 'DTEND:' . esc_html( gmdate( 'Ymd\THis\Z', $end ) ) . "\r\n";
 			echo 'SUMMARY:' . esc_html( $meeting->post_title ) . "\r\n";
@@ -119,7 +138,7 @@ class FOP_Meetings {
 			if ( ! $closes ) {
 				continue;
 			}
-			echo "BEGIN:VEVENT\r\nUID:fop-ballot-" . (int) $ballot->ID . "@" . esc_html( wp_parse_url( home_url(), PHP_URL_HOST ) ) . "\r\n";
+			echo "BEGIN:VEVENT\r\nUID:fop-ballot-" . (int) $ballot->ID . '@' . esc_html( wp_parse_url( home_url(), PHP_URL_HOST ) ) . "\r\n";
 			echo 'DTSTART:' . esc_html( gmdate( 'Ymd\THis\Z', $closes ) ) . "\r\n";
 			echo 'DTEND:' . esc_html( gmdate( 'Ymd\THis\Z', $closes ) ) . "\r\n";
 			echo 'SUMMARY:' . esc_html( sprintf( /* translators: %s ballot. */ __( 'Voting closes: %s', 'fan-ownership' ), $ballot->post_title ) ) . "\r\n";
@@ -151,18 +170,25 @@ class FOP_Meetings {
 	}
 
 	public static function meta_box() {
-		add_meta_box( 'fop_meeting_details', __( 'Meeting Details', 'fan-ownership' ), function ( $post ) {
-			wp_nonce_field( 'fop_meeting_meta', 'fop_meeting_nonce' );
-			$start  = get_post_meta( $post->ID, '_fop_meeting_start', true );
-			$embed  = get_post_meta( $post->ID, '_fop_stream_embed', true );
-			$is_agm = get_post_meta( $post->ID, '_fop_is_agm', true );
-			echo '<p><label>' . esc_html__( 'Starts', 'fan-ownership' ) . '</label> <input type="datetime-local" name="fop_meeting_start" value="' . esc_attr( $start ? gmdate( 'Y-m-d\TH:i', strtotime( $start ) ) : '' ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'Live stream embed URL (StreamYard destination)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_stream_embed" value="' . esc_attr( $embed ) . '"></p>';
-			echo '<p><label><input type="checkbox" name="fop_is_agm" ' . checked( $is_agm, '1', false ) . '> ' . esc_html__( 'This is the AGM (statutory resolutions run as ballots in the AGM window)', 'fan-ownership' ) . '</label></p>';
-			echo '<p><label>' . esc_html__( 'Recording URL (available within 24h of the meeting)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_recording" value="' . esc_attr( get_post_meta( $post->ID, '_fop_recording', true ) ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'Action minutes', 'fan-ownership' ) . '</label><textarea class="widefat" rows="4" name="fop_minutes">' . esc_textarea( get_post_meta( $post->ID, '_fop_minutes', true ) ) . '</textarea></p>';
-			echo '<p>' . esc_html( sprintf( /* translators: %d count. */ __( 'RSVPs: %d', 'fan-ownership' ), count( (array) get_post_meta( $post->ID, '_fop_attendees', true ) ) ) ) . '</p>';
-		}, 'fop_meeting', 'normal', 'high' );
+		add_meta_box(
+			'fop_meeting_details',
+			__( 'Meeting Details', 'fan-ownership' ),
+			function ( $post ) {
+				wp_nonce_field( 'fop_meeting_meta', 'fop_meeting_nonce' );
+				$start  = get_post_meta( $post->ID, '_fop_meeting_start', true );
+				$embed  = get_post_meta( $post->ID, '_fop_stream_embed', true );
+				$is_agm = get_post_meta( $post->ID, '_fop_is_agm', true );
+				echo '<p><label>' . esc_html__( 'Starts', 'fan-ownership' ) . '</label> <input type="datetime-local" name="fop_meeting_start" value="' . esc_attr( $start ? gmdate( 'Y-m-d\TH:i', strtotime( $start ) ) : '' ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'Live stream embed URL (StreamYard destination)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_stream_embed" value="' . esc_attr( $embed ) . '"></p>';
+				echo '<p><label><input type="checkbox" name="fop_is_agm" ' . checked( $is_agm, '1', false ) . '> ' . esc_html__( 'This is the AGM (statutory resolutions run as ballots in the AGM window)', 'fan-ownership' ) . '</label></p>';
+				echo '<p><label>' . esc_html__( 'Recording URL (available within 24h of the meeting)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_recording" value="' . esc_attr( get_post_meta( $post->ID, '_fop_recording', true ) ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'Action minutes', 'fan-ownership' ) . '</label><textarea class="widefat" rows="4" name="fop_minutes">' . esc_textarea( get_post_meta( $post->ID, '_fop_minutes', true ) ) . '</textarea></p>';
+				echo '<p>' . esc_html( sprintf( /* translators: %d count. */ __( 'RSVPs: %d', 'fan-ownership' ), count( (array) get_post_meta( $post->ID, '_fop_attendees', true ) ) ) ) . '</p>';
+			},
+			'fop_meeting',
+			'normal',
+			'high'
+		);
 	}
 
 	public static function save_meta( $post_id, $post ) {

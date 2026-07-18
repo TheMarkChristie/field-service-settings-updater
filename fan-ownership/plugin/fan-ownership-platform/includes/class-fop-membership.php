@@ -41,11 +41,17 @@ class FOP_Membership {
 
 		// FO-105 AC1: name, email, password, 18+ confirmation, terms.
 		if ( ! $is_adult ) {
-			self::back_with( array( 'fop_error' => rawurlencode( sprintf(
-				/* translators: %d minimum age. */
-				__( 'You must be %d or over to own shares in the club.', 'fan-ownership' ),
-				(int) fop_setting( 'min_age_confirm', 18 )
-			) ) ) );
+			self::back_with(
+				array(
+					'fop_error' => rawurlencode(
+						sprintf(
+						/* translators: %d minimum age. */
+							__( 'You must be %d or over to own shares in the club.', 'fan-ownership' ),
+							(int) fop_setting( 'min_age_confirm', 18 )
+						)
+					),
+				)
+			);
 		}
 		if ( ! $terms_ok ) {
 			self::back_with( array( 'fop_error' => rawurlencode( __( 'Please accept the terms of membership.', 'fan-ownership' ) ) ) );
@@ -59,13 +65,15 @@ class FOP_Membership {
 		}
 
 		$username = self::unique_username( $email );
-		$user_id  = wp_insert_user( array(
-			'user_login'   => $username,
-			'user_email'   => $email,
-			'user_pass'    => $password,
-			'display_name' => $name,
-			'role'         => 'subscriber', // Promoted to fan_owner on email verification + first share.
-		) );
+		$user_id  = wp_insert_user(
+			array(
+				'user_login'   => $username,
+				'user_email'   => $email,
+				'user_pass'    => $password,
+				'display_name' => $name,
+				'role'         => 'subscriber', // Promoted to fan_owner on email verification + first share.
+			)
+		);
 		if ( is_wp_error( $user_id ) ) {
 			self::back_with( array( 'fop_error' => rawurlencode( $user_id->get_error_message() ) ) );
 		}
@@ -88,7 +96,10 @@ class FOP_Membership {
 		update_user_meta( $user_id, 'fop_email_verified', '' );
 		$user = get_userdata( $user_id );
 		$link = add_query_arg(
-			array( 'fop_verify' => $user_id, 'token' => $token ),
+			array(
+				'fop_verify' => $user_id,
+				'token'      => $token,
+			),
 			home_url( '/' )
 		);
 		FOP_Comms::send(
@@ -105,12 +116,16 @@ class FOP_Membership {
 	}
 
 	public static function maybe_handle_verification() {
+		// Email-link flow: a nonce cannot exist in a link sent by email.
+		// Authentication is the single-use hashed token checked below.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		if ( ! isset( $_GET['fop_verify'], $_GET['token'] ) ) {
 			return;
 		}
 		$user_id = absint( $_GET['fop_verify'] );
 		$token   = sanitize_text_field( wp_unslash( $_GET['token'] ) );
-		$hash    = get_user_meta( $user_id, 'fop_email_token', true );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		$hash = get_user_meta( $user_id, 'fop_email_token', true );
 		if ( ! $user_id || ! $hash || ! wp_check_password( $token, $hash ) ) {
 			wp_die( esc_html__( 'This verification link is not valid. Please request a new one.', 'fan-ownership' ) );
 		}
@@ -133,10 +148,15 @@ class FOP_Membership {
 	 * FO-110 AC1: flag (never auto-block) near-duplicate registrations.
 	 */
 	private static function flag_possible_duplicates( $user_id, $email, $name ) {
-		$local     = strtolower( preg_replace( '/\+.*$/', '', strstr( $email, '@', true ) ) );
-		$domain    = strtolower( substr( strrchr( $email, '@' ), 1 ) );
-		$suspects  = array();
-		foreach ( get_users( array( 'fields' => array( 'ID', 'user_email', 'display_name' ), 'number' => 2000 ) ) as $u ) {
+		$local    = strtolower( preg_replace( '/\+.*$/', '', strstr( $email, '@', true ) ) );
+		$domain   = strtolower( substr( strrchr( $email, '@' ), 1 ) );
+		$suspects = array();
+		foreach ( get_users(
+			array(
+				'fields' => array( 'ID', 'user_email', 'display_name' ),
+				'number' => 2000,
+			)
+		) as $u ) {
 			if ( (int) $u->ID === (int) $user_id ) {
 				continue;
 			}

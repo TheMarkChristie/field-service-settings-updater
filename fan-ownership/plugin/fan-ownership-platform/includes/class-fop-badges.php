@@ -42,7 +42,12 @@ class FOP_Badges {
 			update_user_meta( $user_id, 'fop_badges_awarded', $awarded );
 		} else {
 			$queue   = get_option( 'fop_badge_queue', array() );
-			$queue[] = array( 'user' => $user_id, 'badge' => $badge, 'context' => $context, 'queued_at' => time() );
+			$queue[] = array(
+				'user'      => $user_id,
+				'badge'     => $badge,
+				'context'   => $context,
+				'queued_at' => time(),
+			);
 			update_option( 'fop_badge_queue', $queue, false );
 		}
 	}
@@ -89,15 +94,41 @@ class FOP_Badges {
 		$counts[ $event ] = ( isset( $counts[ $event ] ) ? (int) $counts[ $event ] : 0 ) + 1;
 		update_user_meta( $user_id, 'fop_milestone_counts', $counts );
 
-		$rules = get_option( 'fop_milestone_rules', array(
-			array( 'key' => 'ten_ballots', 'event' => 'ballot_voted', 'threshold' => 10 ),
-			array( 'key' => 'first_idea_to_ballot', 'event' => 'idea_reached_ballot', 'threshold' => 1 ),
-			array( 'key' => 'five_referrals', 'event' => 'referral', 'threshold' => 5 ),
-			array( 'key' => 'every_quarterly', 'event' => 'meeting_attended', 'threshold' => 4 ),
-		) );
+		$rules = get_option(
+			'fop_milestone_rules',
+			array(
+				array(
+					'key'       => 'ten_ballots',
+					'event'     => 'ballot_voted',
+					'threshold' => 10,
+				),
+				array(
+					'key'       => 'first_idea_to_ballot',
+					'event'     => 'idea_reached_ballot',
+					'threshold' => 1,
+				),
+				array(
+					'key'       => 'five_referrals',
+					'event'     => 'referral',
+					'threshold' => 5,
+				),
+				array(
+					'key'       => 'every_quarterly',
+					'event'     => 'meeting_attended',
+					'threshold' => 4,
+				),
+			)
+		);
 		foreach ( $rules as $rule ) {
 			if ( $rule['event'] === $event && $counts[ $event ] >= (int) $rule['threshold'] ) {
-				self::award( $user_id, $rule['key'], array( 'event' => $event, 'count' => $counts[ $event ] ) );
+				self::award(
+					$user_id,
+					$rule['key'],
+					array(
+						'event' => $event,
+						'count' => $counts[ $event ],
+					)
+				);
 			}
 		}
 	}

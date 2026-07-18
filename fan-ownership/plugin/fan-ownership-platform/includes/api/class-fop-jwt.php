@@ -35,14 +35,35 @@ class FOP_JWT {
 
 	public static function issue_pair( $user_id ) {
 		return array(
-			'access_token'  => self::encode( array( 'sub' => $user_id, 'typ' => 'access', 'exp' => time() + self::ACCESS_TTL, 'ver' => self::token_version( $user_id ) ) ),
-			'refresh_token' => self::encode( array( 'sub' => $user_id, 'typ' => 'refresh', 'exp' => time() + self::REFRESH_TTL, 'ver' => self::token_version( $user_id ) ) ),
+			'access_token'  => self::encode(
+				array(
+					'sub' => $user_id,
+					'typ' => 'access',
+					'exp' => time() + self::ACCESS_TTL,
+					'ver' => self::token_version( $user_id ),
+				)
+			),
+			'refresh_token' => self::encode(
+				array(
+					'sub' => $user_id,
+					'typ' => 'refresh',
+					'exp' => time() + self::REFRESH_TTL,
+					'ver' => self::token_version( $user_id ),
+				)
+			),
 			'expires_in'    => self::ACCESS_TTL,
 		);
 	}
 
 	public static function encode( $claims ) {
-		$header  = self::b64( wp_json_encode( array( 'alg' => 'HS256', 'typ' => 'JWT' ) ) );
+		$header  = self::b64(
+			wp_json_encode(
+				array(
+					'alg' => 'HS256',
+					'typ' => 'JWT',
+				)
+			)
+		);
 		$payload = self::b64( wp_json_encode( $claims ) );
 		$sig     = self::b64( hash_hmac( 'sha256', $header . '.' . $payload, self::secret(), true ) );
 		return $header . '.' . $payload . '.' . $sig;
@@ -57,10 +78,11 @@ class FOP_JWT {
 			return new WP_Error( 'fop_jwt', __( 'Malformed token.', 'fan-ownership' ), array( 'status' => 401 ) );
 		}
 		list( $header, $payload, $sig ) = $parts;
-		$expected = self::b64( hash_hmac( 'sha256', $header . '.' . $payload, self::secret(), true ) );
+		$expected                       = self::b64( hash_hmac( 'sha256', $header . '.' . $payload, self::secret(), true ) );
 		if ( ! hash_equals( $expected, $sig ) ) {
 			return new WP_Error( 'fop_jwt', __( 'Invalid token signature.', 'fan-ownership' ), array( 'status' => 401 ) );
 		}
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- JWT payload decode (RFC 7515).
 		$claims = json_decode( base64_decode( strtr( $payload, '-_', '+/' ) ), true );
 		if ( ! is_array( $claims ) || ( $claims['exp'] ?? 0 ) < time() || ( $claims['typ'] ?? '' ) !== $expected_type ) {
 			return new WP_Error( 'fop_jwt', __( 'Token expired or wrong type.', 'fan-ownership' ), array( 'status' => 401 ) );
@@ -73,6 +95,8 @@ class FOP_JWT {
 	}
 
 	private static function b64( $data ) {
+		// Base64url is the JWT wire format (RFC 7515), not obfuscation.
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		return rtrim( strtr( base64_encode( $data ), '+/', '-_' ), '=' );
 	}
 }

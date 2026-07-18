@@ -102,7 +102,10 @@ class FOP_Match_Centre {
 		}
 		$wpdb->update(
 			$wpdb->prefix . 'fop_match_events',
-			array( 'corrected_by' => $staff_id, 'removed' => $remove ? 1 : 0 ),
+			array(
+				'corrected_by' => $staff_id,
+				'removed'      => $remove ? 1 : 0,
+			),
 			array( 'id' => (int) $event_id ),
 			array( '%d', '%d' ),
 			array( '%d' )
@@ -119,10 +122,13 @@ class FOP_Match_Centre {
 			$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}fop_match_events WHERE match_id = %d ORDER BY id ASC", $match_id ),
 			ARRAY_A
 		);
-		return array_map( function ( $row ) {
-			$row['detail'] = json_decode( (string) $row['detail'], true );
-			return $row;
-		}, $rows );
+		return array_map(
+			function ( $row ) {
+				$row['detail'] = json_decode( (string) $row['detail'], true );
+				return $row;
+			},
+			$rows
+		);
 	}
 
 	/**
@@ -145,18 +151,25 @@ class FOP_Match_Centre {
 	}
 
 	public static function meta_box() {
-		add_meta_box( 'fop_match_details', __( 'Match Details', 'fan-ownership' ), function ( $post ) {
-			wp_nonce_field( 'fop_match_meta', 'fop_match_nonce' );
-			$kickoff = get_post_meta( $post->ID, '_fop_kickoff', true );
-			echo '<p><label>' . esc_html__( 'Kick-off', 'fan-ownership' ) . '</label> <input type="datetime-local" name="fop_kickoff" value="' . esc_attr( $kickoff ? gmdate( 'Y-m-d\TH:i', strtotime( $kickoff ) ) : '' ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'Opponent', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_opponent" value="' . esc_attr( get_post_meta( $post->ID, '_fop_opponent', true ) ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'Venue', 'fan-ownership' ) . '</label> <select name="fop_venue"><option value="home" ' . selected( get_post_meta( $post->ID, '_fop_venue', true ), 'home', false ) . '>' . esc_html__( 'Home (video stream)', 'fan-ownership' ) . '</option><option value="away" ' . selected( get_post_meta( $post->ID, '_fop_venue', true ), 'away', false ) . '>' . esc_html__( 'Away (audio commentary)', 'fan-ownership' ) . '</option></select></p>';
-			echo '<p><label>' . esc_html__( 'Cloudflare Stream live input UID (home video)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_stream_uid" value="' . esc_attr( get_post_meta( $post->ID, '_fop_stream_uid', true ) ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'Audio stream URL (away commentary)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_audio_url" value="' . esc_attr( get_post_meta( $post->ID, '_fop_audio_url', true ) ) . '"></p>';
-			echo '<p><label><input type="checkbox" name="fop_stream_live" ' . checked( get_post_meta( $post->ID, '_fop_stream_live', true ), '1', false ) . '> ' . esc_html__( 'Stream is LIVE now', 'fan-ownership' ) . '</label> <label><input type="checkbox" name="fop_ended" ' . checked( get_post_meta( $post->ID, '_fop_ended', true ), '1', false ) . '> ' . esc_html__( 'Match ended', 'fan-ownership' ) . '</label></p>';
-			echo '<p><label>' . esc_html__( 'Approved volunteer reporters (user IDs, comma-separated)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_reporters" value="' . esc_attr( implode( ',', array_map( 'intval', (array) get_post_meta( $post->ID, '_fop_reporters', true ) ) ) ) . '"></p>';
-			echo '<p><label>' . esc_html__( 'Sponsor ident/advert URLs (one per line: pre-start, half-time, breaks — staff-controlled, FO-309)', 'fan-ownership' ) . '</label><textarea class="widefat" rows="3" name="fop_ad_slots">' . esc_textarea( implode( "\n", (array) get_post_meta( $post->ID, '_fop_ad_slots', true ) ) ) . '</textarea></p>';
-		}, 'fop_match', 'normal', 'high' );
+		add_meta_box(
+			'fop_match_details',
+			__( 'Match Details', 'fan-ownership' ),
+			function ( $post ) {
+				wp_nonce_field( 'fop_match_meta', 'fop_match_nonce' );
+				$kickoff = get_post_meta( $post->ID, '_fop_kickoff', true );
+				echo '<p><label>' . esc_html__( 'Kick-off', 'fan-ownership' ) . '</label> <input type="datetime-local" name="fop_kickoff" value="' . esc_attr( $kickoff ? gmdate( 'Y-m-d\TH:i', strtotime( $kickoff ) ) : '' ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'Opponent', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_opponent" value="' . esc_attr( get_post_meta( $post->ID, '_fop_opponent', true ) ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'Venue', 'fan-ownership' ) . '</label> <select name="fop_venue"><option value="home" ' . selected( get_post_meta( $post->ID, '_fop_venue', true ), 'home', false ) . '>' . esc_html__( 'Home (video stream)', 'fan-ownership' ) . '</option><option value="away" ' . selected( get_post_meta( $post->ID, '_fop_venue', true ), 'away', false ) . '>' . esc_html__( 'Away (audio commentary)', 'fan-ownership' ) . '</option></select></p>';
+				echo '<p><label>' . esc_html__( 'Cloudflare Stream live input UID (home video)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_stream_uid" value="' . esc_attr( get_post_meta( $post->ID, '_fop_stream_uid', true ) ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'Audio stream URL (away commentary)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="fop_audio_url" value="' . esc_attr( get_post_meta( $post->ID, '_fop_audio_url', true ) ) . '"></p>';
+				echo '<p><label><input type="checkbox" name="fop_stream_live" ' . checked( get_post_meta( $post->ID, '_fop_stream_live', true ), '1', false ) . '> ' . esc_html__( 'Stream is LIVE now', 'fan-ownership' ) . '</label> <label><input type="checkbox" name="fop_ended" ' . checked( get_post_meta( $post->ID, '_fop_ended', true ), '1', false ) . '> ' . esc_html__( 'Match ended', 'fan-ownership' ) . '</label></p>';
+				echo '<p><label>' . esc_html__( 'Approved volunteer reporters (user IDs, comma-separated)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="fop_reporters" value="' . esc_attr( implode( ',', array_map( 'intval', (array) get_post_meta( $post->ID, '_fop_reporters', true ) ) ) ) . '"></p>';
+				echo '<p><label>' . esc_html__( 'Sponsor ident/advert URLs (one per line: pre-start, half-time, breaks — staff-controlled, FO-309)', 'fan-ownership' ) . '</label><textarea class="widefat" rows="3" name="fop_ad_slots">' . esc_textarea( implode( "\n", (array) get_post_meta( $post->ID, '_fop_ad_slots', true ) ) ) . '</textarea></p>';
+			},
+			'fop_match',
+			'normal',
+			'high'
+		);
 	}
 
 	public static function save_meta( $post_id, $post ) {
