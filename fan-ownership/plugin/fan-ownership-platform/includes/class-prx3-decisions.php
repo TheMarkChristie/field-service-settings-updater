@@ -7,10 +7,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The public decision register: passed ballots and released board
+ * decisions, each tracked with dated implementation updates and flagged
+ * when progress stalls.
+ */
 class PRX3_Decisions {
 
 	const STATUSES = array( 'planned', 'in-progress', 'done', 'blocked' );
 
+	/**
+	 * Hook the implementation meta box and its save handler.
+	 */
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
 		add_action( 'save_post_prx3_decision', array( __CLASS__, 'save_meta' ), 10, 2 );
@@ -18,6 +26,11 @@ class PRX3_Decisions {
 
 	/**
 	 * FO-218 AC1: every passed ballot enters the register automatically.
+	 *
+	 * @param int    $ballot_id      Source ballot.
+	 * @param string $winning_option Label of the winning option.
+	 * @param array  $extra          Optional extra meta (key => value), keys prefixed on save.
+	 * @return int Decision post ID, or 0 on failure.
 	 */
 	public static function create_from_ballot( $ballot_id, $winning_option, $extra = array() ) {
 		$decision_id = wp_insert_post(
@@ -43,6 +56,11 @@ class PRX3_Decisions {
 
 	/**
 	 * Board decision released to the register (P84 selective disclosure).
+	 *
+	 * @param string $title     Decision title.
+	 * @param string $body      Decision body (post content).
+	 * @param string $reasoning The board's published reasoning.
+	 * @return int|WP_Error Decision post ID, or the wp_insert_post() error.
 	 */
 	public static function create_from_board( $title, $body, $reasoning ) {
 		$decision_id = wp_insert_post(

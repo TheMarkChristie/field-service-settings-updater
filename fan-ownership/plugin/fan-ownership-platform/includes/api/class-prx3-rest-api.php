@@ -254,8 +254,8 @@ class PRX3_REST_API {
 							'post_status'    => 'publish',
 							'posts_per_page' => 20,
 							'no_found_rows'  => true,
-							'meta_key'       => '_prx3_state',
-							'meta_value'     => 'published',
+							'meta_key'       => '_prx3_state', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Bounded lookup of the last 20 published ballots for the app feed.
+							'meta_value'     => 'published', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Bounded lookup of the last 20 published ballots for the app feed.
 						)
 					);
 					foreach ( $closed as $ballot ) {

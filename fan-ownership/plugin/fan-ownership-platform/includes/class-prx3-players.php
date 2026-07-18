@@ -312,6 +312,12 @@ class PRX3_Players {
 		return self::month_results( $user_id );
 	}
 
+	/**
+	 * Live Player of the Month tallies plus the winners archive.
+	 *
+	 * @param int $user_id Optional. Requesting user ID, for 'my_vote'. Default 0.
+	 * @return array
+	 */
 	public static function month_results( $user_id = 0 ) {
 		$votes = (array) get_option( 'prx3_potm_month_' . self::month_key(), array() );
 		$tally = array_count_values( array_map( 'intval', $votes ) );
@@ -374,6 +380,9 @@ class PRX3_Players {
 
 	/* ---------------- REST ---------------- */
 
+	/**
+	 * Register the POTM and Player of the Month routes (owners only).
+	 */
 	public static function routes() {
 		$owner_only = function () {
 			return prx3_is_owner() ? true : new WP_Error( 'prx3_owner_only', __( 'Owners only.', 'fan-ownership' ), array( 'status' => rest_authorization_required_code() ) );
