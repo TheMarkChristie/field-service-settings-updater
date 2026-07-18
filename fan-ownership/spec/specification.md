@@ -2,7 +2,7 @@
 
 **Version:** 1.1 (draft for sign-off)
 **Date:** 18 July 2026
-**Status:** All 131 scoping decisions captured (81 process, 75 technical) — see `decisions-log.md` for the full question-by-question record. §10 consolidates the round-2 decisions; board-member decisions (P78–P81) are folded into §6.5.
+**Status:** All 139 scoping decisions captured (89 process, 75 technical) — see `decisions-log.md` for the full question-by-question record. §10 consolidates the round-2 decisions; board-member decisions (P78–P81) are in §6.5, and the private board workspace (P82–P89) in §6.5a.
 **Scope note:** the club retains its existing WordPress theme — this project delivers **the plugin and the native apps only**; plugin UI inherits the theme's look (T53–T54).
 **Reference model:** Caledonian Braves FC (Boardroom voting app, Match Centre, Brave TV, worldwide ownership community), including lessons from their Wefunder campaign's public Q&A.
 
@@ -165,6 +165,21 @@ Firebase FCM push · Brevo email · bbPress forum · self-hosted websocket chat 
 - **Engagement dashboard:** membership & revenue (tracking the 1,000-owner target), ballot health vs quorum, content performance, community health.
 - Match-reporter console for volunteer minute-by-minute reporting.
 - Analytics: privacy-first self-hosted (Matomo/Plausible) + Firebase app analytics.
+
+### 6.5a The private board workspace (P82–P89)
+
+A board-only area inside the platform — the full boardroom moves in:
+
+- **Contents:** agenda packs and board papers per meeting, formal internal board votes, private discussion threads, and a confidential document vault (contracts, legal advice, personnel records).
+- **Internal votes (P83):** one vote per director, open within the board (directors see each other's votes, as company-law accountability expects), chair holds a casting vote; outcomes are auto-minuted.
+- **Disclosure (P84):** the board releases business to the owners' decision register selectively — nothing publishes automatically.
+- **Conflicts (P85):** a standing conflicts register per director, public on the board directory, plus a declare-and-recuse step on every board vote; a recused director loses access to that item's papers and ballot.
+- **Meetings (P86):** board meetings run fully in-platform. Note: this needs small-group video conferencing, distinct from the StreamYard broadcast stack — implementation recommendation is an embedded WebRTC service (e.g. self-hosted Jitsi: bootstrap-budget friendly, UK/EU residency).
+- **Advisors (P87):** a **Board Observer** role for the company secretary, lawyer, or auditor — invited per meeting or item, read-only, never voting, access auto-expiring.
+- **Vault security (P88):** documents render in-platform only (no downloads, same rule as member financials), every view watermarked with the director's name and timestamp, and a full access log visible to the chair.
+- **Departure (P89):** access revoked the instant the role is removed; the director's votes, declarations, and contributions remain permanently on record; their ordinary owner account and shares are untouched.
+
+Delivery: the board workspace lands as a **Phase 2 extension** (with the Boardroom governance build), with the in-platform video element allowed to slip to Phase 3 alongside the other real-time work if needed.
 
 ### 6.6 Non-functional requirements (P43–P44, T29–T36, T46)
 

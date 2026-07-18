@@ -161,6 +161,19 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | P80 | Board visibility | Board directory page (photo, bio, responsibilities); "Board" badge on forum/chat posts; casting votes and recommendations recorded in the decision register |
 | P81 | Board formal actions | Structured flows: recorded casting-vote action on ties; formal recommendations attached to ballots; reserved-matter and failed-quorum decisions logged in the decision register with published reasoning |
 
+## Process decisions — round 4: private board workspace (P82–P89)
+
+| # | Question | Decision |
+|---|----------|----------|
+| P82 | Workspace contents | All four: board papers & agendas; internal board votes; private discussion threads; confidential document vault |
+| P83 | Internal board votes | Open within the board (one vote per director, visible to fellow directors), chair carries casting vote, outcomes auto-minuted |
+| P84 | Disclosure to owners | Board releases selectively — nothing publishes to the decision register until the board pushes it out |
+| P85 | Conflicts of interest | Standing conflicts register per director (public on board directory) + declare-and-recuse per board vote; recused directors locked out of that item's papers and vote |
+| P86 | Board meetings | Fully in-platform — board video calls run through the platform (small-group video conferencing, distinct from the StreamYard broadcast stack; implementation note: embed a WebRTC service, e.g. self-hosted Jitsi, fits bootstrap budget + UK/EU residency) |
+| P87 | Advisor access | Board Observer role: invited per meeting/item, read-only, never votes, access auto-expires (company secretary, lawyer, auditor) |
+| P88 | Vault security | View-only in-platform (no downloads), per-view watermark with director name + timestamp, full access log visible to the chair |
+| P89 | Director departure | Access revoked instantly on role removal; votes/declarations/contributions preserved permanently; ordinary owner account and shares unaffected |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |
