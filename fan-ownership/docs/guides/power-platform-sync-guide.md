@@ -53,7 +53,7 @@ never trigger an outbound echo, so there are no loops.
 
 ## The review queue
 
-Fan Ownership → **CRM Sync** shows sync health (outbound queue depth)
+Settings → **CRM Sync** shows sync health (outbound queue depth)
 and the matching review queue. Records land there when they matched no
 member, matched ambiguously, or conflicted with an existing link. For
 each one: check the payload, then either *Link & apply* (enter the

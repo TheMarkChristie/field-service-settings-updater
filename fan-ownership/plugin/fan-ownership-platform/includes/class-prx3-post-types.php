@@ -32,6 +32,7 @@ class PRX3_Post_Types {
 		$gated_base = array(
 			'public'          => true,
 			'show_ui'         => true,
+			'show_in_menu'    => 'prx3-owners',
 			'show_in_rest'    => false, // App access goes through the authenticated prx3/v1 API only.
 			'has_archive'     => true,
 			'capability_type' => 'post',

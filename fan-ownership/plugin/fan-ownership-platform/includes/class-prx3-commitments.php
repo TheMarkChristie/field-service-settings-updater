@@ -224,7 +224,7 @@ class PRX3_Commitments {
 	 */
 	public static function menu() {
 		add_submenu_page(
-			'prx3-settings',
+			'prx3-owners',
 			__( 'Commitments', 'fan-ownership' ),
 			__( 'Commitments', 'fan-ownership' ),
 			'prx3_governance',

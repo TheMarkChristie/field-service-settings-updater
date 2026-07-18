@@ -28,13 +28,21 @@ class PRX3_Admin {
 	 */
 	public static function menu() {
 		add_menu_page(
-			__( 'Fan Ownership', 'fan-ownership' ),
-			__( 'Fan Ownership', 'fan-ownership' ),
+			__( 'Fan Ownership Settings', 'fan-ownership' ),
+			__( 'Settings', 'fan-ownership' ),
 			'prx3_admin',
 			'prx3-settings',
 			array( __CLASS__, 'render' ),
-			'dashicons-groups',
-			2
+			'dashicons-admin-generic',
+			3.4
+		);
+		add_submenu_page(
+			'prx3-settings',
+			__( 'Fan Ownership Settings', 'fan-ownership' ),
+			__( 'Settings', 'fan-ownership' ),
+			'prx3_admin',
+			'prx3-settings',
+			array( __CLASS__, 'render' )
 		);
 	}
 

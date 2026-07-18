@@ -49,6 +49,7 @@ class PRX3_Players {
 			array(
 				'public'          => true,
 				'show_ui'         => true,
+				'show_in_menu'    => 'prx3-owners',
 				'show_in_rest'    => false,
 				'menu_icon'       => 'dashicons-id-alt',
 				'has_archive'     => true,

@@ -12,7 +12,7 @@ weighted and secret. The two never mix.
 
 ## Managing the squad
 
-Admin → Players. Each player has a name, squad number, position (free
+Owners → Players. Each player has a name, squad number, position (free
 text — works for any sport), photo (featured image), and an **active**
 flag. Public profiles live under `/squad/`.
 

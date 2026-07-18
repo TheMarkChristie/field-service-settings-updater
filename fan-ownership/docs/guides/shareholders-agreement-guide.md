@@ -63,7 +63,7 @@ clause 7).
 
 ## The board signatures register
 
-Board Workspace → **Owner Signatures** (board access only) lists every
+Board → **Owner Signatures** (board access only) lists every
 accepting owner: owner number, name and email, accepted version (with
 an out-of-date flag), how many acceptances they have recorded, the most
 recent date and context, their signature, and a link to their executed

@@ -22,15 +22,26 @@ class PRX3_Dashboard {
 	}
 
 	/**
-	 * Register the Club Dashboard submenu under Fan Ownership.
+	 * Register the Owners top-level menu. The club dashboard is its
+	 * landing page; every member-facing content type attaches beneath it
+	 * via show_in_menu.
 	 */
 	public static function menu() {
+		add_menu_page(
+			__( 'Owners', 'fan-ownership' ),
+			__( 'Owners', 'fan-ownership' ),
+			'edit_posts',
+			'prx3-owners',
+			array( __CLASS__, 'render' ),
+			'dashicons-groups',
+			3
+		);
 		add_submenu_page(
-			'prx3-settings',
+			'prx3-owners',
 			__( 'Club Dashboard', 'fan-ownership' ),
 			__( 'Dashboard', 'fan-ownership' ),
-			'prx3_view_tally',
-			'prx3-dashboard',
+			'edit_posts',
+			'prx3-owners',
 			array( __CLASS__, 'render' )
 		);
 	}
@@ -40,7 +51,8 @@ class PRX3_Dashboard {
 	 */
 	public static function render() {
 		if ( ! current_user_can( 'prx3_view_tally' ) && ! current_user_can( 'prx3_board' ) ) {
-			wp_die( esc_html__( 'Staff and board only.', 'fan-ownership' ) );
+			echo '<div class="wrap"><h1>' . esc_html__( 'Owners', 'fan-ownership' ) . '</h1><p>' . esc_html__( 'Club figures are visible to staff and board roles. Use the menu on the left for ballots, content, and the squad.', 'fan-ownership' ) . '</p></div>';
+			return;
 		}
 		global $wpdb;
 

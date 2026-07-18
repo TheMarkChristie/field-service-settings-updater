@@ -46,7 +46,7 @@ class PRX3_Board {
 			'prx3-board',
 			array( __CLASS__, 'render_workspace_home' ),
 			'dashicons-shield',
-			3
+			3.2
 		);
 	}
 

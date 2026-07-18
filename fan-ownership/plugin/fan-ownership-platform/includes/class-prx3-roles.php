@@ -34,6 +34,23 @@ class PRX3_Roles {
 		add_action( 'wp_login', array( __CLASS__, 'record_login' ), 10, 2 );
 		add_action( 'set_user_role', array( __CLASS__, 'audit_role_change' ), 10, 3 );
 		add_filter( 'authenticate', array( __CLASS__, 'enforce_staff_2fa_flag' ), 99 );
+		add_action( 'admin_init', array( __CLASS__, 'maybe_install' ), 5 );
+	}
+
+	/**
+	 * Self-heal roles and capabilities on installs where the activation
+	 * hook never (re)ran — without the prx3_* capabilities the Settings,
+	 * Board, and Dashboard menus are invisible even to administrators.
+	 * Version-stamped so it costs one option read per admin request.
+	 */
+	public static function maybe_install() {
+		if ( PRX3_VERSION === get_option( 'prx3_roles_installed' ) ) {
+			return;
+		}
+		self::install();
+		PRX3_Register::install_tables();
+		PRX3_Ballot_Lifecycle::schedule_cron();
+		update_option( 'prx3_roles_installed', PRX3_VERSION, false );
 	}
 
 	/**
