@@ -523,7 +523,29 @@ class PRX3_Shortcodes {
 		}
 		$out  = '<div class="prx3-dashboard">';
 		$out .= '<h2>' . esc_html( sprintf( /* translators: 1: club, 2: name. */ __( '%1$s — welcome back, %2$s', 'fan-ownership' ), prx3_club_name(), wp_get_current_user()->display_name ) ) . '</h2>';
-		$open = PRX3_Ballots::open_ballots();
+
+		$user_id = get_current_user_id();
+		$shares  = prx3_shares( $user_id );
+		$disc    = PRX3_Shares::ticket_discounts( $user_id );
+		$open    = PRX3_Ballots::open_ballots();
+		$account = prx3_setting( 'account_page_id' ) ? get_permalink( (int) prx3_setting( 'account_page_id' ) ) : '';
+
+		$tiles = array(
+			array( __( 'My shares', 'fan-ownership' ), sprintf( '%d / %d', $shares, prx3_max_shares() ), __( 'each share is one vote', 'fan-ownership' ), $account ),
+			array( __( 'My voting power', 'fan-ownership' ), (string) $shares, __( 'votes on every ballot', 'fan-ownership' ), '' ),
+			array( __( 'Ballots open now', 'fan-ownership' ), (string) count( $open ), $open ? __( 'your vote is needed below', 'fan-ownership' ) : __( 'nothing waiting on you', 'fan-ownership' ), '' ),
+			array( __( 'Ticket discount', 'fan-ownership' ), $disc['matchday'] . '%', sprintf( /* translators: %d percent. */ __( 'season tickets %d%%', 'fan-ownership' ), $disc['season'] ), '' ),
+		);
+		$out  .= '<div class="prx3-tiles">';
+		foreach ( $tiles as $tile ) {
+			$tag  = $tile[3] ? 'a' : 'div';
+			$out .= '<' . $tag . ( $tile[3] ? ' href="' . esc_url( $tile[3] ) . '"' : '' ) . ' class="prx3-tile">';
+			$out .= '<span class="prx3-tile-label">' . esc_html( $tile[0] ) . '</span>';
+			$out .= '<strong class="prx3-tile-value">' . esc_html( $tile[1] ) . '</strong>';
+			$out .= '<span class="prx3-tile-note">' . esc_html( $tile[2] ) . '</span>';
+			$out .= '</' . $tag . '>';
+		}
+		$out .= '</div>';
 		if ( $open ) {
 			$out .= '<h3>' . esc_html( sprintf( /* translators: %d count. */ _n( '%d ballot needs your vote', '%d ballots need your vote', count( $open ), 'fan-ownership' ), count( $open ) ) ) . '</h3>';
 			foreach ( $open as $ballot ) {

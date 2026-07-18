@@ -109,6 +109,7 @@ class PRX3_Admin {
 				'share_product_id'  => array( __( 'WooCommerce share product ID', 'fan-ownership' ), 'number' ),
 				'checkout_page_id'  => array( __( 'Checkout page ID', 'fan-ownership' ), 'number' ),
 				'join_page_id'      => array( __( 'Join page ID', 'fan-ownership' ), 'number' ),
+				'account_page_id'   => array( __( 'Account page ID (the [prx3_account] page)', 'fan-ownership' ), 'number' ),
 				'invoice_prefix'    => array( __( 'Invoice prefix', 'fan-ownership' ), 'text' ),
 				'launch_moment'     => array( __( 'Public launch moment (Founders cutoff, e.g. 2026-09-01 12:00)', 'fan-ownership' ), 'text' ),
 			),

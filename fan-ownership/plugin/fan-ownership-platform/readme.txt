@@ -1,10 +1,10 @@
 === Fan Ownership Platform ===
-Contributors: perthpanthers
+Contributors: markchristie
 Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,18 @@ club badge plugin integrate through documented contracts.
    numbers, and integrations.
 
 == Changelog ==
+
+= 0.1.2 =
+* Interactive tile dashboards: the Club Dashboard is now a live tile
+  grid - owner hero number with a target meter, cumulative-shares
+  sparkline, members-by-holding mini chart with hover/keyboard
+  tooltips, per-ballot quorum meters with closing countdowns, and
+  click-through operations tiles (moderation, ideas, questions,
+  stalled decisions, commitments, CRM sync), refreshing every minute
+  with a table view for accessibility.
+* The member dashboard shortcode leads with tiles: my shares, voting
+  power, open ballots, and ticket discounts.
+* Plugin author corrected to Mark Christie.
 
 = 0.1.1 =
 * Admin menus regrouped into three places: Owners (dashboard, ballots,

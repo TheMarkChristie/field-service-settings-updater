@@ -1,0 +1,208 @@
+/**
+ * Club dashboard tiles. Tokens follow the validated reference palette:
+ * sequential blue for magnitude, reserved status colors for state,
+ * text in ink tokens (never the series color).
+ */
+.prx3-dash {
+	color-scheme: light;
+	--surface-1: #fcfcfb;
+	--surface-2: #f0efec;
+	--ink-1: #0b0b0b;
+	--ink-2: #52514e;
+	--line: #d8d7d2;
+	--seq-250: #86b6ef;
+	--seq-450: #2a78d6;
+	--seq-600: #184f95;
+	--status-good: #0ca30c;
+	--status-warning: #fab219;
+	--status-serious: #ec835a;
+}
+
+@media ( prefers-color-scheme: dark ) {
+	.prx3-dash {
+		color-scheme: dark;
+		--surface-1: #1a1a19;
+		--surface-2: #383835;
+		--ink-1: #ffffff;
+		--ink-2: #c3c2b7;
+		--line: #44443f;
+		--seq-250: #6da7ec;
+		--seq-450: #3987e5;
+		--seq-600: #86b6ef;
+	}
+}
+
+.prx3-dash-bar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.prx3-dash-stamp {
+	color: var(--ink-2);
+}
+
+.prx3-tiles {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 230px, 1fr ) );
+	gap: 12px;
+	margin: 12px 0 20px;
+}
+
+.prx3-tile {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 16px;
+	background: var(--surface-1);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	color: var(--ink-1);
+	text-decoration: none;
+	min-height: 96px;
+	box-sizing: border-box;
+}
+
+a.prx3-tile:hover,
+a.prx3-tile:focus-visible {
+	border-color: var(--seq-450);
+}
+
+a.prx3-tile:focus-visible {
+	outline: 3px solid var(--seq-450);
+	outline-offset: 2px;
+}
+
+.prx3-tile-label {
+	color: var(--ink-2);
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.prx3-tile-value {
+	font-size: 28px;
+	line-height: 1.1;
+	font-variant-numeric: tabular-nums;
+}
+
+.prx3-hero {
+	font-size: 48px;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.prx3-tile-note {
+	color: var(--ink-2);
+	font-size: 12px;
+}
+
+.prx3-tile-flag {
+	position: absolute;
+	top: 10px;
+	right: 12px;
+	font-size: 16px;
+}
+
+.prx3-tile.is-warning .prx3-tile-flag { color: var(--status-warning); }
+.prx3-tile.is-serious .prx3-tile-flag { color: var(--status-serious); }
+
+.prx3-tile.is-good .prx3-tile-value::after {
+	content: " \2713";
+	color: var(--status-good);
+	font-size: 16px;
+	vertical-align: middle;
+}
+
+/* Meter: same-ramp track and fill, 4px rounded data end. */
+.prx3-meter {
+	display: block;
+	height: 8px;
+	border-radius: 4px;
+	background: var(--surface-2);
+	overflow: hidden;
+	margin-top: 8px;
+}
+
+.prx3-meter-fill {
+	display: block;
+	height: 100%;
+	border-radius: 4px;
+	background: var(--seq-450);
+	transition: width 0.4s ease;
+}
+
+.prx3-tile--hero,
+.prx3-tile--spark,
+.prx3-tile--chart {
+	grid-column: span 2;
+}
+
+@media ( max-width: 600px ) {
+	.prx3-tile--hero,
+	.prx3-tile--spark,
+	.prx3-tile--chart {
+		grid-column: span 1;
+	}
+}
+
+.prx3-spark svg,
+.prx3-dist svg {
+	display: block;
+	width: 100%;
+	height: 56px;
+	margin-top: 6px;
+}
+
+.prx3-spark path.line {
+	fill: none;
+	stroke: var(--seq-450);
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.prx3-spark path.area {
+	fill: var(--seq-250);
+	opacity: 0.25;
+	stroke: none;
+}
+
+.prx3-dist rect {
+	fill: var(--seq-450);
+}
+
+.prx3-dist rect:hover,
+.prx3-dist rect:focus {
+	fill: var(--seq-600);
+	outline: none;
+}
+
+/* Ballot quorum tiles reuse the meter; below-quorum shows the warning flag. */
+.prx3-ballot-countdown {
+	font-variant-numeric: tabular-nums;
+}
+
+.prx3-dash-table {
+	margin: 8px 0 24px;
+}
+
+.prx3-dash-table summary {
+	cursor: pointer;
+	color: var(--ink-2);
+	margin-bottom: 8px;
+}
+
+/* Hover tooltip: one floating layer, text in ink on surface. */
+.prx3-viz-tip {
+	position: fixed;
+	z-index: 9999;
+	pointer-events: none;
+	background: var(--ink-1, #0b0b0b);
+	color: var(--surface-1, #fcfcfb);
+	font-size: 12px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	white-space: nowrap;
+}
