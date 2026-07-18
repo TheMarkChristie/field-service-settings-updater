@@ -122,10 +122,71 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | T49 | Builders | Built in-house with Claude Code in this repo; external security audit only |
 | T50 | Budget | Bootstrap: < £200/month run-rate, no capital budget |
 
+## Process decisions — round 2 (P53–P77)
+
+| # | Question | Decision |
+|---|----------|----------|
+| P53 | Minimum age | 18+ only |
+| P54 | KYC/AML | Stripe Radar checks only (max spend ~£1,663 caps risk) |
+| P55 | Owner numbers | Sequential by join order |
+| P56 | Founder status | Everyone who buys before public launch day |
+| P57 | Ballot cadence | Maximum 2 live ballots at once + published schedule of upcoming votes |
+| P58 | Ballot authorship | Governance Officer + published annual voting calendar (budget, kit, objectives) |
+| P59 | Ties | Board casting vote |
+| P60 | Vote changing | Allowed until close; final choice counts |
+| P61 | Mid-ballot joiners | Eligibility snapshot at ballot open (shares/members as at open) |
+| P62 | Campaigning | Open debate under code of conduct; club neutral unless board formally recommends |
+| P63 | Results | Instant automated reveal (portal/push/email) + weekly video wrap |
+| P64 | Accountability | Public decision register: every passed ballot tracked (owner, status, updates) |
+| P65 | Meeting records | Recording in portal within 24h + written action minutes feeding decision register |
+| P66 | AGM resolutions | Run in-platform as formal shareholder record (subject to articles permitting e-voting) |
+| P67 | Crisis comms | Owners hear first, within 24h of club knowing; briefing stream within 7 days |
+| P68 | Talent consent | Media clause in player/staff contracts + personal veto + manager sign-off on dressing-room footage |
+| P69 | Sponsors | Club sponsors visible on website; advert slots in streams sold as revenue |
+| P70 | Content sign-off | Editor publishes routine solo; manager gates sensitive footage; review flow reserved for ballots/financials |
+| P71 | Chapters | Light charter: 5+ owners, naming convention, named lead, annual re-affirmation, de-recognisable |
+| P72 | Volunteers | 3+ months good standing + supervised trial; rights revocable |
+| P73 | Referrals | Recognition only (badges, leaderboard, shout-outs) — share price ladder untouched |
+| P74 | Gamification | Meaningful milestone badges via badge plugin; no points/leaderboard noise |
+| P75 | Meta-governance | Changing quorum/majorities/scope requires 75% constitutional ballot |
+| P76 | Quorum denominator | Owners active in last 12 months; dormant owners keep shares, don't inflate quorum |
+| P77 | Annual report | Yearly "State of the Panthers" owners' report in portal |
+
+## Technical decisions — round 2 (T51–T75)
+
+| # | Question | Decision |
+|---|----------|----------|
+| T51 | Repo | Own dedicated repository (this repo holds spec only) |
+| T52 | Domain | One club domain; portal under it; domain held as config |
+| T53 | Theme | Existing theme retained — **project scope is plugin + apps only** |
+| T54 | Plugin UI | Inherit theme typography/colours; ship only structural CSS |
+| T55 | Code flow | Local dev + reviewed PRs; automated tests as the deploy gate |
+| T56 | Errors | Sentry free tier (PHP plugin + Flutter apps), EU region |
+| T57 | Monitoring | UptimeRobot-class checks (portal/checkout/API/streams) + hosted member status page |
+| T58 | Invoicing | Full sequential PDF invoicing plugin on WooCommerce |
+| T59 | Share register | Platform data is the statutory register of members + one-click export for filings |
+| T60 | Certificate verify | QR + public verification page (name shown only with owner consent) |
+| T61 | Badge plugin | Custom in-house plugin; integration contract: `award_badge` action + `get_member_badges` function |
+| T62 | Stream delivery | **Cloudflare Stream Live** (closes T13): OBS→RTMP→signed playback; recordings to R2 as replays |
+| T63 | Chat moderation | Word filter + auto-hold; slow mode + rate limits; member reporting; in-chat mod actions |
+| T64 | Reporter console | Local retry queue — events post when signal returns (narrow exception to online-only) |
+| T65 | Push prefs | Category toggles (ballots/match/content/meetings/news); quorum reminders default on |
+| T66 | Deep links | Universal links: push + shared URLs open exact screen in app, else website |
+| T67 | Min OS | iOS 15 / Android 8 |
+| T68 | Releases | Club-owned Apple/Google accounts; monthly release train + hotfix path; phased rollouts |
+| T69 | Player | Chromecast + AirPlay; quality selection; live DVR rewind; playback speed + captions |
+| T70 | Replay SLA | Auto-publish within the hour of full-time (edited versions may follow) |
+| T71 | A11y verification | Automated only: axe-core in CI + Flutter accessibility linting |
+| T72 | Email design | One branded responsive master template, colours from theme config (rebrand-proof) |
+| T73 | Data migration | No preference given — ASSUMPTION: clean slate; confirm mailing list / WP users / badge data at build kickoff |
+| T74 | Kill switches | Admin on/off toggle per major feature (voting, chat, checkout, streams, forum) with member-facing notice |
+| T75 | Documentation | Full suite: admin guide, matchday runbook, developer docs, API reference, volunteer handbooks |
+
 ## Open items
 
-1. **T13 — Stream delivery server**: OBS ingest target undecided. Recommendation: Cloudflare Stream Live (low ops, signed playback, pay-per-use); alternatives: self-hosted Owncast/nginx-rtmp (fits bootstrap budget, club owns matchday uptime) or private streaming SaaS.
-2. **T20 — Badge plugin**: name and hook/API details of the existing custom badge distribution plugin needed to spec the Founders badge + certificate-linked badge issuance (T24).
+1. ~~T13 — Stream delivery server~~ **CLOSED (T62)**: Cloudflare Stream Live.
+2. ~~T20 — Badge plugin~~ **CLOSED (T61)**: custom in-house plugin; integrate via defined contract (`award_badge` action + `get_member_badges` function). Hook names to be confirmed against the plugin's code at build kickoff.
+3. **T73 — Migration inventory**: confirm at build kickoff what exists to migrate (mailing list → Brevo, current WP users, badge plugin data).
 
 ## Risk flags (recorded, not resolved)
 

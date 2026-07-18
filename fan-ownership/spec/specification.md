@@ -1,8 +1,9 @@
 # Perth Panthers Fan Ownership Platform — Process & Functional Specification
 
-**Version:** 1.0 (draft for sign-off)
+**Version:** 1.1 (draft for sign-off)
 **Date:** 18 July 2026
-**Status:** All 102 scoping decisions captured (52 process, 50 technical) — see `decisions-log.md` for the full question-by-question record.
+**Status:** All 127 scoping decisions captured (77 process, 50+25 technical) — see `decisions-log.md` for the full question-by-question record. §10 consolidates the round-2 decisions.
+**Scope note:** the club retains its existing WordPress theme — this project delivers **the plugin and the native apps only**; plugin UI inherits the theme's look (T53–T54).
 **Reference model:** Caledonian Braves FC (Boardroom voting app, Match Centre, Brave TV, worldwide ownership community), including lessons from their Wefunder campaign's public Q&A.
 
 ---
@@ -192,8 +193,9 @@ Testing: automated coverage on money and vote paths + the founding-owner beta gr
 
 ## 8. Open items
 
-1. **Stream delivery server (T13):** decide the OBS ingest/delivery target before Phase 3 (recommendation: Cloudflare Stream Live).
-2. **Badge plugin (T20):** name + hooks of the existing custom badge distribution plugin, needed to wire Founders-badge auto-issue into checkout.
+1. ~~Stream delivery (T13)~~ **CLOSED:** Cloudflare Stream Live — OBS → RTMP ingest → signed playback in the gated player; recordings auto-publish to the replay library within the hour of full-time.
+2. ~~Badge plugin (T20)~~ **CLOSED:** custom in-house plugin, integrated via a defined contract (`award_badge` action + `get_member_badges` function); confirm hook names at build kickoff.
+3. **Migration inventory (T73):** confirm at build kickoff what carries over — supporter mailing list (→ Brevo, with consent review), existing WP users, badge plugin data. Working assumption: clean slate.
 
 ## 9. Risk flags requiring action before launch
 
@@ -202,6 +204,43 @@ Testing: automated coverage on money and vote paths + the founding-owner beta gr
 3. **Hire & fire ballots** — process wording needs employment-law sign-off.
 4. **Streaming rights** — confirm league/association rules before promising all home games live.
 5. **Straight-to-production deploys** — acceptable now; introduce at least a staging check before binding ballots and live payments.
+
+---
+
+## 10. Round-2 decisions (P53–P77, T51–T75) — consolidated
+
+### 10.1 Membership refinements
+
+- **18+ only** to buy shares (P53); Stripe Radar is the only identity/AML layer (P54).
+- **Owner numbers sequential by join order** (P55); **Founder = bought before public launch day** (P56).
+- Referrals earn **recognition only** — badges, leaderboard, weekly-show shout-outs; the price ladder is never discounted (P73). **Milestone badges** for real participation (voted in 10 ballots, attended every quarterly, idea reached ballot) via the badge plugin (P74).
+
+### 10.2 Ballot mechanics refinements
+
+- **Max 2 ballots live at once**, with a published schedule of upcoming votes (P57); Governance Officer authors, guided by a **published annual voting calendar** — budget ratification, kit vote, season objectives (P58).
+- **Ties: board casting vote** (P59). **Votes changeable until close** (P60). **Eligibility snapshot at ballot open** — mid-ballot share purchases vote from the next ballot (P61).
+- **Open campaigning** under the code of conduct; club neutral unless the board formally recommends (P62).
+- **Results:** instant automated reveal + weekly video wrap (P63). Every passed ballot enters a **public decision register** (decision, owner, status: planned/in progress/done/blocked) — the accountability backbone (P64).
+- **Meta-governance:** changing quorum, majorities, windows, or fan-decision scope itself requires a 75% constitutional ballot (P75). **Quorum denominator = owners active in the last 12 months**; dormant owners keep shares but don't inflate the bar (P76).
+
+### 10.3 Meetings, crisis, and content operations
+
+- Meetings: **recording in portal within 24h + action minutes** feeding the decision register (P65). **AGM statutory resolutions run in-platform** as the formal shareholder record, subject to the articles permitting electronic voting (P66).
+- **Crisis protocol:** owners hear first, within 24h of the club knowing, via push+email, with an owners' briefing stream inside 7 days (P67).
+- **Talent on camera:** media clause in player/staff contracts + personal veto + manager sign-off on dressing-room footage (P68). Editor publishes routine content solo; manager gates sensitive material; the two-person review flow is reserved for ballots and financial posts (P70).
+- **Commercial:** club sponsors visible on the website, and **advert slots in match streams are sold** as a revenue line (P69).
+- **Chapters:** light charter — 5+ owners, "Panthers — [City]" naming, named lead, annual re-affirmation, de-recognisable for breaches (P71). **Volunteers** (reporters/mods): 3+ months in good standing + supervised trial, rights revocable (P72).
+- **Annual "State of the Panthers" owners' report**: ballots and outcomes, decision register, finances vs budget, growth vs target, content stats (P77).
+
+### 10.4 Technical refinements
+
+- **Repo & scope:** platform gets its **own dedicated repository**; this repo keeps the spec only (T51). One club domain (T52). Existing theme retained; **plugin UI inherits the theme** and ships only structural CSS (T53–T54).
+- **Engineering:** local dev + reviewed PRs with automated tests as the deploy gate (T55); Sentry (EU) error tracking across plugin + apps (T56); UptimeRobot-class monitoring + hosted member status page (T57); **admin kill-switch per major feature** — voting, chat, checkout, streams, forum (T74); **full documentation suite** — admin guide, matchday runbook, developer docs, API reference, volunteer handbooks (T75).
+- **Commerce & compliance:** full sequential PDF invoicing (T58); the platform's member/share data **is the statutory register of members** with one-click export for filings (T59); certificates carry a **QR to a public verification page** — name shown only with the owner's consent (T60).
+- **Streaming:** **Cloudflare Stream Live** confirmed (T62); replays auto-publish within the hour (T70); player supports Chromecast/AirPlay, quality selection, live DVR rewind, speed + captions (T69).
+- **Matchday tooling:** chat moderation = word filter with auto-hold, slow mode/rate limits, member reporting, in-chat mod actions (T63); reporter console gets a **local retry queue** so a goal logged in a dead spot posts when signal returns (T64).
+- **Apps:** category-level push preferences with quorum reminders default-on (T65); universal links open the exact screen in app or web (T66); iOS 15 / Android 8 floor (T67); club-owned store accounts, monthly release train, phased rollouts (T68).
+- **Quality:** accessibility verified by automated checks (axe-core in CI + Flutter linting) (T71); one branded master email template driven by theme config (T72).
 
 ---
 
