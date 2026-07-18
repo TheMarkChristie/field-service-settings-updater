@@ -9,8 +9,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Access gating: keeps owner-only content behind membership with a teaser
+ * layer for visitors, and isolates the board workspace (FO-101, FO-226).
+ */
 class PRX3_Access {
 
+	/**
+	 * Hook the template guard, query filtering, content gating and
+	 * activity tracking.
+	 */
 	public static function init() {
 		add_action( 'template_redirect', array( __CLASS__, 'guard' ) );
 		add_action( 'pre_get_posts', array( __CLASS__, 'hide_from_search_and_feeds' ) );

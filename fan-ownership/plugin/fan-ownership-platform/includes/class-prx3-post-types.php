@@ -11,12 +11,23 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Registers every custom post type and taxonomy the platform uses,
+ * owner-gated and board-only alike, on a shared gated base.
+ */
 class PRX3_Post_Types {
 
+	/**
+	 * Hook post type registration.
+	 */
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_all' ) );
 	}
 
+	/**
+	 * Register all post types and taxonomies. Also called on activation
+	 * before the rewrite flush.
+	 */
 	public static function register_all() {
 		$gated_base = array(
 			'public'          => true,

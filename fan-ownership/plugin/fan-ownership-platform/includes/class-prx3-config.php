@@ -9,10 +9,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Platform configuration: default settings, the sport catalogue, and the
+ * FO-103 feature kill switches (identity-as-configuration, FO-104).
+ */
 class PRX3_Config {
 
 	const FEATURES = array( 'registration', 'checkout', 'voting', 'forum', 'chat', 'streams', 'meetings', 'ideas', 'questions' );
 
+	/**
+	 * Hook the kill-switch toggle handler.
+	 */
 	public static function init() {
 		add_action( 'admin_post_prx3_toggle_feature', array( __CLASS__, 'handle_toggle' ) );
 	}

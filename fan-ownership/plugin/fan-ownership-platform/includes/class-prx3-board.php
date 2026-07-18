@@ -11,8 +11,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The board layer: workspace menu, structured actions, internal votes
+ * with conflicts and recusal, selective release to the register,
+ * observers, and the watermarked vault.
+ */
 class PRX3_Board {
 
+	/**
+	 * Wire the workspace menu, action handlers, conflicts profile
+	 * fields, and vault rendering.
+	 */
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_prx3_board_action', array( __CLASS__, 'handle_structured_action' ) );
@@ -26,6 +35,9 @@ class PRX3_Board {
 		add_action( 'template_redirect', array( __CLASS__, 'watermark_vault_view' ) );
 	}
 
+	/**
+	 * Register the Board Workspace admin menu (board members only).
+	 */
 	public static function menu() {
 		add_menu_page(
 			__( 'Board Workspace', 'fan-ownership' ),
@@ -43,6 +55,10 @@ class PRX3_Board {
 	/**
 	 * Open a pending board action (casting vote, failed quorum, reserved
 	 * matter). Called by the ballot lifecycle and admin screens.
+	 *
+	 * @param string $type      Action type key (e.g. 'casting_vote').
+	 * @param int    $ballot_id Related ballot post ID.
+	 * @param string $summary   Plain-text summary shown to directors.
 	 */
 	public static function open_action( $type, $ballot_id, $summary ) {
 		$actions   = get_option( 'prx3_board_actions', array() );
@@ -147,6 +163,10 @@ class PRX3_Board {
 	/**
 	 * FO-227 AC3/AC4: recusal locks papers, threads, and the vote; chair
 	 * can apply it too; always minuted.
+	 *
+	 * @param int    $item_id Board item (paper, vote, or thread) post ID.
+	 * @param int    $user_id Director being recused.
+	 * @param string $how     How the recusal arose (e.g. 'self-declared').
 	 */
 	public static function recuse( $item_id, $user_id, $how ) {
 		$recused   = array_map( 'intval', (array) get_post_meta( $item_id, '_prx3_recused_users', true ) );
@@ -158,6 +178,8 @@ class PRX3_Board {
 	/**
 	 * When every non-recused director has voted, minute the outcome with
 	 * the vote breakdown; a level vote falls to the chair (P83).
+	 *
+	 * @param int $vote_id Board vote post ID.
 	 */
 	private static function maybe_minute_outcome( $vote_id ) {
 		$directors = get_users(
@@ -219,6 +241,14 @@ class PRX3_Board {
 
 	/* ---------------- Observers (FO-228) ---------------- */
 
+	/**
+	 * Whether a user holds a current observer grant on a board item
+	 * (FO-228: time-boxed, read-only access).
+	 *
+	 * @param int $post_id Board item post ID.
+	 * @param int $user_id User to check.
+	 * @return bool True when an unexpired grant exists.
+	 */
 	public static function observer_has_access( $post_id, $user_id ) {
 		$grants = (array) get_post_meta( $post_id, '_prx3_observers', true );
 		foreach ( $grants as $grant ) {
@@ -229,6 +259,10 @@ class PRX3_Board {
 		return false;
 	}
 
+	/**
+	 * Grant time-boxed observer access to a board item (capped at 90
+	 * days), always audited.
+	 */
 	public static function handle_observer_grant() {
 		if ( ! current_user_can( 'prx3_board' ) ) {
 			wp_die( esc_html__( 'Board members only.', 'fan-ownership' ) );
@@ -254,6 +288,12 @@ class PRX3_Board {
 
 	/* ---------------- Conflicts register (FO-227 AC1) ---------------- */
 
+	/**
+	 * Render the conflicts-of-interest field on a director's profile
+	 * (FO-227 AC1: published on the board directory).
+	 *
+	 * @param WP_User $user Profile being viewed or edited.
+	 */
 	public static function conflicts_profile( $user ) {
 		if ( ! in_array( 'prx3_board_member', (array) $user->roles, true ) ) {
 			return;
@@ -264,6 +304,12 @@ class PRX3_Board {
 		echo '<textarea class="widefat" rows="4" name="prx3_conflicts">' . esc_textarea( $conflicts ) . '</textarea>';
 	}
 
+	/**
+	 * Save a director's conflicts register entry from the profile
+	 * screen.
+	 *
+	 * @param int $user_id Profile user ID being saved.
+	 */
 	public static function save_conflicts( $user_id ) {
 		if ( ! isset( $_POST['prx3_conflicts_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_conflicts_nonce'] ), 'prx3_conflicts' ) ) {
 			return;
@@ -304,6 +350,10 @@ class PRX3_Board {
 
 	/* ---------------- Workspace home (admin screen) ---------------- */
 
+	/**
+	 * Render the workspace home screen: outstanding structured actions
+	 * with the required published-reasoning form.
+	 */
 	public static function render_workspace_home() {
 		if ( ! current_user_can( 'prx3_board' ) ) {
 			wp_die( esc_html__( 'Board members only.', 'fan-ownership' ) );

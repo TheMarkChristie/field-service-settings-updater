@@ -15,8 +15,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Bridges share-based ticket discounts (P46) to an external ticketing
+ * provider via personal discount codes and a CSV export.
+ */
 class PRX3_Ticketing {
 
+	/**
+	 * Hook entitlement refresh to share changes and register the export
+	 * handler.
+	 */
 	public static function init() {
 		add_action( 'prx3_shares_granted', array( __CLASS__, 'refresh_entitlement' ), 20 );
 		add_action( 'prx3_shares_surrendered', array( __CLASS__, 'refresh_entitlement' ), 20 );
@@ -51,6 +59,13 @@ class PRX3_Ticketing {
 		return $code;
 	}
 
+	/**
+	 * Generate and store a fresh discount code derived from the owner's
+	 * number and current holding.
+	 *
+	 * @param int $user_id Owner.
+	 * @return string The new code.
+	 */
 	private static function generate_code( $user_id ) {
 		$shares = prx3_shares( $user_id );
 		$code   = strtoupper(

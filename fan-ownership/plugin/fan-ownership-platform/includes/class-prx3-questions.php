@@ -8,8 +8,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Owner questions to the club: submission, upvoting, monthly video
+ * selection and written answers with a daily SLA sweep.
+ */
 class PRX3_Questions {
 
+	/**
+	 * Hook up the answer meta box, save handler and daily SLA check.
+	 */
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
 		add_action( 'save_post_prx3_question', array( __CLASS__, 'save_answer' ), 10, 2 );
@@ -19,6 +26,15 @@ class PRX3_Questions {
 		}
 	}
 
+	/**
+	 * Submit a question (REST + shortcode both call this). Pending until
+	 * staff moderation.
+	 *
+	 * @param int    $user_id Asking owner.
+	 * @param string $title   The question.
+	 * @param string $detail  Optional detail.
+	 * @return int|WP_Error Post ID.
+	 */
 	public static function submit( $user_id, $title, $detail ) {
 		if ( ! prx3_feature_on( 'questions' ) ) {
 			return new WP_Error( 'prx3_off', __( 'Question submission is temporarily unavailable.', 'fan-ownership' ) );
@@ -49,6 +65,13 @@ class PRX3_Questions {
 		return $post_id;
 	}
 
+	/**
+	 * Toggle an owner's upvote on a published question (FO-212 AC2).
+	 *
+	 * @param int $question_id Question post ID.
+	 * @param int $user_id     Voting owner.
+	 * @return array|WP_Error ['count' => int, 'upvoted' => bool]
+	 */
 	public static function toggle_upvote( $question_id, $user_id ) {
 		if ( 'publish' !== get_post_status( $question_id ) ) {
 			return new WP_Error( 'prx3_question', __( 'This question is not open for upvotes.', 'fan-ownership' ) );
@@ -71,6 +94,9 @@ class PRX3_Questions {
 
 	/**
 	 * Written answer saved -> asker notified, answered state set (FO-212 AC4).
+	 *
+	 * @param int     $post_id Question post ID.
+	 * @param WP_Post $post    Post object.
 	 */
 	public static function save_answer( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_question_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_question_nonce'] ), 'prx3_question_meta' ) ) {
@@ -112,7 +138,7 @@ class PRX3_Questions {
 				'post_status'    => 'publish',
 				'posts_per_page' => 50,
 				'date_query'     => array( array( 'before' => $target_days . ' days ago' ) ),
-				'meta_query'     => array(
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded daily SLA sweep, capped at 50 posts.
 					array(
 						'key'     => '_prx3_answer',
 						'compare' => 'NOT EXISTS',
@@ -140,6 +166,9 @@ class PRX3_Questions {
 		}
 	}
 
+	/**
+	 * Register the answer meta box for governance staff.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_question_answer',

@@ -21,8 +21,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Installs the six platform roles and their capability matrix (FO-102),
+ * audits role changes, and enforces the staff 2FA requirement (T7).
+ */
 class PRX3_Roles {
 
+	/**
+	 * Hook login recording, role-change auditing and the 2FA gate.
+	 */
 	public static function init() {
 		add_action( 'wp_login', array( __CLASS__, 'record_login' ), 10, 2 );
 		add_action( 'set_user_role', array( __CLASS__, 'audit_role_change' ), 10, 3 );
@@ -133,6 +140,9 @@ class PRX3_Roles {
 	 * Staff and board roles require 2FA (T7). The platform does not ship its
 	 * own 2FA implementation; it enforces that a 2FA provider has marked the
 	 * user enrolled (filterable so any 2FA plugin can integrate).
+	 *
+	 * @param int|WP_User $user User ID or object to check.
+	 * @return bool Whether the user holds a staff capability that requires 2FA.
 	 */
 	public static function staff_needs_2fa( $user ) {
 		$staff_caps = array( 'prx3_admin', 'prx3_governance', 'prx3_edit_content', 'prx3_moderate', 'prx3_board' );

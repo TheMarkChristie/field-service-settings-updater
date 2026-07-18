@@ -16,8 +16,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The WooCommerce share checkout: ladder pricing, purchase caps, gift
+ * handling, idempotent fulfilment, and gapless sequential invoices.
+ */
 class PRX3_WooCommerce {
 
+	/**
+	 * Attach the checkout, fulfilment, and invoice hooks (no-op when
+	 * WooCommerce is absent — B3 decision).
+	 */
 	public static function init() {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
@@ -40,12 +48,23 @@ class PRX3_WooCommerce {
 		return (int) prx3_setting( 'share_product_id', 0 );
 	}
 
+	/**
+	 * Whether a product is the configured share product.
+	 *
+	 * @param int $product_id Product to check.
+	 * @return bool
+	 */
 	private static function is_share_product( $product_id ) {
 		return $product_id && self::share_product_id() === (int) $product_id;
 	}
 
 	/**
 	 * Cap, age, verification, and kill-switch checks before the cart.
+	 *
+	 * @param bool $passed     Whether validation has passed so far.
+	 * @param int  $product_id Product being added.
+	 * @param int  $quantity   Quantity requested.
+	 * @return bool Whether the add-to-cart may proceed.
 	 */
 	public static function validate_add_to_cart( $passed, $product_id, $quantity ) {
 		if ( ! self::is_share_product( $product_id ) ) {
@@ -124,6 +143,8 @@ class PRX3_WooCommerce {
 
 	/**
 	 * Ladder pricing at cart time (FO-106 AC1, FO-107 AC1).
+	 *
+	 * @param WC_Cart $cart The cart being totalled.
 	 */
 	public static function apply_ladder_pricing( $cart ) {
 		foreach ( $cart->get_cart() as $item ) {
@@ -142,6 +163,10 @@ class PRX3_WooCommerce {
 	/**
 	 * Belt and braces: re-verify at order creation that the charged total
 	 * equals the ladder for this buyer at this moment.
+	 *
+	 * @param WC_Order $order The order being created.
+	 * @param array    $data  Posted checkout data.
+	 * @throws Exception When the charged total no longer matches the ladder.
 	 */
 	public static function verify_order_pricing( $order, $data ) {
 		foreach ( $order->get_items() as $order_item ) {

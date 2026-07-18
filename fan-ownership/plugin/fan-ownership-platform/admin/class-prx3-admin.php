@@ -8,13 +8,24 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The Owner-Admin settings screen: renders and saves every platform
+ * setting (identity, brand pack, prices, governance numbers, integrations)
+ * and the FO-103 feature kill switches.
+ */
 class PRX3_Admin {
 
+	/**
+	 * Hook the menu page and the settings save handler.
+	 */
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_prx3_save_settings', array( __CLASS__, 'save' ) );
 	}
 
+	/**
+	 * Register the top-level Fan Ownership admin menu.
+	 */
 	public static function menu() {
 		add_menu_page(
 			__( 'Fan Ownership', 'fan-ownership' ),
@@ -27,6 +38,11 @@ class PRX3_Admin {
 		);
 	}
 
+	/**
+	 * The settings form definition, grouped by section.
+	 *
+	 * @return array<string,array<string,array>> Section => setting key => array of label and field type.
+	 */
 	private static function fields() {
 		return array(
 			'club'         => array(
@@ -113,6 +129,10 @@ class PRX3_Admin {
 		);
 	}
 
+	/**
+	 * Render the settings screen: kill switches, the settings form,
+	 * register exports and the brand pack link.
+	 */
 	public static function render() {
 		if ( ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
@@ -240,6 +260,9 @@ class PRX3_Admin {
 		);
 	}
 
+	/**
+	 * Save posted settings, sanitised per field type, then audit and redirect.
+	 */
 	public static function save() {
 		if ( ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );

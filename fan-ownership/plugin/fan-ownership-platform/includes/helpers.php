@@ -223,7 +223,7 @@ function prx3_active_owner_count( $since_timestamp = null ) {
 			'count_total' => true,
 			'fields'      => 'ID',
 			'number'      => 1,
-			'meta_query'  => array(
+			'meta_query'  => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded count on the quorum denominator; caching deliberately avoided on vote reads.
 				array(
 					'key'     => 'prx3_last_active',
 					'value'   => $since,
@@ -249,7 +249,7 @@ function prx3_active_owner_ids( $since_timestamp = null ) {
 			'role'       => 'fan_owner',
 			'fields'     => 'ID',
 			'number'     => -1,
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded lookup for governance sends; caching deliberately avoided on vote reads.
 				array(
 					'key'     => 'prx3_last_active',
 					'value'   => $since,

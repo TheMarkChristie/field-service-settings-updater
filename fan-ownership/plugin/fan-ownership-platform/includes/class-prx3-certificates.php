@@ -12,8 +12,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Owner certificates: issued and re-issued as the holding changes,
+ * rendered as print-ready HTML, and publicly verifiable by code.
+ */
 class PRX3_Certificates {
 
+	/**
+	 * Hook certificate issue, the verification endpoint, and rendering.
+	 */
 	public static function init() {
 		add_action( 'prx3_shares_granted', array( __CLASS__, 'issue' ), 10, 4 );
 		add_action( 'init', array( __CLASS__, 'register_verify_endpoint' ) );

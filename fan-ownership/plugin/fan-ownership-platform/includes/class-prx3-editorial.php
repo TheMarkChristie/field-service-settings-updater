@@ -9,8 +9,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Enforces the editorial approval rules: a second approver for ballots
+ * and financial documents, and manager sign-off for sensitive footage.
+ */
 class PRX3_Editorial {
 
+	/**
+	 * Hook up the publish gate, meta boxes and approval handler.
+	 */
 	public static function init() {
 		add_filter( 'wp_insert_post_data', array( __CLASS__, 'enforce_approval' ), 10, 2 );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_boxes' ) );
@@ -20,6 +27,9 @@ class PRX3_Editorial {
 
 	/**
 	 * Types that require a second approver before publish (FO-119 AC2).
+	 *
+	 * @param string $post_type Post type name.
+	 * @return bool
 	 */
 	public static function needs_second_approval( $post_type ) {
 		return in_array( $post_type, array( 'prx3_ballot' ), true );
@@ -27,6 +37,9 @@ class PRX3_Editorial {
 
 	/**
 	 * Financial documents also need it (detected by document type).
+	 *
+	 * @param int $post_id Document post ID.
+	 * @return bool
 	 */
 	private static function is_financial_document( $post_id ) {
 		return has_term( array( 'financial-statement', 'monthly-summary', 'annual-accounts' ), 'prx3_document_type', $post_id );
@@ -34,6 +47,10 @@ class PRX3_Editorial {
 
 	/**
 	 * Hold un-approved governed items at pending, whoever hits publish.
+	 *
+	 * @param array $data    Slashed, sanitized post data about to be saved.
+	 * @param array $postarr Raw post array including the post ID.
+	 * @return array Filtered post data.
 	 */
 	public static function enforce_approval( $data, $postarr ) {
 		$post_id = isset( $postarr['ID'] ) ? (int) $postarr['ID'] : 0;

@@ -8,6 +8,8 @@
  * Author:            Perth Panthers
  * License:           MIT
  * Text Domain:       fan-ownership
+ *
+ * @package FanOwnershipPlatform
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -188,6 +190,9 @@ add_action( 'init', 'prx3_maybe_flush_rewrites', 99 );
 register_activation_hook( __FILE__, 'prx3_activate' );
 register_deactivation_hook( __FILE__, 'prx3_deactivate' );
 
+/**
+ * Activation: install roles, tables, post types and cron, then flush rewrites.
+ */
 function prx3_activate() {
 	PRX3_Roles::install();
 	PRX3_Post_Types::register_all();
@@ -196,6 +201,9 @@ function prx3_activate() {
 	flush_rewrite_rules();
 }
 
+/**
+ * Deactivation: unschedule the ballot cron and flush rewrites.
+ */
 function prx3_deactivate() {
 	PRX3_Ballot_Lifecycle::unschedule_cron();
 	flush_rewrite_rules();

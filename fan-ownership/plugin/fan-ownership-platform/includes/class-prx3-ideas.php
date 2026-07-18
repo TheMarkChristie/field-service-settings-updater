@@ -10,10 +10,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Fan ideas: submission with staff pre-moderation, owner support with a
+ * 5% threshold that auto-drafts a ballot, and the status lifecycle.
+ */
 class PRX3_Ideas {
 
 	const STATUSES = array( 'new', 'under-review', 'ballot-scheduled', 'planned', 'delivered', 'declined' );
 
+	/**
+	 * Hook up the status meta box and save handler.
+	 */
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
 		add_action( 'save_post_prx3_idea', array( __CLASS__, 'save_status' ), 10, 2 );
@@ -23,6 +30,9 @@ class PRX3_Ideas {
 	 * Submit an idea (REST + shortcode both call this). Pending until
 	 * staff moderation (FO-210 AC1).
 	 *
+	 * @param int    $user_id   Proposing owner.
+	 * @param string $title     Idea title.
+	 * @param string $rationale Supporting rationale.
 	 * @return int|WP_Error Post ID.
 	 */
 	public static function submit( $user_id, $title, $rationale ) {
@@ -58,6 +68,8 @@ class PRX3_Ideas {
 	/**
 	 * Toggle support (FO-210 AC2). Once per owner; withdrawable.
 	 *
+	 * @param int $idea_id Idea post ID.
+	 * @param int $user_id Supporting owner.
 	 * @return array|WP_Error ['count' => int, 'supporting' => bool, 'threshold' => int]
 	 */
 	public static function toggle_support( $idea_id, $user_id ) {
@@ -100,6 +112,8 @@ class PRX3_Ideas {
 	/**
 	 * Threshold reached: auto-create the draft ballot, notify staff and
 	 * supporters, set status. Staff legality-check then schedule (FO-210 AC4).
+	 *
+	 * @param int $idea_id Idea post ID.
 	 */
 	private static function auto_draft_ballot( $idea_id ) {
 		$idea      = get_post( $idea_id );
@@ -160,6 +174,10 @@ class PRX3_Ideas {
 
 	/**
 	 * Status transitions with history + notifications (FO-211).
+	 *
+	 * @param int    $idea_id Idea post ID.
+	 * @param string $status  New status (one of self::STATUSES).
+	 * @param string $reason  Optional reason (required when declining).
 	 */
 	public static function set_status( $idea_id, $status, $reason = '' ) {
 		if ( ! in_array( $status, self::STATUSES, true ) ) {
@@ -196,6 +214,9 @@ class PRX3_Ideas {
 		}
 	}
 
+	/**
+	 * Register the Idea Status meta box for staff.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_idea_status',
@@ -224,6 +245,12 @@ class PRX3_Ideas {
 		);
 	}
 
+	/**
+	 * Persist the meta box status change (declining requires a reason).
+	 *
+	 * @param int     $post_id Idea post ID.
+	 * @param WP_Post $post    Post object (unused).
+	 */
 	public static function save_status( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_idea_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_idea_nonce'] ), 'prx3_idea_status' ) ) {
 			return;

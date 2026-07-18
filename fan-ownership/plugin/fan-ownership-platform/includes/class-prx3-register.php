@@ -10,8 +10,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The statutory register of members: append-only event log in a custom
+ * table, CSV export, and per-member history. Owns the plugin's custom
+ * table schema on activation.
+ */
 class PRX3_Register {
 
+	/**
+	 * Hook the register export handler.
+	 */
 	public static function init() {
 		add_action( 'admin_post_prx3_export_register', array( __CLASS__, 'handle_export' ) );
 	}
@@ -103,6 +111,7 @@ class PRX3_Register {
 	 */
 	public static function record( $user_id, $event, $shares, $source, $context = array() ) {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- append to the plugin's own statutory register table; no WP API covers it.
 		$wpdb->insert(
 			$wpdb->prefix . 'prx3_share_register',
 			array(
@@ -128,7 +137,7 @@ class PRX3_Register {
 		}
 		check_admin_referer( 'prx3_export_register' );
 		global $wpdb;
-		$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}prx3_share_register ORDER BY id ASC", ARRAY_A );
+		$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}prx3_share_register ORDER BY id ASC", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- statutory export must read the authoritative register directly, never a cache.
 
 		PRX3_Audit::log( 'register_export', 'Share register exported' );
 
@@ -167,6 +176,7 @@ class PRX3_Register {
 	 */
 	public static function history( $user_id ) {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- money-path read of the plugin's own register table; deliberately uncached so it is always authoritative.
 		return $wpdb->get_results(
 			$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}prx3_share_register WHERE user_id = %d ORDER BY id ASC", $user_id ),
 			ARRAY_A

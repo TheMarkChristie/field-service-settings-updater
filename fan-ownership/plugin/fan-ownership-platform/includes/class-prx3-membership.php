@@ -9,8 +9,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Membership sign-up: handles the registration form, 18+ and terms
+ * confirmation, email verification, and near-duplicate account flagging.
+ */
 class PRX3_Membership {
 
+	/**
+	 * Hook the registration and verification handlers.
+	 */
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'maybe_handle_registration' ) );
 		add_action( 'init', array( __CLASS__, 'maybe_handle_verification' ) );
@@ -35,7 +42,7 @@ class PRX3_Membership {
 
 		$name     = isset( $_POST['prx3_name'] ) ? sanitize_text_field( wp_unslash( $_POST['prx3_name'] ) ) : '';
 		$email    = isset( $_POST['prx3_email'] ) ? sanitize_email( wp_unslash( $_POST['prx3_email'] ) ) : '';
-		$password = isset( $_POST['prx3_password'] ) ? (string) wp_unslash( $_POST['prx3_password'] ) : '';
+		$password = isset( $_POST['prx3_password'] ) ? (string) wp_unslash( $_POST['prx3_password'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- passwords must not be altered; hashed by wp_insert_user().
 		$is_adult = ! empty( $_POST['prx3_adult'] );
 		$terms_ok = ! empty( $_POST['prx3_terms'] );
 
@@ -89,6 +96,8 @@ class PRX3_Membership {
 
 	/**
 	 * FO-105 AC2: activation only after email verification.
+	 *
+	 * @param int $user_id User to send the verification email to.
 	 */
 	public static function send_verification( $user_id ) {
 		$token = wp_generate_password( 32, false );
@@ -115,6 +124,10 @@ class PRX3_Membership {
 		);
 	}
 
+	/**
+	 * Handle the email verification link: check the token, mark verified,
+	 * sign the member in and send them to checkout.
+	 */
 	public static function maybe_handle_verification() {
 		// Email-link flow: a nonce cannot exist in a link sent by email.
 		// Authentication is the single-use hashed token checked below.
@@ -140,12 +153,22 @@ class PRX3_Membership {
 		exit;
 	}
 
+	/**
+	 * Whether a member has verified their email address.
+	 *
+	 * @param int $user_id User.
+	 * @return bool
+	 */
 	public static function is_verified( $user_id ) {
 		return (bool) get_user_meta( $user_id, 'prx3_email_verified', true );
 	}
 
 	/**
 	 * FO-110 AC1: flag (never auto-block) near-duplicate registrations.
+	 *
+	 * @param int    $user_id Newly registered user.
+	 * @param string $email   Registration email address.
+	 * @param string $name    Display name given at registration.
 	 */
 	private static function flag_possible_duplicates( $user_id, $email, $name ) {
 		$local    = strtolower( preg_replace( '/\+.*$/', '', strstr( $email, '@', true ) ) );
@@ -175,6 +198,12 @@ class PRX3_Membership {
 		}
 	}
 
+	/**
+	 * Derive a unique username from the local part of an email address.
+	 *
+	 * @param string $email Email address.
+	 * @return string Unique username.
+	 */
 	private static function unique_username( $email ) {
 		$base = sanitize_user( current( explode( '@', $email ) ), true );
 		$base = $base ? $base : 'owner';
@@ -186,6 +215,11 @@ class PRX3_Membership {
 		return $name;
 	}
 
+	/**
+	 * Redirect back to the referring page with the given query args and exit.
+	 *
+	 * @param array $args Query args to append (e.g. prx3_error).
+	 */
 	private static function back_with( $args ) {
 		$url = wp_get_referer() ? wp_get_referer() : home_url();
 		wp_safe_redirect( add_query_arg( $args, remove_query_arg( array( 'prx3_error', 'prx3_registered' ), $url ) ) );

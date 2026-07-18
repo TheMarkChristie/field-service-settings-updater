@@ -15,8 +15,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The shares engine: the single write path for holdings, cap enforcement,
+ * owner number allocation, surrender and transfer-on-death.
+ */
 class PRX3_Shares {
 
+	/**
+	 * No hooks of its own; other modules call the public API directly.
+	 */
 	public static function init() {}
 
 	/**
@@ -130,6 +137,8 @@ class PRX3_Shares {
 
 	/**
 	 * FO-112: sequential owner numbers, race-safe, never reused.
+	 *
+	 * @param int $user_id User to allocate the next owner number to.
 	 */
 	private static function allocate_owner_number( $user_id ) {
 		global $wpdb;
@@ -137,8 +146,8 @@ class PRX3_Shares {
 			return;
 		}
 		// Atomic increment via the options table under a dedicated row.
-		$wpdb->query( "INSERT INTO {$wpdb->options} (option_name, option_value, autoload) VALUES ('prx3_owner_seq', '1', 'no') ON DUPLICATE KEY UPDATE option_value = option_value + 1" );
-		$number = (int) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'prx3_owner_seq'" );
+		$wpdb->query( "INSERT INTO {$wpdb->options} (option_name, option_value, autoload) VALUES ('prx3_owner_seq', '1', 'no') ON DUPLICATE KEY UPDATE option_value = option_value + 1" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- atomic increment; the options API cannot do this race-safely.
+		$number = (int) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'prx3_owner_seq'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- must read the just-incremented value; a cache could hand out a duplicate owner number.
 		update_user_meta( $user_id, 'prx3_owner_number', $number );
 		wp_cache_delete( 'prx3_owner_seq', 'options' );
 	}

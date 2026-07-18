@@ -23,6 +23,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Bidirectional Dataverse sync: queues and delivers signed outbound
+ * webhooks plus paged delta/register feeds, applies allow-listed inbound
+ * enrichment upserts, and routes anything ambiguous to a human review
+ * queue (FO-124/FO-125).
+ */
 class PRX3_Sync {
 
 	const OUTBOX_OPTION = 'prx3_sync_outbox';
@@ -30,6 +36,10 @@ class PRX3_Sync {
 	const MAX_TRIES     = 8;
 	const OUTBOX_CAP    = 500;
 
+	/**
+	 * Hook REST routes, change-tracking signals, outbox delivery on the
+	 * ballot tick, and the admin review screen.
+	 */
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 
@@ -46,24 +56,51 @@ class PRX3_Sync {
 		add_action( 'admin_post_prx3_sync_resolve', array( __CLASS__, 'handle_resolve' ) );
 	}
 
+	/**
+	 * Is sync switched on with an API key configured?
+	 *
+	 * @return bool True when enabled and keyed.
+	 */
 	public static function enabled() {
 		return (int) prx3_setting( 'sync_enabled', 0 ) && '' !== (string) prx3_setting( 'sync_api_key', '' );
 	}
 
 	/* ---------------- Change tracking + outbox ---------------- */
 
+	/**
+	 * A member's profile or badges changed — touch and queue.
+	 *
+	 * @param int $user_id Member.
+	 */
 	public static function on_member_changed( $user_id ) {
 		self::touch_and_queue( (int) $user_id, 'member_updated' );
 	}
 
+	/**
+	 * A member's holding changed (grant or surrender) — touch and queue.
+	 *
+	 * @param int $user_id Member.
+	 */
 	public static function on_shares_changed( $user_id ) {
 		self::touch_and_queue( (int) $user_id, 'shares_changed' );
 	}
 
+	/**
+	 * A member accepted the Shareholders' Agreement — touch and queue.
+	 *
+	 * @param int $user_id Member.
+	 */
 	public static function on_agreement_accepted( $user_id ) {
 		self::touch_and_queue( (int) $user_id, 'agreement_accepted' );
 	}
 
+	/**
+	 * Stamp the member's modified time and append the event to the
+	 * capped outbound webhook queue.
+	 *
+	 * @param int    $user_id Member.
+	 * @param string $event   Event name, e.g. 'shares_changed'.
+	 */
 	private static function touch_and_queue( $user_id, $event ) {
 		if ( ! $user_id ) {
 			return;
@@ -146,6 +183,13 @@ class PRX3_Sync {
 
 	/* ---------------- The member payload (outbound shape) ---------------- */
 
+	/**
+	 * The outbound member shape: identity, holding, agreement status,
+	 * badges, engagement, and the CRM enrichment fields already held.
+	 *
+	 * @param int $user_id Member.
+	 * @return array Payload, or an id + deleted marker for missing users.
+	 */
 	public static function member_payload( $user_id ) {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
@@ -191,6 +235,8 @@ class PRX3_Sync {
 	 * The Dataverse-owned enrichment fields inbound writes may touch.
 	 * Everything else — shares, votes, acceptances, owner numbers — is
 	 * WordPress-owned and rejected.
+	 *
+	 * @return string[] Allow-listed inbound field names.
 	 */
 	public static function inbound_fields() {
 		return apply_filters(
@@ -201,6 +247,10 @@ class PRX3_Sync {
 
 	/* ---------------- REST API ---------------- */
 
+	/**
+	 * Register the prx3/v1 sync routes: members delta, register feed,
+	 * inbound upsert, and the review queue.
+	 */
 	public static function routes() {
 		register_rest_route(
 			'prx3/v1',
@@ -242,6 +292,9 @@ class PRX3_Sync {
 
 	/**
 	 * API-key auth for service-to-service calls (Power Automate).
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return true|WP_Error True when the key matches; error otherwise.
 	 */
 	public static function authorize( $request ) {
 		if ( ! self::enabled() ) {
@@ -257,6 +310,9 @@ class PRX3_Sync {
 	/**
 	 * GET /sync/members — paged; ?modified_since= (ISO 8601 or epoch)
 	 * returns only members touched since then.
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response Page of member payloads with a total.
 	 */
 	public static function route_members( $request ) {
 		$page     = max( 1, (int) $request->get_param( 'page' ) );
@@ -298,6 +354,9 @@ class PRX3_Sync {
 	/**
 	 * GET /sync/register — append-only share register feed; ?since_id=
 	 * streams rows after that id (natural, gap-free delta).
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response Register rows, last id, and a more flag.
 	 */
 	public static function route_register( $request ) {
 		global $wpdb;
@@ -321,6 +380,9 @@ class PRX3_Sync {
 	 * 1. prx3_dataverse_id cross-reference; 2. email (case-insensitive);
 	 * 3. owner number. Ambiguity or conflict queues for human review —
 	 * never auto-merge, never auto-create.
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response|WP_Error Linked/review outcome, or an error.
 	 */
 	public static function route_upsert( $request ) {
 		$body         = $request->get_json_params();
@@ -394,6 +456,12 @@ class PRX3_Sync {
 		);
 	}
 
+	/**
+	 * GET /sync/review — the queue of inbound records awaiting a human.
+	 *
+	 * @param WP_REST_Request $request Incoming request (unused).
+	 * @return WP_REST_Response Review queue entries.
+	 */
 	public static function route_review( $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- REST signature.
 		return rest_ensure_response( array( 'review' => array_values( (array) get_option( self::REVIEW_OPTION, array() ) ) ) );
 	}
@@ -401,6 +469,11 @@ class PRX3_Sync {
 	/**
 	 * Link + write the enrichment fields. Returns the rejected field
 	 * names (anything outside the allow-list — field-level ownership).
+	 *
+	 * @param int    $user_id      Member.
+	 * @param string $dataverse_id Dataverse cross-reference ID to link.
+	 * @param array  $fields       Inbound field => value map.
+	 * @return string[] Rejected field names.
 	 */
 	private static function apply_inbound( $user_id, $dataverse_id, $fields ) {
 		update_user_meta( $user_id, 'prx3_dataverse_id', $dataverse_id );
@@ -419,6 +492,14 @@ class PRX3_Sync {
 		return $ignored;
 	}
 
+	/**
+	 * Queue an inbound record for human review and answer the caller.
+	 *
+	 * @param string $reason  Machine reason, e.g. 'no_match'.
+	 * @param array  $payload The inbound request body.
+	 * @param string $message Human-readable explanation.
+	 * @return WP_REST_Response Review status with the queue key.
+	 */
 	private static function to_review( $reason, $payload, $message ) {
 		$review         = (array) get_option( self::REVIEW_OPTION, array() );
 		$key            = substr( md5( wp_json_encode( $payload ) ), 0, 12 );
@@ -442,6 +523,9 @@ class PRX3_Sync {
 
 	/* ---------------- Admin: sync health + review queue ---------------- */
 
+	/**
+	 * Add the CRM Sync screen under the plugin settings menu.
+	 */
 	public static function menu() {
 		add_submenu_page(
 			'prx3-settings',
@@ -453,6 +537,9 @@ class PRX3_Sync {
 		);
 	}
 
+	/**
+	 * Render the sync health summary and the matching review queue.
+	 */
 	public static function render_admin() {
 		if ( ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Admin access required.', 'fan-ownership' ) );
@@ -487,6 +574,10 @@ class PRX3_Sync {
 		echo '</tbody></table></div>';
 	}
 
+	/**
+	 * Resolve a review entry: link it to a member and apply the fields,
+	 * or discard it. Either way the entry leaves the queue, audited.
+	 */
 	public static function handle_resolve() {
 		if ( ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Admin access required.', 'fan-ownership' ) );

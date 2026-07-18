@@ -8,7 +8,8 @@
 	<arg name="extensions" value="php"/>
 	<arg value="sp"/>
 
-	<rule ref="WordPress-Extra">
+	<!-- Full WordPress standard: Core + Docs + Extra. -->
+	<rule ref="WordPress">
 		<!-- Hook callbacks legitimately receive parameters they do not use. -->
 		<exclude name="Generic.CodeAnalysis.UnusedFunctionParameter"/>
 	</rule>

@@ -8,12 +8,22 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The staff/board club dashboard: membership and revenue numbers,
+ * quorum progress on open ballots, and content and community health.
+ */
 class PRX3_Dashboard {
 
+	/**
+	 * Hook the dashboard submenu page.
+	 */
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 	}
 
+	/**
+	 * Register the Club Dashboard submenu under Fan Ownership.
+	 */
 	public static function menu() {
 		add_submenu_page(
 			'prx3-settings',
@@ -25,6 +35,9 @@ class PRX3_Dashboard {
 		);
 	}
 
+	/**
+	 * Render the dashboard metrics (FO-120, FO-315, T28).
+	 */
 	public static function render() {
 		if ( ! current_user_can( 'prx3_view_tally' ) && ! current_user_can( 'prx3_board' ) ) {
 			wp_die( esc_html__( 'Staff and board only.', 'fan-ownership' ) );
@@ -40,10 +53,10 @@ class PRX3_Dashboard {
 			)
 		);
 		$active     = prx3_active_owner_count();
-		$shares     = (int) $wpdb->get_var( "SELECT SUM(meta_value+0) FROM {$wpdb->usermeta} WHERE meta_key = 'prx3_shares'" );
-		$revenue    = (float) $wpdb->get_var( "SELECT SUM(consideration) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'acquisition'" );
+		$shares     = (int) $wpdb->get_var( "SELECT SUM(meta_value+0) FROM {$wpdb->usermeta} WHERE meta_key = 'prx3_shares'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- live share total; caching deliberately avoided on money/vote reads.
+		$revenue    = (float) $wpdb->get_var( "SELECT SUM(consideration) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'acquisition'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the custom register table is its own record; live money read.
 		$gifts      = count( array_filter( get_option( 'prx3_gift_codes', array() ), fn( $g ) => empty( $g['redeemed'] ) ) );
-		$surrenders = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'surrender'" );
+		$surrenders = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'surrender'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the custom register table is its own record; live count.
 
 		echo '<div class="wrap"><h1>' . esc_html( sprintf( /* translators: %s club. */ __( '%s — Club Dashboard', 'fan-ownership' ), prx3_club_name() ) ) . '</h1>';
 
@@ -83,8 +96,8 @@ class PRX3_Dashboard {
 					'posts_per_page' => -1,
 					'fields'         => 'ids',
 					'no_found_rows'  => true,
-					'meta_key'       => '_prx3_stalled',
-					'meta_value'     => 1,
+					'meta_key'       => '_prx3_stalled', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded lookup on an admin-only dashboard.
+					'meta_value'     => 1, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				)
 			)
 		);

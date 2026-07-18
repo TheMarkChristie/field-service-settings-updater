@@ -16,8 +16,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Chargeback and refund clawback: when a share order's payment is
+ * reversed, surrenders the shares that order granted and voids its gift
+ * codes; merely disputed orders are flagged to admins without touching
+ * shares.
+ */
 class PRX3_Disputes {
 
+	/**
+	 * Hook the WooCommerce refunded and on-hold status transitions.
+	 */
 	public static function init() {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
@@ -91,6 +100,10 @@ class PRX3_Disputes {
 	 * Surrender up to $qty shares from a member because this order's
 	 * payment failed to stick. Partial holdings are respected: we never
 	 * take more than they currently hold.
+	 *
+	 * @param int $user_id  Member whose shares are surrendered.
+	 * @param int $qty      Shares the order granted.
+	 * @param int $order_id Order whose payment was reversed.
 	 */
 	private static function surrender_from_order( $user_id, $qty, $order_id ) {
 		$held = prx3_shares( $user_id );
@@ -137,6 +150,8 @@ class PRX3_Disputes {
 	/**
 	 * Gift codes from a clawed-back order: void the unredeemed; surrender
 	 * from the redeemer where already redeemed.
+	 *
+	 * @param int $order_id Order whose payment was reversed.
 	 */
 	private static function unwind_gifts( $order_id ) {
 		$gifts   = get_option( 'prx3_gift_codes', array() );

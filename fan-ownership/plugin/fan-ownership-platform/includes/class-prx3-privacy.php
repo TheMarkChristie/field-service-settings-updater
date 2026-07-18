@@ -10,8 +10,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * GDPR tooling: plugs the platform's personal data into WordPress
+ * core's exporter/eraser framework, handles self-serve account closure
+ * with share surrender, and runs the daily retention sweep.
+ */
 class PRX3_Privacy {
 
+	/**
+	 * Register the exporter/eraser, the close-account handler, and the
+	 * daily retention sweep event.
+	 */
 	public static function init() {
 		add_filter( 'wp_privacy_personal_data_exporters', array( __CLASS__, 'register_exporter' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( __CLASS__, 'register_eraser' ) );
@@ -22,6 +31,12 @@ class PRX3_Privacy {
 		}
 	}
 
+	/**
+	 * Add the plugin's exporter to core's personal data exporters.
+	 *
+	 * @param array $exporters Registered exporters.
+	 * @return array Exporters including ours.
+	 */
 	public static function register_exporter( $exporters ) {
 		$exporters['prx3'] = array(
 			'exporter_friendly_name' => __( 'Fan Ownership', 'fan-ownership' ),
@@ -32,6 +47,9 @@ class PRX3_Privacy {
 
 	/**
 	 * FO-117 AC2: everything the platform holds, in the portable export.
+	 *
+	 * @param string $email Email address being exported.
+	 * @return array Exporter response: data groups and a done flag.
 	 */
 	public static function export( $email ) {
 		$user = get_user_by( 'email', $email );

@@ -18,8 +18,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Tracks the club's recurring promises and statutory deadlines with
+ * accountable owners, auto-advancing due dates, and email chasing when
+ * a commitment slips.
+ */
 class PRX3_Commitments {
 
+	/**
+	 * Hook the daily tick, admin screen, and admin-post handlers.
+	 */
 	public static function init() {
 		add_action( 'prx3_commitments_tick', array( __CLASS__, 'tick' ) );
 		if ( ! wp_next_scheduled( 'prx3_commitments_tick' ) ) {
@@ -114,6 +122,13 @@ class PRX3_Commitments {
 		return $items;
 	}
 
+	/**
+	 * The next due date for a frequency, counted from a timestamp.
+	 *
+	 * @param string $frequency weekly|monthly|quarterly|annual.
+	 * @param int    $from_ts   Unix timestamp to count from.
+	 * @return string Y-m-d.
+	 */
 	private static function next_due( $frequency, $from_ts ) {
 		$intervals = array(
 			'weekly'    => '+1 week',
@@ -153,6 +168,11 @@ class PRX3_Commitments {
 		}
 	}
 
+	/**
+	 * Email the accountable owner and the admins about an overdue commitment.
+	 *
+	 * @param array $item Commitment row (key, label, owner, due).
+	 */
 	private static function chase( $item ) {
 		$recipients = array();
 		$owner      = $item['owner'] ? get_userdata( (int) $item['owner'] ) : null;
@@ -181,10 +201,14 @@ class PRX3_Commitments {
 
 	/**
 	 * Shares issued since a date (drives the SH01 reminder).
+	 *
+	 * @param string $since Y-m-d of the last SH01 filing, '' for ever.
+	 * @return int Acquisition count since that date.
 	 */
 	private static function allotments_since( $since ) {
 		global $wpdb;
 		$since_sql = $since ? $since . ' 00:00:00' : '1970-01-01 00:00:00';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Money-path read of the custom share register; must be fresh for the statutory filing check, so caching is deliberately avoided.
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'acquisition' AND recorded_at > %s",
@@ -195,6 +219,9 @@ class PRX3_Commitments {
 
 	/* ---------------- Admin screen ---------------- */
 
+	/**
+	 * Register the Commitments submenu under the platform settings menu.
+	 */
 	public static function menu() {
 		add_submenu_page(
 			'prx3-settings',
@@ -206,6 +233,10 @@ class PRX3_Commitments {
 		);
 	}
 
+	/**
+	 * Render the commitments table: label, frequency, accountable owner,
+	 * due date, status, and mark-done / save controls.
+	 */
 	public static function render() {
 		if ( ! current_user_can( 'prx3_governance' ) && ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Governance staff only.', 'fan-ownership' ) );
@@ -236,6 +267,10 @@ class PRX3_Commitments {
 		echo '</div>';
 	}
 
+	/**
+	 * Mark a commitment done: record the date, roll the due date on, and
+	 * clear the missed flag.
+	 */
 	public static function handle_done() {
 		if ( ! current_user_can( 'prx3_governance' ) && ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Governance staff only.', 'fan-ownership' ) );
@@ -256,6 +291,10 @@ class PRX3_Commitments {
 		exit;
 	}
 
+	/**
+	 * Save a commitment's accountable owner and due date from the admin
+	 * screen.
+	 */
 	public static function handle_save() {
 		if ( ! current_user_can( 'prx3_governance' ) && ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Governance staff only.', 'fan-ownership' ) );
@@ -294,6 +333,7 @@ class PRX3_Commitments {
 			}
 		}
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Money-path read of the custom share register for the Companies House export; must be fresh, so caching is deliberately avoided.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}prx3_share_register WHERE event = 'acquisition' AND recorded_at > %s ORDER BY id ASC",

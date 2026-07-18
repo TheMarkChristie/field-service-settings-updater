@@ -8,8 +8,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Gift share codes: issues a code and delivery email when a gift order
+ * is paid, and redeems the code into the recipient's own account with
+ * agreement acceptance, age, and cap checks (FO-108).
+ */
 class PRX3_Gifts {
 
+	/**
+	 * Hook the redemption form handler.
+	 */
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'maybe_redeem' ) );
 	}
@@ -138,6 +146,11 @@ class PRX3_Gifts {
 		);
 	}
 
+	/**
+	 * Bounce back to the referring page with the message in prx3_error.
+	 *
+	 * @param string $message User-facing error message.
+	 */
 	private static function back( $message ) {
 		$url = wp_get_referer() ? wp_get_referer() : home_url();
 		wp_safe_redirect( add_query_arg( 'prx3_error', rawurlencode( $message ), remove_query_arg( 'prx3_error', $url ) ) );

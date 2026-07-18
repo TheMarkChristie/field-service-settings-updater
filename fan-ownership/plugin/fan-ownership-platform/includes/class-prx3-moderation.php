@@ -10,8 +10,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Runs the moderation queue and applies the warn -> mute -> expel
+ * sanctions ladder, with auditing on every action.
+ */
 class PRX3_Moderation {
 
+	/**
+	 * Hook up the moderation action handler.
+	 */
 	public static function init() {
 		add_action( 'admin_post_prx3_moderate', array( __CLASS__, 'handle_action' ) );
 	}
@@ -19,6 +26,11 @@ class PRX3_Moderation {
 	/**
 	 * Add an item to the queue (pending posts register on submission;
 	 * reports register here too).
+	 *
+	 * @param int    $object_id Post or message ID being queued.
+	 * @param string $kind      Object kind, e.g. 'idea', 'question', 'chat'.
+	 * @param int    $reporter  Reporting member ID (0 for system entries).
+	 * @param string $note      Optional reporter note.
 	 */
 	public static function enqueue( $object_id, $kind, $reporter = 0, $note = '' ) {
 		$queue   = get_option( 'prx3_mod_queue', array() );
@@ -35,6 +47,12 @@ class PRX3_Moderation {
 
 	/**
 	 * Member report from any surface (FO-220 AC4).
+	 *
+	 * @param int    $object_id Post or message ID being reported.
+	 * @param string $kind      Object kind, e.g. 'idea', 'question', 'chat'.
+	 * @param int    $reporter  Reporting member ID.
+	 * @param string $note      Reporter note.
+	 * @return true|WP_Error
 	 */
 	public static function report( $object_id, $kind, $reporter, $note ) {
 		if ( ! prx3_is_owner( $reporter ) ) {
@@ -46,11 +64,23 @@ class PRX3_Moderation {
 
 	/* ---------------- Sanctions ---------------- */
 
+	/**
+	 * Whether a member's posting rights are currently suspended.
+	 *
+	 * @param int $user_id Member ID.
+	 * @return bool
+	 */
 	public static function is_muted( $user_id ) {
 		$until = (int) get_user_meta( $user_id, 'prx3_muted_until', true );
 		return $until > time();
 	}
 
+	/**
+	 * Message shown to a muted member wherever posting is blocked.
+	 *
+	 * @param int $user_id Member ID.
+	 * @return string
+	 */
 	public static function mute_message( $user_id ) {
 		return sprintf(
 			/* translators: %s date. */
@@ -142,6 +172,9 @@ class PRX3_Moderation {
 		return true;
 	}
 
+	/**
+	 * Admin-post handler for the moderation screen's sanction form.
+	 */
 	public static function handle_action() {
 		check_admin_referer( 'prx3_moderate' );
 		$target = isset( $_POST['target'] ) ? absint( $_POST['target'] ) : 0;

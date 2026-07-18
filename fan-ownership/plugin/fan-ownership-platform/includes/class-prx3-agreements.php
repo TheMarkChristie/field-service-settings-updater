@@ -20,8 +20,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Versioned acceptance of the club's legal documents. Requires a signed
+ * acceptance of the Shareholders' Agreement at checkout, gift redemption,
+ * and re-accept; keeps the permanent evidential record; renders each
+ * member's executed copy and the board signatures register.
+ */
 class PRX3_Agreements {
 
+	/**
+	 * Hook checkout acceptance, re-accept handling, the executed-copy
+	 * endpoint, and the board signatures register.
+	 */
 	public static function init() {
 		if ( class_exists( 'WooCommerce' ) ) {
 			add_action( 'woocommerce_review_order_before_submit', array( __CLASS__, 'checkout_checkbox' ) );
@@ -36,19 +46,38 @@ class PRX3_Agreements {
 		add_action( 'admin_menu', array( __CLASS__, 'board_menu' ), 20 );
 	}
 
+	/**
+	 * Register the /my-agreement/ rewrite for the executed copy.
+	 */
 	public static function register_endpoint() {
 		add_rewrite_rule( '^my-agreement/?$', 'index.php?prx3_agreement=1', 'top' );
 	}
 
+	/**
+	 * Register the prx3_agreement query var.
+	 *
+	 * @param array $vars Public query vars.
+	 * @return array Filtered query vars.
+	 */
 	public static function query_vars( $vars ) {
 		$vars[] = 'prx3_agreement';
 		return $vars;
 	}
 
+	/**
+	 * The currently published agreement version.
+	 *
+	 * @return string Version string, e.g. '1.0'.
+	 */
 	public static function version() {
 		return (string) prx3_setting( 'sha_version', '1.0' );
 	}
 
+	/**
+	 * Permalink of the published Shareholders' Agreement page.
+	 *
+	 * @return string URL, or '' when the page is not set or not published.
+	 */
 	public static function agreement_url() {
 		$page_id = (int) prx3_setting( 'sha_page_id', 0 );
 		return $page_id && 'publish' === get_post_status( $page_id ) ? get_permalink( $page_id ) : '';
@@ -69,6 +98,10 @@ class PRX3_Agreements {
 		return false;
 	}
 
+	/**
+	 * Render the acceptance checkbox and signature pad at checkout when
+	 * the cart contains shares.
+	 */
 	public static function checkout_checkbox() {
 		if ( ! self::cart_has_shares() ) {
 			return;
@@ -135,6 +168,10 @@ class PRX3_Agreements {
 		return $prefix . base64_encode( $decoded ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- re-encoding the validated signature PNG only.
 	}
 
+	/**
+	 * Block checkout unless the agreement is accepted and signed when
+	 * shares are in the cart.
+	 */
 	public static function checkout_validate() {
 		if ( ! self::cart_has_shares() ) {
 			return;
@@ -148,6 +185,12 @@ class PRX3_Agreements {
 		}
 	}
 
+	/**
+	 * Record the acceptance captured at checkout once the order is
+	 * processed, when the order contains shares.
+	 *
+	 * @param int $order_id WooCommerce order ID.
+	 */
 	public static function record_from_order( $order_id ) {
 		$order = wc_get_order( $order_id );
 		if ( ! $order || ! $order->get_user_id() ) {
@@ -197,6 +240,9 @@ class PRX3_Agreements {
 
 	/**
 	 * Has this owner accepted the current version?
+	 *
+	 * @param int $user_id Member.
+	 * @return bool True when the member's accepted version is current.
 	 */
 	public static function is_current( $user_id ) {
 		return get_user_meta( $user_id, 'prx3_sha_version', true ) === self::version();
@@ -205,6 +251,9 @@ class PRX3_Agreements {
 	/**
 	 * Owner-facing status block for the account page: accepted version,
 	 * document links, and a re-accept button when a new version ships.
+	 *
+	 * @param int $user_id Member.
+	 * @return string HTML for the account page.
 	 */
 	public static function account_block( $user_id ) {
 		$url     = self::agreement_url();
@@ -246,6 +295,10 @@ class PRX3_Agreements {
 		return $html;
 	}
 
+	/**
+	 * Handle the re-accept form: nonce, checkbox, and signature checks,
+	 * then record the acceptance and return the member whence they came.
+	 */
 	public static function handle_reaccept() {
 		if ( ! is_user_logged_in() ) {
 			wp_die( esc_html__( 'Please sign in.', 'fan-ownership' ) );
@@ -392,6 +445,9 @@ class PRX3_Agreements {
 
 	/* ---------------- Board area: owner signatures register ---------------- */
 
+	/**
+	 * Add the Owner Signatures register under the board menu.
+	 */
 	public static function board_menu() {
 		add_submenu_page(
 			'prx3-board',
@@ -403,6 +459,10 @@ class PRX3_Agreements {
 		);
 	}
 
+	/**
+	 * Render the board-only signatures register: every member's accepted
+	 * version, acceptance history, signature, and executed copy link.
+	 */
 	public static function render_signatures_register() {
 		if ( ! current_user_can( 'prx3_board' ) ) {
 			wp_die( esc_html__( 'Board access required.', 'fan-ownership' ) );

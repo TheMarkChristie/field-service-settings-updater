@@ -13,8 +13,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Renders the member-facing web portal surfaces as shortcodes — join,
+ * account, governance, watch and dashboard — with app parity via the
+ * shared REST API (FO-302).
+ */
 class PRX3_Shortcodes {
 
+	/**
+	 * Register every shortcode tag against its render method.
+	 */
 	public static function init() {
 		$codes = array(
 			'prx3_register'        => 'register_form',
@@ -36,11 +44,19 @@ class PRX3_Shortcodes {
 		}
 	}
 
+	/**
+	 * Enqueue the front-end styles and script registered at boot.
+	 */
 	private static function enqueue() {
 		wp_enqueue_style( 'prx3' );
 		wp_enqueue_script( 'prx3' );
 	}
 
+	/**
+	 * Success and error notices carried on the query string after redirects.
+	 *
+	 * @return string Notice HTML, empty when there is nothing to show.
+	 */
 	private static function notices() {
 		$html = '';
 		if ( isset( $_GET['prx3_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -55,12 +71,22 @@ class PRX3_Shortcodes {
 		return $html;
 	}
 
+	/**
+	 * The teaser shown to non-owners in place of gated content.
+	 *
+	 * @return string Gate HTML, or empty for owners.
+	 */
 	private static function gate() {
 		return prx3_is_owner() ? '' : PRX3_Access::gate_content( '' );
 	}
 
 	/* ---------------- Join ---------------- */
 
+	/**
+	 * [prx3_register] — the account creation form.
+	 *
+	 * @return string Form HTML.
+	 */
 	public static function register_form() {
 		self::enqueue();
 		if ( is_user_logged_in() ) {
@@ -90,6 +116,12 @@ class PRX3_Shortcodes {
 		return ob_get_clean();
 	}
 
+	/**
+	 * [prx3_redeem_gift] — the gift code redemption form, with the
+	 * Shareholders' Agreement acceptance when one is published.
+	 *
+	 * @return string Form HTML.
+	 */
 	public static function redeem_form() {
 		self::enqueue();
 		ob_start();

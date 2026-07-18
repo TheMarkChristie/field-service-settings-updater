@@ -10,8 +10,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Member meetings: RSVPs feeding attendance badges, the tokenised
+ * owners calendar (ICS) feed, start-time reminders, and meeting meta
+ * (stream embed, recording, minutes, AGM flag).
+ */
 class PRX3_Meetings {
 
+	/**
+	 * Wire the meeting meta box, the ICS endpoint, and the hourly
+	 * reminder cron.
+	 */
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
 		add_action( 'save_post_prx3_meeting', array( __CLASS__, 'save_meta' ), 10, 2 );
@@ -25,6 +34,10 @@ class PRX3_Meetings {
 
 	/**
 	 * RSVP toggle (FO-213 AC1). Attendance feeds the milestone badges.
+	 *
+	 * @param int $meeting_id Meeting post ID.
+	 * @param int $user_id    Owner toggling their RSVP.
+	 * @return array|WP_Error Attendee count and attending state, or error.
 	 */
 	public static function toggle_rsvp( $meeting_id, $user_id ) {
 		if ( 'publish' !== get_post_status( $meeting_id ) || 'prx3_meeting' !== get_post_type( $meeting_id ) ) {
@@ -51,6 +64,9 @@ class PRX3_Meetings {
 
 	/**
 	 * Mark attendance when a member opens the live meeting (badge event).
+	 *
+	 * @param int $meeting_id Meeting post ID.
+	 * @param int $user_id    Attending member.
 	 */
 	public static function mark_attended( $meeting_id, $user_id ) {
 		$attended = array_map( 'intval', (array) get_post_meta( $meeting_id, '_prx3_attended', true ) );
@@ -63,6 +79,9 @@ class PRX3_Meetings {
 
 	/**
 	 * Upcoming published meetings, soonest first.
+	 *
+	 * @param int $limit Maximum number of meetings to return.
+	 * @return WP_Post[] Meeting posts.
 	 */
 	public static function upcoming( $limit = 10 ) {
 		return get_posts(

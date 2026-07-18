@@ -20,16 +20,21 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * The ballot engine: authoring, weighted casting with revision, secrecy
+ * while open, and permanent results against a snapshotted electorate.
+ */
 class PRX3_Ballots {
 
+	/**
+	 * Hook the ballot authoring meta box and its save handler.
+	 */
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_boxes' ) );
 		add_action( 'save_post_prx3_ballot', array( __CLASS__, 'save_meta' ), 10, 2 );
 	}
 
-	/* ------------------------------------------------------------------ */
-	/* Casting                                                            */
-	/* ------------------------------------------------------------------ */
+	/* ---------------- Casting ---------------- */
 
 	/**
 	 * Cast (or revise) a member's vote. FO-202.
@@ -62,10 +67,10 @@ class PRX3_Ballots {
 		$weight = (int) $electorate[ $user_id ];
 
 		$table    = $wpdb->prefix . 'prx3_ballot_votes';
-		$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id, revised FROM $table WHERE ballot_id = %d AND user_id = %d", $ballot_id, $user_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id, revised FROM $table WHERE ballot_id = %d AND user_id = %d", $ballot_id, $user_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- own votes table; vote reads are deliberately uncached so counts are always live.
 		if ( $existing ) {
 			// FO-202 AC2: revision replaces the final choice, exactly once counted.
-			$wpdb->update(
+			$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- writing to the plugin's own votes table.
 				$table,
 				array(
 					'choice'  => $choice,
@@ -79,7 +84,7 @@ class PRX3_Ballots {
 			);
 			$revised = true;
 		} else {
-			$inserted = $wpdb->insert(
+			$inserted = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- inserting into the plugin's own votes table; the unique (ballot, user) key enforces one row per member.
 				$table,
 				array(
 					'ballot_id' => $ballot_id,
@@ -106,14 +111,24 @@ class PRX3_Ballots {
 		);
 	}
 
-	/* ------------------------------------------------------------------ */
-	/* Reads                                                              */
-	/* ------------------------------------------------------------------ */
+	/* ---------------- Reads ---------------- */
 
+	/**
+	 * A ballot's lifecycle state.
+	 *
+	 * @param int $ballot_id Ballot.
+	 * @return string One of draft|scheduled|open|closed|rerun|unresolved|published.
+	 */
 	public static function state( $ballot_id ) {
 		return get_post_meta( $ballot_id, '_prx3_state', true );
 	}
 
+	/**
+	 * Whether a ballot requires the constitutional supermajority. FO-207.
+	 *
+	 * @param int $ballot_id Ballot.
+	 * @return bool True for constitutional ballots.
+	 */
 	public static function is_constitutional( $ballot_id ) {
 		return 'constitutional' === get_post_meta( $ballot_id, '_prx3_type', true );
 	}
@@ -130,7 +145,7 @@ class PRX3_Ballots {
 			return new WP_Error( 'prx3_secret', __( 'This is a secret ballot — results are revealed when it closes.', 'fan-ownership' ) );
 		}
 		global $wpdb;
-		$rows    = $wpdb->get_results(
+		$rows    = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- own votes table; tallies must be read live, never from cache.
 			$wpdb->prepare( "SELECT choice, SUM(weight) AS votes, COUNT(*) AS members FROM {$wpdb->prefix}prx3_ballot_votes WHERE ballot_id = %d GROUP BY choice", $ballot_id ),
 			ARRAY_A
 		);
@@ -150,10 +165,14 @@ class PRX3_Ballots {
 
 	/**
 	 * A member's own vote on a ballot (own-data view; never others').
+	 *
+	 * @param int $ballot_id Ballot.
+	 * @param int $user_id   Member.
+	 * @return array|null Vote row (choice, weight, cast_at, revised) or null.
 	 */
 	public static function member_choice( $ballot_id, $user_id ) {
 		global $wpdb;
-		return $wpdb->get_row(
+		return $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- own votes table; the member's current choice must be live.
 			$wpdb->prepare( "SELECT choice, weight, cast_at, revised FROM {$wpdb->prefix}prx3_ballot_votes WHERE ballot_id = %d AND user_id = %d", $ballot_id, $user_id ),
 			ARRAY_A
 		);
@@ -161,10 +180,13 @@ class PRX3_Ballots {
 
 	/**
 	 * A member's full participation history (privacy export).
+	 *
+	 * @param int $user_id Member.
+	 * @return array Vote rows (ballot_id, choice, weight, cast_at), oldest first.
 	 */
 	public static function member_vote_history( $user_id ) {
 		global $wpdb;
-		return $wpdb->get_results(
+		return $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- own votes table; one-off privacy export read.
 			$wpdb->prepare( "SELECT ballot_id, choice, weight, cast_at FROM {$wpdb->prefix}prx3_ballot_votes WHERE user_id = %d ORDER BY id ASC", $user_id ),
 			ARRAY_A
 		);
@@ -201,8 +223,10 @@ class PRX3_Ballots {
 		);
 	}
 
-	/* ------------------------------------------------------------------ */
-	/* Authoring                                                          */
+	/*
+	------------------------------------------------------------------ */
+	/*
+	Authoring                                                          */
 	/* ------------------------------------------------------------------ */
 
 	public static function meta_boxes() {
