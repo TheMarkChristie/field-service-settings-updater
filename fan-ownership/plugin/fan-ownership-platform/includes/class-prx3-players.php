@@ -18,10 +18,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Player roster and engagement voting: live Player of the Match during
+ * each game and the monthly Player of the Month poll.
+ */
 class PRX3_Players {
 
 	const POTM_CLOSE_AFTER = 30 * MINUTE_IN_SECONDS;
 
+	/**
+	 * Register the player post type, admin screens, REST routes and the
+	 * poll-closing ticks.
+	 */
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_type' ) );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
@@ -56,6 +64,9 @@ class PRX3_Players {
 		);
 	}
 
+	/**
+	 * Player details meta box: squad number, position, active flag.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_player_details',

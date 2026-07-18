@@ -223,6 +223,10 @@ class PRX3_Ballot_Lifecycle {
 
 	/**
 	 * FO-205 AC2/AC3: one automatic 7-day re-run, then unresolved -> board.
+	 *
+	 * @param int   $ballot_id Ballot.
+	 * @param array $tallies   Tallies snapshotted at close.
+	 * @param int   $needed    Members required for quorum.
 	 */
 	private static function handle_failed_quorum( $ballot_id, $tallies, $needed ) {
 		$is_rerun = (bool) get_post_meta( $ballot_id, '_prx3_rerun_of', true );

@@ -43,6 +43,11 @@ class PRX3_REST_API {
 		return is_wp_error( $claims ) ? $user_id : (int) $claims['sub'];
 	}
 
+	/**
+	 * Permission callback for owner-only routes.
+	 *
+	 * @return true|WP_Error
+	 */
 	private static function owner_permission() {
 		return prx3_is_owner() ? true : new WP_Error( 'prx3_owner_only', __( 'Owners only.', 'fan-ownership' ), array( 'status' => rest_authorization_required_code() ) );
 	}
@@ -68,6 +73,12 @@ class PRX3_REST_API {
 		return true;
 	}
 
+	/**
+	 * Record a failed sign-in against both throttle keys and lock out on
+	 * the fifth strike.
+	 *
+	 * @param string $username Attempted username.
+	 */
 	private static function login_failed( $username ) {
 		foreach ( self::login_keys( $username ) as $key ) {
 			$fails = (int) get_transient( 'prx3_fail_' . $key ) + 1;
@@ -83,6 +94,11 @@ class PRX3_REST_API {
 		}
 	}
 
+	/**
+	 * Clear the failure counters after a successful sign-in.
+	 *
+	 * @param string $username Username that signed in.
+	 */
 	private static function login_succeeded( $username ) {
 		foreach ( self::login_keys( $username ) as $key ) {
 			delete_transient( 'prx3_fail_' . $key );
