@@ -49,6 +49,9 @@ class PRX3_Onboarding {
 
 	/**
 	 * The email series: skipped for steps whose action is already done.
+	 *
+	 * @param int $user_id Member on the journey.
+	 * @param int $step    Step number (1-3).
 	 */
 	public static function send_step( $user_id, $step ) {
 		$state = get_user_meta( $user_id, 'prx3_onboarding', true );
@@ -84,6 +87,9 @@ class PRX3_Onboarding {
 
 	/**
 	 * Modules report completed actions (vote cast, boardroom visited).
+	 *
+	 * @param int    $user_id Member.
+	 * @param string $key     Completed action key, e.g. 'voted'.
 	 */
 	public static function mark_complete( $user_id, $key ) {
 		$state = get_user_meta( $user_id, 'prx3_onboarding', true );

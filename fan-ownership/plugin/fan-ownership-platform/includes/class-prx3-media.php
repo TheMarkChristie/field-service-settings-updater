@@ -177,6 +177,10 @@ class PRX3_Media {
 
 	/**
 	 * Resume position per member per video (FO-311 AC2).
+	 *
+	 * @param int $video_id Video post ID.
+	 * @param int $user_id  Member user ID.
+	 * @param int $seconds  Playback position in seconds.
 	 */
 	public static function save_position( $video_id, $user_id, $seconds ) {
 		$positions              = (array) get_user_meta( $user_id, 'prx3_watch_positions', true );
@@ -184,11 +188,21 @@ class PRX3_Media {
 		update_user_meta( $user_id, 'prx3_watch_positions', array_slice( $positions, -200, null, true ) );
 	}
 
+	/**
+	 * Saved resume position for a member and video.
+	 *
+	 * @param int $video_id Video post ID.
+	 * @param int $user_id  Member user ID.
+	 * @return int Seconds; 0 when unwatched.
+	 */
 	public static function get_position( $video_id, $user_id ) {
 		$positions = (array) get_user_meta( $user_id, 'prx3_watch_positions', true );
 		return isset( $positions[ $video_id ] ) ? (int) $positions[ $video_id ] : 0;
 	}
 
+	/**
+	 * Video source meta box: Cloudflare Stream UID or self-hosted URL.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_video_source',
@@ -204,6 +218,12 @@ class PRX3_Media {
 		);
 	}
 
+	/**
+	 * Save the video source meta.
+	 *
+	 * @param int     $post_id Video post ID.
+	 * @param WP_Post $post    Video post object.
+	 */
 	public static function save_meta( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_video_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_video_nonce'] ), 'prx3_video_meta' ) ) {
 			return;

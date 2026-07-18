@@ -104,6 +104,10 @@ class PRX3_JWT {
 	}
 
 	/**
+	 * Verify a token's signature, expiry, type, and version.
+	 *
+	 * @param string $token         Compact JWT.
+	 * @param string $expected_type Expected typ claim: 'access' or 'refresh'.
 	 * @return array|WP_Error Claims.
 	 */
 	public static function decode( $token, $expected_type = 'access' ) {
@@ -128,6 +132,12 @@ class PRX3_JWT {
 		return $claims;
 	}
 
+	/**
+	 * Base64url-encode a string.
+	 *
+	 * @param string $data Raw bytes.
+	 * @return string
+	 */
 	private static function b64( $data ) {
 		// Base64url is the JWT wire format (RFC 7515), not obfuscation.
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode

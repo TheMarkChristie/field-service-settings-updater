@@ -11,8 +11,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Registers the prx3/v1 REST routes and Bearer-token authentication for
+ * the native apps and the web front end (FO-302 parity).
+ */
 class PRX3_REST_API {
 
+	/**
+	 * Hook route registration and Bearer authentication.
+	 */
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 		add_filter( 'determine_current_user', array( __CLASS__, 'bearer_auth' ), 20 );
@@ -20,6 +27,9 @@ class PRX3_REST_API {
 
 	/**
 	 * Resolve Bearer tokens to a WordPress user for our namespace.
+	 *
+	 * @param int|false $user_id User already determined upstream, if any.
+	 * @return int|false User ID from the token, or the incoming value.
 	 */
 	public static function bearer_auth( $user_id ) {
 		if ( $user_id ) {

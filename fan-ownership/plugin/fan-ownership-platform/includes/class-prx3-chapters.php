@@ -188,6 +188,13 @@ class PRX3_Chapters {
 		);
 	}
 
+	/**
+	 * Record a re-affirmation from the meta box, clearing the lapsed
+	 * flags.
+	 *
+	 * @param int     $post_id Chapter post ID.
+	 * @param WP_Post $post    Chapter post object.
+	 */
 	public static function save_meta( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_chapter_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_chapter_nonce'] ), 'prx3_chapter_meta' ) ) {
 			return;

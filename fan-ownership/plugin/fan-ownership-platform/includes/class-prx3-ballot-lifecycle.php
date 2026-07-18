@@ -168,9 +168,15 @@ class PRX3_Ballot_Lifecycle {
 		}
 	}
 
+	/**
+	 * User IDs that have already voted on a ballot.
+	 *
+	 * @param int $ballot_id Ballot.
+	 * @return int[] Voter user IDs.
+	 */
 	private static function voter_ids( $ballot_id ) {
 		global $wpdb;
-		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$wpdb->prefix}prx3_ballot_votes WHERE ballot_id = %d", $ballot_id ) ) );
+		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$wpdb->prefix}prx3_ballot_votes WHERE ballot_id = %d", $ballot_id ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- own votes table; the non-voter list must be live when reminders go out.
 	}
 
 	/**
@@ -185,6 +191,12 @@ class PRX3_Ballot_Lifecycle {
 		}
 	}
 
+	/**
+	 * Close one ballot: take the audit snapshot, check quorum, then either
+	 * publish the result or handle the failed quorum. FO-206 AC4.
+	 *
+	 * @param int $ballot_id Ballot.
+	 */
 	public static function close_ballot( $ballot_id ) {
 		// FO-206 AC4: audit snapshot before results.
 		$tallies = PRX3_Ballots::tallies( $ballot_id, true );
