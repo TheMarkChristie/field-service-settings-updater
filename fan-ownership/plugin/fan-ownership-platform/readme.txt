@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.3
+Stable tag: 0.1.4
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,16 @@ club badge plugin integrate through documented contracts.
    numbers, and integrations.
 
 == Changelog ==
+
+= 0.1.4 =
+* Every content list screen now shows its data as table columns:
+  ballots (state, type, turnout vs quorum, closes - sortable), ideas
+  (support vs auto-ballot threshold), questions (answered or
+  awaiting), meetings (start - sortable), videos (type, teaser),
+  behind-the-scenes (teaser), decisions (decided date, delivery
+  status), matches (kick-off - sortable, opponent and venue, live
+  status, player of the match), players (number - sortable, position,
+  active, POTM wins).
 
 = 0.1.3 =
 * New Settings > Targets section: owner target and season financial
