@@ -152,6 +152,15 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | P76 | Quorum denominator | Owners active in last 12 months; dormant owners keep shares, don't inflate quorum |
 | P77 | Annual report | Yearly "State of the Panthers" owners' report in portal |
 
+## Process decisions — round 3: board members (P78–P81)
+
+| # | Question | Decision |
+|---|----------|----------|
+| P78 | Board ballot votes | Only via shares they personally own (same 10-share cap); the board role carries no extra ballot votes |
+| P79 | Board platform access | Dedicated **Board Member** role: full owner access + running tallies on open ballots + decision-register editing + financial drafts before publish + moderation queue visibility. NOT content publishing or member/checkout admin |
+| P80 | Board visibility | Board directory page (photo, bio, responsibilities); "Board" badge on forum/chat posts; casting votes and recommendations recorded in the decision register |
+| P81 | Board formal actions | Structured flows: recorded casting-vote action on ties; formal recommendations attached to ballots; reserved-matter and failed-quorum decisions logged in the decision register with published reasoning |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

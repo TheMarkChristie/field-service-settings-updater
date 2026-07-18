@@ -2,7 +2,7 @@
 
 **Version:** 1.1 (draft for sign-off)
 **Date:** 18 July 2026
-**Status:** All 127 scoping decisions captured (77 process, 50+25 technical) — see `decisions-log.md` for the full question-by-question record. §10 consolidates the round-2 decisions.
+**Status:** All 131 scoping decisions captured (81 process, 75 technical) — see `decisions-log.md` for the full question-by-question record. §10 consolidates the round-2 decisions; board-member decisions (P78–P81) are folded into §6.5.
 **Scope note:** the club retains its existing WordPress theme — this project delivers **the plugin and the native apps only**; plugin UI inherits the theme's look (T53–T54).
 **Reference model:** Caledonian Braves FC (Boardroom voting app, Match Centre, Brave TV, worldwide ownership community), including lessons from their Wefunder campaign's public Q&A.
 
@@ -157,9 +157,10 @@ Monthly one-page income/spend summary published as portal content + full annual 
 
 Firebase FCM push · Brevo email · bbPress forum · self-hosted websocket chat service (match + meeting chat, portal identities, in-house moderation) · members-only ICS calendar feed + add-to-calendar buttons · in-portal document viewer (no downloads) · auto-PDF certificate generation + automatic badge issue · scoped member search across all accessible content.
 
-### 6.5 Club-side tooling (T25–T28, T42)
+### 6.5 Club-side tooling (T25–T28, T42, P78–P81)
 
-- **Four staff roles:** Owner-Admin, Content Editor, Governance Officer, Moderator.
+- **Five platform roles:** Owner-Admin, Content Editor, Governance Officer, Moderator, and **Board Member**.
+- **Board Member role (P78–P81):** full owner access plus running tallies on open ballots, decision-register editing, financial drafts before publish, and moderation-queue visibility — but no content publishing and no member/checkout admin. Board members vote in fan ballots **only via shares they personally own** (same 10-share cap); the role adds no ballot votes. A board directory page (photo, bio, responsibilities) and a "Board" badge on their forum/chat posts make it clear when the club is speaking. Formal board acts are structured platform flows with a permanent trail: recorded casting-vote actions on ties (P59), formal recommendations attached to ballots (P62), and reserved-matter or failed-quorum decisions (P7, P13) logged in the decision register with published reasoning.
 - **Draft → review → publish** workflow on everything member-facing; a second person approves every ballot.
 - **Engagement dashboard:** membership & revenue (tracking the 1,000-owner target), ballot health vs quorum, content performance, community health.
 - Match-reporter console for volunteer minute-by-minute reporting.
