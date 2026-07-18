@@ -81,6 +81,9 @@ class PRX3_Gifts {
 		if ( ! empty( $gifts[ $code ]['redeemed'] ) ) {
 			self::back( __( 'That gift code has already been redeemed.', 'fan-ownership' ) );
 		}
+		if ( ! empty( $gifts[ $code ]['voided'] ) ) {
+			self::back( __( 'That gift code is no longer valid because its payment was reversed. Contact the club if this is unexpected.', 'fan-ownership' ) );
+		}
 		$user_id = get_current_user_id();
 		if ( ! get_user_meta( $user_id, 'prx3_adult_confirmed', true ) ) {
 			self::back( __( 'You must confirm you are 18 or over before holding shares. Update your account first — your gift code remains valid.', 'fan-ownership' ) );

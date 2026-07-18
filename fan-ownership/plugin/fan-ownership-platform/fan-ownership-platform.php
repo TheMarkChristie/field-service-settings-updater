@@ -57,6 +57,8 @@ require_once PRX3_DIR . 'includes/class-prx3-chat.php';
 require_once PRX3_DIR . 'includes/class-prx3-media.php';
 require_once PRX3_DIR . 'includes/class-prx3-ticketing.php';
 require_once PRX3_DIR . 'includes/class-prx3-brand.php';
+require_once PRX3_DIR . 'includes/class-prx3-disputes.php';
+require_once PRX3_DIR . 'includes/class-prx3-commitments.php';
 require_once PRX3_DIR . 'includes/api/class-prx3-jwt.php';
 require_once PRX3_DIR . 'includes/api/class-prx3-rest-api.php';
 
@@ -102,6 +104,8 @@ function prx3_boot() {
 		'PRX3_Media',
 		'PRX3_Ticketing',
 		'PRX3_Brand',
+		'PRX3_Disputes',
+		'PRX3_Commitments',
 		'PRX3_REST_API',
 		'PRX3_Admin',
 		'PRX3_Dashboard',

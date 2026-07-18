@@ -57,7 +57,35 @@ class PRX3_WooCommerce {
 		}
 		$is_gift = ! empty( $_REQUEST['prx3_gift'] ); // phpcs:ignore WordPress.Security.NonceVerification
 		if ( $is_gift ) {
-			return $passed; // Gifts validate the recipient's cap at redemption (FO-108 AC3).
+			// AML/vote-farming control: cap total gifted shares per buyer and
+			// flag bulk gifting for admin review. Recipient cap still applies
+			// at redemption (FO-108 AC3).
+			if ( ! is_user_logged_in() ) {
+				wc_add_notice( __( 'Please sign in to buy gift shares, so the club can keep its share register accurate.', 'fan-ownership' ), 'error' );
+				return false;
+			}
+			$gift_cap = (int) prx3_setting( 'gift_cap_per_buyer', 10 );
+			$given    = 0;
+			foreach ( get_option( 'prx3_gift_codes', array() ) as $gift ) {
+				if ( get_current_user_id() === (int) $gift['buyer'] && empty( $gift['voided'] ) ) {
+					$given += (int) $gift['shares'];
+				}
+			}
+			if ( $given + $quantity > $gift_cap ) {
+				wc_add_notice(
+					sprintf(
+						/* translators: %d cap. */
+						__( 'To keep ownership fair, each buyer can gift at most %d shares in total. Contact the club for anything larger.', 'fan-ownership' ),
+						$gift_cap
+					),
+					'error'
+				);
+				return false;
+			}
+			if ( $given + $quantity > (int) prx3_setting( 'gift_bulk_flag_at', 5 ) ) {
+				PRX3_Audit::log( 'gift_bulk_flag', sprintf( 'User %d gifting in volume: %d prior + %d now', get_current_user_id(), $given, $quantity ) );
+			}
+			return $passed;
 		}
 		if ( ! is_user_logged_in() ) {
 			wc_add_notice( __( 'Please create your account and confirm your email before buying shares.', 'fan-ownership' ), 'error' );

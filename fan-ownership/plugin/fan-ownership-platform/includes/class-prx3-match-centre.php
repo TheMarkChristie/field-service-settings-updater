@@ -160,6 +160,16 @@ class PRX3_Match_Centre {
 				echo '<p><label>' . esc_html__( 'Audio stream URL (away commentary)', 'fan-ownership' ) . '</label> <input type="url" class="widefat" name="prx3_audio_url" value="' . esc_attr( get_post_meta( $post->ID, '_prx3_audio_url', true ) ) . '"></p>';
 				echo '<p><label><input type="checkbox" name="prx3_stream_live" ' . checked( get_post_meta( $post->ID, '_prx3_stream_live', true ), '1', false ) . '> ' . esc_html__( 'Stream is LIVE now', 'fan-ownership' ) . '</label> <label><input type="checkbox" name="prx3_ended" ' . checked( get_post_meta( $post->ID, '_prx3_ended', true ), '1', false ) . '> ' . esc_html__( 'Match ended', 'fan-ownership' ) . '</label></p>';
 				echo '<p><label>' . esc_html__( 'Approved volunteer reporters (user IDs, comma-separated)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="prx3_reporters" value="' . esc_attr( implode( ',', array_map( 'intval', (array) get_post_meta( $post->ID, '_prx3_reporters', true ) ) ) ) . '"></p>';
+				$rota = (array) get_post_meta( $post->ID, '_prx3_rota', true );
+				echo '<h4>' . esc_html__( 'Matchday volunteer rota (user IDs, comma-separated — assignees are emailed on save)', 'fan-ownership' ) . '</h4>';
+				foreach ( array(
+					'camera'     => __( 'Camera / stream production', 'fan-ownership' ),
+					'commentary' => __( 'Commentary', 'fan-ownership' ),
+					'chat_mods'  => __( 'Chat moderators', 'fan-ownership' ),
+				) as $rota_key => $rota_label ) {
+					$rota_value = isset( $rota[ $rota_key ] ) ? implode( ',', array_map( 'intval', (array) $rota[ $rota_key ] ) ) : '';
+					echo '<p><label>' . esc_html( $rota_label ) . '</label> <input type="text" class="widefat" name="prx3_rota_' . esc_attr( $rota_key ) . '" value="' . esc_attr( $rota_value ) . '"></p>';
+				}
 				echo '<p><label>' . esc_html__( 'Sponsor ident/advert URLs (one per line: pre-start, half-time, breaks — staff-controlled, FO-309)', 'fan-ownership' ) . '</label><textarea class="widefat" rows="3" name="prx3_ad_slots">' . esc_textarea( implode( "\n", (array) get_post_meta( $post->ID, '_prx3_ad_slots', true ) ) ) . '</textarea></p>';
 			},
 			'prx3_match',
@@ -185,6 +195,31 @@ class PRX3_Match_Centre {
 		update_post_meta( $post_id, '_prx3_stream_live', isset( $_POST['prx3_stream_live'] ) ? '1' : '' );
 		update_post_meta( $post_id, '_prx3_ended', isset( $_POST['prx3_ended'] ) ? '1' : '' );
 		update_post_meta( $post_id, '_prx3_reporters', array_filter( array_map( 'absint', explode( ',', isset( $_POST['prx3_reporters'] ) ? sanitize_text_field( wp_unslash( $_POST['prx3_reporters'] ) ) : '' ) ) ) );
+		$old_rota = (array) get_post_meta( $post_id, '_prx3_rota', true );
+		$new_rota = array();
+		foreach ( array( 'camera', 'commentary', 'chat_mods' ) as $rota_key ) {
+			$field                 = 'prx3_rota_' . $rota_key;
+			$new_rota[ $rota_key ] = array_filter( array_map( 'absint', explode( ',', isset( $_POST[ $field ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) : '' ) ) );
+			$added                 = array_diff( $new_rota[ $rota_key ], isset( $old_rota[ $rota_key ] ) ? (array) $old_rota[ $rota_key ] : array() );
+			foreach ( $added as $volunteer_id ) {
+				$volunteer = get_userdata( $volunteer_id );
+				if ( $volunteer ) {
+					PRX3_Comms::send(
+						$volunteer->user_email,
+						sprintf( /* translators: %s match title. */ __( 'Matchday rota: %s', 'fan-ownership' ), get_the_title( $post_id ) ),
+						sprintf(
+							/* translators: 1: role, 2: match, 3: start. */
+							__( 'You are on the rota as %1$s for %2$s (%3$s). Thank you — the matchday runbook covers what to do and who to call if something breaks.', 'fan-ownership' ),
+							str_replace( '_', ' ', $rota_key ),
+							get_the_title( $post_id ),
+							prx3_format_datetime( get_post_meta( $post_id, '_prx3_kickoff', true ) )
+						),
+						'governance'
+					);
+				}
+			}
+		}
+		update_post_meta( $post_id, '_prx3_rota', $new_rota );
 		update_post_meta( $post_id, '_prx3_ad_slots', array_filter( array_map( 'esc_url_raw', array_map( 'trim', explode( "\n", isset( $_POST['prx3_ad_slots'] ) ? sanitize_textarea_field( wp_unslash( $_POST['prx3_ad_slots'] ) ) : '' ) ) ) ) );
 		// Replay pipeline: match just ended -> schedule the auto-publish check (FO-310).
 		if ( ! $was_ended && isset( $_POST['prx3_ended'] ) ) {

@@ -37,6 +37,53 @@ class PRX3_REST_API {
 		return prx3_is_owner() ? true : new WP_Error( 'prx3_owner_only', __( 'Owners only.', 'fan-ownership' ), array( 'status' => rest_authorization_required_code() ) );
 	}
 
+	/**
+	 * Login throttle: after 5 failures per IP or per username inside 15
+	 * minutes, that key locks out; the lockout doubles on repeat strikes
+	 * (15m, 30m, 60m… capped at 4 hours).
+	 *
+	 * @param string $username Attempted username.
+	 * @return true|WP_Error
+	 */
+	private static function login_throttled( $username ) {
+		foreach ( self::login_keys( $username ) as $key ) {
+			if ( get_transient( 'prx3_lock_' . $key ) ) {
+				return new WP_Error(
+					'prx3_locked',
+					__( 'Too many failed sign-in attempts. Please wait before trying again, or reset your password.', 'fan-ownership' ),
+					array( 'status' => 429 )
+				);
+			}
+		}
+		return true;
+	}
+
+	private static function login_failed( $username ) {
+		foreach ( self::login_keys( $username ) as $key ) {
+			$fails = (int) get_transient( 'prx3_fail_' . $key ) + 1;
+			set_transient( 'prx3_fail_' . $key, $fails, 15 * MINUTE_IN_SECONDS );
+			if ( $fails >= 5 ) {
+				$strikes = (int) get_transient( 'prx3_strikes_' . $key ) + 1;
+				set_transient( 'prx3_strikes_' . $key, $strikes, 12 * HOUR_IN_SECONDS );
+				$lockout = min( 4 * HOUR_IN_SECONDS, 15 * MINUTE_IN_SECONDS * (int) pow( 2, $strikes - 1 ) );
+				set_transient( 'prx3_lock_' . $key, 1, $lockout );
+				delete_transient( 'prx3_fail_' . $key );
+				PRX3_Audit::log( 'login_lockout', sprintf( 'Login lockout for %s (%d strikes, %d seconds)', $key, $strikes, $lockout ) );
+			}
+		}
+	}
+
+	private static function login_succeeded( $username ) {
+		foreach ( self::login_keys( $username ) as $key ) {
+			delete_transient( 'prx3_fail_' . $key );
+		}
+	}
+
+	private static function login_keys( $username ) {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'noip';
+		return array( 'ip_' . md5( $ip ), 'user_' . md5( strtolower( $username ) ) );
+	}
+
 	private static function rate_limit( $key, $per_minute = 20 ) {
 		$user_id = get_current_user_id();
 		$bucket  = 'prx3_rl_' . $key . '_' . $user_id . '_' . gmdate( 'YmdHi' );
@@ -59,10 +106,19 @@ class PRX3_REST_API {
 				'methods'             => 'POST',
 				'permission_callback' => '__return_true',
 				'callback'            => function ( WP_REST_Request $request ) {
-					$user = wp_authenticate( sanitize_text_field( (string) $request['username'] ), (string) $request['password'] );
+					// Credential-stuffing defence: unauthenticated surface, so
+					// throttle by IP and by target username with growing lockouts.
+					$username  = sanitize_text_field( (string) $request['username'] );
+					$throttled = self::login_throttled( $username );
+					if ( is_wp_error( $throttled ) ) {
+						return $throttled;
+					}
+					$user = wp_authenticate( $username, (string) $request['password'] );
 					if ( is_wp_error( $user ) ) {
+						self::login_failed( $username );
 						return new WP_Error( 'prx3_login', __( 'Sign-in failed. Check your email and password.', 'fan-ownership' ), array( 'status' => 401 ) );
 					}
+					self::login_succeeded( $username );
 					prx3_touch_activity( $user->ID );
 					return PRX3_JWT::issue_pair( $user->ID );
 				},

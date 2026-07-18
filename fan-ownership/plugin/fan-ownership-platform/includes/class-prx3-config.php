@@ -68,6 +68,8 @@ class PRX3_Config {
 			'club_accent'                        => '#e2b007',
 			'currency_symbol'                    => '£',
 			'ticketing_provider'                 => 'Fanbase',
+			'gift_cap_per_buyer'                 => 10,
+			'gift_bulk_flag_at'                  => 5,
 			'share_base_price'                   => 50.0,
 			'share_tier_growth'                  => 0.25,
 			'max_shares'                         => 10,
