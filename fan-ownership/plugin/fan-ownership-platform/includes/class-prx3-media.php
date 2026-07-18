@@ -76,6 +76,12 @@ class PRX3_Media {
 		return $cf_uid;
 	}
 
+	/**
+	 * Base64url-encode data for the Cloudflare Stream signed-token format.
+	 *
+	 * @param string $data Raw bytes to encode.
+	 * @return string
+	 */
 	private static function b64( $data ) {
 		// Base64url per Cloudflare Stream signed-token format, not obfuscation.
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
@@ -86,6 +92,8 @@ class PRX3_Media {
 	 * FO-310: replay auto-publish. Runs ~15 minutes after full-time and
 	 * retries until Cloudflare has the recording ready, alerting staff if
 	 * still missing at the one-hour mark (AC4).
+	 *
+	 * @param int $match_id Match post ID.
 	 */
 	public static function publish_replay( $match_id ) {
 		$uid = get_post_meta( $match_id, '_prx3_stream_uid', true );
@@ -138,6 +146,9 @@ class PRX3_Media {
 
 	/**
 	 * Ask Cloudflare for the live input's recorded video UID.
+	 *
+	 * @param string $live_input_uid Cloudflare Stream live input UID.
+	 * @return string Recording UID, or empty string when not ready.
 	 */
 	private static function cloudflare_recording_uid( $live_input_uid ) {
 		$account = prx3_setting( 'cf_account_id', '' );

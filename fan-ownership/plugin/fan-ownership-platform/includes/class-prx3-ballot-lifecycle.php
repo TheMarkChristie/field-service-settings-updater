@@ -97,6 +97,12 @@ class PRX3_Ballot_Lifecycle {
 		}
 	}
 
+	/**
+	 * Open one ballot: snapshot the electorate and weights, set the quorum
+	 * denominator, and notify every eligible voter. FO-204.
+	 *
+	 * @param int $ballot_id Ballot.
+	 */
 	public static function open_ballot( $ballot_id ) {
 		// Electorate snapshot: active owners and their weights at open (P61/P76).
 		$active     = prx3_active_owner_ids();

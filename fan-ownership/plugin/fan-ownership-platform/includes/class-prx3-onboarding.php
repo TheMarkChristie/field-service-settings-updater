@@ -7,8 +7,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Guided first week for new owners: a scheduled three-step email series
+ * that skips completed actions and can be dismissed at any time.
+ */
 class PRX3_Onboarding {
 
+	/**
+	 * Hook the journey start, scheduled steps, and dismiss handler.
+	 */
 	public static function init() {
 		add_action( 'prx3_member_became_owner', array( __CLASS__, 'start_journey' ) );
 		add_action( 'prx3_onboarding_step', array( __CLASS__, 'send_step' ), 10, 2 );
@@ -18,6 +25,8 @@ class PRX3_Onboarding {
 	/**
 	 * Kick off: welcome view flag + scheduled email series over week one
 	 * (FO-115 AC3). Steps stop early once completed.
+	 *
+	 * @param int $user_id Member who just became an owner.
 	 */
 	public static function start_journey( $user_id ) {
 		update_user_meta(

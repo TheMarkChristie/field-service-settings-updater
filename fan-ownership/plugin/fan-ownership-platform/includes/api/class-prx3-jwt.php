@@ -45,10 +45,22 @@ class PRX3_JWT {
 		return (int) get_user_meta( $user_id, 'prx3_token_version', true );
 	}
 
+	/**
+	 * Revoke every outstanding token for a user by bumping their token
+	 * version (FO-301 AC3).
+	 *
+	 * @param int $user_id User.
+	 */
 	public static function revoke_all( $user_id ) {
 		update_user_meta( $user_id, 'prx3_token_version', self::token_version( $user_id ) + 1 );
 	}
 
+	/**
+	 * Issue a fresh access + refresh token pair for a user.
+	 *
+	 * @param int $user_id User.
+	 * @return array access_token, refresh_token, expires_in.
+	 */
 	public static function issue_pair( $user_id ) {
 		return array(
 			'access_token'  => self::encode(
@@ -71,6 +83,12 @@ class PRX3_JWT {
 		);
 	}
 
+	/**
+	 * Encode claims as a signed HS256 JWT.
+	 *
+	 * @param array $claims Claims to sign.
+	 * @return string Compact JWT.
+	 */
 	public static function encode( $claims ) {
 		$header  = self::b64(
 			wp_json_encode(

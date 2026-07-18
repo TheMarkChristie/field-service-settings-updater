@@ -168,6 +168,15 @@ class PRX3_Comms {
 		return $queued;
 	}
 
+	/**
+	 * Send one push message to one device token via FCM.
+	 *
+	 * @param string $server_key FCM server key; empty no-ops.
+	 * @param string $token      Device token.
+	 * @param string $title      Notification title.
+	 * @param string $body       Notification body.
+	 * @param string $deeplink   Universal link target.
+	 */
 	private static function fcm_send( $server_key, $token, $title, $body, $deeplink ) {
 		if ( ! $server_key ) {
 			return; // Not configured yet; pushes silently no-op in dev.

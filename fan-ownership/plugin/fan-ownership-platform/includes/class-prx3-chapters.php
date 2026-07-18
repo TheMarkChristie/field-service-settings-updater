@@ -72,6 +72,10 @@ class PRX3_Chapters {
 
 	/**
 	 * Join / leave freely (FO-222 AC2).
+	 *
+	 * @param int $chapter_id Chapter post ID.
+	 * @param int $user_id    Owner joining or leaving.
+	 * @return array|WP_Error Member count and membership state, or error.
 	 */
 	public static function toggle_membership( $chapter_id, $user_id ) {
 		if ( 'publish' !== get_post_status( $chapter_id ) || ! prx3_is_owner( $user_id ) ) {
@@ -127,6 +131,14 @@ class PRX3_Chapters {
 		}
 	}
 
+	/**
+	 * De-recognise a chapter: moved out of the directory with the
+	 * decision recorded (FO-222 AC3).
+	 *
+	 * @param int    $chapter_id Chapter post ID.
+	 * @param string $reason     Reason recorded against the chapter.
+	 * @return true|WP_Error True on success.
+	 */
 	public static function derecognise( $chapter_id, $reason ) {
 		if ( ! current_user_can( 'prx3_admin' ) && ! current_user_can( 'prx3_governance' ) ) {
 			return new WP_Error( 'prx3_denied', __( 'Not allowed.', 'fan-ownership' ) );
@@ -150,6 +162,10 @@ class PRX3_Chapters {
 		return true;
 	}
 
+	/**
+	 * Chapter side meta box: city, lead, member count, affirmation
+	 * state, and the re-affirmation checkbox.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_chapter_details',
