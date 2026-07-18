@@ -64,6 +64,11 @@ class PRX3_Admin {
 				'brand_contact'             => array( __( 'Brand queries contact (email)', 'fan-ownership' ), 'text' ),
 				'brand_usage_notes'         => array( __( 'Brand usage notes (clear space, minimum sizes, do/do-not)', 'fan-ownership' ), 'textarea' ),
 			),
+			'legal'        => array(
+				'sha_page_id'   => array( __( 'Shareholders\' Agreement page ID (the supplied document)', 'fan-ownership' ), 'number' ),
+				'sha_version'   => array( __( 'Shareholders\' Agreement version (bump to require re-acceptance)', 'fan-ownership' ), 'text' ),
+				'terms_page_id' => array( __( 'Terms of Membership page ID', 'fan-ownership' ), 'number' ),
+			),
 			'ticketing'    => array(
 				'ticketing_provider'                 => array( __( 'Ticketing provider name', 'fan-ownership' ), 'text' ),
 				'matchday_ticket_discount_per_share' => array( __( 'Matchday discount % per share', 'fan-ownership' ), 'number' ),

@@ -194,6 +194,9 @@ class PRX3_Match_Centre {
 		$was_ended = (bool) get_post_meta( $post_id, '_prx3_ended', true );
 		update_post_meta( $post_id, '_prx3_stream_live', isset( $_POST['prx3_stream_live'] ) ? '1' : '' );
 		update_post_meta( $post_id, '_prx3_ended', isset( $_POST['prx3_ended'] ) ? '1' : '' );
+		if ( ! $was_ended && isset( $_POST['prx3_ended'] ) ) {
+			update_post_meta( $post_id, '_prx3_ended_at', time() ); // Starts the player-of-the-match closing window.
+		}
 		update_post_meta( $post_id, '_prx3_reporters', array_filter( array_map( 'absint', explode( ',', isset( $_POST['prx3_reporters'] ) ? sanitize_text_field( wp_unslash( $_POST['prx3_reporters'] ) ) : '' ) ) ) );
 		$old_rota = (array) get_post_meta( $post_id, '_prx3_rota', true );
 		$new_rota = array();

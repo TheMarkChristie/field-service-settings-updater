@@ -10,6 +10,7 @@ policies create.
 |---|---|
 | `articles-alignment-brief.md` | Solicitor drafts/updates articles — CRITICAL before launch |
 | `terms-of-membership-draft.md` | Solicitor review — CRITICAL before checkout opens |
+| `shareholders-agreement-draft.md` | Solicitor review — CRITICAL before checkout opens (morality clauses, surrender-on-expulsion) |
 | `financial-controls-policy.md` | Board adoption |
 | `safeguarding-policy.md` | Board adoption + named safeguarding officer |
 | `complaints-procedure.md` | Board adoption |

@@ -99,6 +99,18 @@ class PRX3_Shortcodes {
 			<?php wp_nonce_field( 'prx3_redeem_gift', 'prx3_gift_nonce' ); ?>
 			<p><label for="prx3_gift_code"><?php esc_html_e( 'Gift code', 'fan-ownership' ); ?></label>
 			<input type="text" id="prx3_gift_code" name="prx3_gift_code" required></p>
+			<?php if ( PRX3_Agreements::agreement_url() ) : ?>
+			<p><label><input type="checkbox" name="prx3_sha_accept" value="1" required>
+				<?php
+				printf(
+					/* translators: 1: URL, 2: version. */
+					wp_kses_post( __( 'I have read and agree to the <a href="%1$s" target="_blank" rel="noopener">Shareholders\' Agreement</a> (v%2$s).', 'fan-ownership' ) ),
+					esc_url( PRX3_Agreements::agreement_url() ),
+					esc_html( PRX3_Agreements::version() )
+				);
+				?>
+			</label></p>
+			<?php endif; ?>
 			<p><button type="submit" class="prx3-button"><?php esc_html_e( 'Redeem my shares', 'fan-ownership' ); ?></button></p>
 			<?php if ( ! is_user_logged_in() ) : ?>
 				<p class="description"><?php esc_html_e( 'You will need an account first — create one, then redeem here.', 'fan-ownership' ); ?></p>
@@ -158,6 +170,7 @@ class PRX3_Shortcodes {
 				<p class="description"><?php esc_html_e( 'Governance notices (ballots, AGM) always send — they are part of being an owner.', 'fan-ownership' ); ?></p>
 				<p><button class="prx3-button" type="submit"><?php esc_html_e( 'Save preferences', 'fan-ownership' ); ?></button></p>
 			</form>
+			<?php echo wp_kses_post( PRX3_Agreements::account_block( $user_id ) ); ?>
 			<h3><?php esc_html_e( 'My data', 'fan-ownership' ); ?></h3>
 			<p><?php esc_html_e( 'You can request a full export of your data from your profile, or close your account below. Closing surrenders your shares to the club with no payout, as the terms provide.', 'fan-ownership' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('<?php echo esc_js( __( 'Close your account and surrender your shares? This cannot be undone.', 'fan-ownership' ) ); ?>');">
