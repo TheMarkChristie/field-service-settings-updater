@@ -96,3 +96,11 @@ t_eq( $result['applied'], array( 'target_owners' ), 'Known setting applied' );
 t_eq( in_array( 'data_api_key', $result['ignored'], true ), true, 'Key rotation over the API refused' );
 t_eq( (int) prx3_setting( 'target_owners' ), 2000, 'Setting stored' );
 t_eq( prx3_setting( 'data_api_key' ), 'secret-key', 'API key unchanged' );
+
+// Read route: inspect existing content before writing.
+$list = PRX3_Data_API::route_content_read( new PRX3_Test_Request( array(), array( 'type' => 'prx3_player' ) ) );
+t_eq( count( $list['items'] ), 1, 'Read route lists the inserted player' );
+t_eq( $list['items'][0]['title'], 'Alexis Wight', 'Read returns the title' );
+t_eq( $list['items'][0]['meta']['_prx3_number'], 19, 'Read returns platform meta' );
+t_eq( $list['items'][0]['meta']['_prx3_active'], 0, 'Read reflects the update' );
+t_error_code( PRX3_Data_API::route_content_read( new PRX3_Test_Request( array(), array( 'type' => 'post' ) ) ), 'prx3_data_type', 'Read refuses core types' );

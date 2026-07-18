@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.7
+Stable tag: 0.1.8
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,13 @@ club badge plugin integrate through documented contracts.
    numbers, and integrations.
 
 == Changelog ==
+
+= 0.1.8 =
+* Ready-made Claude connection under Settings > API & Integrations:
+  one click provisions a key and produces a paste-ready connection
+  card plus a downloadable JSON connection profile; revoke with one
+  click when done. New GET data/content-list read route so automation
+  can inspect existing data before writing.
 
 = 0.1.7 =
 * Settings split into submenus: Features (kill switches), Club, Brand

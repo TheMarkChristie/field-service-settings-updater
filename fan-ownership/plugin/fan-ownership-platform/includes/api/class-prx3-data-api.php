@@ -25,10 +25,13 @@ defined( 'ABSPATH' ) || exit;
 class PRX3_Data_API {
 
 	/**
-	 * Hook the REST routes.
+	 * Hook the REST routes and the one-click connection actions.
 	 */
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
+		add_action( 'admin_post_prx3_data_api_provision', array( __CLASS__, 'handle_provision' ) );
+		add_action( 'admin_post_prx3_data_api_revoke', array( __CLASS__, 'handle_revoke' ) );
+		add_action( 'admin_post_prx3_data_api_profile', array( __CLASS__, 'handle_profile' ) );
 	}
 
 	/**
@@ -48,10 +51,11 @@ class PRX3_Data_API {
 	 */
 	public static function routes() {
 		$routes = array(
-			'/data/schema'   => array( 'GET', 'route_schema' ),
-			'/data/content'  => array( 'POST', 'route_content' ),
-			'/data/members'  => array( 'POST', 'route_members' ),
-			'/data/settings' => array( 'POST', 'route_settings' ),
+			'/data/schema'       => array( 'GET', 'route_schema' ),
+			'/data/content'      => array( 'POST', 'route_content' ),
+			'/data/content-list' => array( 'GET', 'route_content_read' ),
+			'/data/members'      => array( 'POST', 'route_members' ),
+			'/data/settings'     => array( 'POST', 'route_settings' ),
 		);
 		foreach ( $routes as $path => $def ) {
 			register_rest_route(
@@ -191,6 +195,55 @@ class PRX3_Data_API {
 	}
 
 	/**
+	 * GET /data/content-list — read platform content with its meta, so
+	 * automation can inspect existing data before writing.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function route_content_read( $request ) {
+		$type = sanitize_key( (string) $request->get_param( 'type' ) );
+		if ( ! in_array( $type, self::allowed_types(), true ) ) {
+			return new WP_Error( 'prx3_data_type', __( 'type must be a platform post type.', 'fan-ownership' ), array( 'status' => 400 ) );
+		}
+		$page     = max( 1, (int) $request->get_param( 'page' ) );
+		$per_page = min( 100, max( 1, (int) ( $request->get_param( 'per_page' ) ? $request->get_param( 'per_page' ) : 50 ) ) );
+		$posts    = get_posts(
+			array(
+				'post_type'      => $type,
+				'post_status'    => array( 'publish', 'draft', 'pending' ),
+				'posts_per_page' => $per_page,
+				'paged'          => $page,
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
+			)
+		);
+		$items    = array();
+		foreach ( $posts as $post ) {
+			$meta = array();
+			foreach ( (array) get_post_meta( $post->ID ) as $key => $values ) {
+				if ( 0 === strpos( (string) $key, '_prx3_' ) ) {
+					$meta[ $key ] = maybe_unserialize( $values[0] ?? '' );
+				}
+			}
+			$items[] = array(
+				'id'      => $post->ID,
+				'status'  => $post->post_status,
+				'title'   => $post->post_title,
+				'content' => $post->post_content,
+				'meta'    => $meta,
+			);
+		}
+		return rest_ensure_response(
+			array(
+				'type'  => $type,
+				'page'  => $page,
+				'items' => $items,
+			)
+		);
+	}
+
+	/**
 	 * POST /data/members — create members and grant shares through the
 	 * money path (cap and age gate enforced, register records written).
 	 * Accepts one object or an array of objects.
@@ -308,6 +361,125 @@ class PRX3_Data_API {
 				'ignored' => $ignored,
 			)
 		);
+	}
+
+	/* ---------------- Ready-made connection (for Claude) ---------------- */
+
+	/**
+	 * The connection blob an admin pastes straight into a Claude chat.
+	 *
+	 * @return string Multi-line connection instructions including the key.
+	 */
+	private static function connection_text() {
+		return sprintf(
+			"Connect to my Fan Ownership Platform site and work with its data.\nBase URL: %1\$s\nSend this header on every request: X-Prx3-Data-Key: %2\$s\nStart with GET %1\$sdata/schema to discover the writable surface.\nRead content: GET %1\$sdata/content-list?type=prx3_player (any platform type).\nWrite content: POST %1\$sdata/content — single object or an array (max 100).\nImport members: POST %1\$sdata/members (shares go through the real money path).\nUpdate settings: POST %1\$sdata/settings (allow-listed keys only).",
+			rest_url( 'prx3/v1/' ),
+			(string) prx3_setting( 'data_api_key', '' )
+		);
+	}
+
+	/**
+	 * The connection panel rendered on Settings → API & Integrations:
+	 * one-click provision/revoke and the paste-ready connection card.
+	 */
+	public static function connection_panel() {
+		$key    = (string) prx3_setting( 'data_api_key', '' );
+		$active = self::authorize_state();
+		echo '<h2>' . esc_html__( 'Ready-made Claude connection', 'fan-ownership' ) . '</h2>';
+		if ( ! $active ) {
+			echo '<p>' . esc_html__( 'One click generates a strong key, switches the Data API on, and produces a connection card you paste into a Claude chat. Treat the card like an admin password.', 'fan-ownership' ) . '</p>';
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+			wp_nonce_field( 'prx3_data_api_provision' );
+			echo '<input type="hidden" name="action" value="prx3_data_api_provision">';
+			echo '<p><button class="button button-primary">' . esc_html__( 'Create connection', 'fan-ownership' ) . '</button></p></form>';
+			return;
+		}
+		echo '<p>' . esc_html__( 'The connection is live. Paste the card below into a Claude conversation to let it read and insert club data — then revoke when the job is done.', 'fan-ownership' ) . '</p>';
+		echo '<p><label for="prx3_connection_card"><strong>' . esc_html__( 'Connection card (contains the key — handle like a password)', 'fan-ownership' ) . '</strong></label></p>';
+		echo '<textarea id="prx3_connection_card" class="large-text code" rows="9" readonly onclick="this.select()">' . esc_textarea( self::connection_text() ) . '</textarea>';
+		echo '<p>';
+		echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_data_api_profile' ), 'prx3_data_api_profile' ) ) . '">' . esc_html__( 'Download connection profile (JSON)', 'fan-ownership' ) . '</a> ';
+		echo '</p>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" onsubmit="return confirm(\'' . esc_js( __( 'Revoke the key and switch the Data API off?', 'fan-ownership' ) ) . '\');">';
+		wp_nonce_field( 'prx3_data_api_revoke' );
+		echo '<input type="hidden" name="action" value="prx3_data_api_revoke">';
+		echo '<p><button class="button">' . esc_html__( 'Revoke connection', 'fan-ownership' ) . '</button></p></form>';
+		if ( $key && ! (int) prx3_setting( 'data_api_enabled', 0 ) ) {
+			echo '<p>' . esc_html__( 'A key exists but the Data API is switched off above — enable it to make the connection live.', 'fan-ownership' ) . '</p>';
+		}
+	}
+
+	/**
+	 * Is the connection usable right now (enabled with a key)?
+	 *
+	 * @return bool
+	 */
+	private static function authorize_state() {
+		return '' !== (string) prx3_setting( 'data_api_key', '' ) && (int) prx3_setting( 'data_api_enabled', 0 );
+	}
+
+	/**
+	 * One-click provision: generate a key (if none) and enable the API.
+	 */
+	public static function handle_provision() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_data_api_provision' );
+		if ( '' === (string) prx3_setting( 'data_api_key', '' ) ) {
+			prx3_update_setting( 'data_api_key', wp_generate_password( 48, false, false ) );
+		}
+		prx3_update_setting( 'data_api_enabled', 1 );
+		PRX3_Audit::log( 'data_api_provisioned', sprintf( 'Data API connection provisioned by user %d', get_current_user_id() ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=prx3-settings-api&saved=1' ) );
+		exit;
+	}
+
+	/**
+	 * Revoke: clear the key and switch the API off.
+	 */
+	public static function handle_revoke() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_data_api_revoke' );
+		prx3_update_setting( 'data_api_key', '' );
+		prx3_update_setting( 'data_api_enabled', 0 );
+		PRX3_Audit::log( 'data_api_revoked', sprintf( 'Data API connection revoked by user %d', get_current_user_id() ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=prx3-settings-api&saved=1' ) );
+		exit;
+	}
+
+	/**
+	 * Download the machine-readable connection profile.
+	 */
+	public static function handle_profile() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_data_api_profile' );
+		$profile = array(
+			'name'      => sprintf( '%s — Fan Ownership Data API', prx3_club_name() ),
+			'base_url'  => rest_url( 'prx3/v1/' ),
+			'auth'      => array(
+				'type'   => 'header',
+				'header' => 'X-Prx3-Data-Key',
+				'key'    => (string) prx3_setting( 'data_api_key', '' ),
+			),
+			'discovery' => rest_url( 'prx3/v1/data/schema' ),
+			'endpoints' => array(
+				'schema'       => array( 'GET', 'data/schema' ),
+				'content_list' => array( 'GET', 'data/content-list?type={post_type}' ),
+				'content'      => array( 'POST', 'data/content' ),
+				'members'      => array( 'POST', 'data/members' ),
+				'settings'     => array( 'POST', 'data/settings' ),
+			),
+			'notes'     => 'Batches max 100. Content meta keys must start _prx3_. Member share grants pass the cap/age/register money path.',
+		);
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="prx3-claude-connection.json"' );
+		echo wp_json_encode( $profile, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON file download.
+		exit;
 	}
 
 	/**

@@ -4,17 +4,24 @@ A key-gated write API so trusted automation — Claude, migration
 scripts, integration jobs — can insert and update platform data
 (decision P104). Off by default.
 
-## Enabling it
+## Enabling it — the ready-made Claude connection
 
-Settings → Integrations:
+Settings → API & Integrations → **Ready-made Claude connection** →
+*Create connection*. One click generates a strong key, switches the
+API on, and shows:
 
-- *Data API enabled* — `1`.
-- *Data API key* — a long random value. Every call sends it as the
-  `X-Prx3-Data-Key` header. Treat it like an admin password: it can
-  write content, members, and settings.
+- a **connection card** — paste it straight into a Claude chat and
+  Claude has everything it needs (base URL, auth header, key, and
+  where to discover the surface);
+- a **connection profile (JSON)** download for scripts and other
+  tools;
+- a **Revoke** button that clears the key and switches the API off —
+  use it the moment the job is done. Enable-when-needed is the
+  intended posture, and the card is an admin password: don't leave it
+  in shared documents.
 
-Switch it off (or blank the key) the moment an import job is done —
-enable-when-needed is the intended posture.
+(The same settings can be managed by hand via the *Data API enabled*
+and *Data API key* fields above the panel.)
 
 ## What it can do
 
@@ -24,6 +31,7 @@ posts take one object or an array (capped at 100 per call).
 | Route | Method | Purpose |
 |---|---|---|
 | `/data/schema` | GET | Discovery: writable types, fields, and settings keys |
+| `/data/content-list` | GET | Read platform content with its meta (`?type=prx3_player&page=1`) — look before you write |
 | `/data/content` | POST | Create/update any platform content type — players, matches, ballots, meetings, videos, documents, decisions, chapters, ideas, questions, behind-the-scenes — with title, content, status, `_prx3_` meta, and taxonomy terms |
 | `/data/members` | POST | Create members (or find by email) and grant shares |
 | `/data/settings` | POST | Update known settings keys |

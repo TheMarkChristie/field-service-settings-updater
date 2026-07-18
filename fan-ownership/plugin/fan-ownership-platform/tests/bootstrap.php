@@ -95,12 +95,47 @@ function delete_user_meta( $user_id, $key ) {
 	return true;
 }
 
-function get_post_meta( $post_id, $key, $single = false ) {
+function get_post_meta( $post_id, $key = '', $single = false ) {
+	if ( '' === $key ) {
+		$all = isset( $GLOBALS['prx3_t']['post_meta'][ $post_id ] ) ? $GLOBALS['prx3_t']['post_meta'][ $post_id ] : array();
+		$out = array();
+		foreach ( $all as $meta_key => $value ) {
+			$out[ $meta_key ] = array( $value );
+		}
+		return $out;
+	}
 	$store = isset( $GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] ) ? $GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] : null;
 	if ( null === $store ) {
 		return $single ? '' : array();
 	}
 	return $single ? $store : array( $store );
+}
+function maybe_unserialize( $value ) {
+	return $value;
+}
+function rest_url( $path = '' ) {
+	return 'https://example.test/wp-json/' . $path;
+}
+function get_posts( $args = array() ) {
+	$out = array();
+	foreach ( $GLOBALS['prx3_t_posts'] as $id => $post ) {
+		if ( isset( $args['post_type'] ) && $post['post_type'] !== $args['post_type'] ) {
+			continue;
+		}
+		if ( isset( $args['post_status'] ) && is_array( $args['post_status'] ) && ! in_array( $post['post_status'] ?? 'draft', $args['post_status'], true ) ) {
+			continue;
+		}
+		$out[] = (object) array(
+			'ID'           => $id,
+			'post_title'   => $post['post_title'] ?? '',
+			'post_status'  => $post['post_status'] ?? 'draft',
+			'post_content' => $post['post_content'] ?? '',
+			'post_type'    => $post['post_type'],
+		);
+	}
+	$per  = isset( $args['posts_per_page'] ) && $args['posts_per_page'] > 0 ? (int) $args['posts_per_page'] : count( $out );
+	$page = isset( $args['paged'] ) ? max( 1, (int) $args['paged'] ) : 1;
+	return array_slice( $out, ( $page - 1 ) * $per, $per );
 }
 function update_post_meta( $post_id, $key, $value ) {
 	$GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] = $value;

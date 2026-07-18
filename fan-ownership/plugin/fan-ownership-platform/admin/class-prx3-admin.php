@@ -287,6 +287,9 @@ class PRX3_Admin {
 		if ( 'ticketing' === $section ) {
 			echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_ticketing' ), 'prx3_export_ticketing' ) ) . '">' . esc_html( sprintf( /* translators: %s ticketing provider. */ __( 'Export %s discount codes (CSV)', 'fan-ownership' ), PRX3_Ticketing::provider() ) ) . '</a></p>';
 		}
+		if ( 'integrations' === $section ) {
+			PRX3_Data_API::connection_panel();
+		}
 		if ( 'brand pack' === $section ) {
 			echo '<p><a class="button" href="' . esc_url( home_url( '/brand-pack/' ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'View printable brand pack (print to PDF to supply it)', 'fan-ownership' ) . '</a></p>';
 		}
