@@ -65,19 +65,24 @@ function prx3_brand_asset( $key ) {
  */
 function prx3_brand_pack() {
 	return array(
-		'badge'          => prx3_brand_asset( 'badge' ),
-		'badge_inverted' => prx3_brand_asset( 'badge_inverted' ),
-		'badge_social'   => prx3_brand_asset( 'badge_social' ),
-		'badge_svg'      => prx3_brand_asset( 'badge_svg' ),
-		'wordmark'       => prx3_brand_asset( 'wordmark' ),
-		'favicon'        => prx3_brand_asset( 'favicon' ),
-		'app_icon'       => prx3_brand_asset( 'app_icon' ),
-		'email_header'   => prx3_brand_asset( 'email_header' ),
-		'font_file'      => prx3_brand_asset( 'font_file' ),
-		'font_name'      => prx3_setting( 'brand_font_name', '' ),
-		'primary'        => prx3_setting( 'club_primary', '#1a1a2e' ),
-		'secondary'      => prx3_setting( 'club_secondary', '#ffffff' ),
-		'tertiary'       => prx3_setting( 'club_tertiary', '#e2b007' ),
+		'badge'            => prx3_brand_asset( 'badge' ),
+		'badge_inverted'   => prx3_brand_asset( 'badge_inverted' ),
+		'badge_social'     => prx3_brand_asset( 'badge_social' ),
+		'badge_svg'        => prx3_brand_asset( 'badge_svg' ),
+		'wordmark'         => prx3_brand_asset( 'wordmark' ),
+		'favicon'          => prx3_brand_asset( 'favicon' ),
+		'app_icon'         => prx3_brand_asset( 'app_icon' ),
+		'email_header'     => prx3_brand_asset( 'email_header' ),
+		'font_file'        => prx3_brand_asset( 'font_file' ),
+		'badge_mono_dark'  => prx3_brand_asset( 'badge_mono_dark' ),
+		'badge_mono_light' => prx3_brand_asset( 'badge_mono_light' ),
+		'font_name'        => prx3_setting( 'brand_font_name', '' ),
+		'secondary_font'   => prx3_setting( 'brand_secondary_font_name', '' ),
+		'tagline'          => prx3_setting( 'club_tagline', '' ),
+		'brand_pack_url'   => home_url( '/brand-pack/' ),
+		'primary'          => prx3_setting( 'club_primary', '#1a1a2e' ),
+		'secondary'        => prx3_setting( 'club_secondary', '#ffffff' ),
+		'tertiary'         => prx3_setting( 'club_tertiary', '#e2b007' ),
 	);
 }
 

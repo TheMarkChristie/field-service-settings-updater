@@ -35,20 +35,33 @@ class PRX3_Admin {
 				'currency_symbol' => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
 			),
 			'brand pack'   => array(
-				'club_primary'            => array( __( 'Primary colour (hex)', 'fan-ownership' ), 'text' ),
-				'club_secondary'          => array( __( 'Secondary colour (hex)', 'fan-ownership' ), 'text' ),
-				'club_tertiary'           => array( __( 'Third colour (hex)', 'fan-ownership' ), 'text' ),
-				'brand_font_name'         => array( __( 'Brand font name (as used in CSS)', 'fan-ownership' ), 'text' ),
-				'brand_font_file_id'      => array( __( 'Brand font file (woff2/ttf)', 'fan-ownership' ), 'media' ),
-				'brand_badge_id'          => array( __( 'Badge / crest', 'fan-ownership' ), 'media' ),
-				'brand_badge_inverted_id' => array( __( 'Inverted badge (for dark backgrounds)', 'fan-ownership' ), 'media' ),
-				'brand_badge_social_id'   => array( __( 'Social media badge (square)', 'fan-ownership' ), 'media' ),
-				'brand_badge_svg_id'      => array( __( 'SVG badge (vector master)', 'fan-ownership' ), 'media' ),
-				'brand_wordmark_id'       => array( __( 'Wordmark / logotype', 'fan-ownership' ), 'media' ),
-				'brand_favicon_id'        => array( __( 'Favicon', 'fan-ownership' ), 'media' ),
-				'brand_app_icon_id'       => array( __( 'App icon (1024px square)', 'fan-ownership' ), 'media' ),
-				'brand_email_header_id'   => array( __( 'Email header image', 'fan-ownership' ), 'media' ),
-				'brand_usage_notes'       => array( __( 'Brand usage notes (clear space, minimum sizes, do/do-not)', 'fan-ownership' ), 'textarea' ),
+				'club_primary'              => array( __( 'Primary colour (hex)', 'fan-ownership' ), 'text' ),
+				'club_secondary'            => array( __( 'Secondary colour (hex)', 'fan-ownership' ), 'text' ),
+				'club_tertiary'             => array( __( 'Third colour (hex)', 'fan-ownership' ), 'text' ),
+				'brand_font_name'           => array( __( 'Brand font name (as used in CSS)', 'fan-ownership' ), 'text' ),
+				'brand_font_file_id'        => array( __( 'Brand font file (woff2/ttf)', 'fan-ownership' ), 'media' ),
+				'brand_badge_id'            => array( __( 'Badge / crest', 'fan-ownership' ), 'media' ),
+				'brand_badge_inverted_id'   => array( __( 'Inverted badge (for dark backgrounds)', 'fan-ownership' ), 'media' ),
+				'brand_badge_social_id'     => array( __( 'Social media badge (square)', 'fan-ownership' ), 'media' ),
+				'brand_badge_svg_id'        => array( __( 'SVG badge (vector master)', 'fan-ownership' ), 'media' ),
+				'brand_wordmark_id'         => array( __( 'Wordmark / logotype', 'fan-ownership' ), 'media' ),
+				'brand_favicon_id'          => array( __( 'Favicon', 'fan-ownership' ), 'media' ),
+				'brand_app_icon_id'         => array( __( 'App icon (1024px square)', 'fan-ownership' ), 'media' ),
+				'brand_email_header_id'     => array( __( 'Email header image', 'fan-ownership' ), 'media' ),
+				'brand_badge_mono_dark_id'  => array( __( 'Monochrome badge — dark (for light backgrounds)', 'fan-ownership' ), 'media' ),
+				'brand_badge_mono_light_id' => array( __( 'Monochrome badge — light (for dark backgrounds)', 'fan-ownership' ), 'media' ),
+				'club_primary_print'        => array( __( 'Primary print spec (CMYK / Pantone)', 'fan-ownership' ), 'text' ),
+				'club_secondary_print'      => array( __( 'Secondary print spec (CMYK / Pantone)', 'fan-ownership' ), 'text' ),
+				'club_tertiary_print'       => array( __( 'Third colour print spec (CMYK / Pantone)', 'fan-ownership' ), 'text' ),
+				'brand_secondary_font_name' => array( __( 'Secondary / body font name', 'fan-ownership' ), 'text' ),
+				'club_tagline'              => array( __( 'Tagline / motto', 'fan-ownership' ), 'text' ),
+				'club_legal_name'           => array( __( 'Legal name', 'fan-ownership' ), 'text' ),
+				'club_short_name'           => array( __( 'Short name', 'fan-ownership' ), 'text' ),
+				'club_abbreviation'         => array( __( 'Abbreviation / initials', 'fan-ownership' ), 'text' ),
+				'club_founded'              => array( __( 'Founded (year)', 'fan-ownership' ), 'text' ),
+				'brand_social_handles'      => array( __( 'Official social handles (one per line)', 'fan-ownership' ), 'textarea' ),
+				'brand_contact'             => array( __( 'Brand queries contact (email)', 'fan-ownership' ), 'text' ),
+				'brand_usage_notes'         => array( __( 'Brand usage notes (clear space, minimum sizes, do/do-not)', 'fan-ownership' ), 'textarea' ),
 			),
 			'ticketing'    => array(
 				'ticketing_provider'                 => array( __( 'Ticketing provider name', 'fan-ownership' ), 'text' ),
@@ -150,6 +163,8 @@ class PRX3_Admin {
 				PRX3_Ticketing::provider()
 			)
 		) . '</a></p>';
+		echo '<h2>' . esc_html__( 'Printable brand pack', 'fan-ownership' ) . '</h2>';
+		echo '<p><a class="button" href="' . esc_url( home_url( '/brand-pack/' ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'View printable brand pack (print to PDF to supply it)', 'fan-ownership' ) . '</a></p>';
 		echo '</div>';
 
 		// Media Library pickers for the brand pack fields.
