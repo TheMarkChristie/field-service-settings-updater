@@ -178,10 +178,10 @@
 		}
 		body.textContent = '';
 		var rows = [
-			[ 'Owners', data.owners + ' / ' + data.target ],
+			[ 'Owners (target)', data.owners + ' / ' + data.target ],
 			[ 'Active owners (12m)', data.active ],
 			[ 'Shares issued', data.shares ],
-			[ 'Share revenue', data.revenue ],
+			[ 'Share revenue' + ( data.target_revenue_label ? ' (target ' + data.target_revenue_label + ')' : '' ), data.revenue ],
 			[ 'Gifts unredeemed', data.gifts ],
 			[ 'Surrender events', data.surrenders ],
 			[ 'Moderation queue', data.queue ],
@@ -237,8 +237,15 @@
 		} );
 		var meter = root.querySelector( '[data-meter="owners"]' );
 		if ( meter ) {
+			meter.setAttribute( 'aria-valuemax', String( data.target ) );
 			meter.setAttribute( 'aria-valuenow', String( data.owners ) );
 			meter.querySelector( '.prx3-meter-fill' ).style.width = Math.min( 100, Math.round( ( data.owners / Math.max( 1, data.target ) ) * 100 ) ) + '%';
+		}
+		var revMeter = root.querySelector( '[data-meter="revenue"]' );
+		if ( revMeter && data.target_revenue > 0 ) {
+			revMeter.setAttribute( 'aria-valuemax', String( data.target_revenue ) );
+			revMeter.setAttribute( 'aria-valuenow', String( data.revenue_raw ) );
+			revMeter.querySelector( '.prx3-meter-fill' ).style.width = Math.min( 100, Math.round( ( data.revenue_raw / data.target_revenue ) * 100 ) ) + '%';
 		}
 	}
 

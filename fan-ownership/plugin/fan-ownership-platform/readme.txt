@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.2
+Stable tag: 0.1.3
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,12 @@ club badge plugin integrate through documented contracts.
    numbers, and integrations.
 
 == Changelog ==
+
+= 0.1.3 =
+* New Settings > Targets section: owner target and season financial
+  target. The dashboard owner meter follows the owner target, and the
+  revenue tile gains its own progress meter when a financial target is
+  set.
 
 = 0.1.2 =
 * Interactive tile dashboards: the Club Dashboard is now a live tile

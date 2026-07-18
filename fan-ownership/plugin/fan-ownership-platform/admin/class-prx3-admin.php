@@ -113,6 +113,10 @@ class PRX3_Admin {
 				'invoice_prefix'    => array( __( 'Invoice prefix', 'fan-ownership' ), 'text' ),
 				'launch_moment'     => array( __( 'Public launch moment (Founders cutoff, e.g. 2026-09-01 12:00)', 'fan-ownership' ), 'text' ),
 			),
+			'targets'      => array(
+				'target_owners'  => array( __( 'Owner target (drives the dashboard meter)', 'fan-ownership' ), 'number' ),
+				'target_revenue' => array( __( 'Financial target for the season (club currency; 0 hides the meter)', 'fan-ownership' ), 'number' ),
+			),
 			'governance'   => array(
 				'quorum_percent'      => array( __( 'Quorum % of active owners', 'fan-ownership' ), 'number' ),
 				'constitutional_pct'  => array( __( 'Constitutional supermajority %', 'fan-ownership' ), 'number' ),

@@ -154,21 +154,24 @@ class PRX3_Dashboard {
 		}
 
 		return array(
-			'owners'     => $owners,
-			'target'     => 1000,
-			'active'     => prx3_active_owner_count(),
-			'shares'     => $shares,
-			'revenue'    => prx3_money( $revenue ),
-			'gifts'      => count( array_filter( get_option( 'prx3_gift_codes', array() ), fn( $g ) => empty( $g['redeemed'] ) && empty( $g['voided'] ) ) ),
-			'surrenders' => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'surrender'" ), // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the custom register table is its own record; live count.
-			'series'     => $series,
-			'dist'       => array_values( $dist ),
-			'ballots'    => $ballots,
-			'videos'     => (int) ( wp_count_posts( 'prx3_video' )->publish ?? 0 ),
-			'ideas'      => array( (int) $ideas->publish, (int) $ideas->pending ),
-			'questions'  => array( (int) $questions->publish, (int) $questions->pending ),
-			'queue'      => count( array_filter( get_option( 'prx3_mod_queue', array() ), fn( $q ) => empty( $q['resolved'] ) ) ),
-			'stalled'    => count(
+			'owners'               => $owners,
+			'target'               => max( 1, (int) prx3_setting( 'target_owners', 1000 ) ),
+			'active'               => prx3_active_owner_count(),
+			'shares'               => $shares,
+			'revenue'              => prx3_money( $revenue ),
+			'revenue_raw'          => $revenue,
+			'target_revenue'       => (float) prx3_setting( 'target_revenue', 0 ),
+			'target_revenue_label' => (float) prx3_setting( 'target_revenue', 0 ) > 0 ? prx3_money( (float) prx3_setting( 'target_revenue', 0 ) ) : '',
+			'gifts'                => count( array_filter( get_option( 'prx3_gift_codes', array() ), fn( $g ) => empty( $g['redeemed'] ) && empty( $g['voided'] ) ) ),
+			'surrenders'           => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'surrender'" ), // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the custom register table is its own record; live count.
+			'series'               => $series,
+			'dist'                 => array_values( $dist ),
+			'ballots'              => $ballots,
+			'videos'               => (int) ( wp_count_posts( 'prx3_video' )->publish ?? 0 ),
+			'ideas'                => array( (int) $ideas->publish, (int) $ideas->pending ),
+			'questions'            => array( (int) $questions->publish, (int) $questions->pending ),
+			'queue'                => count( array_filter( get_option( 'prx3_mod_queue', array() ), fn( $q ) => empty( $q['resolved'] ) ) ),
+			'stalled'              => count(
 				get_posts(
 					array(
 						'post_type'      => 'prx3_decision',
@@ -181,12 +184,12 @@ class PRX3_Dashboard {
 					)
 				)
 			),
-			'sync'       => array(
+			'sync'                 => array(
 				'outbox' => count( (array) get_option( 'prx3_sync_outbox', array() ) ),
 				'review' => count( (array) get_option( 'prx3_sync_review', array() ) ),
 			),
-			'overdue'    => $overdue,
-			'links'      => array(
+			'overdue'              => $overdue,
+			'links'                => array(
 				'owners'      => admin_url( 'users.php?role=fan_owner' ),
 				'ballots'     => admin_url( 'edit.php?post_type=prx3_ballot' ),
 				'ideas'       => admin_url( 'edit.php?post_status=pending&post_type=prx3_idea' ),
@@ -197,7 +200,7 @@ class PRX3_Dashboard {
 				'commitments' => admin_url( 'admin.php?page=prx3-commitments' ),
 				'settings'    => admin_url( 'admin.php?page=prx3-settings' ),
 			),
-			'stamp'      => prx3_format_datetime( prx3_now() ),
+			'stamp'                => prx3_format_datetime( prx3_now() ),
 		);
 	}
 
@@ -268,7 +271,17 @@ class PRX3_Dashboard {
 		echo '<span class="prx3-spark" data-spark aria-hidden="true"></span>';
 		echo '</div>';
 
-		self::tile( 'revenue', __( 'Share revenue', 'fan-ownership' ), $d['revenue'], $d['links']['settings'], __( 'recorded in the register', 'fan-ownership' ) );
+		// Revenue tile: meter against the financial target when one is set.
+		echo '<a class="prx3-tile" href="' . esc_url( $d['links']['settings'] ) . '" data-tile="revenue">';
+		echo '<span class="prx3-tile-label">' . esc_html__( 'Share revenue', 'fan-ownership' ) . '</span>';
+		echo '<strong class="prx3-tile-value" data-bind="revenue">' . esc_html( $d['revenue'] ) . '</strong>';
+		if ( $d['target_revenue'] > 0 ) {
+			echo '<span class="prx3-tile-note" data-note="revenue">' . esc_html( sprintf( /* translators: %s target. */ __( 'of the %s target', 'fan-ownership' ), $d['target_revenue_label'] ) ) . '</span>';
+			echo '<span class="prx3-meter" role="meter" aria-label="' . esc_attr__( 'Progress to financial target', 'fan-ownership' ) . '" aria-valuemin="0" aria-valuemax="' . esc_attr( (string) $d['target_revenue'] ) . '" aria-valuenow="' . esc_attr( (string) $d['revenue_raw'] ) . '" data-meter="revenue"><span class="prx3-meter-fill" style="width:' . esc_attr( (string) min( 100, round( $d['revenue_raw'] / $d['target_revenue'] * 100 ) ) ) . '%"></span></span>';
+		} else {
+			echo '<span class="prx3-tile-note">' . esc_html__( 'set a financial target in Settings → Targets to track progress', 'fan-ownership' ) . '</span>';
+		}
+		echo '</a>';
 		self::tile( 'active', __( 'Active owners', 'fan-ownership' ), (string) $d['active'], '', __( 'quorum denominator (12 months)', 'fan-ownership' ) );
 		self::tile( 'gifts', __( 'Gifts unredeemed', 'fan-ownership' ), (string) $d['gifts'], '', __( 'codes never expire', 'fan-ownership' ) );
 		self::tile( 'surrenders', __( 'Surrender events', 'fan-ownership' ), (string) $d['surrenders'] );

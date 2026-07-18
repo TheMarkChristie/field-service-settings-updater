@@ -87,6 +87,8 @@ class PRX3_Config {
 			'sha_signatory_signature_id'         => 0,
 			'brand_club_stamp_id'                => 0,
 			'account_page_id'                    => 0,
+			'target_owners'                      => 1000,
+			'target_revenue'                     => 0,
 			'gift_cap_per_buyer'                 => 10,
 			'gift_bulk_flag_at'                  => 5,
 			'share_base_price'                   => 50.0,
