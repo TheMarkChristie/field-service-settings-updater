@@ -4,7 +4,7 @@
  * that the club supplies to printers, press, broadcasters, and sponsors.
  * Print-to-PDF from the browser produces the distributable document.
  *
- * Contents: cover (badge, name, tagline), logo suite on light and dark
+ * Contents: cover (badge, name, tagline), mission statement, logo suite on light and dark
  * with download links, colour swatches with hex/RGB and the print specs
  * (CMYK/Pantone), typography specimen of the uploaded brand font,
  * naming rules, current kit and kit history (home and away), photography
@@ -121,6 +121,14 @@ class PRX3_Brand {
 			<p style="font-size:1.3rem;"><?php echo esc_html( $tagline ); ?></p><?php endif; ?>
 	<p><?php esc_html_e( 'Brand Pack', 'fan-ownership' ); ?> — <?php echo esc_html( date_i18n( get_option( 'date_format' ) ) ); ?></p>
 </section>
+
+		<?php $mission = prx3_setting( 'club_mission', '' ); ?>
+		<?php if ( $mission ) : ?>
+<section class="page">
+	<h2><?php esc_html_e( 'Our mission', 'fan-ownership' ); ?></h2>
+	<div style="font-size:1.25rem;line-height:1.7;max-width:44rem;"><?php echo wp_kses_post( wpautop( $mission ) ); ?></div>
+</section>
+		<?php endif; ?>
 
 <section class="page">
 	<h2><?php esc_html_e( 'Our name', 'fan-ownership' ); ?></h2>

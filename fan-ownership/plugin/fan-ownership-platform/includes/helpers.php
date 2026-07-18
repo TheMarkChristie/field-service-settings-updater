@@ -104,6 +104,7 @@ function prx3_brand_pack() {
 		'font_name'        => prx3_setting( 'brand_font_name', '' ),
 		'secondary_font'   => prx3_setting( 'brand_secondary_font_name', '' ),
 		'tagline'          => prx3_setting( 'club_tagline', '' ),
+		'mission'          => prx3_setting( 'club_mission', '' ),
 		'brand_pack_url'   => home_url( '/brand-pack/' ),
 		'primary'          => prx3_setting( 'club_primary', '#1a1a2e' ),
 		'secondary'        => prx3_setting( 'club_secondary', '#ffffff' ),

@@ -35,6 +35,7 @@ class PRX3_Admin {
 				'currency_symbol' => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
 			),
 			'brand pack'   => array(
+				'club_mission'              => array( __( 'Mission statement (rich text — shown on the brand pack and available to the app)', 'fan-ownership' ), 'richtext' ),
 				'club_primary'              => array( __( 'Primary colour (hex)', 'fan-ownership' ), 'text' ),
 				'club_secondary'            => array( __( 'Secondary colour (hex)', 'fan-ownership' ), 'text' ),
 				'club_tertiary'             => array( __( 'Third colour (hex)', 'fan-ownership' ), 'text' ),
@@ -132,6 +133,16 @@ class PRX3_Admin {
 						echo '<option value="' . esc_attr( $sport_key ) . '" ' . selected( $value, $sport_key, false ) . '>' . esc_html( $sport['label'] ) . '</option>';
 					}
 					echo '</select>';
+				} elseif ( 'richtext' === $def[1] ) {
+					wp_editor(
+						(string) $value,
+						'prx3_' . $key,
+						array(
+							'textarea_name' => $key,
+							'textarea_rows' => 6,
+							'media_buttons' => false,
+						)
+					);
 				} elseif ( 'gallery' === $def[1] ) {
 					$ids = array_filter( array_map( 'absint', explode( ',', (string) $value ) ) );
 					echo '<div class="prx3-media-field">';
@@ -231,6 +242,8 @@ class PRX3_Admin {
 					prx3_update_setting( $key, absint( $raw ) );
 				} elseif ( 'gallery' === $def[1] ) {
 					prx3_update_setting( $key, implode( ',', array_filter( array_map( 'absint', explode( ',', (string) $raw ) ) ) ) );
+				} elseif ( 'richtext' === $def[1] ) {
+					prx3_update_setting( $key, wp_kses_post( $raw ) );
 				} elseif ( 'sport' === $def[1] ) {
 					$sport = sanitize_key( $raw );
 					prx3_update_setting( $key, array_key_exists( $sport, PRX3_Config::sports() ) ? $sport : 'generic' );

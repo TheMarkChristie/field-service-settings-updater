@@ -44,6 +44,7 @@ class PRX3_Config {
 			'brand_social_handles'               => '',
 			'brand_contact'                      => '',
 			'club_tagline'                       => '',
+			'club_mission'                       => '',
 			'club_legal_name'                    => '',
 			'club_short_name'                    => '',
 			'club_abbreviation'                  => '',
