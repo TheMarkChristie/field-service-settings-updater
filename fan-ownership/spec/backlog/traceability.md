@@ -95,6 +95,14 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Cross-cutting requirements
 
+- **Coding standards**: the committed gate (`phpcs.xml.dist`) is the **full
+  `WordPress` ruleset** (Core + Docs + Extra) with the plugin's registered
+  capabilities, `fan-ownership` text domain, and `prx3` prefix rules — all
+  44 plugin files pass with zero errors and zero warnings, every class and
+  function carries a docblock, and every custom-table query carries a
+  justified inline annotation. The test harness (`tests/`) is excluded as
+  it shims core functions by design.
+
 - **WCAG 2.1 AA (P44/T71)**: labels on all inputs, `fieldset/legend` on ballots, `aria-live` feedback, visible focus (3px outline), 44px targets, reflow-safe CSS, screen-reader text. CI axe-core run not yet configured.
 - **Kill switches (T74)**: registration, checkout, voting, forum, chat, streams, meetings, ideas, questions — all honoured at both web and API layers.
 - **Data residency/GDPR (T29/T30)**: exporter/eraser/retention implemented; residency is a hosting choice.
