@@ -33,6 +33,8 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-121 Accept & sign the SHA | Done | `class-prx3-agreements.php` + `prx3-signature.js` — checkout/gift/re-accept all require tick + drawn signature (validated PNG), append-only acceptance log (version/at/IP/context/order/signed), version-bump re-accept banner, no lockout while outstanding | Agreement text itself awaits solicitor (operations handbook draft) |
 | FO-122 Executed copy | Done | `/my-agreement/` — full page text + execution block: member signature/name/owner #/date, club stamp (`brand_club_stamp_id`), board countersignature (Legal settings), print-to-PDF, stale-version note, self-only access with board/admin override | |
 | FO-123 Board signatures register | Done | Board Workspace → Owner Signatures — owner #, version (out-of-date flag), acceptance count/date/context, signature thumbnail, link to executed copy, `prx3_board` capability, personal-data warning; exporter includes acceptances, eraser removes signature image and retains the log | |
+| FO-124 Outbound CRM sync | Done | `class-prx3-sync.php` — change hooks queue signed webhooks (HMAC-SHA256, 8-try retry, capped outbox, 5-min tick), paged `/sync/members` delta, `/sync/register` append-only feed, signatures excluded from payloads, admin health page, off until configured | Dataverse solution (columns/table/flows/connector) built by the club from `spec/power-platform-sync-design.md` |
+| FO-125 Inbound matching rules | Done | `/sync/upsert` — ID → email → owner number exact matching, allow-listed enrichment fields (`prx3_sync_inbound_fields`), review queue for no-match/ambiguous/conflict with admin link-or-discard (audited), permanent linking, no outbound echo | |
 
 ## Phase 2 — Decide
 
@@ -101,7 +103,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 39 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+Done 41 · Partial 19 · Operational 1 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The two most important follow-ups: (1) automated tests on checkout and
 ballot tallying before launch, (2) the documentation suite. The board

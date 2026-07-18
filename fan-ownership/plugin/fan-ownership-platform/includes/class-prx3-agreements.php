@@ -192,6 +192,7 @@ class PRX3_Agreements {
 		update_user_meta( $user_id, 'prx3_sha_acceptances', $log );
 		update_user_meta( $user_id, 'prx3_sha_version', self::version() );
 		PRX3_Audit::log( 'sha_accepted', sprintf( 'User %d accepted Shareholders\' Agreement v%s (%s)', $user_id, self::version(), $context ) );
+		do_action( 'prx3_sha_accepted', $user_id, $context );
 	}
 
 	/**

@@ -7,7 +7,7 @@ switches from day one.
 
 Epics: A. Platform foundations · B. Join and buy · C. Recognition ·
 D. Onboarding, comms and account · E. Content foundations ·
-F. Legal agreements
+F. Legal agreements · G. CRM sync
 
 ---
 
@@ -291,3 +291,48 @@ Test script:
 3. Follow a row's link — expect that owner's executed copy.
 4. Attempt access as a non-board staff account and as a member — expect refusal both times.
 5. Run a personal data export for an accepting member — expect their acceptance history and a signature-held indicator included; erase a test account — expect the signature image removed while the acceptance record remains as the retained legal minimum.
+
+---
+
+## Epic G — CRM sync
+
+### FO-124 The CRM always knows the members
+As the club, I want every member's ownership picture — identity, owner number, shares, agreement status, badges, and engagement — flowing into our CRM automatically as it changes, so that supporter care, campaigns, and reporting work from live data without anyone re-keying.
+Traceability: P99, P100, P101. Estimate: Design 1.5 / Build 1.5 / Develop 3 / Test 2
+
+Acceptance criteria:
+1. When a member registers, changes profile details, gains or loses shares, accepts the agreement, or earns a badge, the change reaches the CRM within minutes without manual action.
+2. Change notifications are authenticated and tamper-evident: the receiving system can verify each message was sent by the platform and unaltered.
+3. A pull interface returns members changed since a given time, paged, so the CRM can catch up after any outage; the share register is available as an append-only feed that can be resumed from the last row received without gaps or duplicates.
+4. Failed deliveries retry automatically and are dropped only after repeated failure with an audit record; sync health (queue depth, awaiting review) is visible to administrators.
+5. Members' agreement signatures never leave the platform; the CRM receives acceptance facts only (version, current or not, count).
+6. Sync can be switched off entirely, and is off until credentials are configured.
+
+Test script:
+1. With sync configured, register a member, buy shares, and accept the agreement — expect three authenticated notifications at the receiving endpoint within the delivery interval, each carrying the member's current picture.
+2. Tamper with a captured notification body and re-verify the signature — expect verification failure.
+3. Take the receiving endpoint offline, make changes, bring it back — expect queued deliveries to arrive on retry; pull members with a modified-since timestamp — expect exactly the changed members.
+4. Pull the share register feed from row zero, then again from the last row received — expect no gaps and no duplicates across the two pulls.
+5. Inspect a notification for a member who signed the agreement — expect version, currency, and count, and no signature image.
+6. Disable sync — expect API calls refused and no outbound deliveries.
+
+### FO-125 Inbound updates under matching rules
+As the club, I want CRM-owned details — phone, address, marketing consents, notes — flowing back to the platform under strict matching rules, so that the two systems converge on one truth without ever corrupting the ownership record.
+Traceability: P100, P102. Estimate: Design 1.5 / Build 1 / Develop 3 / Test 2
+
+Acceptance criteria:
+1. An inbound update matches a member by, in order: the stored cross-reference identifier, verified email (case-insensitive), then owner number. There is no fuzzy matching.
+2. A record that matches nothing, matches ambiguously, or conflicts with an existing cross-reference link is queued for human review with its full payload and reason — never auto-merged, never auto-created, and the sender is told it is under review.
+3. An administrator resolves each queued record by linking it to the right member (applying its updates) or discarding it; both outcomes are audited.
+4. Inbound writes are limited to the agreed CRM-owned enrichment fields; any attempt to write ownership data — shares, votes, acceptances, owner numbers — is rejected and reported back to the sender.
+5. A successful inbound update links the two records permanently so all future matching is by identifier.
+6. Inbound updates do not echo back outbound (no notification loops).
+
+Test script:
+1. Send an inbound update for a linked member — expect fields applied, response naming the match rule "cross-reference", and enrichment visible on the member.
+2. Send an update for an unlinked member matched by email, then by owner number only — expect each matched by the stated rule and the link stored, so a repeat matches by identifier.
+3. Send an update matching no member — expect a review response, the record in the admin review queue with reason, and no member created.
+4. Send an update whose email matches member A but whose identifier is already linked to member B — expect a conflict review entry, no writes to either member.
+5. Resolve one queued record by linking and one by discarding — expect the link applied with fields written, the discard removed, and both audited.
+6. Send an update attempting to set shares and owner number — expect those fields reported as rejected and unchanged on the member.
+7. Confirm an applied inbound update produced no outbound notification.

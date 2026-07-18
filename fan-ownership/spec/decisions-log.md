@@ -193,6 +193,19 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | P97 | Shareholders' Agreement | A versioned **Shareholders' Agreement with morality/conduct clauses** is a condition of becoming a shareholder: ticked acceptance required at share checkout AND gift redemption; every acceptance recorded permanently (version, timestamp, IP, context, order). New versions banner existing owners for re-acceptance. Draft with clauses covering violence/discrimination, criminal offences, disrepute, democracy manipulation, access misuse, and brand misuse is in the operations handbook — **solicitor must settle it before checkout opens** |
 | P98 | Executed copies | Every acceptance is **signed**: the member draws their signature (finger/stylus/mouse) at checkout, gift redemption, and re-acceptance — mandatory, validated PNG. A personalised **executed copy** at `/my-agreement/` shows the full agreement text plus an execution block: member signature, name, owner number, date, the **club stamp** (uploadable brand asset), and the configured **board signatory's countersignature** (name, role, signature image — Legal settings). Print-to-PDF for the member's personal copy. All owner signatures and the acceptance history live in a **board-only "Owner Signatures" register** inside the Board Workspace (personal data, board eyes only) |
 
+## Decisions — round 7: Power Platform sync (P99–P102)
+
+Defaults recorded on Mark's direction to sync "back and forth with API
+and matching rules"; the selectable-answer round could not be delivered,
+so the recommended options were applied — revisit any of these on request.
+
+| # | Topic | Decision |
+|---|---|---|
+| P99 | Sync scope | **Members + shares + engagement**: contact identity, owner number, shareholding, agreement status (facts only — signatures never leave the platform), badges, and engagement counts; the share register streams as an append-only feed. Cases/meetings/commitments excluded for now |
+| P100 | Conflict rule | **Field-level ownership**: the platform owns what it mints (shares, votes, acceptances, owner numbers — legally authoritative); Dataverse owns CRM enrichment (phone, address, marketing consents, notes). Inbound writes are allow-listed (`prx3_sync_inbound_fields`); nothing inbound can touch ownership data |
+| P101 | Mechanism | **REST + signed webhooks + custom connector**: plugin REST API (`/sync/members` paged delta, `/sync/register` append-only feed, `/sync/upsert`, `/sync/review`) authenticated by `X-Prx3-Api-Key`; outbound events queued and delivered to a Power Automate HTTP trigger with HMAC-SHA256 `X-Prx3-Signature`, 8-try retry, capped outbox; hourly delta-pull flow as the safety net; Swagger 2.0 custom connector packaged for makers |
+| P102 | Matching rules | **Cross-reference ID → verified email → owner number**, exact matches only. No fuzzy matching, no auto-create, no auto-merge: no-match, ambiguous, and link-conflict records queue for human review in Fan Ownership → CRM Sync, resolved by link-and-apply or discard, both audited. Dataverse upserts by `prx3_WPUserFK` alternate key so sync can never create duplicates |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

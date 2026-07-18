@@ -99,12 +99,16 @@ class PRX3_Admin {
 				'decision_stale_days' => array( __( 'Decision stalled after (days)', 'fan-ownership' ), 'number' ),
 			),
 			'integrations' => array(
-				'cf_account_id'     => array( __( 'Cloudflare account ID', 'fan-ownership' ), 'text' ),
-				'cf_api_token'      => array( __( 'Cloudflare API token', 'fan-ownership' ), 'password' ),
-				'cf_stream_key_id'  => array( __( 'Stream signing key ID', 'fan-ownership' ), 'text' ),
-				'cf_stream_key_pem' => array( __( 'Stream signing key (PEM)', 'fan-ownership' ), 'textarea' ),
-				'fcm_server_key'    => array( __( 'Firebase FCM server key', 'fan-ownership' ), 'password' ),
-				'chat_blocklist'    => array( __( 'Chat word filter (one per line)', 'fan-ownership' ), 'textarea' ),
+				'cf_account_id'       => array( __( 'Cloudflare account ID', 'fan-ownership' ), 'text' ),
+				'cf_api_token'        => array( __( 'Cloudflare API token', 'fan-ownership' ), 'password' ),
+				'cf_stream_key_id'    => array( __( 'Stream signing key ID', 'fan-ownership' ), 'text' ),
+				'cf_stream_key_pem'   => array( __( 'Stream signing key (PEM)', 'fan-ownership' ), 'textarea' ),
+				'fcm_server_key'      => array( __( 'Firebase FCM server key', 'fan-ownership' ), 'password' ),
+				'chat_blocklist'      => array( __( 'Chat word filter (one per line)', 'fan-ownership' ), 'textarea' ),
+				'sync_enabled'        => array( __( 'Power Platform sync enabled (1 = on)', 'fan-ownership' ), 'number' ),
+				'sync_api_key'        => array( __( 'Sync API key (Power Automate sends this as X-Prx3-Api-Key)', 'fan-ownership' ), 'password' ),
+				'sync_webhook_url'    => array( __( 'Outbound webhook URL (Power Automate HTTP trigger)', 'fan-ownership' ), 'text' ),
+				'sync_webhook_secret' => array( __( 'Webhook signing secret (HMAC-SHA256, X-Prx3-Signature)', 'fan-ownership' ), 'password' ),
 			),
 		);
 	}

@@ -110,6 +110,7 @@ function prx3_boot() {
 		'PRX3_Commitments',
 		'PRX3_Players',
 		'PRX3_Agreements',
+		'PRX3_Sync',
 		'PRX3_REST_API',
 		'PRX3_Admin',
 		'PRX3_Dashboard',
