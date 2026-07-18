@@ -174,6 +174,15 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | P88 | Vault security | View-only in-platform (no downloads), per-view watermark with director name + timestamp, full access log visible to the chair |
 | P89 | Director departure | Access revoked instantly on role removal; votes/declarations/contributions preserved permanently; ordinary owner account and shares unaffected |
 
+## Decisions — round 5: generic product, ticketing, brand pack (P90–P93)
+
+| # | Question | Decision |
+|---|----------|----------|
+| P90 | Sport | The club is an **ice hockey** team, but the platform is **generic for any club**: a sport setting with presets (ice hockey, football, rugby, basketball, generic — filterable via `prx3_sports`) drives Match Centre event types, period labels, start-of-play language, and push notification titles |
+| P91 | Ticketing provider | **Fanbase**. Per-owner discount codes reflect share entitlement (rotated when holdings change), shown in account + app, CSV export for upload to Fanbase, and a `prx3_ticketing_entitlement` hook ready for direct API sync |
+| P92 | Brand pack | All brand assets are **uploadable via the Media Library**: badge, inverted badge, social media badge, SVG badge, wordmark, favicon, app icon, email header, and brand font file — plus primary/secondary/third colours, font name, and usage notes. The pack drives site CSS variables + @font-face, favicon, email template, certificates, and the app theme via `/me` |
+| P93 | Prefix | Platform prefix is `prx3` (PROXIMO 3 standard), replacing the earlier `fop` |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

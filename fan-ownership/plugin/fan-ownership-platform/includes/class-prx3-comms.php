@@ -51,10 +51,20 @@ class PRX3_Comms {
 		$unsub   = 'governance' === $category ? '' :
 			'<p style="font-size:12px;color:#777;">' . esc_html__( 'Choose which emails you receive:', 'fan-ownership' )
 			. ' <a href="' . $prefs . '">' . esc_html__( 'preferences', 'fan-ownership' ) . '</a></p>';
+		// Brand pack: uploaded email header wins; else inverted badge beside
+		// the club name on the primary colour; else name alone.
+		$header_image = prx3_brand_asset( 'email_header' );
+		$badge        = prx3_brand_asset( 'badge_inverted' );
+		if ( $header_image ) {
+			$header = '<tr><td style="background:' . esc_attr( $primary ) . ';"><img src="' . esc_url( $header_image ) . '" width="600" style="display:block;width:100%;height:auto;" alt="' . esc_attr( $club ) . '"></td></tr>';
+		} else {
+			$badge_html = $badge ? '<img src="' . esc_url( $badge ) . '" height="36" style="vertical-align:middle;margin-right:12px;" alt="">' : '';
+			$header     = '<tr><td style="background:' . esc_attr( $primary ) . ';color:#fff;padding:20px 28px;font-size:20px;font-weight:700;">' . $badge_html . esc_html( $club ) . '</td></tr>';
+		}
 		return '<!doctype html><html><body style="margin:0;background:#f4f4f6;font-family:system-ui,Arial,sans-serif;">'
 			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px;">'
 			. '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;">'
-			. '<tr><td style="background:' . esc_attr( $primary ) . ';color:#fff;padding:20px 28px;font-size:20px;font-weight:700;">' . esc_html( $club ) . '</td></tr>'
+			. $header
 			. '<tr><td style="padding:28px;font-size:15px;line-height:1.6;color:#1a1a2e;">' . wp_kses_post( nl2br( esc_html( $body ) ) ) . '</td></tr>'
 			. '<tr><td style="padding:0 28px 24px;">' . $unsub . '</td></tr>'
 			. '</table></td></tr></table></body></html>';

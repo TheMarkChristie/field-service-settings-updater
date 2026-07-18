@@ -139,6 +139,7 @@ class PRX3_Shortcodes {
 				<li><?php echo esc_html( sprintf( /* translators: 1: pct, 2: pct. */ __( 'Ticket discounts: %1$d%% matchday, %2$d%% season ticket.', 'fan-ownership' ), $disc['matchday'], $disc['season'] ) ); ?></li>
 				<li><a href="<?php echo esc_url( home_url( '/?prx3_certificate=latest' ) ); ?>"><?php esc_html_e( 'View my certificate', 'fan-ownership' ); ?></a></li>
 				<li><a href="<?php echo esc_url( PRX3_Meetings::member_ics_url( $user_id ) ); ?>"><?php esc_html_e( 'Subscribe to the owners calendar', 'fan-ownership' ); ?></a></li>
+				<li><?php echo esc_html( sprintf( /* translators: %s ticketing provider. */ __( 'Your %s ticket discount code:', 'fan-ownership' ), PRX3_Ticketing::provider() ) ); ?> <code><?php echo esc_html( PRX3_Ticketing::member_code( $user_id ) ); ?></code></li>
 				<li><?php esc_html_e( 'My referral link:', 'fan-ownership' ); ?> <code><?php echo esc_html( add_query_arg( 'ref', $user_id, home_url( '/' ) ) ); ?></code></li>
 			</ul>
 			<?php if ( $shares < prx3_max_shares() && prx3_feature_on( 'checkout' ) ) : ?>

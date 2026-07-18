@@ -25,10 +25,25 @@ class PRX3_Config {
 	public static function defaults() {
 		return array(
 			'club_name'                          => 'Perth Panthers',
-			'club_crest_id'                      => 0,
+			'sport'                              => 'ice_hockey',
+			// Brand pack (uploadable via the Media Library; values are attachment IDs).
+			'brand_badge_id'                     => 0,
+			'brand_badge_inverted_id'            => 0,
+			'brand_badge_social_id'              => 0,
+			'brand_badge_svg_id'                 => 0,
+			'brand_wordmark_id'                  => 0,
+			'brand_favicon_id'                   => 0,
+			'brand_app_icon_id'                  => 0,
+			'brand_email_header_id'              => 0,
+			'brand_font_file_id'                 => 0,
+			'brand_font_name'                    => '',
+			'brand_usage_notes'                  => '',
 			'club_primary'                       => '#1a1a2e',
+			'club_secondary'                     => '#ffffff',
+			'club_tertiary'                      => '#e2b007',
 			'club_accent'                        => '#e2b007',
 			'currency_symbol'                    => '£',
+			'ticketing_provider'                 => 'Fanbase',
 			'share_base_price'                   => 50.0,
 			'share_tier_growth'                  => 0.25,
 			'max_shares'                         => 10,
@@ -43,6 +58,113 @@ class PRX3_Config {
 			'matchday_ticket_discount_per_share' => 5,
 			'season_ticket_discount_per_share'   => 10,
 		);
+	}
+
+	/**
+	 * Sport presets: the club picks a sport and the Match Centre speaks its
+	 * language — event types, period structure, notification titles.
+	 * Filterable (prx3_sports) so any sport can be added without code here.
+	 *
+	 * Event definition: key => [label, scoring(bool), push_title|null].
+	 *
+	 * @return array<string,array>
+	 */
+	public static function sports() {
+		$sports = array(
+			'ice_hockey' => array(
+				'label'   => __( 'Ice hockey', 'fan-ownership' ),
+				'start'   => __( 'Face-off', 'fan-ownership' ),
+				'periods' => array( __( 'Period 1', 'fan-ownership' ), __( 'Period 2', 'fan-ownership' ), __( 'Period 3', 'fan-ownership' ), __( 'Overtime', 'fan-ownership' ), __( 'Shootout', 'fan-ownership' ) ),
+				'events'  => array(
+					'faceoff'          => array( __( 'Face-off', 'fan-ownership' ), false, __( 'Face-off — we are underway', 'fan-ownership' ) ),
+					'goal'             => array( __( 'Goal', 'fan-ownership' ), true, __( 'GOAL!', 'fan-ownership' ) ),
+					'assist'           => array( __( 'Assist', 'fan-ownership' ), false, null ),
+					'penalty'          => array( __( 'Penalty (2 min)', 'fan-ownership' ), false, __( 'Penalty', 'fan-ownership' ) ),
+					'major_penalty'    => array( __( 'Major penalty (5 min)', 'fan-ownership' ), false, __( 'Major penalty', 'fan-ownership' ) ),
+					'powerplay_goal'   => array( __( 'Powerplay goal', 'fan-ownership' ), true, __( 'POWERPLAY GOAL!', 'fan-ownership' ) ),
+					'shorthanded_goal' => array( __( 'Shorthanded goal', 'fan-ownership' ), true, __( 'SHORTHANDED GOAL!', 'fan-ownership' ) ),
+					'period_end'       => array( __( 'End of period', 'fan-ownership' ), false, __( 'End of the period', 'fan-ownership' ) ),
+					'overtime'         => array( __( 'Overtime', 'fan-ownership' ), false, __( 'Overtime!', 'fan-ownership' ) ),
+					'shootout'         => array( __( 'Shootout', 'fan-ownership' ), false, __( 'Shootout!', 'fan-ownership' ) ),
+					'timeout'          => array( __( 'Timeout', 'fan-ownership' ), false, null ),
+					'full_time'        => array( __( 'Final buzzer', 'fan-ownership' ), false, __( 'Final score', 'fan-ownership' ) ),
+					'note'             => array( __( 'Note', 'fan-ownership' ), false, null ),
+				),
+			),
+			'football'   => array(
+				'label'   => __( 'Football', 'fan-ownership' ),
+				'start'   => __( 'Kick-off', 'fan-ownership' ),
+				'periods' => array( __( 'First half', 'fan-ownership' ), __( 'Second half', 'fan-ownership' ), __( 'Extra time', 'fan-ownership' ), __( 'Penalties', 'fan-ownership' ) ),
+				'events'  => array(
+					'kickoff'     => array( __( 'Kick-off', 'fan-ownership' ), false, __( 'Kick-off', 'fan-ownership' ) ),
+					'goal'        => array( __( 'Goal', 'fan-ownership' ), true, __( 'GOAL!', 'fan-ownership' ) ),
+					'own_goal'    => array( __( 'Own goal', 'fan-ownership' ), true, __( 'Goal (OG)', 'fan-ownership' ) ),
+					'card_yellow' => array( __( 'Yellow card', 'fan-ownership' ), false, null ),
+					'card_red'    => array( __( 'Red card', 'fan-ownership' ), false, __( 'Red card', 'fan-ownership' ) ),
+					'sub'         => array( __( 'Substitution', 'fan-ownership' ), false, null ),
+					'half_time'   => array( __( 'Half-time', 'fan-ownership' ), false, __( 'Half-time', 'fan-ownership' ) ),
+					'full_time'   => array( __( 'Full-time', 'fan-ownership' ), false, __( 'Full-time', 'fan-ownership' ) ),
+					'note'        => array( __( 'Note', 'fan-ownership' ), false, null ),
+				),
+			),
+			'rugby'      => array(
+				'label'   => __( 'Rugby', 'fan-ownership' ),
+				'start'   => __( 'Kick-off', 'fan-ownership' ),
+				'periods' => array( __( 'First half', 'fan-ownership' ), __( 'Second half', 'fan-ownership' ) ),
+				'events'  => array(
+					'kickoff'      => array( __( 'Kick-off', 'fan-ownership' ), false, __( 'Kick-off', 'fan-ownership' ) ),
+					'try'          => array( __( 'Try', 'fan-ownership' ), true, __( 'TRY!', 'fan-ownership' ) ),
+					'conversion'   => array( __( 'Conversion', 'fan-ownership' ), true, null ),
+					'penalty_kick' => array( __( 'Penalty kick', 'fan-ownership' ), true, null ),
+					'drop_goal'    => array( __( 'Drop goal', 'fan-ownership' ), true, __( 'Drop goal!', 'fan-ownership' ) ),
+					'card_yellow'  => array( __( 'Yellow card', 'fan-ownership' ), false, null ),
+					'card_red'     => array( __( 'Red card', 'fan-ownership' ), false, __( 'Red card', 'fan-ownership' ) ),
+					'half_time'    => array( __( 'Half-time', 'fan-ownership' ), false, __( 'Half-time', 'fan-ownership' ) ),
+					'full_time'    => array( __( 'Full-time', 'fan-ownership' ), false, __( 'Full-time', 'fan-ownership' ) ),
+					'note'         => array( __( 'Note', 'fan-ownership' ), false, null ),
+				),
+			),
+			'basketball' => array(
+				'label'   => __( 'Basketball', 'fan-ownership' ),
+				'start'   => __( 'Tip-off', 'fan-ownership' ),
+				'periods' => array( __( 'Q1', 'fan-ownership' ), __( 'Q2', 'fan-ownership' ), __( 'Q3', 'fan-ownership' ), __( 'Q4', 'fan-ownership' ), __( 'Overtime', 'fan-ownership' ) ),
+				'events'  => array(
+					'tipoff'     => array( __( 'Tip-off', 'fan-ownership' ), false, __( 'Tip-off', 'fan-ownership' ) ),
+					'score'      => array( __( 'Score update', 'fan-ownership' ), true, null ),
+					'three'      => array( __( 'Three-pointer', 'fan-ownership' ), true, null ),
+					'foul'       => array( __( 'Foul', 'fan-ownership' ), false, null ),
+					'timeout'    => array( __( 'Timeout', 'fan-ownership' ), false, null ),
+					'period_end' => array( __( 'End of quarter', 'fan-ownership' ), false, null ),
+					'full_time'  => array( __( 'Final buzzer', 'fan-ownership' ), false, __( 'Final score', 'fan-ownership' ) ),
+					'note'       => array( __( 'Note', 'fan-ownership' ), false, null ),
+				),
+			),
+			'generic'    => array(
+				'label'   => __( 'Other sport (generic)', 'fan-ownership' ),
+				'start'   => __( 'Start', 'fan-ownership' ),
+				'periods' => array( __( 'Period 1', 'fan-ownership' ), __( 'Period 2', 'fan-ownership' ) ),
+				'events'  => array(
+					'start'      => array( __( 'Start', 'fan-ownership' ), false, __( 'We are underway', 'fan-ownership' ) ),
+					'score'      => array( __( 'Score', 'fan-ownership' ), true, __( 'Score!', 'fan-ownership' ) ),
+					'incident'   => array( __( 'Incident', 'fan-ownership' ), false, null ),
+					'period_end' => array( __( 'End of period', 'fan-ownership' ), false, null ),
+					'full_time'  => array( __( 'Full time', 'fan-ownership' ), false, __( 'Final score', 'fan-ownership' ) ),
+					'note'       => array( __( 'Note', 'fan-ownership' ), false, null ),
+				),
+			),
+		);
+		return apply_filters( 'prx3_sports', $sports );
+	}
+
+	/**
+	 * The active sport's preset.
+	 *
+	 * @return array
+	 */
+	public static function sport() {
+		$sports = self::sports();
+		$key    = prx3_setting( 'sport', 'ice_hockey' );
+		return isset( $sports[ $key ] ) ? $sports[ $key ] : $sports['generic'];
 	}
 
 	/**

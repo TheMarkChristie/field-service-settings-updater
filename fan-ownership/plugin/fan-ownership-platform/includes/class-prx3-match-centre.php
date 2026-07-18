@@ -48,9 +48,12 @@ class PRX3_Match_Centre {
 		if ( ! self::is_reporter( $match_id, $user_id ) ) {
 			return new WP_Error( 'prx3_reporter', __( 'You are not an approved reporter for this match.', 'fan-ownership' ) );
 		}
-		$allowed = array( 'goal', 'own_goal', 'card_yellow', 'card_red', 'sub', 'kickoff', 'half_time', 'full_time', 'note' );
-		if ( ! in_array( $event_type, $allowed, true ) ) {
-			return new WP_Error( 'prx3_event', __( 'Unknown event type.', 'fan-ownership' ) );
+		// Event vocabulary comes from the configured sport preset (generic
+		// multi-sport support): ice hockey gets penalties and overtime,
+		// football gets cards and half-time, and prx3_sports adds any other.
+		$sport = PRX3_Config::sport();
+		if ( ! isset( $sport['events'][ $event_type ] ) ) {
+			return new WP_Error( 'prx3_event', __( 'Unknown event type for this sport.', 'fan-ownership' ) );
 		}
 		$client_key = substr( preg_replace( '/[^a-zA-Z0-9\-]/', '', (string) $client_key ), 0, 64 );
 		if ( ! $client_key ) {
@@ -73,21 +76,14 @@ class PRX3_Match_Centre {
 			// Unique (match_id, client_key) hit: the retry already landed. Success, no duplicate.
 			return array( 'duplicate' => true );
 		}
-		if ( in_array( $event_type, array( 'goal', 'own_goal' ), true ) && isset( $detail['score'] ) ) {
+		list( , $scoring, $push_title ) = array_pad( $sport['events'][ $event_type ], 3, null );
+		if ( $scoring && isset( $detail['score'] ) ) {
 			update_post_meta( $match_id, '_prx3_score', sanitize_text_field( (string) $detail['score'] ) );
 		}
 		// Push within seconds (FO-307 AC2), match category, deep link to the match.
-		$titles = array(
-			'goal'      => __( 'GOAL!', 'fan-ownership' ),
-			'own_goal'  => __( 'Goal (OG)', 'fan-ownership' ),
-			'card_red'  => __( 'Red card', 'fan-ownership' ),
-			'kickoff'   => __( 'Kick-off', 'fan-ownership' ),
-			'half_time' => __( 'Half-time', 'fan-ownership' ),
-			'full_time' => __( 'Full-time', 'fan-ownership' ),
-		);
-		if ( isset( $titles[ $event_type ] ) ) {
+		if ( $push_title ) {
 			$body = isset( $detail['text'] ) ? (string) $detail['text'] : get_the_title( $match_id );
-			PRX3_Comms::push( array(), $titles[ $event_type ], $body, 'match', get_permalink( $match_id ) );
+			PRX3_Comms::push( array(), $push_title, $body, 'match', get_permalink( $match_id ) );
 		}
 		return array( 'duplicate' => false );
 	}
@@ -157,7 +153,7 @@ class PRX3_Match_Centre {
 			function ( $post ) {
 				wp_nonce_field( 'prx3_match_meta', 'prx3_match_nonce' );
 				$kickoff = get_post_meta( $post->ID, '_prx3_kickoff', true );
-				echo '<p><label>' . esc_html__( 'Kick-off', 'fan-ownership' ) . '</label> <input type="datetime-local" name="prx3_kickoff" value="' . esc_attr( $kickoff ? gmdate( 'Y-m-d\TH:i', strtotime( $kickoff ) ) : '' ) . '"></p>';
+				echo '<p><label>' . esc_html( PRX3_Config::sport()['start'] ) . '</label> <input type="datetime-local" name="prx3_kickoff" value="' . esc_attr( $kickoff ? gmdate( 'Y-m-d\TH:i', strtotime( $kickoff ) ) : '' ) . '"></p>';
 				echo '<p><label>' . esc_html__( 'Opponent', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="prx3_opponent" value="' . esc_attr( get_post_meta( $post->ID, '_prx3_opponent', true ) ) . '"></p>';
 				echo '<p><label>' . esc_html__( 'Venue', 'fan-ownership' ) . '</label> <select name="prx3_venue"><option value="home" ' . selected( get_post_meta( $post->ID, '_prx3_venue', true ), 'home', false ) . '>' . esc_html__( 'Home (video stream)', 'fan-ownership' ) . '</option><option value="away" ' . selected( get_post_meta( $post->ID, '_prx3_venue', true ), 'away', false ) . '>' . esc_html__( 'Away (audio commentary)', 'fan-ownership' ) . '</option></select></p>';
 				echo '<p><label>' . esc_html__( 'Cloudflare Stream live input UID (home video)', 'fan-ownership' ) . '</label> <input type="text" class="widefat" name="prx3_stream_uid" value="' . esc_attr( get_post_meta( $post->ID, '_prx3_stream_uid', true ) ) . '"></p>';

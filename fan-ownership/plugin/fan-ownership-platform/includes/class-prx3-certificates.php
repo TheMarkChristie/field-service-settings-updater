@@ -138,6 +138,7 @@ class PRX3_Certificates {
 			.no{font-size:1.1rem;} .name{font-size:1.9rem;margin:1.5rem 0 .5rem;} .shares{font-size:1.2rem;}
 			.verify{margin-top:2.5rem;font-size:.85rem;color:#444;} @media print{.noprint{display:none}}
 			</style></head><body><div class="frame">'
+			. ( prx3_brand_asset( 'badge' ) ? '<img src="' . esc_url( prx3_brand_asset( 'badge' ) ) . '" alt="" style="height:90px;margin-bottom:1rem;">' : '' )
 			. '<h1>' . esc_html( $cert['club_name'] ) . '</h1>'
 			. '<p class="no">' . esc_html__( 'Certificate of Fan Ownership', 'fan-ownership' ) . ' — ' . esc_html__( 'Owner', 'fan-ownership' ) . ' #' . (int) $cert['owner_number'] . '</p>'
 			. '<p class="name">' . esc_html( $user->display_name ) . '</p>'

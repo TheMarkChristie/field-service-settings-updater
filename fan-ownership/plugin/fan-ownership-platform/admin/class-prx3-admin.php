@@ -31,9 +31,29 @@ class PRX3_Admin {
 		return array(
 			'club'         => array(
 				'club_name'       => array( __( 'Club name', 'fan-ownership' ), 'text' ),
-				'club_primary'    => array( __( 'Primary colour', 'fan-ownership' ), 'text' ),
-				'club_accent'     => array( __( 'Accent colour', 'fan-ownership' ), 'text' ),
+				'sport'           => array( __( 'Sport (drives Match Centre events and language)', 'fan-ownership' ), 'sport' ),
 				'currency_symbol' => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
+			),
+			'brand pack'   => array(
+				'club_primary'            => array( __( 'Primary colour (hex)', 'fan-ownership' ), 'text' ),
+				'club_secondary'          => array( __( 'Secondary colour (hex)', 'fan-ownership' ), 'text' ),
+				'club_tertiary'           => array( __( 'Third colour (hex)', 'fan-ownership' ), 'text' ),
+				'brand_font_name'         => array( __( 'Brand font name (as used in CSS)', 'fan-ownership' ), 'text' ),
+				'brand_font_file_id'      => array( __( 'Brand font file (woff2/ttf)', 'fan-ownership' ), 'media' ),
+				'brand_badge_id'          => array( __( 'Badge / crest', 'fan-ownership' ), 'media' ),
+				'brand_badge_inverted_id' => array( __( 'Inverted badge (for dark backgrounds)', 'fan-ownership' ), 'media' ),
+				'brand_badge_social_id'   => array( __( 'Social media badge (square)', 'fan-ownership' ), 'media' ),
+				'brand_badge_svg_id'      => array( __( 'SVG badge (vector master)', 'fan-ownership' ), 'media' ),
+				'brand_wordmark_id'       => array( __( 'Wordmark / logotype', 'fan-ownership' ), 'media' ),
+				'brand_favicon_id'        => array( __( 'Favicon', 'fan-ownership' ), 'media' ),
+				'brand_app_icon_id'       => array( __( 'App icon (1024px square)', 'fan-ownership' ), 'media' ),
+				'brand_email_header_id'   => array( __( 'Email header image', 'fan-ownership' ), 'media' ),
+				'brand_usage_notes'       => array( __( 'Brand usage notes (clear space, minimum sizes, do/do-not)', 'fan-ownership' ), 'textarea' ),
+			),
+			'ticketing'    => array(
+				'ticketing_provider'                 => array( __( 'Ticketing provider name', 'fan-ownership' ), 'text' ),
+				'matchday_ticket_discount_per_share' => array( __( 'Matchday discount % per share', 'fan-ownership' ), 'number' ),
+				'season_ticket_discount_per_share'   => array( __( 'Season ticket discount % per share', 'fan-ownership' ), 'number' ),
 			),
 			'shares'       => array(
 				'share_base_price'  => array( __( 'Share 1 price', 'fan-ownership' ), 'number' ),
@@ -93,8 +113,26 @@ class PRX3_Admin {
 				echo '<tr><th scope="row"><label for="prx3_' . esc_attr( $key ) . '">' . esc_html( $def[0] ) . '</label></th><td>';
 				if ( 'textarea' === $def[1] ) {
 					echo '<textarea class="large-text" rows="3" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">' . esc_textarea( (string) $value ) . '</textarea>';
+				} elseif ( 'sport' === $def[1] ) {
+					echo '<select id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">';
+					foreach ( PRX3_Config::sports() as $sport_key => $sport ) {
+						echo '<option value="' . esc_attr( $sport_key ) . '" ' . selected( $value, $sport_key, false ) . '>' . esc_html( $sport['label'] ) . '</option>';
+					}
+					echo '</select>';
+				} elseif ( 'media' === $def[1] ) {
+					$attachment_id = (int) $value;
+					$preview       = $attachment_id ? wp_get_attachment_image( $attachment_id, array( 60, 60 ) ) : '';
+					echo '<div class="prx3-media-field">';
+					echo '<input type="hidden" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $attachment_id ? $attachment_id : '' ) . '">';
+					echo '<span class="prx3-media-preview">' . wp_kses_post( $preview ) . '</span> ';
+					echo '<button type="button" class="button prx3-media-pick" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Upload / choose', 'fan-ownership' ) . '</button> ';
+					echo '<button type="button" class="button prx3-media-clear" data-target="prx3_' . esc_attr( $key ) . '">' . esc_html__( 'Clear', 'fan-ownership' ) . '</button>';
+					if ( $attachment_id && ! $preview ) {
+						echo ' <a href="' . esc_url( (string) wp_get_attachment_url( $attachment_id ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'View file', 'fan-ownership' ) . '</a>';
+					}
+					echo '</div>';
 				} else {
-					$type = 'password' === $def[1] ? 'password' : ( 'number' === $def[1] ? 'text' : 'text' );
+					$type = 'password' === $def[1] ? 'password' : 'text';
 					echo '<input type="' . esc_attr( $type ) . '" class="regular-text" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( (string) $value ) . '">';
 				}
 				echo '</td></tr>';
@@ -104,8 +142,46 @@ class PRX3_Admin {
 		echo '<p><button class="button button-primary">' . esc_html__( 'Save settings', 'fan-ownership' ) . '</button></p></form>';
 
 		echo '<h2>' . esc_html__( 'Share register', 'fan-ownership' ) . '</h2>';
-		echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_register' ), 'prx3_export_register' ) ) . '">' . esc_html__( 'Export register of members (CSV)', 'fan-ownership' ) . '</a></p>';
+		echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_register' ), 'prx3_export_register' ) ) . '">' . esc_html__( 'Export register of members (CSV)', 'fan-ownership' ) . '</a> ';
+		echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_ticketing' ), 'prx3_export_ticketing' ) ) . '">' . esc_html(
+			sprintf(
+				/* translators: %s ticketing provider. */
+				__( 'Export %s discount codes (CSV)', 'fan-ownership' ),
+				PRX3_Ticketing::provider()
+			)
+		) . '</a></p>';
 		echo '</div>';
+
+		// Media Library pickers for the brand pack fields.
+		wp_enqueue_media();
+		wp_add_inline_script(
+			'media-editor',
+			"
+			document.addEventListener('click', function (event) {
+				var pick = event.target.closest('.prx3-media-pick');
+				var clear = event.target.closest('.prx3-media-clear');
+				if (clear) {
+					var target = document.getElementById(clear.getAttribute('data-target'));
+					if (target) { target.value = ''; clear.closest('.prx3-media-field').querySelector('.prx3-media-preview').innerHTML = ''; }
+					return;
+				}
+				if (!pick) { return; }
+				var frame = wp.media({ title: 'Brand asset', multiple: false });
+				frame.on('select', function () {
+					var attachment = frame.state().get('selection').first().toJSON();
+					var target = document.getElementById(pick.getAttribute('data-target'));
+					if (target) { target.value = attachment.id; }
+					var preview = pick.closest('.prx3-media-field').querySelector('.prx3-media-preview');
+					if (preview && attachment.sizes && attachment.sizes.thumbnail) {
+						preview.innerHTML = '<img src=\"' + attachment.sizes.thumbnail.url + '\" style=\"max-height:60px\" alt=\"\">';
+					} else if (preview) {
+						preview.textContent = attachment.filename;
+					}
+				});
+				frame.open();
+			});
+		"
+		);
 	}
 
 	public static function save() {
@@ -119,7 +195,16 @@ class PRX3_Admin {
 					continue;
 				}
 				$raw = wp_unslash( $_POST[ $key ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				prx3_update_setting( $key, 'textarea' === $def[1] ? sanitize_textarea_field( $raw ) : sanitize_text_field( $raw ) );
+				if ( 'media' === $def[1] ) {
+					prx3_update_setting( $key, absint( $raw ) );
+				} elseif ( 'sport' === $def[1] ) {
+					$sport = sanitize_key( $raw );
+					prx3_update_setting( $key, array_key_exists( $sport, PRX3_Config::sports() ) ? $sport : 'generic' );
+				} elseif ( 'textarea' === $def[1] ) {
+					prx3_update_setting( $key, sanitize_textarea_field( $raw ) );
+				} else {
+					prx3_update_setting( $key, sanitize_text_field( $raw ) );
+				}
 			}
 		}
 		PRX3_Audit::log( 'settings_saved', 'Platform settings updated' );

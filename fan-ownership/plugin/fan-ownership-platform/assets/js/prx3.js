@@ -117,9 +117,9 @@
 
 		function renderMatch( data ) {
 			var states = {
-				countdown: 'Kick-off ' + ( data.kickoff || '' ),
+				countdown: ( data.start_label || 'Start' ) + ' ' + ( data.kickoff || '' ),
 				live: 'LIVE',
-				delayed: 'Kick-off due — the stream is on its way. If this persists, check the status page.',
+				delayed: ( data.start_label || 'Start' ) + ' due — the stream is on its way. If this persists, check the status page.',
 				ended: 'Full-time' + ( data.score ? ' — ' + data.score : '' )
 			};
 			stateEl.textContent = ( states[ data.state ] || '' ) + ( data.score && data.state === 'live' ? ' · ' + data.score : '' );

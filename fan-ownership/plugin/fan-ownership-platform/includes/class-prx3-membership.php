@@ -98,7 +98,7 @@ class PRX3_Membership {
 		$link = add_query_arg(
 			array(
 				'prx3_verify' => $user_id,
-				'token'      => $token,
+				'token'       => $token,
 			),
 			home_url( '/' )
 		);

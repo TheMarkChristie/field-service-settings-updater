@@ -37,7 +37,7 @@ class PRX3_Roles {
 			'fan_owner',
 			__( 'Fan Owner', 'fan-ownership' ),
 			array(
-				'read'       => true,
+				'read'        => true,
 				'prx3_member' => true,
 			)
 		);
@@ -47,8 +47,8 @@ class PRX3_Roles {
 			__( 'Content Editor', 'fan-ownership' ),
 			array(
 				'read'                 => true,
-				'prx3_member'           => true,
-				'prx3_edit_content'     => true,
+				'prx3_member'          => true,
+				'prx3_edit_content'    => true,
 				'upload_files'         => true,
 				'edit_posts'           => true,
 				'edit_others_posts'    => true,
@@ -63,9 +63,9 @@ class PRX3_Roles {
 			__( 'Governance Officer', 'fan-ownership' ),
 			array(
 				'read'                 => true,
-				'prx3_member'           => true,
-				'prx3_governance'       => true,
-				'prx3_view_tally'       => true,
+				'prx3_member'          => true,
+				'prx3_governance'      => true,
+				'prx3_view_tally'      => true,
 				'edit_posts'           => true,
 				'publish_posts'        => true,
 				'edit_published_posts' => true,
@@ -76,7 +76,7 @@ class PRX3_Roles {
 			'prx3_moderator',
 			__( 'Moderator', 'fan-ownership' ),
 			array(
-				'read'         => true,
+				'read'          => true,
 				'prx3_member'   => true,
 				'prx3_moderate' => true,
 			)
@@ -86,7 +86,7 @@ class PRX3_Roles {
 			'prx3_board_member',
 			__( 'Board Member', 'fan-ownership' ),
 			array(
-				'read'           => true,
+				'read'            => true,
 				'prx3_member'     => true,
 				'prx3_board'      => true,
 				'prx3_view_tally' => true,
@@ -99,7 +99,7 @@ class PRX3_Roles {
 			'prx3_owner_admin',
 			__( 'Owner-Admin', 'fan-ownership' ),
 			array(
-				'read'               => true,
+				'read'                => true,
 				'prx3_member'         => true,
 				'prx3_admin'          => true,
 				'prx3_governance'     => true,
@@ -107,9 +107,9 @@ class PRX3_Roles {
 				'prx3_moderate'       => true,
 				'prx3_view_tally'     => true,
 				'prx3_second_approve' => true,
-				'list_users'         => true,
-				'edit_users'         => true,
-				'upload_files'       => true,
+				'list_users'          => true,
+				'edit_users'          => true,
+				'upload_files'        => true,
 			)
 		);
 

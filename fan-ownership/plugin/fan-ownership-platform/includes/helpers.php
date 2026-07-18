@@ -41,6 +41,47 @@ function prx3_club_name() {
 }
 
 /**
+ * A brand-pack asset URL by key (badge, badge_inverted, badge_social,
+ * badge_svg, wordmark, favicon, app_icon, email_header, font_file).
+ * Assets are uploaded through the Media Library; settings store the
+ * attachment IDs.
+ *
+ * @param string $key Asset key without the brand_/_id wrapping.
+ * @return string URL, or '' when not uploaded.
+ */
+function prx3_brand_asset( $key ) {
+	$attachment_id = (int) prx3_setting( 'brand_' . sanitize_key( $key ) . '_id', 0 );
+	if ( ! $attachment_id ) {
+		return '';
+	}
+	$url = wp_get_attachment_url( $attachment_id );
+	return $url ? $url : '';
+}
+
+/**
+ * The full brand pack for consumers (API /me, emails, certificates).
+ *
+ * @return array<string,mixed>
+ */
+function prx3_brand_pack() {
+	return array(
+		'badge'          => prx3_brand_asset( 'badge' ),
+		'badge_inverted' => prx3_brand_asset( 'badge_inverted' ),
+		'badge_social'   => prx3_brand_asset( 'badge_social' ),
+		'badge_svg'      => prx3_brand_asset( 'badge_svg' ),
+		'wordmark'       => prx3_brand_asset( 'wordmark' ),
+		'favicon'        => prx3_brand_asset( 'favicon' ),
+		'app_icon'       => prx3_brand_asset( 'app_icon' ),
+		'email_header'   => prx3_brand_asset( 'email_header' ),
+		'font_file'      => prx3_brand_asset( 'font_file' ),
+		'font_name'      => prx3_setting( 'brand_font_name', '' ),
+		'primary'        => prx3_setting( 'club_primary', '#1a1a2e' ),
+		'secondary'      => prx3_setting( 'club_secondary', '#ffffff' ),
+		'tertiary'       => prx3_setting( 'club_tertiary', '#e2b007' ),
+	);
+}
+
+/**
  * Is a feature enabled? Kill switches per FO-103 / T74.
  *
  * @param string $feature One of: registration, checkout, voting, forum, chat, streams, meetings, ideas, questions.

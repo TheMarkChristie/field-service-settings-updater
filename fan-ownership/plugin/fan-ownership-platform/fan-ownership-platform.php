@@ -55,6 +55,7 @@ require_once PRX3_DIR . 'includes/class-prx3-board.php';
 require_once PRX3_DIR . 'includes/class-prx3-match-centre.php';
 require_once PRX3_DIR . 'includes/class-prx3-chat.php';
 require_once PRX3_DIR . 'includes/class-prx3-media.php';
+require_once PRX3_DIR . 'includes/class-prx3-ticketing.php';
 require_once PRX3_DIR . 'includes/api/class-prx3-jwt.php';
 require_once PRX3_DIR . 'includes/api/class-prx3-rest-api.php';
 
@@ -98,6 +99,7 @@ function prx3_boot() {
 		'PRX3_Match_Centre',
 		'PRX3_Chat',
 		'PRX3_Media',
+		'PRX3_Ticketing',
 		'PRX3_REST_API',
 		'PRX3_Admin',
 		'PRX3_Dashboard',
@@ -131,6 +133,33 @@ function prx3_assets() {
 	);
 }
 add_action( 'wp_enqueue_scripts', 'prx3_assets' );
+
+/**
+ * Brand pack on the front end: CSS custom properties, @font-face for an
+ * uploaded brand font, and the uploaded favicon (T46 — all configuration).
+ */
+function prx3_brand_head() {
+	$brand = prx3_brand_pack();
+	$css   = sprintf(
+		':root{--prx3-primary:%s;--prx3-secondary:%s;--prx3-tertiary:%s;--prx3-accent:%s;}',
+		sanitize_hex_color( $brand['primary'] ) ? $brand['primary'] : '#1a1a2e',
+		sanitize_hex_color( $brand['secondary'] ) ? $brand['secondary'] : '#ffffff',
+		sanitize_hex_color( $brand['tertiary'] ) ? $brand['tertiary'] : '#e2b007',
+		sanitize_hex_color( $brand['tertiary'] ) ? $brand['tertiary'] : '#e2b007'
+	);
+	if ( $brand['font_file'] && $brand['font_name'] ) {
+		$css .= sprintf(
+			'@font-face{font-family:"%s";src:url("%s");font-display:swap;}',
+			esc_attr( $brand['font_name'] ),
+			esc_url( $brand['font_file'] )
+		);
+	}
+	echo '<style id="prx3-brand">' . $css . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from sanitised values above.
+	if ( $brand['favicon'] ) {
+		echo '<link rel="icon" href="' . esc_url( $brand['favicon'] ) . '">';
+	}
+}
+add_action( 'wp_head', 'prx3_brand_head', 5 );
 
 register_activation_hook( __FILE__, 'prx3_activate' );
 register_deactivation_hook( __FILE__, 'prx3_deactivate' );

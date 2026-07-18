@@ -104,10 +104,16 @@ class PRX3_REST_API {
 						'is_owner'         => prx3_is_owner( $user->ID ),
 						'badges'           => PRX3_Badges::member_badges( $user->ID ),
 						'discounts'        => PRX3_Shares::ticket_discounts( $user->ID ),
-						'club'             => array(
-							'name'    => prx3_club_name(),
-							'primary' => prx3_setting( 'club_primary', '#1a1a2e' ),
-							'accent'  => prx3_setting( 'club_accent', '#e2b007' ),
+						'club'             => array_merge(
+							array(
+								'name'  => prx3_club_name(),
+								'sport' => prx3_setting( 'sport', 'ice_hockey' ),
+							),
+							prx3_brand_pack() // Full uploadable brand pack: badges, wordmark, colours, font (app themes itself from this).
+						),
+						'ticketing'        => array(
+							'provider' => PRX3_Ticketing::provider(),
+							'code'     => PRX3_Ticketing::member_code( $user->ID ),
 						),
 						'checkout_url'     => prx3_setting( 'checkout_page_id' ) ? get_permalink( (int) prx3_setting( 'checkout_page_id' ) ) : home_url(), // Apps link out (T33).
 						'calendar_url'     => PRX3_Meetings::member_ics_url( $user->ID ),
@@ -339,16 +345,18 @@ class PRX3_REST_API {
 					prx3_touch_activity();
 					$uid = get_post_meta( $id, '_prx3_stream_uid', true );
 					return array(
-						'id'       => $id,
-						'title'    => get_the_title( $id ),
-						'state'    => PRX3_Match_Centre::live_state( $id ),
-						'venue'    => get_post_meta( $id, '_prx3_venue', true ),
-						'score'    => get_post_meta( $id, '_prx3_score', true ),
-						'kickoff'  => get_post_meta( $id, '_prx3_kickoff', true ),
-						'playback' => $uid && prx3_feature_on( 'streams' ) ? PRX3_Media::playback_token( $uid, get_current_user_id() ) : null,
-						'audio'    => get_post_meta( $id, '_prx3_audio_url', true ),
-						'ad_slots' => (array) get_post_meta( $id, '_prx3_ad_slots', true ),
-						'timeline' => PRX3_Match_Centre::timeline( $id ),
+						'id'          => $id,
+						'title'       => get_the_title( $id ),
+						'state'       => PRX3_Match_Centre::live_state( $id ),
+						'start_label' => PRX3_Config::sport()['start'],
+						'event_types' => array_map( fn( $e ) => $e[0], PRX3_Config::sport()['events'] ),
+						'venue'       => get_post_meta( $id, '_prx3_venue', true ),
+						'score'       => get_post_meta( $id, '_prx3_score', true ),
+						'kickoff'     => get_post_meta( $id, '_prx3_kickoff', true ),
+						'playback'    => $uid && prx3_feature_on( 'streams' ) ? PRX3_Media::playback_token( $uid, get_current_user_id() ) : null,
+						'audio'       => get_post_meta( $id, '_prx3_audio_url', true ),
+						'ad_slots'    => (array) get_post_meta( $id, '_prx3_ad_slots', true ),
+						'timeline'    => PRX3_Match_Centre::timeline( $id ),
 					);
 				},
 			)
