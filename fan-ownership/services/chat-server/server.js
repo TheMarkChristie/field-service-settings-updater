@@ -4,7 +4,7 @@
  *
  * Auth: clients connect with ?token=<JWT access token issued by the
  * plugin>; the relay validates it against WordPress by calling
- * /wp-json/fop/v1/me. Messages are persisted through the same plugin API
+ * /wp-json/prx3/v1/me. Messages are persisted through the same plugin API
  * (single source of truth: moderation, word filter, retention all apply),
  * so this relay only fans out realtime events.
  *
@@ -22,7 +22,7 @@ const PORT = Number(process.env.PORT || 8787);
 const rooms = new Map();
 
 async function verifyMember(token) {
-  const response = await fetch(`${WP_BASE}/wp-json/fop/v1/me`, {
+  const response = await fetch(`${WP_BASE}/wp-json/prx3/v1/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) return null;
@@ -30,7 +30,7 @@ async function verifyMember(token) {
 }
 
 async function persistMessage(token, room, body) {
-  const response = await fetch(`${WP_BASE}/wp-json/fop/v1/chat/${room}`, {
+  const response = await fetch(`${WP_BASE}/wp-json/prx3/v1/chat/${room}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ body }),

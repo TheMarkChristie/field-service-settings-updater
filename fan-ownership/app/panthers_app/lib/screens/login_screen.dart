@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../api/fop_api.dart';
+import '../api/prx3_api.dart';
 
 /// FO-301: email/password sign-in. Apple/Google sign-in buttons join here
 /// once the Firebase project + Sign in with Apple entitlements exist.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.api, required this.onSignedIn});
-  final FopApi api;
+  final Prx3Api api;
   final Future<void> Function() onSignedIn;
 
   @override
@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await widget.api.login(_username.text.trim(), _password.text);
       await widget.onSignedIn();
-    } on FopApiException catch (e) {
+    } on Prx3ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {
       if (mounted) setState(() => _busy = false);

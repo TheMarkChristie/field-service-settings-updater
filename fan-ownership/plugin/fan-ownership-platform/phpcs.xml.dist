@@ -15,14 +15,14 @@
 	<rule ref="WordPress.WP.Capabilities">
 		<properties>
 			<property name="custom_capabilities" type="array">
-				<element value="fop_member"/>
-				<element value="fop_admin"/>
-				<element value="fop_edit_content"/>
-				<element value="fop_governance"/>
-				<element value="fop_moderate"/>
-				<element value="fop_board"/>
-				<element value="fop_view_tally"/>
-				<element value="fop_second_approve"/>
+				<element value="prx3_member"/>
+				<element value="prx3_admin"/>
+				<element value="prx3_edit_content"/>
+				<element value="prx3_governance"/>
+				<element value="prx3_moderate"/>
+				<element value="prx3_board"/>
+				<element value="prx3_view_tally"/>
+				<element value="prx3_second_approve"/>
 			</property>
 		</properties>
 	</rule>
@@ -38,13 +38,9 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="fop"/>
-				<element value="FOP"/>
+				<element value="prx3"/>
+				<element value="PRX3"/>
 			</property>
 		</properties>
-		<!-- Documented deviation: "fop" is 3 characters. The 4+ character
-		     rule exists for wordpress.org's shared plugin namespace; this
-		     plugin is bespoke to the club and not distributed there. -->
-		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed"/>
 	</rule>
 </ruleset>

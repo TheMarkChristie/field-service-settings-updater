@@ -14,8 +14,8 @@ defined( 'ABSPATH' ) || exit;
  * @param mixed  $default_value Fallback when unset.
  * @return mixed
  */
-function fop_setting( $key, $default_value = '' ) {
-	$settings = get_option( 'fop_settings', array() );
+function prx3_setting( $key, $default_value = '' ) {
+	$settings = get_option( 'prx3_settings', array() );
 	return isset( $settings[ $key ] ) && '' !== $settings[ $key ] ? $settings[ $key ] : $default_value;
 }
 
@@ -25,10 +25,10 @@ function fop_setting( $key, $default_value = '' ) {
  * @param string $key   Setting key.
  * @param mixed  $value Value.
  */
-function fop_update_setting( $key, $value ) {
-	$settings         = get_option( 'fop_settings', array() );
+function prx3_update_setting( $key, $value ) {
+	$settings         = get_option( 'prx3_settings', array() );
 	$settings[ $key ] = $value;
-	update_option( 'fop_settings', $settings );
+	update_option( 'prx3_settings', $settings );
 }
 
 /**
@@ -36,8 +36,8 @@ function fop_update_setting( $key, $value ) {
  *
  * @return string
  */
-function fop_club_name() {
-	return fop_setting( 'club_name', 'Perth Panthers' );
+function prx3_club_name() {
+	return prx3_setting( 'club_name', 'Perth Panthers' );
 }
 
 /**
@@ -46,8 +46,8 @@ function fop_club_name() {
  * @param string $feature One of: registration, checkout, voting, forum, chat, streams, meetings, ideas, questions.
  * @return bool
  */
-function fop_feature_on( $feature ) {
-	$switches = get_option( 'fop_kill_switches', array() );
+function prx3_feature_on( $feature ) {
+	$switches = get_option( 'prx3_kill_switches', array() );
 	return empty( $switches[ $feature ]['off'] );
 }
 
@@ -57,9 +57,9 @@ function fop_feature_on( $feature ) {
  * @param int|null $user_id User ID, default current.
  * @return bool
  */
-function fop_is_owner( $user_id = null ) {
+function prx3_is_owner( $user_id = null ) {
 	$user_id = $user_id ? $user_id : get_current_user_id();
-	return $user_id && ( user_can( $user_id, 'fop_member' ) || user_can( $user_id, 'manage_options' ) );
+	return $user_id && ( user_can( $user_id, 'prx3_member' ) || user_can( $user_id, 'manage_options' ) );
 }
 
 /**
@@ -68,12 +68,12 @@ function fop_is_owner( $user_id = null ) {
  * @param int|null $user_id User ID, default current.
  * @return int
  */
-function fop_shares( $user_id = null ) {
+function prx3_shares( $user_id = null ) {
 	$user_id = $user_id ? $user_id : get_current_user_id();
 	if ( ! $user_id ) {
 		return 0;
 	}
-	return max( 0, min( fop_max_shares(), (int) get_user_meta( $user_id, 'fop_shares', true ) ) );
+	return max( 0, min( prx3_max_shares(), (int) get_user_meta( $user_id, 'prx3_shares', true ) ) );
 }
 
 /**
@@ -81,8 +81,8 @@ function fop_shares( $user_id = null ) {
  *
  * @return int
  */
-function fop_max_shares() {
-	return (int) apply_filters( 'fop_max_shares', (int) fop_setting( 'max_shares', 10 ) );
+function prx3_max_shares() {
+	return (int) apply_filters( 'prx3_max_shares', (int) prx3_setting( 'max_shares', 10 ) );
 }
 
 /**
@@ -92,9 +92,9 @@ function fop_max_shares() {
  * @param int $n Tier number, 1-based.
  * @return float
  */
-function fop_share_price( $n ) {
-	$base   = (float) fop_setting( 'share_base_price', 50.0 );
-	$growth = (float) fop_setting( 'share_tier_growth', 0.25 );
+function prx3_share_price( $n ) {
+	$base   = (float) prx3_setting( 'share_base_price', 50.0 );
+	$growth = (float) prx3_setting( 'share_tier_growth', 0.25 );
 	return round( $base * pow( 1 + $growth, max( 0, (int) $n - 1 ) ), 2 );
 }
 
@@ -106,10 +106,10 @@ function fop_share_price( $n ) {
  * @param int $buying         Shares being bought now.
  * @return float
  */
-function fop_ladder_total( $current_shares, $buying ) {
+function prx3_ladder_total( $current_shares, $buying ) {
 	$total = 0.0;
 	for ( $i = 1; $i <= $buying; $i++ ) {
-		$total += fop_share_price( $current_shares + $i );
+		$total += prx3_share_price( $current_shares + $i );
 	}
 	return round( $total, 2 );
 }
@@ -120,8 +120,8 @@ function fop_ladder_total( $current_shares, $buying ) {
  * @param float $amount Amount.
  * @return string
  */
-function fop_money( $amount ) {
-	return fop_setting( 'currency_symbol', '£' ) . number_format_i18n( (float) $amount, 2 );
+function prx3_money( $amount ) {
+	return prx3_setting( 'currency_symbol', '£' ) . number_format_i18n( (float) $amount, 2 );
 }
 
 /**
@@ -130,10 +130,10 @@ function fop_money( $amount ) {
  *
  * @param int|null $user_id User ID, default current.
  */
-function fop_touch_activity( $user_id = null ) {
+function prx3_touch_activity( $user_id = null ) {
 	$user_id = $user_id ? $user_id : get_current_user_id();
 	if ( $user_id ) {
-		update_user_meta( $user_id, 'fop_last_active', time() );
+		update_user_meta( $user_id, 'prx3_last_active', time() );
 	}
 }
 
@@ -143,7 +143,7 @@ function fop_touch_activity( $user_id = null ) {
  * @param int|null $since_timestamp Cutoff; default 12 months ago.
  * @return int
  */
-function fop_active_owner_count( $since_timestamp = null ) {
+function prx3_active_owner_count( $since_timestamp = null ) {
 	$since = $since_timestamp ? $since_timestamp : strtotime( '-12 months' );
 	$query = new WP_User_Query(
 		array(
@@ -153,7 +153,7 @@ function fop_active_owner_count( $since_timestamp = null ) {
 			'number'      => 1,
 			'meta_query'  => array(
 				array(
-					'key'     => 'fop_last_active',
+					'key'     => 'prx3_last_active',
 					'value'   => $since,
 					'compare' => '>=',
 					'type'    => 'NUMERIC',
@@ -170,7 +170,7 @@ function fop_active_owner_count( $since_timestamp = null ) {
  * @param int|null $since_timestamp Cutoff; default 12 months ago.
  * @return int[]
  */
-function fop_active_owner_ids( $since_timestamp = null ) {
+function prx3_active_owner_ids( $since_timestamp = null ) {
 	$since = $since_timestamp ? $since_timestamp : strtotime( '-12 months' );
 	return get_users(
 		array(
@@ -179,7 +179,7 @@ function fop_active_owner_ids( $since_timestamp = null ) {
 			'number'     => -1,
 			'meta_query' => array(
 				array(
-					'key'     => 'fop_last_active',
+					'key'     => 'prx3_last_active',
 					'value'   => $since,
 					'compare' => '>=',
 					'type'    => 'NUMERIC',
@@ -194,7 +194,7 @@ function fop_active_owner_ids( $since_timestamp = null ) {
  *
  * @return string
  */
-function fop_now() {
+function prx3_now() {
 	return current_time( 'mysql' );
 }
 
@@ -204,28 +204,28 @@ function fop_now() {
  * @param string $datetime MySQL datetime.
  * @return string
  */
-function fop_format_datetime( $datetime ) {
+function prx3_format_datetime( $datetime ) {
 	$ts = $datetime ? strtotime( $datetime ) : false;
 	return $ts ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $ts ) : '';
 }
 
 /**
- * The owner-only post types (guarded by FOP_Access).
+ * The owner-only post types (guarded by PRX3_Access).
  *
  * @return string[]
  */
-function fop_gated_post_types() {
+function prx3_gated_post_types() {
 	return array(
-		'fop_ballot',
-		'fop_idea',
-		'fop_question',
-		'fop_meeting',
-		'fop_video',
-		'fop_document',
-		'fop_exclusive',
-		'fop_decision',
-		'fop_chapter',
-		'fop_match',
+		'prx3_ballot',
+		'prx3_idea',
+		'prx3_question',
+		'prx3_meeting',
+		'prx3_video',
+		'prx3_document',
+		'prx3_exclusive',
+		'prx3_decision',
+		'prx3_chapter',
+		'prx3_match',
 	);
 }
 
@@ -234,6 +234,6 @@ function fop_gated_post_types() {
  *
  * @return string[]
  */
-function fop_board_post_types() {
-	return array( 'fop_board_meeting', 'fop_board_paper', 'fop_board_thread', 'fop_board_vote', 'fop_vault_doc' );
+function prx3_board_post_types() {
+	return array( 'prx3_board_meeting', 'prx3_board_paper', 'prx3_board_thread', 'prx3_board_vote', 'prx3_vault_doc' );
 }

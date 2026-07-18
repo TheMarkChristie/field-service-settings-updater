@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../api/fop_api.dart';
+import '../api/prx3_api.dart';
 
 /// Match Centre (FO-305/306): live state, timeline, chat via the polling
 /// transport (websocket transport swaps in per B4). The video player
@@ -10,7 +10,7 @@ import '../api/fop_api.dart';
 /// build-out; the signed playback token is already served.
 class MatchScreen extends StatefulWidget {
   const MatchScreen({super.key, required this.api, this.matchId});
-  final FopApi api;
+  final Prx3Api api;
   final int? matchId;
 
   @override
@@ -48,7 +48,7 @@ class _MatchScreenState extends State<MatchScreen> {
     try {
       final match = await widget.api.match(_matchId);
       if (mounted) setState(() => _match = match);
-    } on FopApiException {
+    } on Prx3ApiException {
       // Connectivity state surfaces through the UI's last-known state (T38).
     }
   }
@@ -63,7 +63,7 @@ class _MatchScreenState extends State<MatchScreen> {
           _chat.add(row);
         }
       });
-    } on FopApiException {
+    } on Prx3ApiException {
       // Silent retry on next tick.
     }
   }
@@ -75,7 +75,7 @@ class _MatchScreenState extends State<MatchScreen> {
       await widget.api.sendChat('match-$_matchId', text);
       _chatInput.clear();
       await _pollChat();
-    } on FopApiException catch (e) {
+    } on Prx3ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     }

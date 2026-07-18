@@ -10,34 +10,34 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 | Story | Status | Implementation | Gaps / notes |
 |---|---|---|---|
-| FO-101 Members-only areas | Done | `class-fop-access.php` — redirect to join page, search/feed exclusion, teaser layer, instant loss on closure | |
-| FO-102 Roles & permissions | Done | `class-fop-roles.php` — six roles, capability matrix in file header, audited changes, session destroy on board removal | 2FA enforced via provider contract (`fop_2fa_provider_active`); pair with a 2FA plugin at deploy |
-| FO-103 Kill switches | Done | `class-fop-config.php` — per-feature toggles, audit with reason, member notice; API routes honour switches | |
-| FO-104 Identity as config | Partial | `helpers.php` (`fop_club_name`), used across emails/certificates/API; historical identity frozen on certificates | AC2's automated hard-coded-name check not built (add a CI grep) |
-| FO-105 Registration | Partial | `class-fop-membership.php` — 18+ confirm, terms, email verification gate, duplicate email routing | Apple/Google sign-in needs a social-login companion plugin; app login is email/password until Firebase project exists |
-| FO-106 Tiered share checkout | Done | `class-fop-woocommerce.php` + `fop_ladder_total()` — ladder pricing, price re-verified at order, cap across all sources, idempotent fulfilment, failed payment leaves holding unchanged | Requires WooCommerce + a configured share product (settings screen) |
+| FO-101 Members-only areas | Done | `class-prx3-access.php` — redirect to join page, search/feed exclusion, teaser layer, instant loss on closure | |
+| FO-102 Roles & permissions | Done | `class-prx3-roles.php` — six roles, capability matrix in file header, audited changes, session destroy on board removal | 2FA enforced via provider contract (`prx3_2fa_provider_active`); pair with a 2FA plugin at deploy |
+| FO-103 Kill switches | Done | `class-prx3-config.php` — per-feature toggles, audit with reason, member notice; API routes honour switches | |
+| FO-104 Identity as config | Partial | `helpers.php` (`prx3_club_name`), used across emails/certificates/API; historical identity frozen on certificates | AC2's automated hard-coded-name check not built (add a CI grep) |
+| FO-105 Registration | Partial | `class-prx3-membership.php` — 18+ confirm, terms, email verification gate, duplicate email routing | Apple/Google sign-in needs a social-login companion plugin; app login is email/password until Firebase project exists |
+| FO-106 Tiered share checkout | Done | `class-prx3-woocommerce.php` + `prx3_ladder_total()` — ladder pricing, price re-verified at order, cap across all sources, idempotent fulfilment, failed payment leaves holding unchanged | Requires WooCommerce + a configured share product (settings screen) |
 | FO-107 Top-ups | Done | Ladder continues from held position; cap explained at max | |
-| FO-108 Gifting | Done | `class-fop-gifts.php` — codes, indefinite validity, recipient cap/age at redemption, failure preserves code | Giver's unredeemed-gift list is API-only (`FOP_Gifts::unredeemed_for`), not yet on the account page |
+| FO-108 Gifting | Done | `class-prx3-gifts.php` — codes, indefinite validity, recipient cap/age at redemption, failure preserves code | Giver's unredeemed-gift list is API-only (`PRX3_Gifts::unredeemed_for`), not yet on the account page |
 | FO-109 Invoices | Partial | Gapless sequential numbering (atomic), permanent order records | PDF rendering delegated to a WooCommerce invoice plugin per T58 |
-| FO-110 One person one account | Partial | Email-heuristic + payment-fingerprint flagging (`fop_payment_identity` hook), audited | Admin merge/close UI is manual via Users screen; no dedicated merge tool |
-| FO-111 Share register | Done | `class-fop-register.php` — append-only table, holding-after, consideration, CSV export, audited | |
+| FO-110 One person one account | Partial | Email-heuristic + payment-fingerprint flagging (`prx3_payment_identity` hook), audited | Admin merge/close UI is manual via Users screen; no dedicated merge tool |
+| FO-111 Share register | Done | `class-prx3-register.php` — append-only table, holding-after, consideration, CSV export, audited | |
 | FO-112 Owner numbers | Done | Atomic sequence, never reused, on certificate/profile/API | |
 | FO-113 Certificates | Partial | Instant issue + re-issue with history, print-to-PDF view, public verification endpoint with consent-gated name, surrendered state | Verify link is textual; QR image generation not yet rendered on the certificate |
-| FO-114 Badges | Done | `class-fop-badges.php` — contract (`fop_award_badge`/`fop_get_member_badges`), queue + hourly retry, founders cutoff, configurable milestone rules | Needs the club's badge plugin to implement the contract |
+| FO-114 Badges | Done | `class-prx3-badges.php` — contract (`prx3_award_badge`/`prx3_get_member_badges`), queue + hourly retry, founders cutoff, configurable milestone rules | Needs the club's badge plugin to implement the contract |
 | FO-115 Onboarding | Partial | Journey state, 3-step email series stopping early, dismissible, starter-ballot prompt via dashboard | Welcome video is club content on the join/dashboard page rather than a bespoke first-run screen |
-| FO-116 Email foundations | Done | `class-fop-comms.php` — one branded template from config, category prefs (email+push in one centre), governance always sends, prefs link | Campaign sending itself rides Brevo SMTP site-wide |
-| FO-117 My data | Done | `class-fop-privacy.php` — core exporter/eraser integration, self-serve closure with surrender + session destroy, retention sweeps | |
-| FO-118 Exclusive content | Done | `fop_exclusive` CPT + teaser meta + gating | |
-| FO-119 Editorial workflow | Done | `class-fop-editorial.php` — author≠approver enforcement at publish, manager gate on sensitive, audited approvals | |
-| FO-120 Dashboard v1 | Done | `admin/class-fop-dashboard.php` — owners vs 1,000 target, shares by holding, revenue from register, gifts, surrenders | |
+| FO-116 Email foundations | Done | `class-prx3-comms.php` — one branded template from config, category prefs (email+push in one centre), governance always sends, prefs link | Campaign sending itself rides Brevo SMTP site-wide |
+| FO-117 My data | Done | `class-prx3-privacy.php` — core exporter/eraser integration, self-serve closure with surrender + session destroy, retention sweeps | |
+| FO-118 Exclusive content | Done | `prx3_exclusive` CPT + teaser meta + gating | |
+| FO-119 Editorial workflow | Done | `class-prx3-editorial.php` — author≠approver enforcement at publish, manager gate on sensitive, audited approvals | |
+| FO-120 Dashboard v1 | Done | `admin/class-prx3-dashboard.php` — owners vs 1,000 target, shares by holding, revenue from register, gifts, surrenders | |
 
 ## Phase 2 — Decide
 
 | Story | Status | Implementation | Gaps / notes |
 |---|---|---|---|
-| FO-201 Author & schedule | Done | `class-fop-ballots.php` + lifecycle — options/type/window, default 7 days, max-2 live with queue, hard lock once voting starts, second approval | Annual voting calendar is the scheduled-ballot queue; no separate calendar entity |
+| FO-201 Author & schedule | Done | `class-prx3-ballots.php` + lifecycle — options/type/window, default 7 days, max-2 live with queue, hard lock once voting starts, second approval | Annual voting calendar is the scheduled-ballot queue; no separate calendar entity |
 | FO-202 Cast my votes | Done | Snapshot-weighted casting, unlimited revision to close, unique-key concurrency safety, REST + accessible web form | |
-| FO-203 Secret until closed | Done | Tally access requires `fop_view_tally`; members get secrecy notice; named records never surfaced | |
+| FO-203 Secret until closed | Done | Tally access requires `prx3_view_tally`; members get secrecy notice; named records never surfaced | |
 | FO-204 Eligibility snapshot | Done | Electorate + weights frozen at open; clear explanation for mid-ballot joiners | |
 | FO-205 Quorum & re-run | Done | Active-owner denominator (P76), one automatic re-run, unresolved → board action, at-risk reminders to non-voters | |
 | FO-206 Automated lifecycle | Done | 5-minute cron: open/close/publish, notifications each stage, pre-publish snapshot + audit | Weekly video wrap is editorial output; result pages link once the video is attached |
@@ -75,7 +75,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-304 Shipping | Operational | Sentry dependency included; store accounts, monthly train, phased rollout are operational setup | Documented in the spec; nothing to code until store accounts exist |
 | FO-305 Live match stream | Done | Cloudflare signed playback tokens (per-member, 4h), state machine (countdown/live/delayed/ended), gated web player, staff alert path via monitoring | App-side player embed pending a webview/player package choice |
 | FO-306 Matchday chat | Done | Chat service: identity-tagged, word filter + hold, slow mode, reporting, delete/timeout/mute in-chat; polling transport + websocket relay (`services/chat-server`) persisting through the same API | |
-| FO-307 Reporter console | Done | Idempotent `client_key` events (DB unique), retry queue (web localStorage; app mirrors pattern), visible corrections, push on key events, vetted reporter lists | Dedicated big-button console UI is the API + `fopReporter` JS; a styled console page is cosmetic build-out |
+| FO-307 Reporter console | Done | Idempotent `client_key` events (DB unique), retry queue (web localStorage; app mirrors pattern), visible corrections, push on key events, vetted reporter lists | Dedicated big-button console UI is the API + `prx3Reporter` JS; a styled console page is cosmetic build-out |
 | FO-308 Away audio | Done | Audio URL per away match, gated page, background-capable native audio element | |
 | FO-309 Stream sponsorship | Done | Staff-controlled ad slot URLs per match, served via API, no ad network | |
 | FO-310 Replays in the hour | Done | Auto-publish 15-min retries after full-time, Cloudflare recording lookup, one-hour staff alert, push on publish | |

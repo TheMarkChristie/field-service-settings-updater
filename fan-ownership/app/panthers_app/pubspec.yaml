@@ -1,5 +1,5 @@
 name: panthers_app
-description: "The fan ownership app: Boardroom voting, Match Centre, Panthers TV. Consumes the WordPress plugin's fop/v1 API."
+description: "The fan ownership app: Boardroom voting, Match Centre, Panthers TV. Consumes the WordPress plugin's prx3/v1 API."
 publish_to: "none"
 version: 0.1.0+1
 

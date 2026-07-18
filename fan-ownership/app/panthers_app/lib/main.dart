@@ -7,7 +7,7 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'api/fop_api.dart';
+import 'api/prx3_api.dart';
 import 'screens/ballots_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/login_screen.dart';
@@ -15,17 +15,17 @@ import 'screens/match_screen.dart';
 import 'screens/videos_screen.dart';
 
 const String apiBase =
-    String.fromEnvironment('FOP_API', defaultValue: 'https://example.test/wp-json/fop/v1');
+    String.fromEnvironment('PRX3_API', defaultValue: 'https://example.test/wp-json/prx3/v1');
 
 void main() {
   // Firebase + Sentry initialisation land here when the project files
   // (google-services.json / GoogleService-Info.plist, DSN) are added.
-  runApp(PanthersApp(api: FopApi(apiBase)));
+  runApp(PanthersApp(api: Prx3Api(apiBase)));
 }
 
 class PanthersApp extends StatefulWidget {
   const PanthersApp({super.key, required this.api});
-  final FopApi api;
+  final Prx3Api api;
 
   @override
   State<PanthersApp> createState() => _PanthersAppState();
@@ -45,7 +45,7 @@ class _PanthersAppState extends State<PanthersApp> {
     if (await widget.api.signedIn) {
       try {
         _me = await widget.api.me();
-      } on FopApiException {
+      } on Prx3ApiException {
         _me = null;
       }
     }
@@ -78,7 +78,7 @@ class _PanthersAppState extends State<PanthersApp> {
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.api, required this.me});
-  final FopApi api;
+  final Prx3Api api;
   final Map<String, dynamic> me;
 
   @override

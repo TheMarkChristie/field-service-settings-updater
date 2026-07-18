@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../api/fop_api.dart';
+import '../api/prx3_api.dart';
 
 /// Owner home: identity, shares, ladder link-out (T33), quick sections.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key, required this.api, required this.me});
-  final FopApi api;
+  final Prx3Api api;
   final Map<String, dynamic> me;
 
   @override

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../api/fop_api.dart';
+import '../api/prx3_api.dart';
 
 /// Panthers TV library (FO-311): typed browsing + search; playback embeds
 /// the signed Cloudflare token / gated media URL at build-out.
 class VideosScreen extends StatefulWidget {
   const VideosScreen({super.key, required this.api});
-  final FopApi api;
+  final Prx3Api api;
 
   @override
   State<VideosScreen> createState() => _VideosScreenState();

@@ -1,0 +1,113 @@
+/*
+ * Fan Ownership Platform — structural styles only (T54).
+ * Typography and colours inherit from the site theme; the two custom
+ * properties below fall back to neutral values when the theme does not
+ * define them. WCAG 2.1 AA: focus visible, 3:1 UI contrast, reflow-safe.
+ */
+.prx3-card,
+.prx3-form,
+.prx3-notice {
+	border: 1px solid currentColor;
+	border-radius: 8px;
+	padding: 1rem 1.25rem;
+	margin: 0 0 1rem;
+	max-width: 44rem;
+}
+
+.prx3-notice--error { border-width: 2px; }
+.prx3-notice--success { border-style: dashed; }
+.prx3-notice--unavailable { font-style: italic; }
+
+.prx3-button {
+	display: inline-block;
+	padding: 0.6em 1.2em;
+	border: 2px solid currentColor;
+	border-radius: 6px;
+	background: var(--prx3-primary, #1a1a2e);
+	color: #ffffff;
+	cursor: pointer;
+	font: inherit;
+	text-decoration: none;
+	min-height: 44px; /* Target size */
+	min-width: 44px;
+}
+
+.prx3-button--secondary {
+	background: transparent;
+	color: inherit;
+}
+
+.prx3-button--danger { border-style: double; }
+
+.prx3-button:focus-visible,
+.prx3-form input:focus-visible,
+.prx3-form textarea:focus-visible,
+.prx3-chat__form input:focus-visible {
+	outline: 3px solid var(--prx3-accent, #e2b007);
+	outline-offset: 2px;
+}
+
+.prx3-form label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.prx3-form input[type="text"],
+.prx3-form input[type="email"],
+.prx3-form input[type="password"],
+.prx3-form input[type="url"],
+.prx3-form textarea {
+	width: 100%;
+	max-width: 28rem;
+	padding: 0.5em;
+	border: 1px solid currentColor;
+	border-radius: 4px;
+	font: inherit;
+}
+
+.prx3-badge {
+	display: inline-block;
+	border: 1px solid currentColor;
+	border-radius: 999px;
+	padding: 0.1em 0.75em;
+	font-size: 0.85em;
+}
+
+.prx3-badge--constitutional,
+.prx3-badge--stalled { font-weight: 700; }
+
+.prx3-table { border-collapse: collapse; width: 100%; max-width: 34rem; }
+.prx3-table th, .prx3-table td { border: 1px solid currentColor; padding: 0.4em 0.8em; text-align: left; }
+.prx3-table caption { text-align: left; font-weight: 700; padding-bottom: 0.5em; }
+
+.prx3-ballot__note, .prx3-ballot__rec { font-size: 0.9em; }
+.prx3-feedback:empty { display: none; }
+.prx3-feedback { font-weight: 600; }
+
+.prx3-match__player { aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
+.prx3-match__player iframe, .prx3-match__player video { width: 100%; height: 100%; border: 0; }
+.prx3-match__timeline { list-style: none; padding: 0; }
+.prx3-match__timeline li { border-left: 3px solid currentColor; margin: 0.35rem 0; padding: 0.15rem 0.75rem; }
+.prx3-match__timeline li.prx3-removed { text-decoration: line-through; opacity: 0.7; }
+
+.prx3-chat__messages {
+	list-style: none;
+	padding: 0.5rem;
+	margin: 0 0 0.5rem;
+	max-height: 20rem;
+	overflow-y: auto;
+	border: 1px solid currentColor;
+	border-radius: 8px;
+}
+.prx3-chat__form { display: flex; gap: 0.5rem; }
+.prx3-chat__form input { flex: 1; min-width: 0; padding: 0.5em; border: 1px solid currentColor; border-radius: 4px; font: inherit; }
+
+.prx3-videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1rem; }
+
+.screen-reader-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.prx3-card, .prx3-button { transition: none; }
+}

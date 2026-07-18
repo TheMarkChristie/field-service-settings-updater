@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../api/fop_api.dart';
+import '../api/prx3_api.dart';
 
 /// FO-202/FO-203 in the app: weighted secret voting, change until close.
 class BallotsScreen extends StatefulWidget {
   const BallotsScreen({super.key, required this.api});
-  final FopApi api;
+  final Prx3Api api;
 
   @override
   State<BallotsScreen> createState() => _BallotsScreenState();
@@ -30,7 +30,7 @@ class _BallotsScreenState extends State<BallotsScreen> {
             : 'Vote recorded: ${result['weight']} vote(s). Results appear when the ballot closes.'),
       ));
       setState(() => _ballots = widget.api.ballots());
-    } on FopApiException catch (e) {
+    } on Prx3ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     }

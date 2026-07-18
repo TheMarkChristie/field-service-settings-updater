@@ -12,96 +12,96 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FOP_VERSION', '0.1.0' );
-define( 'FOP_FILE', __FILE__ );
-define( 'FOP_DIR', plugin_dir_path( __FILE__ ) );
-define( 'FOP_URL', plugin_dir_url( __FILE__ ) );
+define( 'PRX3_VERSION', '0.1.0' );
+define( 'PRX3_FILE', __FILE__ );
+define( 'PRX3_DIR', plugin_dir_path( __FILE__ ) );
+define( 'PRX3_URL', plugin_dir_url( __FILE__ ) );
 
 // Foundations.
-require_once FOP_DIR . 'includes/helpers.php';
-require_once FOP_DIR . 'includes/class-fop-config.php';
-require_once FOP_DIR . 'includes/class-fop-roles.php';
-require_once FOP_DIR . 'includes/class-fop-post-types.php';
-require_once FOP_DIR . 'includes/class-fop-access.php';
-require_once FOP_DIR . 'includes/class-fop-audit.php';
+require_once PRX3_DIR . 'includes/helpers.php';
+require_once PRX3_DIR . 'includes/class-prx3-config.php';
+require_once PRX3_DIR . 'includes/class-prx3-roles.php';
+require_once PRX3_DIR . 'includes/class-prx3-post-types.php';
+require_once PRX3_DIR . 'includes/class-prx3-access.php';
+require_once PRX3_DIR . 'includes/class-prx3-audit.php';
 
 // Phase 1 — Own.
-require_once FOP_DIR . 'includes/class-fop-membership.php';
-require_once FOP_DIR . 'includes/class-fop-shares.php';
-require_once FOP_DIR . 'includes/class-fop-woocommerce.php';
-require_once FOP_DIR . 'includes/class-fop-gifts.php';
-require_once FOP_DIR . 'includes/class-fop-register.php';
-require_once FOP_DIR . 'includes/class-fop-certificates.php';
-require_once FOP_DIR . 'includes/class-fop-badges.php';
-require_once FOP_DIR . 'includes/class-fop-onboarding.php';
-require_once FOP_DIR . 'includes/class-fop-comms.php';
-require_once FOP_DIR . 'includes/class-fop-privacy.php';
-require_once FOP_DIR . 'includes/class-fop-editorial.php';
+require_once PRX3_DIR . 'includes/class-prx3-membership.php';
+require_once PRX3_DIR . 'includes/class-prx3-shares.php';
+require_once PRX3_DIR . 'includes/class-prx3-woocommerce.php';
+require_once PRX3_DIR . 'includes/class-prx3-gifts.php';
+require_once PRX3_DIR . 'includes/class-prx3-register.php';
+require_once PRX3_DIR . 'includes/class-prx3-certificates.php';
+require_once PRX3_DIR . 'includes/class-prx3-badges.php';
+require_once PRX3_DIR . 'includes/class-prx3-onboarding.php';
+require_once PRX3_DIR . 'includes/class-prx3-comms.php';
+require_once PRX3_DIR . 'includes/class-prx3-privacy.php';
+require_once PRX3_DIR . 'includes/class-prx3-editorial.php';
 
 // Phase 2 — Decide.
-require_once FOP_DIR . 'includes/class-fop-ballots.php';
-require_once FOP_DIR . 'includes/class-fop-ballot-lifecycle.php';
-require_once FOP_DIR . 'includes/class-fop-ideas.php';
-require_once FOP_DIR . 'includes/class-fop-questions.php';
-require_once FOP_DIR . 'includes/class-fop-meetings.php';
-require_once FOP_DIR . 'includes/class-fop-decisions.php';
-require_once FOP_DIR . 'includes/class-fop-financials.php';
-require_once FOP_DIR . 'includes/class-fop-community.php';
-require_once FOP_DIR . 'includes/class-fop-moderation.php';
-require_once FOP_DIR . 'includes/class-fop-chapters.php';
-require_once FOP_DIR . 'includes/class-fop-board.php';
+require_once PRX3_DIR . 'includes/class-prx3-ballots.php';
+require_once PRX3_DIR . 'includes/class-prx3-ballot-lifecycle.php';
+require_once PRX3_DIR . 'includes/class-prx3-ideas.php';
+require_once PRX3_DIR . 'includes/class-prx3-questions.php';
+require_once PRX3_DIR . 'includes/class-prx3-meetings.php';
+require_once PRX3_DIR . 'includes/class-prx3-decisions.php';
+require_once PRX3_DIR . 'includes/class-prx3-financials.php';
+require_once PRX3_DIR . 'includes/class-prx3-community.php';
+require_once PRX3_DIR . 'includes/class-prx3-moderation.php';
+require_once PRX3_DIR . 'includes/class-prx3-chapters.php';
+require_once PRX3_DIR . 'includes/class-prx3-board.php';
 
 // Phase 3 — Watch.
-require_once FOP_DIR . 'includes/class-fop-match-centre.php';
-require_once FOP_DIR . 'includes/class-fop-chat.php';
-require_once FOP_DIR . 'includes/class-fop-media.php';
-require_once FOP_DIR . 'includes/api/class-fop-jwt.php';
-require_once FOP_DIR . 'includes/api/class-fop-rest-api.php';
+require_once PRX3_DIR . 'includes/class-prx3-match-centre.php';
+require_once PRX3_DIR . 'includes/class-prx3-chat.php';
+require_once PRX3_DIR . 'includes/class-prx3-media.php';
+require_once PRX3_DIR . 'includes/api/class-prx3-jwt.php';
+require_once PRX3_DIR . 'includes/api/class-prx3-rest-api.php';
 
 // Admin.
-require_once FOP_DIR . 'admin/class-fop-admin.php';
-require_once FOP_DIR . 'admin/class-fop-dashboard.php';
-require_once FOP_DIR . 'includes/class-fop-shortcodes.php';
+require_once PRX3_DIR . 'admin/class-prx3-admin.php';
+require_once PRX3_DIR . 'admin/class-prx3-dashboard.php';
+require_once PRX3_DIR . 'includes/class-prx3-shortcodes.php';
 
 /**
  * Boot all modules.
  */
-function fop_boot() {
+function prx3_boot() {
 	$modules = array(
-		'FOP_Config',
-		'FOP_Roles',
-		'FOP_Post_Types',
-		'FOP_Access',
-		'FOP_Audit',
-		'FOP_Membership',
-		'FOP_Shares',
-		'FOP_WooCommerce',
-		'FOP_Gifts',
-		'FOP_Register',
-		'FOP_Certificates',
-		'FOP_Badges',
-		'FOP_Onboarding',
-		'FOP_Comms',
-		'FOP_Privacy',
-		'FOP_Editorial',
-		'FOP_Ballots',
-		'FOP_Ballot_Lifecycle',
-		'FOP_Ideas',
-		'FOP_Questions',
-		'FOP_Meetings',
-		'FOP_Decisions',
-		'FOP_Financials',
-		'FOP_Community',
-		'FOP_Moderation',
-		'FOP_Chapters',
-		'FOP_Board',
-		'FOP_Match_Centre',
-		'FOP_Chat',
-		'FOP_Media',
-		'FOP_REST_API',
-		'FOP_Admin',
-		'FOP_Dashboard',
-		'FOP_Shortcodes',
+		'PRX3_Config',
+		'PRX3_Roles',
+		'PRX3_Post_Types',
+		'PRX3_Access',
+		'PRX3_Audit',
+		'PRX3_Membership',
+		'PRX3_Shares',
+		'PRX3_WooCommerce',
+		'PRX3_Gifts',
+		'PRX3_Register',
+		'PRX3_Certificates',
+		'PRX3_Badges',
+		'PRX3_Onboarding',
+		'PRX3_Comms',
+		'PRX3_Privacy',
+		'PRX3_Editorial',
+		'PRX3_Ballots',
+		'PRX3_Ballot_Lifecycle',
+		'PRX3_Ideas',
+		'PRX3_Questions',
+		'PRX3_Meetings',
+		'PRX3_Decisions',
+		'PRX3_Financials',
+		'PRX3_Community',
+		'PRX3_Moderation',
+		'PRX3_Chapters',
+		'PRX3_Board',
+		'PRX3_Match_Centre',
+		'PRX3_Chat',
+		'PRX3_Media',
+		'PRX3_REST_API',
+		'PRX3_Admin',
+		'PRX3_Dashboard',
+		'PRX3_Shortcodes',
 	);
 	foreach ( $modules as $module ) {
 		if ( class_exists( $module ) && method_exists( $module, 'init' ) ) {
@@ -109,19 +109,19 @@ function fop_boot() {
 		}
 	}
 }
-add_action( 'plugins_loaded', 'fop_boot' );
+add_action( 'plugins_loaded', 'prx3_boot' );
 
 /**
  * Front-end assets.
  */
-function fop_assets() {
-	wp_register_style( 'fop', FOP_URL . 'assets/css/fop.css', array(), FOP_VERSION );
-	wp_register_script( 'fop', FOP_URL . 'assets/js/fop.js', array(), FOP_VERSION, true );
+function prx3_assets() {
+	wp_register_style( 'prx3', PRX3_URL . 'assets/css/prx3.css', array(), PRX3_VERSION );
+	wp_register_script( 'prx3', PRX3_URL . 'assets/js/prx3.js', array(), PRX3_VERSION, true );
 	wp_localize_script(
-		'fop',
-		'fopConfig',
+		'prx3',
+		'prx3Config',
 		array(
-			'restUrl' => esc_url_raw( rest_url( 'fop/v1/' ) ),
+			'restUrl' => esc_url_raw( rest_url( 'prx3/v1/' ) ),
 			'nonce'   => wp_create_nonce( 'wp_rest' ),
 			'i18n'    => array(
 				'working' => __( 'Working…', 'fan-ownership' ),
@@ -130,28 +130,28 @@ function fop_assets() {
 		)
 	);
 }
-add_action( 'wp_enqueue_scripts', 'fop_assets' );
+add_action( 'wp_enqueue_scripts', 'prx3_assets' );
 
-register_activation_hook( __FILE__, 'fop_activate' );
-register_deactivation_hook( __FILE__, 'fop_deactivate' );
+register_activation_hook( __FILE__, 'prx3_activate' );
+register_deactivation_hook( __FILE__, 'prx3_deactivate' );
 
-function fop_activate() {
-	FOP_Roles::install();
-	FOP_Post_Types::register_all();
-	FOP_Register::install_tables();
-	FOP_Ballot_Lifecycle::schedule_cron();
+function prx3_activate() {
+	PRX3_Roles::install();
+	PRX3_Post_Types::register_all();
+	PRX3_Register::install_tables();
+	PRX3_Ballot_Lifecycle::schedule_cron();
 	flush_rewrite_rules();
 }
 
-function fop_deactivate() {
-	FOP_Ballot_Lifecycle::unschedule_cron();
+function prx3_deactivate() {
+	PRX3_Ballot_Lifecycle::unschedule_cron();
 	flush_rewrite_rules();
 }
 
 /**
  * Companion-plugin notices: integrate when present, degrade clearly when not.
  */
-function fop_dependency_notices() {
+function prx3_dependency_notices() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
@@ -162,11 +162,11 @@ function fop_dependency_notices() {
 	if ( ! class_exists( 'bbPress' ) ) {
 		$missing[] = __( 'bbPress (the member forum is disabled until it is active)', 'fan-ownership' );
 	}
-	if ( ! has_action( 'fop_award_badge' ) && ! apply_filters( 'fop_badge_provider_present', false ) ) {
-		$missing[] = __( 'Badge plugin integration (no handler found for the fop_award_badge action — badges will queue until one is connected)', 'fan-ownership' );
+	if ( ! has_action( 'prx3_award_badge' ) && ! apply_filters( 'prx3_badge_provider_present', false ) ) {
+		$missing[] = __( 'Badge plugin integration (no handler found for the prx3_award_badge action — badges will queue until one is connected)', 'fan-ownership' );
 	}
 	if ( $missing ) {
 		echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'Fan Ownership Platform — companion plugins:', 'fan-ownership' ) . '</strong> ' . esc_html( implode( '; ', $missing ) ) . '</p></div>';
 	}
 }
-add_action( 'admin_notices', 'fop_dependency_notices' );
+add_action( 'admin_notices', 'prx3_dependency_notices' );
