@@ -194,6 +194,8 @@ class PRX3_Ballots {
 
 	/**
 	 * Open ballots (max 2 by rule), and the queue behind them. FO-201 AC2.
+	 *
+	 * @return WP_Post[] Ballots currently in the open state.
 	 */
 	public static function open_ballots() {
 		return get_posts(
@@ -201,38 +203,48 @@ class PRX3_Ballots {
 				'post_type'      => 'prx3_ballot',
 				'post_status'    => 'publish',
 				'posts_per_page' => -1,
-				'meta_key'       => '_prx3_state',
-				'meta_value'     => 'open',
+				'meta_key'       => '_prx3_state', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded lifecycle lookup; at most two ballots are ever open.
+				'meta_value'     => 'open', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'orderby'        => 'meta_value',
 				'no_found_rows'  => true,
 			)
 		);
 	}
 
+	/**
+	 * Ballots queued behind the live cap, awaiting their open time.
+	 *
+	 * @return WP_Post[] Ballots currently in the scheduled state.
+	 */
 	public static function scheduled_ballots() {
 		return get_posts(
 			array(
 				'post_type'      => 'prx3_ballot',
 				'post_status'    => 'publish',
 				'posts_per_page' => -1,
-				'meta_key'       => '_prx3_state',
-				'meta_value'     => 'scheduled',
+				'meta_key'       => '_prx3_state', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded lifecycle lookup over the small ballot post type.
+				'meta_value'     => 'scheduled', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'orderby'        => 'meta_value_datetime',
 				'no_found_rows'  => true,
 			)
 		);
 	}
 
-	/*
-	------------------------------------------------------------------ */
-	/*
-	Authoring                                                          */
-	/* ------------------------------------------------------------------ */
+	/* ---------------- Authoring ---------------- */
 
+	/**
+	 * Register the ballot setup meta box on the ballot editor.
+	 */
 	public static function meta_boxes() {
 		add_meta_box( 'prx3_ballot_setup', __( 'Ballot Setup', 'fan-ownership' ), array( __CLASS__, 'render_setup' ), 'prx3_ballot', 'normal', 'high' );
 	}
 
+	/**
+	 * Render the ballot setup meta box: options, type, window, board
+	 * recommendation, and the staff-only running tally. FO-201, FO-203.
+	 *
+	 * @param WP_Post $post The ballot being edited.
+	 */
 	public static function render_setup( $post ) {
 		wp_nonce_field( 'prx3_ballot_meta', 'prx3_ballot_nonce' );
 		$options = get_post_meta( $post->ID, '_prx3_options', true );
@@ -290,6 +302,13 @@ class PRX3_Ballots {
 		}
 	}
 
+	/**
+	 * Persist ballot setup from the meta box; rules lock once voting has
+	 * started (FO-201 AC4).
+	 *
+	 * @param int     $post_id Ballot post ID.
+	 * @param WP_Post $post    The post being saved.
+	 */
 	public static function save_meta( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_ballot_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_ballot_nonce'] ), 'prx3_ballot_meta' ) ) {
 			return;

@@ -15,8 +15,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Match Centre service: fixture meta, live page state and the idempotent
+ * minute-by-minute event feed from the volunteer reporter console.
+ */
 class PRX3_Match_Centre {
 
+	/**
+	 * Register the match edit screen hooks.
+	 */
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
 		add_action( 'save_post_prx3_match', array( __CLASS__, 'save_meta' ), 10, 2 );
@@ -24,6 +31,10 @@ class PRX3_Match_Centre {
 
 	/**
 	 * Is this user an approved reporter for the match (P72 vetting)?
+	 *
+	 * @param int $match_id Match post ID.
+	 * @param int $user_id  User ID to check.
+	 * @return bool
 	 */
 	public static function is_reporter( $match_id, $user_id ) {
 		if ( user_can( $user_id, 'prx3_edit_content' ) || user_can( $user_id, 'prx3_admin' ) ) {
@@ -38,6 +49,12 @@ class PRX3_Match_Centre {
 	 * (FO-307 AC3): the console generates a UUID per event; a resend after
 	 * a dead spot cannot duplicate.
 	 *
+	 * @param int      $match_id   Match post ID.
+	 * @param int      $user_id    Reporting user ID.
+	 * @param string   $client_key Console-generated idempotency key.
+	 * @param string   $event_type Event type from the sport preset vocabulary.
+	 * @param int|null $minute     Match minute, or null when not applicable.
+	 * @param array    $detail     Event detail (text, score, etc.).
 	 * @return array|WP_Error Event row.
 	 */
 	public static function record_event( $match_id, $user_id, $client_key, $event_type, $minute, $detail ) {
@@ -59,7 +76,7 @@ class PRX3_Match_Centre {
 		if ( ! $client_key ) {
 			return new WP_Error( 'prx3_key', __( 'Missing event key.', 'fan-ownership' ) );
 		}
-		$inserted = $wpdb->insert(
+		$inserted = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- write to the plugin's own match events table; the unique (match_id, client_key) idempotency check needs the direct insert.
 			$wpdb->prefix . 'prx3_match_events',
 			array(
 				'match_id'   => $match_id,
@@ -90,13 +107,18 @@ class PRX3_Match_Centre {
 
 	/**
 	 * FO-307 AC4: visible corrections, never silent.
+	 *
+	 * @param int  $event_id Event row ID.
+	 * @param int  $staff_id Correcting staff user ID.
+	 * @param bool $remove   Whether the event is struck from the timeline.
+	 * @return true|WP_Error
 	 */
 	public static function correct_event( $event_id, $staff_id, $remove ) {
 		global $wpdb;
 		if ( ! user_can( $staff_id, 'prx3_edit_content' ) && ! user_can( $staff_id, 'prx3_admin' ) ) {
 			return new WP_Error( 'prx3_denied', __( 'Staff only.', 'fan-ownership' ) );
 		}
-		$wpdb->update(
+		$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- correction flags live on the plugin's own match events table.
 			$wpdb->prefix . 'prx3_match_events',
 			array(
 				'corrected_by' => $staff_id,
@@ -111,10 +133,13 @@ class PRX3_Match_Centre {
 
 	/**
 	 * The timeline (corrections shown, removed events marked).
+	 *
+	 * @param int $match_id Match post ID.
+	 * @return array[] Event rows with decoded detail.
 	 */
 	public static function timeline( $match_id ) {
 		global $wpdb;
-		$rows = $wpdb->get_results(
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- live-match read of the plugin's own events table; caching deliberately avoided so new events and corrections show immediately.
 			$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}prx3_match_events WHERE match_id = %d ORDER BY id ASC", $match_id ),
 			ARRAY_A
 		);
@@ -129,6 +154,9 @@ class PRX3_Match_Centre {
 
 	/**
 	 * Match page state (FO-305 AC2): countdown / live / delayed / ended.
+	 *
+	 * @param int $match_id Match post ID.
+	 * @return string One of 'countdown', 'live', 'delayed', 'ended'.
 	 */
 	public static function live_state( $match_id ) {
 		$kickoff = strtotime( (string) get_post_meta( $match_id, '_prx3_kickoff', true ) );
@@ -146,6 +174,10 @@ class PRX3_Match_Centre {
 		return 'countdown';
 	}
 
+	/**
+	 * Match details meta box: kickoff, venue, streams, reporters, the
+	 * volunteer rota and advert slots.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_match_details',
@@ -178,6 +210,13 @@ class PRX3_Match_Centre {
 		);
 	}
 
+	/**
+	 * Save match meta, email newly rostered volunteers, and schedule the
+	 * replay auto-publish check when the match is marked ended (FO-310).
+	 *
+	 * @param int     $post_id Match post ID.
+	 * @param WP_Post $post    Match post object.
+	 */
 	public static function save_meta( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_match_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_match_nonce'] ), 'prx3_match_meta' ) ) {
 			return;

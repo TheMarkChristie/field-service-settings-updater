@@ -8,12 +8,23 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Append-only audit log in its own custom table: who did what, when,
+ * across governed actions platform-wide. Entries are never edited.
+ */
 class PRX3_Audit {
 
+	/**
+	 * No hooks of its own; modules call log() directly.
+	 */
 	public static function init() {}
 
 	/**
 	 * Create the audit table (called from PRX3_Register::install_tables).
+	 *
+	 * @param string $charset_collate Charset/collation clause from $wpdb.
+	 * @param string $prefix          Table prefix.
+	 * @return string CREATE TABLE statement for dbDelta.
 	 */
 	public static function table_sql( $charset_collate, $prefix ) {
 		return "CREATE TABLE {$prefix}prx3_audit (
@@ -38,6 +49,7 @@ class PRX3_Audit {
 	 */
 	public static function log( $event, $summary, $context = array() ) {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- append to the plugin's own audit table; no WP API covers it.
 		$wpdb->insert(
 			$wpdb->prefix . 'prx3_audit',
 			array(
@@ -74,6 +86,6 @@ class PRX3_Audit {
 		$sql      = 'SELECT * FROM ' . $wpdb->prefix . 'prx3_audit WHERE ' . implode( ' AND ', $where ) . ' ORDER BY id DESC LIMIT %d OFFSET %d';
 		$params[] = $limit;
 		$params[] = $offset;
-		return $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- bounded read of the plugin's own audit table; uncached so staff screens always show the live record.
 	}
 }

@@ -106,6 +106,12 @@ class PRX3_Privacy {
 		);
 	}
 
+	/**
+	 * Add the plugin's eraser to core's personal data erasers.
+	 *
+	 * @param array $erasers Registered erasers.
+	 * @return array Erasers including ours.
+	 */
 	public static function register_eraser( $erasers ) {
 		$erasers['prx3'] = array(
 			'eraser_friendly_name' => __( 'Fan Ownership', 'fan-ownership' ),
@@ -117,6 +123,9 @@ class PRX3_Privacy {
 	/**
 	 * FO-117 AC3: erase/anonymise personal data while the share register
 	 * and named ballot records keep their legal minimum.
+	 *
+	 * @param string $email Email address being erased.
+	 * @return array Eraser response: removed/retained flags and messages.
 	 */
 	public static function erase( $email ) {
 		$user = get_user_by( 'email', $email );
@@ -173,11 +182,11 @@ class PRX3_Privacy {
 		global $wpdb;
 		// Chat messages older than the configured window (default 12 months).
 		$cutoff = gmdate( 'Y-m-d H:i:s', strtotime( '-' . (int) prx3_setting( 'chat_retention_months', 12 ) . ' months' ) );
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}prx3_chat_messages WHERE created_at < %s", $cutoff ) );
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}prx3_chat_messages WHERE created_at < %s", $cutoff ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- retention purge on the plugin's own chat table; no core API or cache covers it.
 		// Closed accounts past the retention window lose remaining meta.
 		$closed = get_users(
 			array(
-				'meta_key' => 'prx3_account_closed',
+				'meta_key' => 'prx3_account_closed', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded daily sweep over closed accounts only.
 				'fields'   => 'ID',
 				'number'   => 200,
 			)

@@ -15,8 +15,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Financial transparency: monthly summary publishing with missed-month
+ * flagging, view-only inline PDF streaming, and annual report assembly.
+ */
 class PRX3_Financials {
 
+	/**
+	 * Hook up the monthly check cron and the inline viewer route.
+	 */
 	public static function init() {
 		add_action( 'prx3_financial_month_check', array( __CLASS__, 'flag_missing_month' ) );
 		if ( ! wp_next_scheduled( 'prx3_financial_month_check' ) ) {
@@ -41,7 +48,7 @@ class PRX3_Financials {
 				'posts_per_page' => 1,
 				'no_found_rows'  => true,
 				'date_query'     => array( array( 'after' => gmdate( 'Y-m-01' ) ) ),
-				'tax_query'      => array(
+				'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- daily single-post existence check on the plugin's document type taxonomy.
 					array(
 						'taxonomy' => 'prx3_document_type',
 						'field'    => 'slug',
@@ -73,6 +80,9 @@ class PRX3_Financials {
 		add_rewrite_tag( '%prx3_view_doc%', '([0-9]+)' );
 	}
 
+	/**
+	 * Serve the requested statement PDF inline to owners, or bail.
+	 */
 	public static function maybe_stream_inline() {
 		$doc_id = absint( get_query_var( 'prx3_view_doc' ) );
 		if ( ! $doc_id ) {
@@ -112,7 +122,7 @@ class PRX3_Financials {
 				'post_status'    => 'publish',
 				'posts_per_page' => -1,
 				'no_found_rows'  => true,
-				'meta_query'     => array(
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- yearly admin-only report assembly.
 					array(
 						'key'     => '_prx3_state',
 						'value'   => array( 'published', 'unresolved' ),
@@ -141,7 +151,7 @@ class PRX3_Financials {
 			$by_status[ $s ] = ( $by_status[ $s ] ?? 0 ) + 1;
 		}
 		global $wpdb;
-		$new_owners = (int) $wpdb->get_var(
+		$new_owners = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- yearly count from the plugin's own share register table.
 			$wpdb->prepare(
 				"SELECT COUNT(DISTINCT user_id) FROM {$wpdb->prefix}prx3_share_register WHERE event = 'acquisition' AND recorded_at BETWEEN %s AND %s",
 				$from,

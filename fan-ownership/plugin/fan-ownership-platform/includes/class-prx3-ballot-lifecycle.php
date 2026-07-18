@@ -15,8 +15,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Cron-driven ballot lifecycle: opens due ballots with an electorate
+ * snapshot, chases quorum, closes on time, and publishes results —
+ * including re-runs, supermajorities, and tie hand-offs to the board.
+ */
 class PRX3_Ballot_Lifecycle {
 
+	/**
+	 * Hook the lifecycle tick and its five-minute cron interval.
+	 */
 	public static function init() {
 		add_action( 'prx3_ballot_tick', array( __CLASS__, 'tick' ) );
 		// 5-minute heartbeat is required for timely ballot open/close (FO-206);
@@ -25,6 +33,12 @@ class PRX3_Ballot_Lifecycle {
 		add_filter( 'cron_schedules', array( __CLASS__, 'five_minutes' ) );
 	}
 
+	/**
+	 * Register the five-minute cron interval used by the tick.
+	 *
+	 * @param array $schedules Registered cron schedules.
+	 * @return array Schedules including prx3_5min.
+	 */
 	public static function five_minutes( $schedules ) {
 		$schedules['prx3_5min'] = array(
 			'interval' => 300,
@@ -33,16 +47,26 @@ class PRX3_Ballot_Lifecycle {
 		return $schedules;
 	}
 
+	/**
+	 * Schedule the recurring tick (called on plugin activation).
+	 */
 	public static function schedule_cron() {
 		if ( ! wp_next_scheduled( 'prx3_ballot_tick' ) ) {
 			wp_schedule_event( time() + 60, 'prx3_5min', 'prx3_ballot_tick' );
 		}
 	}
 
+	/**
+	 * Clear the recurring tick (called on plugin deactivation).
+	 */
 	public static function unschedule_cron() {
 		wp_clear_scheduled_hook( 'prx3_ballot_tick' );
 	}
 
+	/**
+	 * One lifecycle pass: open due ballots, send reminders, close due
+	 * ballots, and flag stalled decision-register entries.
+	 */
 	public static function tick() {
 		self::open_due_ballots();
 		self::remind_closing_soon();

@@ -11,11 +11,20 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * HS256 JWT issue/verify for the native apps, with revocation via a
+ * per-user token version (FO-301, T6).
+ */
 class PRX3_JWT {
 
 	const ACCESS_TTL  = 3600;        // 1 hour.
 	const REFRESH_TTL = 2592000;     // 30 days.
 
+	/**
+	 * The signing secret: a stored random value plus the site auth salt.
+	 *
+	 * @return string
+	 */
 	private static function secret() {
 		$secret = get_option( 'prx3_jwt_secret' );
 		if ( ! $secret ) {
@@ -25,6 +34,13 @@ class PRX3_JWT {
 		return $secret . wp_salt( 'auth' );
 	}
 
+	/**
+	 * The user's current token version; tokens minted for older versions
+	 * are rejected.
+	 *
+	 * @param int $user_id User.
+	 * @return int
+	 */
 	public static function token_version( $user_id ) {
 		return (int) get_user_meta( $user_id, 'prx3_token_version', true );
 	}

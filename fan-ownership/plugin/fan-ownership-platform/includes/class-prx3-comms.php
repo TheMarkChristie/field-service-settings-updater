@@ -12,10 +12,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Outbound communications: wraps email in the single branded template,
+ * gates sends on category preferences, and fans out push notifications
+ * to registered app devices.
+ */
 class PRX3_Comms {
 
 	const CATEGORIES = array( 'governance', 'match', 'content', 'meetings', 'news' );
 
+	/**
+	 * Hook the preference-centre save handler.
+	 */
 	public static function init() {
 		add_action( 'admin_post_prx3_save_prefs', array( __CLASS__, 'save_prefs' ) );
 		add_action( 'admin_post_nopriv_prx3_save_prefs', '__return_false' );
@@ -43,6 +51,11 @@ class PRX3_Comms {
 
 	/**
 	 * The single branded template (FO-116 AC1 / T72), identity from config.
+	 *
+	 * @param string $subject  Subject (unused in the body markup, kept for filters).
+	 * @param string $body     Plain-text body to wrap.
+	 * @param string $category Category; governance omits the unsubscribe link.
+	 * @return string Full HTML email markup.
 	 */
 	private static function wrap( $subject, $body, $category ) {
 		$club    = prx3_club_name();

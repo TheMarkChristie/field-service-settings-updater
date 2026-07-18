@@ -30,6 +30,11 @@ class PRX3_Certificates {
 	/**
 	 * Issue (or re-issue) the certificate whenever the holding changes.
 	 * Superseded versions remain viewable (FO-113 AC2).
+	 *
+	 * @param int    $user_id User the shares were granted to.
+	 * @param int    $count   Shares added in this grant.
+	 * @param int    $total   New total holding.
+	 * @param string $source  Grant source ('purchase'|'gift'|'admin').
 	 */
 	public static function issue( $user_id, $count, $total, $source ) {
 		$history   = get_user_meta( $user_id, 'prx3_certificates', true );
@@ -70,6 +75,9 @@ class PRX3_Certificates {
 		// Automatic badge issue rides the same event (T24): PRX3_Badges listens too.
 	}
 
+	/**
+	 * Register the public /verify-owner/{code}/ rewrite endpoint.
+	 */
 	public static function register_verify_endpoint() {
 		add_rewrite_rule( '^verify-owner/([A-Z0-9]+)/?$', 'index.php?prx3_verify_code=$matches[1]', 'top' );
 		add_rewrite_tag( '%prx3_verify_code%', '([A-Z0-9]+)' );
@@ -90,6 +98,11 @@ class PRX3_Certificates {
 		}
 	}
 
+	/**
+	 * Render the public verification page for a certificate code and exit.
+	 *
+	 * @param string $code Uppercased verification code from the URL.
+	 */
 	private static function render_verification( $code ) {
 		$codes = get_option( 'prx3_verify_codes', array() );
 		status_header( 200 );
@@ -128,6 +141,11 @@ class PRX3_Certificates {
 		exit;
 	}
 
+	/**
+	 * Render the member's latest certificate as a print-ready page and exit.
+	 *
+	 * @param int $user_id Logged-in member viewing their certificate.
+	 */
 	private static function render_certificate( $user_id ) {
 		$history = get_user_meta( $user_id, 'prx3_certificates', true );
 		if ( ! is_array( $history ) || ! $history ) {

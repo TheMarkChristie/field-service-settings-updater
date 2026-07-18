@@ -12,8 +12,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Badge awarding: Founders and configurable milestone rules, delivered
+ * through the badge plugin contract with queue-and-retry when no handler
+ * is installed.
+ */
 class PRX3_Badges {
 
+	/**
+	 * Hook award triggers and schedule the hourly retry of queued awards.
+	 */
 	public static function init() {
 		add_action( 'prx3_shares_granted', array( __CLASS__, 'maybe_award_founder' ), 10, 4 );
 		add_action( 'prx3_milestone_event', array( __CLASS__, 'evaluate_milestones' ), 10, 2 );
@@ -69,6 +77,11 @@ class PRX3_Badges {
 	/**
 	 * FO-114 AC1: Founders badge for first purchases before the configured
 	 * launch moment (P56).
+	 *
+	 * @param int    $user_id User the shares were granted to.
+	 * @param int    $count   Shares added in this grant.
+	 * @param int    $total   New total holding.
+	 * @param string $source  Grant source ('purchase'|'gift'|'admin').
 	 */
 	public static function maybe_award_founder( $user_id, $count, $total, $source ) {
 		if ( $total !== $count ) {

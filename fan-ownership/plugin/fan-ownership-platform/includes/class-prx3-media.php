@@ -13,8 +13,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Media service: signed Cloudflare Stream playback, the replay
+ * auto-publish pipeline, and per-member resumable playback positions.
+ */
 class PRX3_Media {
 
+	/**
+	 * Register the replay pipeline and video edit screen hooks.
+	 */
 	public static function init() {
 		add_action( 'prx3_publish_replay', array( __CLASS__, 'publish_replay' ) );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
@@ -25,6 +32,8 @@ class PRX3_Media {
 	 * Signed playback token for a Cloudflare Stream video (T62/T12):
 	 * per-member, short-lived, so leaked links die.
 	 *
+	 * @param string $cf_uid  Cloudflare Stream video UID.
+	 * @param int    $user_id Requesting member's user ID.
 	 * @return string|WP_Error Signed token, or the UID unsigned when no
 	 *                         signing key is configured (dev mode).
 	 */

@@ -9,8 +9,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Owner chapters: founding applications, open join/leave membership,
+ * annual re-affirmation with lapse flagging, and de-recognition.
+ */
 class PRX3_Chapters {
 
+	/**
+	 * Wire the chapter meta box, save handler, and the daily
+	 * re-affirmation check.
+	 */
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
 		add_action( 'save_post_prx3_chapter', array( __CLASS__, 'save_meta' ), 10, 2 );

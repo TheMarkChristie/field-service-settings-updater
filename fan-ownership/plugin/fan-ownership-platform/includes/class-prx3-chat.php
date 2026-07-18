@@ -200,6 +200,12 @@ class PRX3_Chat {
 		return isset( $modes[ $room ] ) ? (int) $modes[ $room ] : 0;
 	}
 
+	/**
+	 * Does the message hit the configured word filter (held for review)?
+	 *
+	 * @param string $body Message text.
+	 * @return bool
+	 */
 	private static function hits_word_filter( $body ) {
 		$list = array_filter( array_map( 'trim', explode( "\n", (string) prx3_setting( 'chat_blocklist', '' ) ) ) );
 		foreach ( $list as $word ) {

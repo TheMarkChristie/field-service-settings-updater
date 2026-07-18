@@ -89,10 +89,10 @@ class PRX3_Meetings {
 				'post_type'      => 'prx3_meeting',
 				'post_status'    => 'publish',
 				'posts_per_page' => $limit,
-				'meta_key'       => '_prx3_meeting_start',
+				'meta_key'       => '_prx3_meeting_start', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded lookup ordering a small meeting CPT by start.
 				'orderby'        => 'meta_value',
 				'order'          => 'ASC',
-				'meta_query'     => array(
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- filters the same small meeting CPT to future dates.
 					array(
 						'key'     => '_prx3_meeting_start',
 						'value'   => prx3_now(),
@@ -115,6 +115,12 @@ class PRX3_Meetings {
 		add_rewrite_tag( '%prx3_ics_token%', '([a-f0-9]{32})' );
 	}
 
+	/**
+	 * Per-member calendar feed URL, minting the token on first use.
+	 *
+	 * @param int $user_id Member user ID.
+	 * @return string Tokenised ICS feed URL.
+	 */
 	public static function member_ics_url( $user_id ) {
 		$token = get_user_meta( $user_id, 'prx3_ics_token', true );
 		if ( ! $token ) {
@@ -124,6 +130,10 @@ class PRX3_Meetings {
 		return home_url( '/owners-calendar/' . $token . '.ics' );
 	}
 
+	/**
+	 * Serve the calendar feed when a tokenised URL is requested:
+	 * upcoming meetings plus open ballot deadlines.
+	 */
 	public static function maybe_serve_ics() {
 		$token = get_query_var( 'prx3_ics_token' );
 		if ( ! $token ) {
@@ -131,8 +141,8 @@ class PRX3_Meetings {
 		}
 		$users = get_users(
 			array(
-				'meta_key'   => 'prx3_ics_token',
-				'meta_value' => $token,
+				'meta_key'   => 'prx3_ics_token', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- exact-match token lookup, one row.
+				'meta_value' => $token, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'fields'     => 'ID',
 				'number'     => 1,
 			)
@@ -188,6 +198,10 @@ class PRX3_Meetings {
 		}
 	}
 
+	/**
+	 * Meeting details meta box: start time, stream embed, AGM flag,
+	 * recording, and action minutes.
+	 */
 	public static function meta_box() {
 		add_meta_box(
 			'prx3_meeting_details',
@@ -210,6 +224,13 @@ class PRX3_Meetings {
 		);
 	}
 
+	/**
+	 * Save meeting meta from the meta box; logs when a recording is
+	 * first published.
+	 *
+	 * @param int     $post_id Meeting post ID.
+	 * @param WP_Post $post    Meeting post object.
+	 */
 	public static function save_meta( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_meeting_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_meeting_nonce'] ), 'prx3_meeting_meta' ) ) {
 			return;

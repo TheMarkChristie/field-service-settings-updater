@@ -153,6 +153,11 @@ class PRX3_Shortcodes {
 		return ob_get_clean();
 	}
 
+	/**
+	 * [prx3_share_ladder] — the published tiered price ladder.
+	 *
+	 * @return string Table HTML.
+	 */
 	public static function share_ladder() {
 		$max  = prx3_max_shares();
 		$rows = '';
@@ -166,6 +171,12 @@ class PRX3_Shortcodes {
 
 	/* ---------------- Account ---------------- */
 
+	/**
+	 * [prx3_account] — the owner's account page: shares, discounts,
+	 * certificate, preferences, agreement status and account closure.
+	 *
+	 * @return string Account HTML, or the gate for visitors.
+	 */
 	public static function account() {
 		self::enqueue();
 		if ( ! is_user_logged_in() ) {
@@ -219,6 +230,12 @@ class PRX3_Shortcodes {
 
 	/* ---------------- Governance ---------------- */
 
+	/**
+	 * [prx3_ballots] — open ballots with voting forms plus the
+	 * upcoming schedule.
+	 *
+	 * @return string Ballots HTML, or the gate for non-owners.
+	 */
 	public static function ballots() {
 		self::enqueue();
 		if ( ! prx3_is_owner() ) {
@@ -245,6 +262,13 @@ class PRX3_Shortcodes {
 		return ob_get_clean();
 	}
 
+	/**
+	 * One ballot card: options, the member's current choice, weighting
+	 * and the secret-ballot note.
+	 *
+	 * @param int $ballot_id Ballot post ID.
+	 * @return string Card HTML.
+	 */
 	private static function render_ballot_card( $ballot_id ) {
 		$options = (array) get_post_meta( $ballot_id, '_prx3_options', true );
 		$mine    = PRX3_Ballots::member_choice( $ballot_id, get_current_user_id() );
@@ -277,6 +301,12 @@ class PRX3_Shortcodes {
 		return $html;
 	}
 
+	/**
+	 * [prx3_ideas] — propose an idea and support others; ideas hitting
+	 * the threshold go automatically to a ballot.
+	 *
+	 * @return string Ideas HTML, or the gate for non-owners.
+	 */
 	public static function ideas() {
 		self::enqueue();
 		if ( ! prx3_is_owner() ) {
@@ -306,6 +336,11 @@ class PRX3_Shortcodes {
 		return ob_get_clean();
 	}
 
+	/**
+	 * [prx3_questions] — ask the club, upvote questions and read answers.
+	 *
+	 * @return string Questions HTML, or the gate for non-owners.
+	 */
 	public static function questions() {
 		self::enqueue();
 		if ( ! prx3_is_owner() ) {
@@ -339,6 +374,11 @@ class PRX3_Shortcodes {
 		return ob_get_clean();
 	}
 
+	/**
+	 * [prx3_meetings] — upcoming meetings with RSVP and the calendar feed.
+	 *
+	 * @return string Meetings HTML, or the gate for non-owners.
+	 */
 	public static function meetings() {
 		self::enqueue();
 		if ( ! prx3_is_owner() ) {
@@ -356,6 +396,12 @@ class PRX3_Shortcodes {
 		return ob_get_clean();
 	}
 
+	/**
+	 * [prx3_decisions] — the decision register with status badges and
+	 * recent updates.
+	 *
+	 * @return string Register HTML, or the gate for non-owners.
+	 */
 	public static function decisions() {
 		if ( ! prx3_is_owner() ) {
 			return self::gate();
@@ -395,6 +441,12 @@ class PRX3_Shortcodes {
 
 	/* ---------------- Watch ---------------- */
 
+	/**
+	 * [prx3_match id] — the match centre: player, timeline and chat.
+	 *
+	 * @param array $atts Shortcode attributes: id (match post ID).
+	 * @return string Match centre HTML, or the gate for non-owners.
+	 */
 	public static function match( $atts ) {
 		self::enqueue();
 		if ( ! prx3_is_owner() ) {
@@ -417,6 +469,12 @@ class PRX3_Shortcodes {
 			. '</section></div>';
 	}
 
+	/**
+	 * [prx3_videos] — the video library, optionally filtered by type.
+	 *
+	 * @param array $atts Shortcode attributes: type (video type slug).
+	 * @return string Library HTML, or the gate for non-owners.
+	 */
 	public static function videos( $atts ) {
 		self::enqueue();
 		if ( ! prx3_is_owner() ) {
@@ -430,7 +488,7 @@ class PRX3_Shortcodes {
 			'no_found_rows'  => true,
 		);
 		if ( $atts['type'] ) {
-			$args['tax_query'] = array(
+			$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- single-term filter on a capped library listing.
 				array(
 					'taxonomy' => 'prx3_video_type',
 					'field'    => 'slug',
@@ -453,6 +511,11 @@ class PRX3_Shortcodes {
 
 	/* ---------------- Dashboard & board ---------------- */
 
+	/**
+	 * [prx3_dashboard] — the member home: open ballots and the next meeting.
+	 *
+	 * @return string Dashboard HTML, or the gate for non-owners.
+	 */
 	public static function dashboard() {
 		self::enqueue();
 		if ( ! prx3_is_owner() ) {
@@ -475,6 +538,12 @@ class PRX3_Shortcodes {
 		return $out;
 	}
 
+	/**
+	 * [prx3_board_directory] — public list of board members with their
+	 * declared interests.
+	 *
+	 * @return string Directory HTML.
+	 */
 	public static function board_directory() {
 		$out = '<div class="prx3-board-directory"><h2>' . esc_html__( 'The board', 'fan-ownership' ) . '</h2>';
 		foreach ( get_users( array( 'role' => 'prx3_board_member' ) ) as $director ) {

@@ -16,13 +16,24 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Serves the print-optimised brand pack page at /brand-pack/ from the
+ * club's uploaded assets — logos, colours, typography, kit, and usage
+ * rules.
+ */
 class PRX3_Brand {
 
+	/**
+	 * Register the rewrite endpoint and the front-end renderer.
+	 */
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'endpoint' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_render' ) );
 	}
 
+	/**
+	 * Add the /brand-pack/ rewrite rule and query var.
+	 */
 	public static function endpoint() {
 		add_rewrite_rule( '^brand-pack/?$', 'index.php?prx3_brand_pack=1', 'top' );
 		add_rewrite_tag( '%prx3_brand_pack%', '1' );
@@ -42,6 +53,10 @@ class PRX3_Brand {
 		return sprintf( '%d %d %d', hexdec( substr( $hex, 0, 2 ) ), hexdec( substr( $hex, 2, 2 ) ), hexdec( substr( $hex, 4, 2 ) ) );
 	}
 
+	/**
+	 * Output the full brand pack HTML page and exit when the /brand-pack/
+	 * query var is present.
+	 */
 	public static function maybe_render() {
 		if ( ! get_query_var( 'prx3_brand_pack' ) ) {
 			return;

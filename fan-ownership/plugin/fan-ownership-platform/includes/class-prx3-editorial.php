@@ -74,12 +74,20 @@ class PRX3_Editorial {
 		return $data;
 	}
 
+	/**
+	 * Register the Editorial Controls meta box on governed post types.
+	 */
 	public static function meta_boxes() {
 		foreach ( array( 'prx3_ballot', 'prx3_document', 'prx3_video', 'prx3_exclusive' ) as $type ) {
 			add_meta_box( 'prx3_editorial', __( 'Editorial Controls', 'fan-ownership' ), array( __CLASS__, 'render_box' ), $type, 'side', 'high' );
 		}
 	}
 
+	/**
+	 * Render the Editorial Controls meta box.
+	 *
+	 * @param WP_Post $post Post being edited.
+	 */
 	public static function render_box( $post ) {
 		wp_nonce_field( 'prx3_editorial', 'prx3_editorial_nonce' );
 		$approved_by = (int) get_post_meta( $post->ID, '_prx3_approved_by', true );
@@ -109,6 +117,12 @@ class PRX3_Editorial {
 		echo '<p><label><input type="checkbox" name="prx3_teaser_public" value="1" ' . checked( get_post_meta( $post->ID, '_prx3_teaser_public', true ), '1', false ) . '> ' . esc_html__( 'Teaser page is publicly reachable', 'fan-ownership' ) . '</label></p>';
 	}
 
+	/**
+	 * Persist the sensitive/teaser flags and record manager sign-off (P70).
+	 *
+	 * @param int     $post_id Post ID being saved.
+	 * @param WP_Post $post    Post object (unused).
+	 */
 	public static function save_flags( $post_id, $post ) {
 		if ( ! isset( $_POST['prx3_editorial_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_editorial_nonce'] ), 'prx3_editorial' ) ) {
 			return;

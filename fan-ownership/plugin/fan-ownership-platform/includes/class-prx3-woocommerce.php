@@ -192,6 +192,8 @@ class PRX3_WooCommerce {
 	/**
 	 * Payment success: grant shares (or issue the gift code). Idempotent —
 	 * a re-fired status hook cannot double-grant (FO-106 AC4/AC5).
+	 *
+	 * @param int $order_id Paid order ID.
 	 */
 	public static function fulfil_order( $order_id ) {
 		$order = wc_get_order( $order_id );
@@ -237,6 +239,8 @@ class PRX3_WooCommerce {
 
 	/**
 	 * Same payment fingerprint on two accounts = duplicate suspect.
+	 *
+	 * @param WC_Order $order The paid order.
 	 */
 	private static function flag_payment_identity( $order ) {
 		$fingerprint = apply_filters( 'prx3_payment_identity', '', $order ); // Stripe gateway hook supplies the card fingerprint.
@@ -246,8 +250,8 @@ class PRX3_WooCommerce {
 		}
 		$existing = get_users(
 			array(
-				'meta_key'   => 'prx3_payment_fingerprint',
-				'meta_value' => $fingerprint,
+				'meta_key'   => 'prx3_payment_fingerprint', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Bounded duplicate-identity lookup at payment time (FO-110), not a front-end listing.
+				'meta_value' => $fingerprint, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Bounded duplicate-identity lookup at payment time (FO-110), not a front-end listing.
 				'fields'     => 'ID',
 				'exclude'    => array( $user_id ),
 			)
@@ -263,6 +267,10 @@ class PRX3_WooCommerce {
 	/**
 	 * FO-109: gapless sequential invoice numbers, allocated once per order
 	 * at payment, prefixed for the club.
+	 *
+	 * @param string   $number WooCommerce's default order number.
+	 * @param WC_Order $order  The order.
+	 * @return string The allocated invoice number, or the default for unpaid orders.
 	 */
 	public static function sequential_invoice_number( $number, $order ) {
 		$invoice = $order->get_meta( '_prx3_invoice_no' );
@@ -273,7 +281,9 @@ class PRX3_WooCommerce {
 			return $number;
 		}
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic SQL increment is what makes the invoice sequence gapless (FO-109); the options API cannot do this race-free.
 		$wpdb->query( "INSERT INTO {$wpdb->options} (option_name, option_value, autoload) VALUES ('prx3_invoice_seq', '1', 'no') ON DUPLICATE KEY UPDATE option_value = option_value + 1" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Money-path read of the just-incremented sequence; a cached value could duplicate invoice numbers, so caching is deliberately avoided.
 		$seq     = (int) $wpdb->get_var( "SELECT option_value FROM {$wpdb->options} WHERE option_name = 'prx3_invoice_seq'" );
 		$invoice = sprintf( '%s-%06d', prx3_setting( 'invoice_prefix', 'PP' ), $seq );
 		$order->update_meta_data( '_prx3_invoice_no', $invoice );
@@ -282,6 +292,11 @@ class PRX3_WooCommerce {
 		return $invoice;
 	}
 
+	/**
+	 * Show the invoice number on the thank-you page.
+	 *
+	 * @param int $order_id Order ID.
+	 */
 	public static function note_invoice( $order_id ) {
 		$order = wc_get_order( $order_id );
 		if ( $order && $order->get_meta( '_prx3_invoice_no' ) ) {
