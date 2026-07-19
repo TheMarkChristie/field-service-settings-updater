@@ -449,3 +449,19 @@ a.prx3-tile:focus-visible {
 .prx3-profile__socials .prx3-badge {
 	margin-right: 6px;
 }
+
+/* ---------------- FanPress Bot ---------------- */
+.prx3-bot { --prx3-bot: #1a1a2e; --prx3-bot-bg: #eae6df; display: flex; flex-direction: column; max-width: 420px; height: 460px; border: 1px solid #ccd0d4; border-radius: 12px; overflow: hidden; background: #fff; }
+.prx3-bot__head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--prx3-bot); color: #fff; }
+.prx3-bot__avatar { border-radius: 50%; object-fit: cover; }
+.prx3-bot__scroll { flex: 1; overflow-y: auto; padding: 12px; background-color: var(--prx3-bot-bg); background-size: cover; background-position: center; }
+.prx3-bot__form { display: flex; gap: 6px; padding: 8px; border-top: 1px solid #eee; }
+.prx3-bot__form input { flex: 1; min-width: 0; padding: 0.55em; border: 1px solid #ccd0d4; border-radius: 18px; font: inherit; }
+.prx3-bot .prx3-bubble--theirs { background: #fff; }
+.prx3-bot .prx3-bubble--mine { background: var(--prx3-bot); color: #fff; }
+.prx3-bot__ticket { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; padding: 10px; background: #fff; border-radius: 8px; }
+.prx3-bot__ticket input, .prx3-bot__ticket textarea { padding: 0.5em; border: 1px solid #ccd0d4; border-radius: 6px; font: inherit; }
+
+.prx3-bot-launch { position: fixed; right: 18px; bottom: 18px; z-index: 9999; }
+.prx3-bot-launch__btn { width: 56px; height: 56px; border: 0; border-radius: 50%; color: #fff; font-size: 26px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.prx3-bot-launch__panel { position: absolute; right: 0; bottom: 68px; width: min(92vw, 420px); box-shadow: 0 8px 30px rgba(0,0,0,.3); border-radius: 12px; }

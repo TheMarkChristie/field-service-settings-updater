@@ -114,6 +114,7 @@ class PRX3_Admin {
 			'push'        => array( __( 'Push & App', 'fan-ownership' ), 'prx3-setup-push', 'prx3-setup' ),
 			'dataapi'     => array( __( 'Data API & Claude', 'fan-ownership' ), 'prx3-setup-dataapi', 'prx3-setup' ),
 			'sync'        => array( __( 'Power Platform', 'fan-ownership' ), 'prx3-setup-sync', 'prx3-setup' ),
+			'helpbot'     => array( __( 'FanPress Bot', 'fan-ownership' ), 'prx3-setup-helpbot', 'prx3-setup' ),
 		);
 	}
 
@@ -233,6 +234,15 @@ class PRX3_Admin {
 				'sync_webhook_url'    => array( __( 'Outbound webhook URL', 'fan-ownership' ), 'text', __( 'The HTTP-trigger URL from your Power Automate flow — the platform posts member/register deltas here.', 'fan-ownership' ), 'https://make.powerautomate.com/' ),
 				'sync_webhook_secret' => array( __( 'Webhook signing secret', 'fan-ownership' ), 'password', __( 'Any long random string; the platform signs each delivery as X-Prx3-Signature (HMAC-SHA256) so your flow can verify it.', 'fan-ownership' ), '' ),
 			),
+			'helpbot'     => array(
+				'bot_enabled'     => array( __( 'Show the FanPress Bot', 'fan-ownership' ), 'checkbox', __( 'The help bot answers questions from your FAQ and opens a support ticket when it cannot. Appears as a floating chat launcher on the member site and in the app.', 'fan-ownership' ) ),
+				'bot_name'        => array( __( 'Bot name', 'fan-ownership' ), 'text', __( 'The name shown at the top of the chat, e.g. "Panthers Helper".', 'fan-ownership' ) ),
+				'bot_greeting'    => array( __( 'Greeting message', 'fan-ownership' ), 'textarea', __( 'The first message the bot shows when the chat opens.', 'fan-ownership' ) ),
+				'bot_avatar_id'   => array( __( 'Bot avatar', 'fan-ownership' ), 'media', __( 'A small square image shown beside the bot\'s messages.', 'fan-ownership' ) ),
+				'bot_color'       => array( __( 'Bot bubble colour (hex)', 'fan-ownership' ), 'text', __( 'The colour of the bot\'s chat bubbles, e.g. #1a1a2e.', 'fan-ownership' ) ),
+				'bot_bg_color'    => array( __( 'Chat background colour (hex)', 'fan-ownership' ), 'text', __( 'Background colour behind the conversation. Leave blank for the default.', 'fan-ownership' ) ),
+				'bot_bg_image_id' => array( __( 'Chat background image', 'fan-ownership' ), 'media', __( 'Optional wallpaper behind the conversation (WhatsApp-style). Overrides the background colour.', 'fan-ownership' ) ),
+			),
 		);
 	}
 
@@ -326,6 +336,11 @@ class PRX3_Admin {
 			echo '<tr><th scope="row"><label for="prx3_' . esc_attr( $key ) . '">' . esc_html( $def[0] ) . '</label></th><td>';
 			if ( 'textarea' === $def[1] ) {
 				echo '<textarea class="large-text" rows="3" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">' . esc_textarea( (string) $value ) . '</textarea>';
+			} elseif ( 'checkbox' === $def[1] ) {
+				// Hidden field first so an unchecked box posts "0" (not empty,
+				// which prx3_setting() would read as "use the default").
+				echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="0">';
+				echo '<label><input type="checkbox" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="1" ' . checked( (string) $value, '1', false ) . '> ' . esc_html__( 'Enabled', 'fan-ownership' ) . '</label>';
 			} elseif ( 'sport' === $def[1] ) {
 				echo '<select id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">';
 				foreach ( PRX3_Config::sports() as $sport_key => $sport ) {

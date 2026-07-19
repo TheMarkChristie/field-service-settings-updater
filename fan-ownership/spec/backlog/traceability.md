@@ -56,6 +56,7 @@ before shipping.
 | 3.15.1.7 | Squad-source selector (P133): "Players come from" now lists any players table with an admin screen (public or admin-only) so an external club plugin's Players type is connectable; excludes the platform's own content types and WP internals; built-in option rebranded "FanPress players" |
 | 3.15.1.8 | Fixtures-source selector (P134): "Matches come from" points player-of-the-match voting at an existing fixtures table (same pattern as players); external fixtures open voting while published; built-in FanPress matches remain the default |
 | 3.15.1.9 | Fix (P129 completed): the last two top-level menus rebranded — "Owners" → FanPress Owners, "Board" → FanPress Board; all five menus now carry the FanPress name, slugs unchanged |
+| 3.16.0.0 | FanPress Bot (P135): a configurable help bot for web and app — answers members from a searchable FAQ knowledge base and, when it cannot, opens a support ticket in one tap. WhatsApp-style bubbles matching FanPress Chat; name/avatar/colour/background/greeting/on-off under FanPress Technical Setup → FanPress Bot. New FAQ + Support Ticket types (Technical Setup), member-scoped ticket threads with staff notification, floating launcher + [prx3_helpbot]/[prx3_tickets] shortcodes, REST under prx3/v1/help and prx3/v1/tickets |
 
 ## Phase 1 — Own
 
@@ -158,6 +159,7 @@ before shipping.
 | FO-316 The squad | Done | 0.1.0; 3.10.0.0; source select 3.15.1.4 | `class-prx3-players.php` — `prx3_player` CPT at `/squad/` (number, position, active flag, featured-image photo), staff-only editing, active-only poll options + Player pages render number, position, and POTM/month honours (block-theme safe). **Squad source is selectable (P131):** a club can point the player features at an existing players table from another plugin (FanPress Settings → Club → "Players come from"), and the built-in list is hidden so there is never a second squad | |
 | FO-317 Player of the match live | Done | 0.1.0; match source 3.15.1.8 | Opens on match live, closes 30 min after `_prx3_ended_at`, one changeable vote per member, live tallies, roster validation, auto winner + push + player honours on ballot tick; REST GET/POST `/matches/{id}/potm`. **Fixtures source is selectable (P134):** with an external matches table the vote attaches to that plugin's fixtures and opens while the fixture is published | Web/app poll UI consumes the REST routes; native screen is scheduled app build-out |
 | FO-318 Player of the month | Done | 0.1.0 | Last-7-days window, one changeable vote per member, per-month archive option, auto winner + push on daily tick; REST GET/POST `/potm-month` | Same UI note as FO-317 |
+| FO-319 FanPress Bot | Done | 3.16.0.0 | `class-prx3-helpbot.php` — configurable help bot answering members from a searchable FAQ knowledge base (`prx3_faq`, token-overlap scoring with a confidence floor); when it cannot answer it opens a member-scoped support ticket (`prx3_ticket`) in one tap. Threaded replies with ownership enforcement, staff notification on new tickets, answered-on-staff-reply. WhatsApp-style widget matching FanPress Chat; name/avatar/colour/background/greeting/on-off under FanPress Technical Setup → FanPress Bot. Member-only floating launcher, `[prx3_helpbot]`/`[prx3_tickets]` shortcodes, REST `prx3/v1/help` (public config/ask) + `prx3/v1/tickets` (member list/create/reply) | Native app screen consumes the REST routes; scheduled in the app build-out |
 
 ## Cross-cutting requirements
 
@@ -177,7 +179,7 @@ before shipping.
 
 ## Honest summary
 
-Done 78 · Partial 6 · Operational 2 · Not built 0. The documentation
+Done 79 · Partial 6 · Operational 2 · Not built 0. The documentation
 suite is complete (FO-314, 3.15.0.0), meeting video is fully
 in-platform (FO-228: 8×8 JaaS with the meet.jit.si fallback, 3.14.0.0),
 and CI runs the full suite, lint, JS checks, and WPCS on every pull

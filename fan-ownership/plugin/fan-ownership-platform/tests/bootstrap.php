@@ -131,12 +131,18 @@ function get_posts( $args = array() ) {
 		if ( isset( $args['meta_key'], $args['meta_value'] ) && (string) get_post_meta( $id, $args['meta_key'], true ) !== (string) $args['meta_value'] ) {
 			continue;
 		}
+		if ( isset( $args['author'] ) && (int) ( $post['post_author'] ?? 0 ) !== (int) $args['author'] ) {
+			continue;
+		}
 		$out[] = (object) array(
-			'ID'           => $id,
-			'post_title'   => $post['post_title'] ?? '',
-			'post_status'  => $post['post_status'] ?? 'draft',
-			'post_content' => $post['post_content'] ?? '',
-			'post_type'    => $post['post_type'],
+			'ID'            => $id,
+			'post_title'    => $post['post_title'] ?? '',
+			'post_status'   => $post['post_status'] ?? 'draft',
+			'post_content'  => $post['post_content'] ?? '',
+			'post_type'     => $post['post_type'],
+			'post_author'   => (int) ( $post['post_author'] ?? 0 ),
+			'post_date_gmt' => $post['post_date_gmt'] ?? '2026-01-01 00:00:00',
+			'menu_order'    => (int) ( $post['menu_order'] ?? 0 ),
 		);
 	}
 	$per  = isset( $args['posts_per_page'] ) && $args['posts_per_page'] > 0 ? (int) $args['posts_per_page'] : count( $out );
@@ -154,7 +160,12 @@ function get_post( $post_id ) {
 		'post_content' => $post['post_content'] ?? '',
 		'post_type'    => $post['post_type'] ?? 'post',
 		'post_status'  => $post['post_status'] ?? 'draft',
+		'post_author'  => (int) ( $post['post_author'] ?? 0 ),
+		'post_date_gmt' => $post['post_date_gmt'] ?? '2026-01-01 00:00:00',
 	);
+}
+function get_comment_meta( $comment_id, $key, $single = true ) {
+	return $GLOBALS['prx3_t']['comment_meta'][ (int) $comment_id ][ $key ] ?? '';
 }
 function get_post_status( $post_id ) {
 	$post = get_post( $post_id );
@@ -775,6 +786,7 @@ require $prx3_base . '/includes/class-prx3-shopify.php';
 require $prx3_base . '/includes/class-prx3-meetings.php';
 require $prx3_base . '/includes/class-prx3-questions.php';
 require $prx3_base . '/includes/class-prx3-players.php';
+require $prx3_base . '/includes/class-prx3-helpbot.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
 require $prx3_base . '/includes/class-prx3-social.php';

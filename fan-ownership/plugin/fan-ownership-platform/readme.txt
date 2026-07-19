@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.9
+Stable tag: 3.16.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,25 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.16.0.0 =
+* New: FanPress Bot — a configurable help bot for the website and app.
+  Members can ask a question and get an instant answer from your
+  knowledge base; if the bot cannot answer, it offers to open a support
+  ticket in one tap. The bot styles itself like FanPress Chat, with
+  WhatsApp-style message bubbles, and is fully configurable under
+  FanPress Technical Setup > FanPress Bot: name, avatar, colour, chat
+  background, greeting, and an on/off switch.
+* Knowledge base: a new "FAQ" type (under FanPress Technical Setup)
+  holds question/answer entries the bot searches to answer members.
+* Support tickets: a new "Support Ticket" type captures anything the
+  bot could not answer. Members see only their own tickets and can
+  reply in a threaded conversation; staff are notified of new tickets
+  and their replies mark a ticket answered.
+* Front end: a floating launcher for signed-in members, plus
+  [prx3_helpbot] and [prx3_tickets] shortcodes to place the bot and a
+  member's ticket list anywhere. New REST endpoints under prx3/v1/help
+  and prx3/v1/tickets power the website and companion app.
 
 = 3.15.1.9 =
 * Finished the FanPress rebrand of the admin menus: the two remaining
