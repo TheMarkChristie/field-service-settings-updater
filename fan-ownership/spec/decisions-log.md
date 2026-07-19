@@ -78,7 +78,7 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | T5 | Login | Email + password, plus Sign in with Apple/Google |
 | T6 | App auth | JWT/refresh tokens issued by plugin REST namespace |
 | T7 | 2FA | Required for staff, optional for members |
-| T8 | Payments | WooCommerce + Stripe (cards, Apple Pay, Google Pay); share tiers as products |
+| T8 | Payments | ~~WooCommerce + Stripe~~ **Superseded by P105/P106**: Shopify, one variant per ladder tier |
 | T9 | Live production | OBS/Streamlabs encoder feed |
 | T10 | VOD | Self-hosted MP4s |
 | T11 | Away audio | Audio-only live stream through same pipeline |
@@ -117,7 +117,7 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | T44 | Search | Scoped member search across all accessible content, access rules enforced |
 | T45 | Phasing | Phase 1 own (join/shares/certificate/badge/content) → Phase 2 decide (Boardroom) → Phase 3 watch (apps + Match Centre) |
 | T46 | Rebrand-proofing | Fully themeable: name, crest, colours, domain as configuration; identity ballot applied in hours |
-| T47 | Gifting & chapters | Gift redemption codes via WooCommerce; chapter directory + map + chapter forum spaces |
+| T47 | Gifting & chapters | Gift redemption codes issued from the store's paid-order webhook (Shopify since P105/P106); chapter directory + map + chapter forum spaces |
 | T48 | Timeline | Phase 1 live 8–12 weeks from spec sign-off, founding-owner beta before public launch |
 | T49 | Builders | Built in-house with Claude Code in this repo; external security audit only |
 | T50 | Budget | Bootstrap: < £200/month run-rate, no capital budget |
@@ -222,7 +222,7 @@ so the recommended options were applied — revisit any of these on request.
 
 | # | Topic | Decision |
 |---|---|---|
-| P105 | Commerce provider | **Shopify replaces WooCommerce** for share sales (provider switchable via `commerce_provider`; the Woo path remains in the code but dormant). Each ladder tier is a Shopify **variant**; the platform builds cart permalinks for the member's exact next tiers and **re-verifies the paid amount against the ladder** when the `orders/paid` webhook (HMAC-verified) arrives — mismatches are held for review, never granted. Because Shopify checkout cannot capture the drawn signature, **grants are immediate only for members who have already signed the current Shareholders' Agreement; everyone else's purchase waits as a pending claim** and is granted the moment they sign on the platform (email invitation sent) — P97/P98 hold. Gifts via a `gift` line property issue codes as before; `refunds/create` surrenders granted shares and voids the order's gift codes (chargeback rules P28). All grants still travel the money path: cap, age gate, owner numbers, register |
+| P105 | Commerce provider | **Shopify replaces WooCommerce** for share sales (the dormant Woo path was subsequently deleted entirely — P106). Each ladder tier is a Shopify **variant**; the platform builds cart permalinks for the member's exact next tiers and **re-verifies the paid amount against the ladder** when the `orders/paid` webhook (HMAC-verified) arrives — mismatches are held for review, never granted. Because Shopify checkout cannot capture the drawn signature, **grants are immediate only for members who have already signed the current Shareholders' Agreement; everyone else's purchase waits as a pending claim** and is granted the moment they sign on the platform (email invitation sent) — P97/P98 hold. Gifts via a `gift` line property issue codes as before; `refunds/create` surrenders granted shares and voids the order's gift codes (chargeback rules P28). All grants still travel the money path: cap, age gate, owner numbers, register |
 
 ## Decisions — round 11: single commerce path (P106)
 
@@ -241,7 +241,7 @@ so the recommended options were applied — revisit any of these on request.
 | T55 | Code flow | Local dev + reviewed PRs; automated tests as the deploy gate |
 | T56 | Errors | Sentry free tier (PHP plugin + Flutter apps), EU region |
 | T57 | Monitoring | UptimeRobot-class checks (portal/checkout/API/streams) + hosted member status page |
-| T58 | Invoicing | Full sequential PDF invoicing plugin on WooCommerce |
+| T58 | Invoicing | ~~WooCommerce invoicing plugin~~ **Superseded by P106**: Shopify order confirmations/receipts; add a Shopify invoice app if formal PDFs are required |
 | T59 | Share register | Platform data is the statutory register of members + one-click export for filings |
 | T60 | Certificate verify | QR + public verification page (name shown only with owner consent) |
 | T61 | Badge plugin | Custom in-house plugin; integration contract: `award_badge` action + `get_member_badges` function |

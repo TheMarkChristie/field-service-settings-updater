@@ -5,7 +5,7 @@
    governs the DECISION, this policy governs EXECUTION.
 2. Segregation: the person raising a payment is never its sole
    approver. Share proceeds are reconciled monthly against the
-   platform's share register export (WooCommerce/Stripe vs register).
+   platform's share register export (Shopify payouts vs register).
 3. Cards & expenses: club cards have named holders and monthly limits;
    expenses require receipts within 30 days; volunteer expenses (P72)
    are pre-approved by budget line.

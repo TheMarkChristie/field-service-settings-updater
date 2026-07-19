@@ -76,7 +76,7 @@ Traceability: P2, P3, P5, P26, P46, T8, P105. Estimate: Design 1.5 / Build 1 / D
 
 Acceptance criteria:
 1. The price ladder (share 1 at £50, each subsequent share 25% higher) is displayed before payment, and the buyer is always routed to a checkout containing exactly their next tiers so the charged amount matches the published ladder for their current holding.
-2. Card, Apple Pay, and Google Pay are accepted (P25); payment is taken in full at purchase. The checkout may be an external store (P105: Shopify); the platform remains the system of record for ownership.
+2. Card, Apple Pay, and Google Pay are accepted (P25); payment is taken in full at purchase. The checkout is the club's Shopify store (P105/P106 — the platform's only checkout); the platform remains the system of record for ownership.
 3. No route exists to exceed 10 shares per member, including by combining purchases, gifts, and top-ups.
 4. On confirmed payment the platform independently re-verifies the amount paid against the published ladder; a mismatched payment is held for human review and never grants shares. A verified purchase updates the member's share count and voting power the moment they hold a signed current Shareholders' Agreement (immediately for signed members; on signing for others — FO-121), with a confirmation sent.
 5. A failed or abandoned payment leaves the member's holding unchanged, and a purchase awaiting signature is visible to the buyer with clear instructions.
@@ -102,12 +102,12 @@ Acceptance criteria:
 4. Unredeemed gifts remain valid indefinitely and are visible to the giver as unredeemed.
 
 ### FO-109 Invoices and receipts
-As an owner, I want a numbered invoice for every purchase kept in my account, so that my records are complete.
-Traceability: T58. Estimate: Design 0.5 / Build 1 / Develop 1 / Test 0.5
+As an owner, I want a receipt for every purchase and a permanent record of what I paid, so that my records are complete.
+Traceability: T58, P106. Estimate: Design 0.5 / Build 0.5 / Develop 0.5 / Test 0.5
 
 Acceptance criteria:
-1. Every completed purchase generates a sequentially numbered invoice showing the club's details, the shares bought, and the tier prices paid.
-2. Invoices are emailed and permanently available in the member's account.
+1. Every completed purchase produces an order confirmation/receipt from the store (Shopify) showing the shares bought and the tier prices paid; a formal numbered invoice is available through the store where required.
+2. The platform's share register permanently records every purchase with its consideration and order reference, reconcilable against the store's records.
 3. Invoice numbering has no gaps or duplicates, verified under concurrent purchases.
 
 ### FO-110 One person, one account

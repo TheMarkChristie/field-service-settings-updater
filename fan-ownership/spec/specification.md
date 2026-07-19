@@ -43,7 +43,7 @@ The platform is one WordPress site with gated owner areas, plus native iOS and A
 
 ### 2.2 Buying, gifting, leaving (P25–P31, P49)
 
-- **Payment:** card, Apple Pay, Google Pay via WooCommerce + Stripe. Each purchase paid in full — no instalments. Top-ups towards the cap allowed any time.
+- **Payment:** card, Apple Pay, Google Pay via the club's **Shopify store** (P105/P106): one variant per ladder tier, the platform routes each buyer to a cart containing exactly their next tiers, and independently re-verifies the paid amount against the ladder when the paid-order webhook arrives (mismatches held, never granted). Shares are granted only once the buyer holds a signed current Shareholders' Agreement — instantly for signed members, on signing for everyone else (sign-to-claim). Each purchase paid in full — no instalments. Top-ups towards the cap allowed any time.
 - **Gifting:** buy-as-gift at checkout issues a redemption code by email; the recipient redeems at sign-up and shares register to them (cap enforced at redemption).
 - **Refunds:** none (⚠ subject to legal review — see §12).
 - **Transfers:** surrender back to the club only; no secondary market. On death, shares pass to next of kin / nominated beneficiary. Leavers surrender shares without payout; personal data erased per GDPR while the share register retains its legal minimum.
@@ -133,7 +133,7 @@ Monthly one-page income/spend summary published as portal content + full annual 
 |---|---|
 | Platform | WordPress + custom fan-ownership plugin; one site with public teaser layer and gated owner areas |
 | Hosting | Managed WordPress host (Kinsta/WP Engine class), UK/EU region |
-| Commerce | WooCommerce + Stripe (cards, Apple Pay, Google Pay); share tiers as products; gift codes |
+| Commerce | **Shopify** (P105/P106): tier-per-variant products, HMAC webhooks (orders/paid, refunds/create), ladder re-verification, sign-to-claim grants, gift line properties → gift codes, refund clawback. WordPress remains the system of record for ownership |
 | Apps | **Flutter**, iOS + Android from day one, online-only, full member feature parity; admin stays in WP admin |
 | App API | Custom REST namespace on the plugin; JWT + refresh tokens in secure storage |
 | Login | Email/password + Sign in with Apple/Google; 2FA required for staff, optional for members |
@@ -195,11 +195,11 @@ Delivery: the board workspace lands as a **Phase 2 extension** (with the Boardro
 
 ## 7. Delivery plan (T45, T48–T50)
 
-Built **in-house with Claude Code** in this repository. Budget: **bootstrap, < £200/month run-rate** (hosting, Stripe fees, Brevo, storage/CDN, StreamYard, stream delivery, Apple/Google developer accounts). External spend only if the security audit is commissioned.
+Built **in-house with Claude Code** in this repository. Budget: **bootstrap, < £200/month run-rate** (hosting, Shopify plan + fees, Brevo, storage/CDN, StreamYard, stream delivery, Apple/Google developer accounts). External spend only if the security audit is commissioned.
 
 | Phase | Scope | Target |
 |---|---|---|
-| **1 — Own** | Public site + gated portal, registration, WooCommerce share checkout (tiers, gifting), certificate + Founders badge, onboarding journey, first content areas | Live 8–12 weeks from spec sign-off; founding-owner beta before public launch |
+| **1 — Own** | Public site + gated portal, registration, Shopify share checkout (tier variants, gifting, sign-to-claim), certificate + Founders badge, onboarding journey, first content areas | Live 8–12 weeks from spec sign-off; founding-owner beta before public launch |
 | **2 — Decide** | The Boardroom: ballots (weighted, secret, automated), ideas pipeline, questions + monthly Q&A, meetings + RSVP + StreamYard embeds, financial publishing, forum, chapters | Follows Phase 1 |
 | **3 — Watch** | Flutter apps (both stores), Match Centre (live stream, chat, minute-by-minute), away audio, VOD library, push notifications | Follows Phase 2 |
 
@@ -227,7 +227,7 @@ Testing: automated coverage on money and vote paths + the founding-owner beta gr
 
 ### 10.1 Membership refinements
 
-- **18+ only** to buy shares (P53); Stripe Radar is the only identity/AML layer (P54).
+- **18+ only** to buy shares (P53); Shopify's fraud analysis is the only identity/AML layer (P54), with the platform's ladder re-verification as the second control.
 - **Owner numbers sequential by join order** (P55); **Founder = bought before public launch day** (P56).
 - Referrals earn **recognition only** — badges, leaderboard, weekly-show shout-outs; the price ladder is never discounted (P73). **Milestone badges** for real participation (voted in 10 ballots, attended every quarterly, idea reached ballot) via the badge plugin (P74).
 

@@ -2,7 +2,7 @@
 
 1. Bus factor: at least TWO people hold Owner-Admin on the platform,
    and at least two hold access to: registrar/DNS, hosting, Stripe,
-   WooCommerce, Cloudflare, Firebase, Brevo, app store accounts, and
+   Shopify, Cloudflare, Firebase, Brevo, app store accounts, and
    the club's socials.
 2. Credential vault: all club credentials live in a shared password
    manager (club-owned, not personal); named owners; quarterly access
