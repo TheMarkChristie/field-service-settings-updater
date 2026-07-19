@@ -150,3 +150,20 @@ FanPress now presents as a messenger, not a classic forum:
   bubbles, other owners' bubbles, and board members' bubbles.
   Defaults: WhatsApp green / white / soft gold. Invalid values fall
   back to the defaults.
+
+## Comms round & owner profiles (V3.11–V3.12)
+
+- **Chat emails** — replies, @mentions, and private messages email
+  members through the club rails; one toggle on the profile switches
+  them off (the bell always works). Muting a chat silences its badge
+  *and* its emails.
+- **Quote a message** — Reply on any bubble quotes it above yours.
+- **Pins** — staff/moderators pin one message per chat to a banner.
+- **Owner profiles** — bio, socials, badges, owner-since, a
+  private-by-default share count, and the activity ring (voting /
+  community / watching). The private identity section (residence,
+  date of birth, government ID, PEP declaration) is visible only to
+  the member and Owner-Admins via the audited Member Tools lookup —
+  only full birth name and nationality show on the owner card.
+  Profile picture plus up to five personal photos, with a consent
+  box before the club may use them on socials.
