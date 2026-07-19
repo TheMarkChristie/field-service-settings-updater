@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.8.0
+Stable tag: 3.9.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,16 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.9.0 =
+* Rich ballot questions: the question is the ballot's post content -
+  full editor with HTML, images, and embedded video - rendered on the
+  ballot page and now also inside the voting card on the ballots list.
+* Answers with descriptions: each option is an answer plus an optional
+  longer description ("Answer | why this option" in the ballot editor),
+  shown beneath the choice on the voting card and exposed to the app
+  API as option_descriptions. The demo kit ballot ships with worked
+  examples.
 
 = 3.8.0 =
 * Ballot URLs are now sequential numbers, not titles:

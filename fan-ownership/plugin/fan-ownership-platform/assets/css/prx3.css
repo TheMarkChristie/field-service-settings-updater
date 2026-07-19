@@ -381,3 +381,16 @@ a.prx3-tile:focus-visible {
 		max-height: 70vh;
 	}
 }
+
+.prx3-ballot__option-desc {
+	display: block;
+	font-weight: 400;
+	font-size: 0.85rem;
+	color: #5f6672;
+	margin: 2px 0 6px 26px;
+}
+
+.prx3-ballot__question img {
+	max-width: 100%;
+	height: auto;
+}

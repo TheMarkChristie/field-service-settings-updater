@@ -273,7 +273,7 @@ class PRX3_Shortcodes {
 			echo '<p>' . esc_html__( 'Nothing open right now — the upcoming schedule is below.', 'fan-ownership' ) . '</p>';
 		}
 		foreach ( $open as $ballot ) {
-			echo self::render_ballot_card( $ballot->ID ); // phpcs:ignore WordPress.Security.EscapeOutput
+			echo self::render_ballot_card( $ballot->ID, true ); // phpcs:ignore WordPress.Security.EscapeOutput
 		}
 		echo '<h2>' . esc_html__( 'Coming up', 'fan-ownership' ) . '</h2><ul>';
 		foreach ( $scheduled as $ballot ) {
@@ -324,10 +324,11 @@ class PRX3_Shortcodes {
 	 * One ballot card: options, the member's current choice, weighting
 	 * and the secret-ballot note.
 	 *
-	 * @param int $ballot_id Ballot post ID.
+	 * @param int  $ballot_id     Ballot post ID.
+	 * @param bool $with_question Include the full question body (HTML and images) in the card.
 	 * @return string Card HTML.
 	 */
-	private static function render_ballot_card( $ballot_id ) {
+	private static function render_ballot_card( $ballot_id, $with_question = false ) {
 		$options = (array) get_post_meta( $ballot_id, '_prx3_options', true );
 		$mine    = PRX3_Ballots::member_choice( $ballot_id, get_current_user_id() );
 		$weight  = prx3_shares( get_current_user_id() );
@@ -340,13 +341,24 @@ class PRX3_Shortcodes {
 			? '<span class="prx3-badge prx3-badge--constitutional">' . esc_html( sprintf( /* translators: %d pct. */ __( 'Constitutional — %d%% to pass', 'fan-ownership' ), (int) prx3_setting( 'constitutional_pct', 75 ) ) ) . '</span>'
 			: '<span class="prx3-badge">' . esc_html__( 'Standard ballot', 'fan-ownership' ) . '</span>' )
 			. ' <span>' . esc_html( sprintf( /* translators: %s date. */ __( 'closes %s', 'fan-ownership' ), prx3_format_datetime( get_post_meta( $ballot_id, '_prx3_closes', true ) ) ) ) . '</span></p>';
+		if ( $with_question ) {
+			$question = get_post( $ballot_id );
+			if ( $question && '' !== trim( (string) $question->post_content ) ) {
+				$html .= '<div class="prx3-ballot__question">' . wp_kses_post( wpautop( $question->post_content ) ) . '</div>';
+			}
+		}
 		if ( $rec ) {
 			$html .= '<p class="prx3-ballot__rec"><strong>' . esc_html__( 'Board recommendation:', 'fan-ownership' ) . '</strong> ' . esc_html( $rec ) . '</p>';
 		}
 		$html .= '<form class="prx3-ballot__form" data-prx3-vote="' . (int) $ballot_id . '"><fieldset><legend class="screen-reader-text">' . esc_html( get_the_title( $ballot_id ) ) . '</legend>';
 		foreach ( $options as $i => $option ) {
 			$id    = 'prx3-b' . (int) $ballot_id . '-o' . (int) $i;
-			$html .= '<p><input type="radio" id="' . esc_attr( $id ) . '" name="prx3_choice" value="' . (int) $i . '" ' . checked( $mine ? (int) $mine['choice'] : -1, $i, false ) . ' required> <label for="' . esc_attr( $id ) . '">' . esc_html( $option ) . '</label></p>';
+			$desc  = PRX3_Ballots::option_description( $ballot_id, $i );
+			$html .= '<p class="prx3-ballot__option"><input type="radio" id="' . esc_attr( $id ) . '" name="prx3_choice" value="' . (int) $i . '" ' . checked( $mine ? (int) $mine['choice'] : -1, $i, false ) . ' required> <label for="' . esc_attr( $id ) . '"><strong>' . esc_html( $option ) . '</strong>';
+			if ( $desc ) {
+				$html .= '<span class="prx3-ballot__option-desc">' . esc_html( $desc ) . '</span>';
+			}
+			$html .= '</label></p>';
 		}
 		$html .= '</fieldset><button type="submit" class="prx3-button">'
 			. esc_html(

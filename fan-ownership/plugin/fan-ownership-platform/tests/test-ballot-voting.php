@@ -78,3 +78,14 @@ PRX3_Ballots::maybe_number_existing();
 t_ok( PRX3_Ballots::number( $b3 ) > 0, 'Upgrade pass numbers legacy ballots' );
 t_eq( $GLOBALS['prx3_t_posts'][ $b3 ]['post_name'], (string) PRX3_Ballots::number( $b3 ), 'Legacy slug moves to the number' );
 t_eq( get_option( 'prx3_ballot_slugs' ), 'v1', 'Upgrade pass stamps itself done' );
+
+// Options carry an answer plus a longer description (P118).
+$parsed = PRX3_Ballots::parse_options( "Gold with black trim | The Golden Cat concept.\nBlack with gold shoulders\nWhite heritage retro | 1998 anniversary reissue " );
+t_eq( $parsed['labels'], array( 'Gold with black trim', 'Black with gold shoulders', 'White heritage retro' ), 'Labels parse from before the pipe' );
+t_eq( $parsed['descriptions'][0], 'The Golden Cat concept.', 'Descriptions parse from after the pipe' );
+t_eq( $parsed['descriptions'][1], '', 'Options without a pipe have no description' );
+$b4 = wp_insert_post( array( 'post_type' => 'prx3_ballot', 'post_status' => 'publish', 'post_title' => 'Descs', 'post_content' => '' ) );
+update_post_meta( $b4, '_prx3_options', $parsed['labels'] );
+update_post_meta( $b4, '_prx3_option_descs', $parsed['descriptions'] );
+t_eq( PRX3_Ballots::option_description( $b4, 2 ), '1998 anniversary reissue', 'Description readable by option index' );
+t_eq( PRX3_Ballots::option_description( $b4, 9 ), '', 'Missing index returns empty, never an error' );

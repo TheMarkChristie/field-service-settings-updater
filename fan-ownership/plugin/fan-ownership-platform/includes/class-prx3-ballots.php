@@ -50,6 +50,39 @@ class PRX3_Ballots {
 	}
 
 	/**
+	 * Parse the options textarea: one option per line, an optional
+	 * longer description after a pipe — "Answer | why this option".
+	 *
+	 * @param string $raw The textarea contents.
+	 * @return array{labels:string[],descriptions:string[]} Parallel arrays by option index.
+	 */
+	public static function parse_options( $raw ) {
+		$labels       = array();
+		$descriptions = array();
+		foreach ( array_filter( array_map( 'trim', explode( "\n", (string) $raw ) ) ) as $line ) {
+			$parts          = array_map( 'trim', explode( '|', $line, 2 ) );
+			$labels[]       = $parts[0];
+			$descriptions[] = $parts[1] ?? '';
+		}
+		return array(
+			'labels'       => $labels,
+			'descriptions' => $descriptions,
+		);
+	}
+
+	/**
+	 * An option's longer description, by index.
+	 *
+	 * @param int $ballot_id Ballot.
+	 * @param int $index     Option index.
+	 * @return string Description, '' when none.
+	 */
+	public static function option_description( $ballot_id, $index ) {
+		$descs = (array) get_post_meta( $ballot_id, '_prx3_option_descs', true );
+		return isset( $descs[ $index ] ) ? (string) $descs[ $index ] : '';
+	}
+
+	/**
 	 * Assign the next sequential number and make it the URL slug, so a
 	 * ballot's address never leaks its title (/owners/ballot/17/).
 	 * WordPress keeps an old-slug redirect if the title slug existed.
@@ -330,8 +363,14 @@ class PRX3_Ballots {
 			echo '<p><strong>' . esc_html__( 'Voting has started or finished — options and rules are locked. To correct an error, withdraw this ballot (recorded and announced) and issue a new one.', 'fan-ownership' ) . '</strong></p>';
 		}
 		$dis = $locked ? 'disabled' : '';
-		echo '<p><label for="prx3_options"><strong>' . esc_html__( 'Options (one per line, minimum two)', 'fan-ownership' ) . '</strong></label>';
-		echo '<textarea class="widefat" rows="5" id="prx3_options" name="prx3_options" ' . esc_attr( $dis ) . '>' . esc_textarea( is_array( $options ) ? implode( "\n", $options ) : '' ) . '</textarea></p>';
+		echo '<p><label for="prx3_options"><strong>' . esc_html__( 'Options (one per line, minimum two). Add a longer description after a pipe: Answer | why this option', 'fan-ownership' ) . '</strong></label>';
+		$descs = (array) get_post_meta( $post->ID, '_prx3_option_descs', true );
+		$lines = array();
+		foreach ( (array) ( is_array( $options ) ? $options : array() ) as $i => $label ) {
+			$lines[] = $label . ( isset( $descs[ $i ] ) && '' !== $descs[ $i ] ? ' | ' . $descs[ $i ] : '' );
+		}
+		echo '<textarea class="widefat" rows="5" id="prx3_options" name="prx3_options" ' . esc_attr( $dis ) . '>' . esc_textarea( implode( "\n", $lines ) ) . '</textarea></p>';
+		echo '<p class="description">' . esc_html__( 'The ballot question itself is the post content above — full editor, images and video welcome.', 'fan-ownership' ) . '</p>';
 		echo '<p><label for="prx3_type"><strong>' . esc_html__( 'Type', 'fan-ownership' ) . '</strong></label> ';
 		echo '<select id="prx3_type" name="prx3_type" ' . esc_attr( $dis ) . '>';
 		echo '<option value="standard" ' . selected( $type, 'standard', false ) . '>' . esc_html__( 'Standard (simple majority)', 'fan-ownership' ) . '</option>';
@@ -394,10 +433,12 @@ class PRX3_Ballots {
 			}
 			return;
 		}
-		$raw     = isset( $_POST['prx3_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['prx3_options'] ) ) : '';
-		$options = array_values( array_filter( array_map( 'trim', explode( "\n", $raw ) ) ) );
-		update_post_meta( $post_id, '_prx3_options', $options );
-		$type = isset( $_POST['prx3_type'] ) && 'constitutional' === $_POST['prx3_type'] ? 'constitutional' : 'standard';
+		$raw    = isset( $_POST['prx3_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['prx3_options'] ) ) : '';
+		$parsed = self::parse_options( $raw );
+		update_post_meta( $post_id, '_prx3_options', $parsed['labels'] );
+		update_post_meta( $post_id, '_prx3_option_descs', $parsed['descriptions'] );
+		$options = $parsed['labels'];
+		$type    = isset( $_POST['prx3_type'] ) && 'constitutional' === $_POST['prx3_type'] ? 'constitutional' : 'standard';
 		update_post_meta( $post_id, '_prx3_type', $type );
 
 		$opens     = isset( $_POST['prx3_opens'] ) ? sanitize_text_field( wp_unslash( $_POST['prx3_opens'] ) ) : '';

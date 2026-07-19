@@ -22,6 +22,12 @@ Acceptance criteria:
 3. Publishing a ballot requires a second approver (FO-119); the annual voting calendar (budget, kit, objectives) is visible to owners all year.
 4. Once any vote has been cast, a ballot's options and close rules cannot be edited; corrections require withdrawing the ballot, which is recorded and announced.
 
+Rich questions and described answers (P118, added at V3.9): the
+question is the post content — full editor, HTML, images, video —
+shown on the ballot page and in the voting card; each option is an
+answer plus an optional longer description underneath, exposed to the
+app as option_descriptions.
+
 Numbered addresses (P117, added at V3.8): every ballot takes the next
 sequential number on first save (Ballot #N, shown on the card and the
 admin list), and its URL is /owners/ballot/N/ — the title never

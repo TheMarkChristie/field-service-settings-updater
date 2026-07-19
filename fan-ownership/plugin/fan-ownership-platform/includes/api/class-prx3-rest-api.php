@@ -608,6 +608,7 @@ class PRX3_REST_API {
 			'title'                => get_the_title( $ballot_id ),
 			'body'                 => wp_strip_all_tags( get_post_field( 'post_content', $ballot_id ) ),
 			'options'              => (array) get_post_meta( $ballot_id, '_prx3_options', true ),
+			'option_descriptions'  => (array) get_post_meta( $ballot_id, '_prx3_option_descs', true ),
 			'type'                 => get_post_meta( $ballot_id, '_prx3_type', true ),
 			'state'                => $state,
 			'opens'                => get_post_meta( $ballot_id, '_prx3_opens', true ),
