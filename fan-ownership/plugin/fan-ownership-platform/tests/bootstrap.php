@@ -155,6 +155,10 @@ function get_post( $post_id ) {
 		'post_status'  => $post['post_status'] ?? 'draft',
 	);
 }
+function get_post_status( $post_id ) {
+	$post = get_post( $post_id );
+	return $post ? $post->post_status : false;
+}
 function get_the_title( $post_id ) {
 	$post = get_post( $post_id );
 	return $post ? $post->post_title : '';
@@ -625,6 +629,7 @@ require $prx3_base . '/includes/class-prx3-shopify.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
 require $prx3_base . '/includes/class-prx3-social.php';
+require $prx3_base . '/includes/class-prx3-pages.php';
 
 /* ---------------- Assertions ---------------- */
 

@@ -427,3 +427,20 @@ Test script:
 3. Attempt to add a `wp_capabilities` meta key or a core post type to the pack — expect the suite (and the live API) to refuse it.
 4. Click "Load demo club" in wp-admin — expect a success notice showing 20 members / 32 items / settings applied; click it again — expect zero duplicates, 32 skips, no cap errors, and unchanged holdings.
 5. Click "Remove demo data" — expect the demo posts, chats, members, and register rows gone and the loaded marker cleared; load again — expect the full club restored.
+
+### FO-131 A fresh install renders the whole member site
+As the club, I want event permalinks to carry their full experience and a one-click installer for every member-facing page, so that a fresh install shows a working club — never an empty page with just a title.
+Traceability: P116, P109, FO-127. Estimate: Design 0.5 / Build 0.5 / Develop 1.5 / Test 0.5
+
+Acceptance criteria:
+1. A ballot's own page renders the complete experience for owners: the description, then the live voting card (options, weighted cast button, change-vote, secrecy note) when open, a "voting opens…" note when scheduled, and a closed/announced note afterwards — with its FanPress chat beside it.
+2. A match's own page renders the Match Centre experience the same way, with the match-day chat beside it.
+3. Both work on block themes: the renderers key off the queried post, never off classic-loop state.
+4. "Create member pages" (Fan App Settings landing, Owner-Admins, nonce-protected) builds every missing shortcode page — join, account, owners hub, ballots, ideas, questions, meetings, decisions, videos, match centre, FanPress Chat, activity, owners directory, messages, notifications, board directory, gift redemption — publishes them, and wires the join and account gate destinations; existing pages are never touched and re-running is a no-op.
+5. Logged-out visitors bounced from gated content land on the created join page (the owner pitch), not the bare login screen.
+
+Test script:
+1. Open an open ballot's permalink as an owner — expect the voting card and chat; as a non-owner — expect the join redirect; after close — expect the closed note.
+2. Open a match permalink as an owner — expect the Match Centre and chat beside it.
+3. Click "Create member pages" on a fresh install — expect all pages created and join/account settings wired; click again — expect zero new pages and every existing one untouched.
+4. Repeat on a block theme — expect identical results.

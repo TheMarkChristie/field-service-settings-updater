@@ -117,3 +117,16 @@ t_eq( (int) get_option( 'prx3_sample_loaded' ), 0, 'Loaded marker cleared so the
 $reloaded = PRX3_Data_API::seed_sample();
 t_eq( $reloaded['members'], 20, 'Reload after removal imports all members again' );
 t_eq( $reloaded['content'], 32, 'Reload after removal inserts all content again' );
+
+// The member-pages installer (FO-131): builds every shortcode page once.
+prx3_test_reset();
+$GLOBALS['prx3_t_posts'] = array();
+$first_run = PRX3_Pages::install();
+t_eq( $first_run['created'], count( PRX3_Pages::pages() ), 'Installer creates every member page' );
+t_eq( $first_run['existing'], 0, 'Fresh install had nothing pre-existing' );
+$pages_map = (array) get_option( 'prx3_member_pages' );
+t_eq( (int) prx3_setting( 'join_page_id' ), (int) $pages_map['join'], 'Join gate destination wired automatically' );
+t_eq( (int) prx3_setting( 'account_page_id' ), (int) $pages_map['account'], 'Account page setting wired automatically' );
+$second_run = PRX3_Pages::install();
+t_eq( $second_run['created'], 0, 'Re-running creates nothing new' );
+t_eq( $second_run['existing'], count( PRX3_Pages::pages() ), 'Re-running leaves every page untouched' );

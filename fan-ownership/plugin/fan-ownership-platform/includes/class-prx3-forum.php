@@ -868,15 +868,19 @@ class PRX3_Forum {
 	 * @return string Content plus the embedded chat.
 	 */
 	public static function embed_chat( $content ) {
-		if ( ! function_exists( 'is_singular' ) || ! is_singular( array( 'prx3_match', 'prx3_ballot' ) ) || ! in_the_loop() || ! is_main_query() ) {
+		if ( is_admin() || ! function_exists( 'is_singular' ) || ! is_singular( array( 'prx3_match', 'prx3_ballot' ) ) ) {
+			return $content;
+		}
+		// Block-theme safe: key off the queried post, not the loop.
+		$post_id = get_queried_object_id();
+		if ( get_the_ID() && (int) get_the_ID() !== (int) $post_id ) {
 			return $content;
 		}
 		if ( ! prx3_feature_on( 'forum' ) || ! prx3_is_owner() ) {
 			return $content;
 		}
-		$post_id = get_the_ID();
-		$key     = ( 'prx3_match' === get_post_type( $post_id ) ? 'match-' : 'ballot-' ) . (int) $post_id;
-		$topic   = self::topic_for_source( $key );
+		$key   = ( 'prx3_match' === get_post_type( $post_id ) ? 'match-' : 'ballot-' ) . (int) $post_id;
+		$topic = self::topic_for_source( $key );
 		if ( ! $topic ) {
 			return $content;
 		}

@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.6.0
+Stable tag: 3.7.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,20 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.7.0 =
+* Fresh installs now render out of the box. Ballot pages carry their
+  full experience for owners - live voting card (options, weighted
+  cast button, change-vote, secrecy note) while open, scheduled and
+  closed states otherwise - and match pages carry the Match Centre,
+  each with their FanPress chat beside them. Both are block-theme
+  safe (the loop checks that could leave pages empty are gone). New
+  "Create member pages" button on the Fan App Settings landing builds
+  every member shortcode page - join, account, owners hub, ballots,
+  ideas, questions, meetings, decisions, videos, match centre,
+  FanPress Chat, activity, owners, messages, notifications, board,
+  gift redemption - publishes them, and wires the join and account
+  destinations. Idempotent: existing pages are never touched.
 
 = 3.6.0 =
 * Demo club lifecycle: loading is now idempotent - re-running skips

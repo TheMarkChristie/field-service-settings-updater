@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Fan Ownership Platform
  * Description:       The fan-owned club platform: shares on a tiered ladder, weighted secret ballots, ideas, questions, meetings, financial transparency, decision register, board workspace, match centre, and the app API. Built to the Perth Panthers specification (spec v1.1, 139 decisions).
- * Version:           3.6.0
+ * Version:           3.7.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Mark Christie
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PRX3_VERSION', '3.6.0' );
+define( 'PRX3_VERSION', '3.7.0' );
 define( 'PRX3_FILE', __FILE__ );
 define( 'PRX3_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRX3_URL', plugin_dir_url( __FILE__ ) );
@@ -73,6 +73,7 @@ require_once PRX3_DIR . 'includes/class-prx3-admin-columns.php';
 require_once PRX3_DIR . 'admin/class-prx3-admin.php';
 require_once PRX3_DIR . 'admin/class-prx3-dashboard.php';
 require_once PRX3_DIR . 'includes/class-prx3-shortcodes.php';
+require_once PRX3_DIR . 'includes/class-prx3-pages.php';
 
 /**
  * Boot all modules.
@@ -123,6 +124,7 @@ function prx3_boot() {
 		'PRX3_Admin',
 		'PRX3_Dashboard',
 		'PRX3_Shortcodes',
+		'PRX3_Pages',
 	);
 	foreach ( $modules as $module ) {
 		if ( class_exists( $module ) && method_exists( $module, 'init' ) ) {

@@ -42,6 +42,9 @@ class PRX3_Shortcodes {
 		foreach ( $codes as $tag => $method ) {
 			add_shortcode( $tag, array( __CLASS__, $method ) );
 		}
+		// Event permalinks carry their full experience even when no
+		// shortcode page exists (FO-131): ballots vote in place.
+		add_filter( 'the_content', array( __CLASS__, 'single_content' ), 9 );
 	}
 
 	/**
@@ -278,6 +281,43 @@ class PRX3_Shortcodes {
 		}
 		echo '</ul></div>';
 		return ob_get_clean();
+	}
+
+	/**
+	 * Render the full member experience on an event's own permalink:
+	 * an open ballot shows its voting card beneath the description, a
+	 * closed one its state, and a match its Match Centre. Runs for the
+	 * queried singular post only — block-theme safe (no in_the_loop).
+	 *
+	 * @param string $content Post content.
+	 * @return string Content plus the event experience.
+	 */
+	public static function single_content( $content ) {
+		if ( is_admin() || ! function_exists( 'is_singular' ) || ! is_singular( array( 'prx3_ballot', 'prx3_match' ) ) ) {
+			return $content;
+		}
+		$post_id = get_queried_object_id();
+		if ( get_the_ID() && (int) get_the_ID() !== (int) $post_id ) {
+			return $content;
+		}
+		if ( ! prx3_is_owner() ) {
+			return $content;
+		}
+		self::enqueue();
+		if ( 'prx3_match' === get_post_type( $post_id ) ) {
+			return $content . self::match( array( 'id' => $post_id ) );
+		}
+		$state = PRX3_Ballots::state( $post_id );
+		if ( 'open' === $state ) {
+			return $content . '<div class="prx3-ballots" data-prx3-app="ballots">' . self::render_ballot_card( $post_id ) . '</div>';
+		}
+		if ( 'scheduled' === $state ) {
+			return $content . '<p class="prx3-notice">' . esc_html( sprintf( /* translators: %s date. */ __( 'Voting opens %s.', 'fan-ownership' ), prx3_format_datetime( get_post_meta( $post_id, '_prx3_opens', true ) ) ) ) . '</p>';
+		}
+		if ( in_array( $state, array( 'closed', 'published', 'rerun', 'unresolved' ), true ) ) {
+			return $content . '<p class="prx3-notice">' . esc_html__( 'Voting has closed — the result is announced in the decision register and on the owners dashboard.', 'fan-ownership' ) . '</p>';
+		}
+		return $content;
 	}
 
 	/**

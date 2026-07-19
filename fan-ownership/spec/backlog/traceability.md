@@ -80,6 +80,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-233 Community round-out | Done | Directory search + pagination (`PRX3_Social::directory`), @mention autosuggest (`assets/js/prx3-mentions.js` + owner-gated `/members/suggest`), activity cheers (`toggle_cheer`/`cheer_count`, nonce + owner gate), FanPress capabilities tied to platform roles via versioned self-heal | Remaining BuddyPress gaps by choice: email notifications, avatars/cover images, online presence, widgets/blocks |
 | FO-234 WhatsApp-style chat | Done | Chat-list UI with category chips, last-message snippets, and unread badges (`prx3_thread_reads`, visible-only counting); bubble conversations (`render_thread_view`/`bubble_role`: mine right, theirs left, board highlighted + tagged); configurable colours in Settings → FanPress Chat (`chat_colors` with safe fallbacks); match/ballot chats embedded on their pages via `the_content` + `topic_for_source`; front-end send handler; app API unread counts + mark-read | |
 | FO-130 Sample data pack | Done | `integrations/sample-data/` — 20 members (money-path grants), 32 content items across all 12 Data API types incl. FanPress chats, targets + chat colours via settings route, one-command `seed.sh` plus bundled one-click "Load demo club" / "Remove demo data" admin buttons (no key/terminal needed; loading idempotent — skips existing content, tops holdings up to pack amounts; removal deletes the exact demo footprint incl. auto-chats and register rows); `tests/test-sample-data.php` proves every payload through the real API handlers; `prx3_forum_topic` added to Data API allowed types; chat colours registered as known settings | |
+| FO-131 Renders out of the box | Done | Ballot permalinks render the voting card/state (`PRX3_Shortcodes::single_content`), match permalinks render the Match Centre, both block-theme safe (queried-post keyed; chat embed fixed likewise); `PRX3_Pages` one-click installer creates all 17 member shortcode pages idempotently and wires join/account gate destinations | Root-caused from the live Perth Panthers site showing bare ballot pages |
 
 ## Phase 3 — Watch
 
@@ -122,7 +123,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 61 · Partial 18 · Operational 2 · Not built 1 (remainder of the
+Done 62 · Partial 18 · Operational 2 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

@@ -15,3 +15,8 @@ covers setup, day-to-day operation, and troubleshooting for one area.
 
 Still to write (tracked as FO-314): full admin guide, matchday runbook,
 developer docs, API reference, volunteer handbooks.
+
+> Fresh install? **Fan App Settings → Create member pages** builds the
+> whole member site (join, account, hub, ballots, FanPress Chat, match
+> centre, and more) in one click, and event permalinks render their
+> full experience on any theme.

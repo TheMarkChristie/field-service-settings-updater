@@ -203,6 +203,10 @@ class PRX3_Admin {
 		}
 		echo '</p>';
 
+		if ( class_exists( 'PRX3_Pages' ) ) {
+			PRX3_Pages::panel();
+		}
+
 		echo '<h2>' . esc_html__( 'Settings sections', 'fan-ownership' ) . '</h2><ul class="ul-disc">';
 		foreach ( self::sections() as $def ) {
 			echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=' . $def[1] ) ) . '">' . esc_html( $def[0] ) . '</a>' . ( 'prx3-board' === $def[2] ? ' <em>' . esc_html__( '(in the Board menu)', 'fan-ownership' ) . '</em>' : '' ) . '</li>';
