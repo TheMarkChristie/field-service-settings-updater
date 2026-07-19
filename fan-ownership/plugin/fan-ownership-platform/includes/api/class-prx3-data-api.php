@@ -42,7 +42,7 @@ class PRX3_Data_API {
 	public static function allowed_types() {
 		return apply_filters(
 			'prx3_data_api_types',
-			array( 'prx3_ballot', 'prx3_idea', 'prx3_question', 'prx3_meeting', 'prx3_video', 'prx3_document', 'prx3_exclusive', 'prx3_decision', 'prx3_chapter', 'prx3_match', 'prx3_player' )
+			array( 'prx3_ballot', 'prx3_idea', 'prx3_question', 'prx3_meeting', 'prx3_video', 'prx3_document', 'prx3_exclusive', 'prx3_decision', 'prx3_chapter', 'prx3_match', 'prx3_player', 'prx3_forum_topic' )
 		);
 	}
 

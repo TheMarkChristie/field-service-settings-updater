@@ -407,3 +407,18 @@ Test script:
 1. Save a beneficiary on the account page, reload — expect it shown; change it — expect the update saved and audited.
 2. Run a data export — expect the nomination included; erase the account — expect it removed.
 3. Confirm the transmission procedure document exists in the operations handbook with its solicitor questions.
+
+### FO-130 A demo club in one command
+As the club, I want a sample-data pack that loads a complete demo club — members with shares, the squad, matches, ballots, ideas, questions, the AGM, decisions, videos, documents, chapters, and FanPress chats — through the platform's own Data API, so that demos, training, and test environments take one command instead of an afternoon of typing.
+Traceability: P114, P104. Estimate: Design 0.5 / Build 0.5 / Develop 1 / Test 0.5
+
+Acceptance criteria:
+1. The pack (`integrations/sample-data/`) seeds twenty members with share grants through the money path (register rows, sequential owner numbers, cap respected), thirty-plus content items across every Data API type — including FanPress chats with boards — and the targets plus FanPress bubble colours through the settings route.
+2. Loading is one command (`seed.sh` with the site URL and a Data API key) and every write lands in the audit log.
+3. The pack obeys the same guard rails as any API client: platform post types only, `_prx3_` meta only, allow-listed settings only — and the automated test suite proves every payload against the real API handlers, so the pack cannot drift from the API.
+4. Publishing the seeded matches and open ballot triggers the platform's own automation (match-day and ballot chats appear in FanPress without being seeded directly).
+
+Test script:
+1. Run the suite — expect the sample-data test to push all three files through the Data API handlers with zero failures.
+2. Run `seed.sh` against a fresh install with a provisioned key — expect 20 owners in the register with owner numbers, the squad, fixtures, the open kit ballot, and the FanPress chats; expect the audit log to record every write.
+3. Attempt to add a `wp_capabilities` meta key or a core post type to the pack — expect the suite (and the live API) to refuse it.

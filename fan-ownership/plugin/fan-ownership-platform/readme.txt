@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.3.1
+Stable tag: 3.4.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,17 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.4.0 =
+* Sample data pack: integrations/sample-data loads a complete demo
+  club through the platform's own Data API - 20 owners with shares
+  via the money path, the squad, fixtures, an open ballot, ideas,
+  questions, the AGM, decisions, videos, vault documents, an
+  exclusive, chapters, and FanPress chats - with a one-command
+  seeder and every payload proven against the real API handlers in
+  the test suite. FanPress topics are now a Data API content type,
+  and the FanPress bubble colours are settable through the settings
+  route.
 
 = 3.3.1 =
 * On wide screens the embedded event chat now sits beside the match

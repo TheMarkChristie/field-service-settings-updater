@@ -1,0 +1,122 @@
+[
+  {
+    "email": "aileen.munro@example.test",
+    "name": "Aileen Munro",
+    "shares": 4,
+    "source": "sample_import"
+  },
+  {
+    "email": "stuart.mcrae@example.test",
+    "name": "Stuart McRae",
+    "shares": 10,
+    "source": "sample_import"
+  },
+  {
+    "email": "eilidh.watson@example.test",
+    "name": "Eilidh Watson",
+    "shares": 2,
+    "source": "sample_import"
+  },
+  {
+    "email": "callum.boyd@example.test",
+    "name": "Callum Boyd",
+    "shares": 1,
+    "source": "sample_import"
+  },
+  {
+    "email": "morag.sinclair@example.test",
+    "name": "Morag Sinclair",
+    "shares": 6,
+    "source": "sample_import"
+  },
+  {
+    "email": "hamish.frew@example.test",
+    "name": "Hamish Frew",
+    "shares": 3,
+    "source": "sample_import"
+  },
+  {
+    "email": "isla.drummond@example.test",
+    "name": "Isla Drummond",
+    "shares": 1,
+    "source": "sample_import"
+  },
+  {
+    "email": "gregor.tait@example.test",
+    "name": "Gregor Tait",
+    "shares": 5,
+    "source": "sample_import"
+  },
+  {
+    "email": "shona.gilfillan@example.test",
+    "name": "Shona Gilfillan",
+    "shares": 2,
+    "source": "sample_import"
+  },
+  {
+    "email": "ewan.kerr@example.test",
+    "name": "Ewan Kerr",
+    "shares": 1,
+    "source": "sample_import"
+  },
+  {
+    "email": "kirsty.baxter@example.test",
+    "name": "Kirsty Baxter",
+    "shares": 8,
+    "source": "sample_import"
+  },
+  {
+    "email": "dougal.menzies@example.test",
+    "name": "Dougal Menzies",
+    "shares": 1,
+    "source": "sample_import"
+  },
+  {
+    "email": "fiona.lennox@example.test",
+    "name": "Fiona Lennox",
+    "shares": 2,
+    "source": "sample_import"
+  },
+  {
+    "email": "rab.cunningham@example.test",
+    "name": "Rab Cunningham",
+    "shares": 1,
+    "source": "sample_import"
+  },
+  {
+    "email": "senga.pollock@example.test",
+    "name": "Senga Pollock",
+    "shares": 3,
+    "source": "sample_import"
+  },
+  {
+    "email": "tavish.oban@example.test",
+    "name": "Tavish MacIntyre",
+    "shares": 1,
+    "source": "sample_import"
+  },
+  {
+    "email": "lorna.esslemont@example.test",
+    "name": "Lorna Esslemont",
+    "shares": 2,
+    "source": "sample_import"
+  },
+  {
+    "email": "bruce.galbraith@example.test",
+    "name": "Bruce Galbraith",
+    "shares": 7,
+    "source": "sample_import"
+  },
+  {
+    "email": "mairi.struthers@example.test",
+    "name": "Mairi Struthers",
+    "shares": 1,
+    "source": "sample_import"
+  },
+  {
+    "email": "archie.dewar@example.test",
+    "name": "Archie Dewar",
+    "shares": 4,
+    "source": "sample_import"
+  }
+]

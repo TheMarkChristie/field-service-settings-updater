@@ -73,3 +73,21 @@ Example — insert a player:
 Not a public API, not for member devices (they use the member API with
 JWT), and not a bypass: nothing inserted through it escapes the same
 validation, capability, and register rules the admin screens enforce.
+
+## The sample data pack
+
+`integrations/sample-data/` is a complete demo club that loads through
+this API — 20 owners with shares (via the money path), the squad,
+fixtures, an open ballot, ideas, questions, the AGM, decisions,
+videos, vault documents, an exclusive, two chapters, three FanPress
+chats, and the targets + FanPress bubble colours.
+
+```bash
+cd integrations/sample-data
+PRX3_SITE=https://your-site.example PRX3_KEY=your-key ./seed.sh
+```
+
+Provision the key under Settings → API & Integrations. Run once —
+re-running duplicates content and re-grants shares. Every payload in
+the pack is proven against the real API handlers by
+`tests/test-sample-data.php`, so the pack cannot drift from the API.
