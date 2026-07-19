@@ -141,3 +141,13 @@ foreach ( array( 501, 502, 503, 504, 505 ) as $pic ) {
 }
 t_ok( ! PRX3_Social::add_gallery_photo( 80, 506 ), 'A sixth photo is refused' );
 t_eq( count( (array) get_user_meta( 80, 'prx3_gallery', true ) ), 5, 'Gallery holds exactly five' );
+
+// WP user screens link to the live owner profile (3.12.1.0).
+update_option( 'prx3_member_pages', array( 'profile' => 900 ) );
+$GLOBALS['prx3_t_posts'][900] = array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'My Profile' );
+t_ok( false !== strpos( PRX3_Social::profile_url( 80 ), 'prx3_member' ), 'Profile URL targets the installed Profile page with the member ID' );
+$GLOBALS['prx3_t']['caps'][80]['prx3_member'] = true;
+$actions = PRX3_Social::user_row_actions( array( 'edit' => 'x' ), get_userdata( 80 ) );
+t_ok( isset( $actions['prx3_profile'] ), 'Users list gains the View owner profile action for owners' );
+$actions = PRX3_Social::user_row_actions( array( 'edit' => 'x' ), prx3_test_user( 99 ) );
+t_ok( ! isset( $actions['prx3_profile'] ), 'Non-owners get no profile action' );

@@ -49,6 +49,9 @@ class PRX3_Social {
 		add_shortcode( 'prx3_profile', array( __CLASS__, 'shortcode_profile' ) );
 		add_action( 'admin_post_prx3_save_profile', array( __CLASS__, 'handle_save_profile' ) );
 		add_action( 'admin_post_prx3_notify_email', array( __CLASS__, 'handle_notify_email' ) );
+		add_filter( 'user_row_actions', array( __CLASS__, 'user_row_actions' ), 10, 2 );
+		add_action( 'show_user_profile', array( __CLASS__, 'wp_profile_panel' ) );
+		add_action( 'edit_user_profile', array( __CLASS__, 'wp_profile_panel' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 	}
 
@@ -642,6 +645,57 @@ class PRX3_Social {
 		update_user_meta( $me, 'prx3_notify_email_off', get_user_meta( $me, 'prx3_notify_email_off', true ) ? '' : '1' );
 		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
 		exit;
+	}
+
+	/**
+	 * The live owner-profile URL for a member (the installed Profile page).
+	 *
+	 * @param int $user_id Member.
+	 * @return string URL, '' when no profile page exists.
+	 */
+	public static function profile_url( $user_id ) {
+		$map  = (array) get_option( 'prx3_member_pages', array() );
+		$page = isset( $map['profile'] ) ? (int) $map['profile'] : 0;
+		if ( ! $page || 'publish' !== get_post_status( $page ) ) {
+			return '';
+		}
+		return add_query_arg( 'prx3_member', (int) $user_id, get_permalink( $page ) );
+	}
+
+	/**
+	 * Users list: a "View owner profile" row action for owners.
+	 *
+	 * @param array   $actions Row actions.
+	 * @param WP_User $user    The row's user.
+	 * @return array Actions.
+	 */
+	public static function user_row_actions( $actions, $user ) {
+		$url = prx3_is_owner( $user->ID ) ? self::profile_url( $user->ID ) : '';
+		if ( $url ) {
+			$actions['prx3_profile'] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'View owner profile', 'fan-ownership' ) . '</a>';
+		}
+		return $actions;
+	}
+
+	/**
+	 * The wp-admin user screen: owner facts and the live-profile button.
+	 *
+	 * @param WP_User $user The user being viewed.
+	 */
+	public static function wp_profile_panel( $user ) {
+		if ( ! prx3_is_owner( $user->ID ) ) {
+			return;
+		}
+		$score = self::activity_score( $user->ID );
+		echo '<h2>' . esc_html__( 'Owner profile', 'fan-ownership' ) . '</h2><table class="form-table"><tbody>';
+		echo '<tr><th>' . esc_html__( 'Owner number', 'fan-ownership' ) . '</th><td>#' . (int) PRX3_Shares::owner_number( $user->ID ) . '</td></tr>';
+		echo '<tr><th>' . esc_html__( 'Shares', 'fan-ownership' ) . '</th><td>' . (int) prx3_shares( $user->ID ) . '</td></tr>';
+		echo '<tr><th>' . esc_html__( 'Activity', 'fan-ownership' ) . '</th><td>' . (int) $score['percent'] . '% (' . esc_html( sprintf( /* translators: 1-3 percents. */ __( 'voting %1$d%%, community %2$d%%, watching %3$d%%', 'fan-ownership' ), $score['voting'], $score['community'], $score['watching'] ) ) . ')</td></tr>';
+		$url = self::profile_url( $user->ID );
+		if ( $url ) {
+			echo '<tr><th></th><td><a class="button button-primary" href="' . esc_url( $url ) . '">' . esc_html__( 'View live owner profile', 'fan-ownership' ) . '</a></td></tr>';
+		}
+		echo '</tbody></table>';
 	}
 
 	/* ---------------- Cheers (activity likes) ---------------- */

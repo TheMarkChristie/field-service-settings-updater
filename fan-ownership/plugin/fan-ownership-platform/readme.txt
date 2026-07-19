@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.12.0.1
+Stable tag: 3.12.1.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,13 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.12.1.0 =
+* The WordPress user screens now link to the live owner profile: a
+  "View owner profile" action on the Users list for every owner, and
+  an Owner Profile panel on the user-edit screen showing owner
+  number, shares, and the activity breakdown with a button straight
+  to the member-facing profile page.
 
 = 3.12.0.1 =
 * Fix: the demo pack's ballots now arrive with a recorded second

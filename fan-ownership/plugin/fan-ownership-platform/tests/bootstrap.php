@@ -374,6 +374,9 @@ function wp_nonce_field( $action = -1, $name = '_wpnonce', $referer = true, $dis
 	return $field;
 }
 function add_query_arg( ...$args ) {
+	if ( 3 === count( $args ) && is_string( $args[2] ) ) {
+		return $args[2] . ( false === strpos( $args[2], '?' ) ? '?' : '&' ) . $args[0] . '=' . $args[1];
+	}
 	return 'https://example.test/page/?args';
 }
 function remove_query_arg( $keys, $url = false ) {
