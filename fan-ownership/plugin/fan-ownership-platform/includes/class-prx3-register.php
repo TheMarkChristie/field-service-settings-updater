@@ -239,7 +239,7 @@ class PRX3_Register {
 		}
 		global $wpdb;
 		echo '<div class="wrap"><h1>' . esc_html__( 'Share Register', 'fan-ownership' ) . '</h1>';
-		echo '<p>' . esc_html__( 'The statutory register of members: append-only, every movement recorded. The CSV export lives in Fan App Settings → Shares & Checkout.', 'fan-ownership' ) . '</p>';
+		echo '<p>' . esc_html__( 'The statutory register of members: append-only, every movement recorded. The CSV export lives in FanPress Settings → Shares & Checkout.', 'fan-ownership' ) . '</p>';
 		if ( ! is_callable( array( $wpdb, 'get_results' ) ) ) {
 			echo '</div>';
 			return;

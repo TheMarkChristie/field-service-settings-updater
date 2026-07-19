@@ -22,10 +22,10 @@ covers setup, day-to-day operation, and troubleshooting for one area.
 | `api-reference.md` | App & integration developers | Every endpoint under `prx3/v1`: auth models (JWT, nonce, per-integration keys), error codes, rate limits, payload examples, webhooks, tokenised feeds |
 
 The documentation suite (FO-314) is complete — the same API reference
-ships inside every install at **Fan Club Technical Setup → Developers**, generated from
+ships inside every install at **FanPress Technical Setup → Developers**, generated from
 the plugin's own endpoint registry.
 
-> Fresh install? **Fan App Settings → Create member pages** builds the
+> Fresh install? **FanPress Settings → Create member pages** builds the
 > whole member site (join, account, hub, ballots, FanPress Chat, match
 > centre, and more) in one click, and event permalinks render their
 > full experience on any theme.

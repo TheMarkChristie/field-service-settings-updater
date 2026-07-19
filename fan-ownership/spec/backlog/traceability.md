@@ -29,7 +29,7 @@ before shipping.
 | 3.3.0–3.3.1 | WhatsApp-style chat: bubbles, unread badges, configurable colours, event-page embeds (side-by-side) |
 | 3.4.0 | Sample data pack through the Data API; FanPress topics + chat colours API-writable |
 | 3.5.0 | One-click "Load demo club" in wp-admin |
-| 3.6.0 | Idempotent demo loader, "Remove demo data", Fan App Settings menu name |
+| 3.6.0 | Idempotent demo loader, "Remove demo data", FanPress Settings menu name |
 | 3.7.0 | Ballot/match permalinks render fully (block-theme safe), "Create member pages" installer |
 | 3.8.0 | Sequential numbered ballot URLs |
 | 3.9.0 | Rich HTML/image ballot questions, answers with descriptions |
@@ -39,15 +39,16 @@ before shipping.
 | 3.12.0.1 | Fix: demo ballots pre-approved (no four-eyes hold on demo sites), kit ballot live to 31 Aug; member import seeds bios/socials/identity incl. a PEP=yes example |
 | 3.12.1.0 | WP user screens link to the live owner profile (Users-list row action + Owner Profile panel with owner number, shares, activity, and a view button) |
 | 3.12.1.1 | Fix: demo open ballot opened through the real lifecycle (electorate snapshot, quorum, audit, chat) so demo owners can vote; Load demo club heals dead ballots |
-| 3.12.1.2 | Fix: admin screens for four screen-less stores — Share Register (Owners), Audit Log (Fan App Settings), Reports queue (FanPress), Gift Codes (Owners) |
+| 3.12.1.2 | Fix: admin screens for four screen-less stores — Share Register (Owners), Audit Log (FanPress Settings), Reports queue (FanPress), Gift Codes (Owners) |
 | 3.12.1.3 | Fix: member pages self-install on version change (stamped, idempotent); profile-link fallback re-wires the Profile page by slug |
 | 3.12.1.4 | Board menu gains the audited Identity Lookup (masked government ID) — P122 amended: board members may view identity records |
 | 3.13.0.0 | Meeting video: in-platform Jitsi rooms on every meeting page (member + board, never matches), windowed one hour before to six after, audited joins, self-hostable domain setting |
 | 3.14.0.0 | Setup menu + 8×8 JaaS (P124): dedicated top-level Setup menu (Overview status checklist, Commerce — Shopify, Streaming, Meeting Video, Push, Data API, Sync) with a note and "Where to get this" link on every field; meeting video signs RS256 8×8 JaaS room tokens (board/governance/admin moderate, owners join as guests, no 8×8 accounts needed for joiners) with the open meet.jit.si fallback kept |
 | 3.15.0.0 | Documentation complete (P125, closes FO-314): developer guide + full API reference in docs/guides (auth models, error codes, rate limits, payload examples, webhooks, tokenised feeds) and a Setup → Developers page inside every install, generated from the plugin's own endpoint registry |
-| 3.15.0.1 | Fix: the technical admin menu is named "Fan Club Technical Setup" (was "Setup") — menu label, page headings, and guides updated |
+| 3.15.0.1 | Fix: the technical admin menu is named "FanPress Technical Setup" (was "Setup") — menu label, page headings, and guides updated |
 | 3.15.1.0 | Question categories (P126): Board / Manager — pre-match / Manager — weekly / Captain on submit, lists, API, and the Live Q&A presenter. Profile content moderation (P127): admins can fix inappropriate bio/socials/photos from the WP user screen; identity, name, and contact details stay untouchable; all audited |
 | 3.15.1.1 | Fix (P128): Board → Owner Management — search an owner, personal info (audited, ID masked) and profile-content moderation on one page; Share Register moved from Owners to the Board menu; these screens are board members + Owner-Admins only; board members can now moderate profile content |
+| 3.15.1.2 | Fix (P129): FanPress branding across the admin — "Fan App Settings" → FanPress Settings, "Fan Club Technical Setup" → FanPress Technical Setup; labels/headings/notices/guides updated, slugs unchanged |
 
 ## Phase 1 — Own
 
@@ -79,7 +80,7 @@ before shipping.
 | FO-124 Outbound CRM sync | Done | 0.1.6–0.1.9 | `class-prx3-sync.php` — change hooks queue signed webhooks (HMAC-SHA256, 8-try retry, capped outbox, 5-min tick), paged `/sync/members` delta, `/sync/register` append-only feed, signatures excluded from payloads, admin health page, off until configured | Dataverse solution (columns/table/flows/connector) built by the club from `spec/power-platform-sync-design.md` |
 | FO-125 Inbound matching rules | Done | 0.1.9 | `/sync/upsert` — ID → email → owner number exact matching, allow-listed enrichment fields (`prx3_sync_inbound_fields`), review queue for no-match/ambiguous/conflict with admin link-or-discard (audited), permanent linking, no outbound echo | |
 | FO-126 Guarded automation API | Done | 0.1.0 | `class-prx3-data-api.php` — key-gated data routes (schema/content-list/content/members/settings), one-click provision/revoke + connection card + JSON profile, platform-types/prx3-meta/allow-list guard rails, money-path member imports, full audit | |
-| FO-127 Data-rich work screens | Done | 0.1.3–0.1.5; menus 3.1.0.0 era, Fan App Settings 3.6.0, Setup menu 3.14.0.0 | `class-prx3-admin-columns.php` (all 16 types audited, P103), interactive tile dashboard with configurable targets, five-menu structure (Owners, FanPress Chat, Board, Fan App Settings, Setup) — the Setup menu gathers all technical configuration with an Overview status checklist and annotated fields (note + "Where to get this" link on each) | |
+| FO-127 Data-rich work screens | Done | 0.1.3–0.1.5; menus 3.1.0.0 era, FanPress Settings 3.6.0, Setup menu 3.14.0.0 | `class-prx3-admin-columns.php` (all 16 types audited, P103), interactive tile dashboard with configurable targets, five-menu structure (Owners, FanPress Chat, Board, FanPress Settings, Setup) — the Setup menu gathers all technical configuration with an Overview status checklist and annotated fields (note + "Where to get this" link on each) | |
 | FO-128 Commerce seam ops | Done | 0.2.0–0.2.1 | `class-prx3-shopify.php` ops layer — Commerce Ops screen (held/unclaimed with release/reassign/remind/drop), 3/10-day chasing + 30-day refund-review flag, webhook-quiet alert, dashboard tile, seeded reconciliation commitment, monthly register safeguard email (`class-prx3-register.php`) | Refunds themselves are issued in Shopify by policy |
 | FO-129 Beneficiary nomination | Done | 0.1.0 | Account-page nomination (audited), privacy export/erasure wiring, `death-and-transmission.md` runbook | Solicitor to confirm articles transmission clause |
 

@@ -94,7 +94,7 @@ the pack is proven against the real API handlers by
 
 ### No terminal? One click.
 
-The same pack ships inside the plugin: **Fan App Settings → API &
+The same pack ships inside the plugin: **FanPress Settings → API &
 Integrations → Demo club (sample data) → Load demo club**.
 Owner-Admins only, nonce-protected, runs through the identical API
 code paths, and shows a result notice with counts.

@@ -1,7 +1,7 @@
 # Admin Screens — Club Guide
 
 Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
-**FanPress Chat**, **Board**, **Fan App Settings**, **Fan Club Technical Setup**.
+**FanPress Chat**, **Board**, **FanPress Settings**, **FanPress Technical Setup**.
 
 ## Owners
 - **Gift Codes** — every code: shares, buyer, status (outstanding /
@@ -28,11 +28,11 @@ Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
   Owners; board members and Owner-Admins only): every holder with
   owner number, current holding, last event, profile link, and the
   holders/shares-in-issue totals, plus the latest 50 register events.
-  CSV export stays under Fan App Settings → Shares & Checkout.
+  CSV export stays under FanPress Settings → Shares & Checkout.
 - **Identity Lookup** — the quick ID-number lookup; the government ID
   is always masked to its last four. Every view is audited.
 
-## Fan App Settings
+## FanPress Settings
 - Feature switches, Member pages (self-install on upgrade; button for
   manual re-runs), the club-facing settings sections (Club, Brand Pack,
   Ticketing, FanPress Chat), Commerce Ops, **Member Tools** (merge
@@ -40,7 +40,7 @@ Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
   Lookup), and the **Audit Log** — latest 100 entries, filterable by
   event key (`ballot_open`, `identity_viewed`, `data_api_member`, …).
 
-## Fan Club Technical Setup
+## FanPress Technical Setup
 Everything technical, in one place, with a note and a "Where to get
 this" link on every field:
 - **Overview** — status checklist: green dot when an integration is

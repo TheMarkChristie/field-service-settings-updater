@@ -275,7 +275,7 @@ class PRX3_Media {
 	 */
 	public static function show_missed_notice() {
 		if ( get_option( 'prx3_show_missed' ) && current_user_can( 'edit_posts' ) ) {
-			echo '<div class="notice notice-warning"><p>' . esc_html__( 'The weekly show slot has been missed — no episode published in over 8 days. Publish this week\'s episode or clear the standing slot in Fan App Settings → Club.', 'fan-ownership' ) . '</p></div>';
+			echo '<div class="notice notice-warning"><p>' . esc_html__( 'The weekly show slot has been missed — no episode published in over 8 days. Publish this week\'s episode or clear the standing slot in FanPress Settings → Club.', 'fan-ownership' ) . '</p></div>';
 		}
 	}
 }

@@ -17,13 +17,13 @@ registry so the two can never drift.
 |---|---|
 | Web front end | The WordPress session cookie plus an `X-WP-Nonce` header (the plugin localises `restUrl` and `nonce` into `prx3Config` for its own JS). |
 | Mobile app | `POST /auth/login` with username + password returns a JWT pair. Send `Authorization: Bearer <access_token>` on every call; access tokens last **1 hour**, refresh tokens **30 days** — swap at `/auth/refresh`. |
-| Data API (Claude, automation) | `X-Prx3-Data-Key: <key>` header. Keys are provisioned under **Fan Club Technical Setup → Data API & Claude**; the API must also be enabled there. |
-| Power Platform sync | `X-Prx3-Api-Key: <key>` header, configured under **Fan Club Technical Setup → Power Platform**. |
-| Shopify webhooks | `X-Shopify-Hmac-Sha256` signature verified against the webhook secret from **Fan Club Technical Setup → Commerce — Shopify**. |
+| Data API (Claude, automation) | `X-Prx3-Data-Key: <key>` header. Keys are provisioned under **FanPress Technical Setup → Data API & Claude**; the API must also be enabled there. |
+| Power Platform sync | `X-Prx3-Api-Key: <key>` header, configured under **FanPress Technical Setup → Power Platform**. |
+| Shopify webhooks | `X-Shopify-Hmac-Sha256` signature verified against the webhook secret from **FanPress Technical Setup → Commerce — Shopify**. |
 
 "Owner" below means the caller must hold the `prx3_member` capability
 (granted automatically by the money path) — the same registration wall
-as the member site. Kill switches (Fan App Settings → Features) are
+as the member site. Kill switches (FanPress Settings → Features) are
 honoured by every route: a switched-off feature returns `prx3_off`.
 
 ## Errors
@@ -137,7 +137,7 @@ plus the refreshed ballot payload.
 
 ## Data API (server-to-server writes)
 
-Header `X-Prx3-Data-Key`, enabled + provisioned under **Fan Club Technical Setup → Data
+Header `X-Prx3-Data-Key`, enabled + provisioned under **FanPress Technical Setup → Data
 API & Claude**. Full walkthrough with payload formats:
 [data-api-guide.md](data-api-guide.md).
 

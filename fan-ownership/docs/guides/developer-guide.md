@@ -29,7 +29,7 @@ Layers, bottom-up:
   brand pack, commitments, players, agreements.
 - **API** — `includes/api/`: JWT, the app REST API, the Data API.
 - **Admin** — five menus (Owners, FanPress Chat, Board, Fan App
-  Settings, Fan Club Technical Setup), dashboard, admin columns,
+  Settings, FanPress Technical Setup), dashboard, admin columns,
   shortcodes, the member pages installer.
 
 ## Conventions that matter
@@ -95,7 +95,7 @@ Post types: `prx3_ballot`, `prx3_idea`, `prx3_question`,
 
 ## In-install reference
 
-**Fan Club Technical Setup → Developers** inside wp-admin carries the endpoint reference
+**FanPress Technical Setup → Developers** inside wp-admin carries the endpoint reference
 (generated from `PRX3_Admin::api_endpoints()`), the hook list, and the
 capability model — so a webmaster always has the docs that match their
 installed version.

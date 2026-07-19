@@ -358,8 +358,8 @@ Test script:
 5. Revoke the connection — expect all further calls refused and the events audited.
 
 ### FO-127 Work screens that show the data
-As club staff, I want every list screen to show the data its items hold — sortable where it matters — and the admin organised into four menus (Owners, FanPress Chat, Board, Fan App Settings), so that running the club never means opening items one by one to find a number.
-Screens completed at 3.12.1.2: Share Register (Owners — holdings, owner numbers, totals, latest 50 events), Audit Log (Fan App Settings — latest 100, event filter), Reports queue (FanPress Chat), and Gift Codes (Owners) — closing the last data stores that had no admin surface.
+As club staff, I want every list screen to show the data its items hold — sortable where it matters — and the admin organised into four menus (Owners, FanPress Chat, Board, FanPress Settings), so that running the club never means opening items one by one to find a number.
+Screens completed at 3.12.1.2: Share Register (Owners — holdings, owner numbers, totals, latest 50 events), Audit Log (FanPress Settings — latest 100, event filter), Reports queue (FanPress Chat), and Gift Codes (Owners) — closing the last data stores that had no admin surface.
 Traceability: P103. Estimate: Design 1 / Build 1 / Develop 2 / Test 1
 
 Acceptance criteria:
@@ -418,7 +418,7 @@ Acceptance criteria:
 2. Loading is one command (`seed.sh` with the site URL and a Data API key) and every write lands in the audit log.
 3. The pack obeys the same guard rails as any API client: platform post types only, `_prx3_` meta only, allow-listed settings only — and the automated test suite proves every payload against the real API handlers, so the pack cannot drift from the API.
 4. Publishing the seeded matches and open ballot triggers the platform's own automation (match-day and ballot chats appear in FanPress without being seeded directly).
-5. The pack is also bundled in the plugin behind a one-click "Load demo club" button (Fan App Settings → API & Integrations, Owner-Admins only, nonce-protected): no key, terminal, or network access needed; a result notice reports counts, skips, and failures, and the suite proves the bundled copies never drift from the pack.
+5. The pack is also bundled in the plugin behind a one-click "Load demo club" button (FanPress Settings → API & Integrations, Owner-Admins only, nonce-protected): no key, terminal, or network access needed; a result notice reports counts, skips, and failures, and the suite proves the bundled copies never drift from the pack.
 6. Loading is idempotent: re-running skips content that already exists and tops member holdings up to the pack amounts instead of granting again, so a double click or an earlier partial run can never duplicate data or trip the share cap.
 7. A "Remove demo data" button (with confirmation) deletes exactly the demo footprint — pack-matched and sample-tagged posts, the auto-created event chats, the twenty demo members, and their register rows — restoring a clean site; load-after-remove rebuilds the full demo club.
 
@@ -437,7 +437,7 @@ Acceptance criteria:
 1. A ballot's own page renders the complete experience for owners: the description, then the live voting card (options, weighted cast button, change-vote, secrecy note) when open, a "voting opens…" note when scheduled, and a closed/announced note afterwards — with its FanPress chat beside it.
 2. A match's own page renders the Match Centre experience the same way, with the match-day chat beside it.
 3. Both work on block themes: the renderers key off the queried post, never off classic-loop state.
-4. Member pages create themselves on every version change (stamped self-heal, 3.12.1.3); the "Create member pages" button (Fan App Settings landing, Owner-Admins, nonce-protected) remains for manual re-runs and builds every missing shortcode page — join, account, owners hub, ballots, ideas, questions, meetings, decisions, videos, match centre, FanPress Chat, activity, owners directory, messages, notifications, board directory, gift redemption — publishes them, and wires the join and account gate destinations; existing pages are never touched and re-running is a no-op.
+4. Member pages create themselves on every version change (stamped self-heal, 3.12.1.3); the "Create member pages" button (FanPress Settings landing, Owner-Admins, nonce-protected) remains for manual re-runs and builds every missing shortcode page — join, account, owners hub, ballots, ideas, questions, meetings, decisions, videos, match centre, FanPress Chat, activity, owners directory, messages, notifications, board directory, gift redemption — publishes them, and wires the join and account gate destinations; existing pages are never touched and re-running is a no-op.
 5. Logged-out visitors bounced from gated content land on the created join page (the owner pitch), not the bare login screen.
 
 Test script:

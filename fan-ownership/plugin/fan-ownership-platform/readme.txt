@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.1
+Stable tag: 3.15.1.2
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -49,6 +49,13 @@ club badge plugin integrate through documented contracts.
 
 == Changelog ==
 
+= 3.15.1.2 =
+* Consistent FanPress branding across the admin: "Fan App Settings"
+  is now "FanPress Settings" and "Fan Club Technical Setup" is now
+  "FanPress Technical Setup". Menu labels, page headings, notices,
+  and all guides updated; page slugs are unchanged so existing
+  bookmarks and links keep working.
+
 = 3.15.1.1 =
 * Board > Owner Management: one findable place to search an owner,
   see their personal information (identity with the ID masked,
@@ -75,7 +82,7 @@ club badge plugin integrate through documented contracts.
   are never editable by admins; every change is audited.
 
 = 3.15.0.1 =
-* Fix: the technical admin menu is named "Fan Club Technical Setup"
+* Fix: the technical admin menu is named "FanPress Technical Setup"
   (was "Setup") - menu label, page headings, and all guides updated.
 
 = 3.15.0.0 =
@@ -108,7 +115,7 @@ club badge plugin integrate through documented contracts.
   member meetings and AGMs for owners, board meetings inside the
   board wall. Matches are deliberately excluded (they stream through
   the Match Centre). Jitsi Meet embed with a self-hostable domain
-  setting (Fan App Settings > API & Integrations; default
+  setting (FanPress Settings > API & Integrations; default
   meet.jit.si), unguessable per-meeting room names, the room opens an
   hour before the start and closes six hours after, and every join is
   audited. Formal board acts (votes, casting votes) remain platform
@@ -133,7 +140,7 @@ club badge plugin integrate through documented contracts.
 * Fix: four data stores existed with no admin screen. New Share
   Register screen under Owners (current holdings with owner numbers,
   totals, profile links, and the latest 50 register events); new
-  Audit Log viewer under Fan App Settings (latest 100 entries with an
+  Audit Log viewer under FanPress Settings (latest 100 entries with an
   event filter); new Reports queue under FanPress Chat (member
   reports for moderators); new Gift Codes screen under Owners
   (issued / redeemed / outstanding / voided).
@@ -234,7 +241,7 @@ club badge plugin integrate through documented contracts.
   closed states otherwise - and match pages carry the Match Centre,
   each with their FanPress chat beside them. Both are block-theme
   safe (the loop checks that could leave pages empty are gone). New
-  "Create member pages" button on the Fan App Settings landing builds
+  "Create member pages" button on the FanPress Settings landing builds
   every member shortcode page - join, account, owners hub, ballots,
   ideas, questions, meetings, decisions, videos, match centre,
   FanPress Chat, activity, owners, messages, notifications, board,
@@ -250,7 +257,7 @@ club badge plugin integrate through documented contracts.
   posts, their auto-created match/ballot chats, the twenty demo
   members, and their register rows) with confirmation; load after
   remove rebuilds the full club. The result notice now reports skips.
-* The Settings top-level admin menu is renamed "Fan App Settings".
+* The Settings top-level admin menu is renamed "FanPress Settings".
 
 = 3.5.0 =
 * One-click demo club: the sample data pack now ships inside the
