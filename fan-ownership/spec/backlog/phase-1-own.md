@@ -417,8 +417,10 @@ Acceptance criteria:
 2. Loading is one command (`seed.sh` with the site URL and a Data API key) and every write lands in the audit log.
 3. The pack obeys the same guard rails as any API client: platform post types only, `_prx3_` meta only, allow-listed settings only — and the automated test suite proves every payload against the real API handlers, so the pack cannot drift from the API.
 4. Publishing the seeded matches and open ballot triggers the platform's own automation (match-day and ballot chats appear in FanPress without being seeded directly).
+5. The pack is also bundled in the plugin behind a one-click "Load demo club" button (Settings → API & Integrations, Owner-Admins only, nonce-protected): no key, terminal, or network access needed; a result notice reports counts and failures, re-running warns before duplicating, and the suite proves the bundled copies never drift from the pack.
 
 Test script:
 1. Run the suite — expect the sample-data test to push all three files through the Data API handlers with zero failures.
 2. Run `seed.sh` against a fresh install with a provisioned key — expect 20 owners in the register with owner numbers, the squad, fixtures, the open kit ballot, and the FanPress chats; expect the audit log to record every write.
 3. Attempt to add a `wp_capabilities` meta key or a core post type to the pack — expect the suite (and the live API) to refuse it.
+4. Click "Load demo club" in wp-admin — expect the same result as `seed.sh` with a success notice showing 20 members / 32 items / settings applied; click again — expect a duplicate warning first.

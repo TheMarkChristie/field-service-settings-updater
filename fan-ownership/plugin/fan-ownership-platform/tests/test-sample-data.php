@@ -71,3 +71,27 @@ foreach ( $prx3_content as $prx3_item ) {
 	}
 }
 t_ok( true, 'Pack stays inside platform types and _prx3_ meta throughout' );
+
+// The bundled one-click loader (Load demo club) runs the same pack.
+prx3_test_reset();
+$GLOBALS['prx3_t_posts']    = array();
+$GLOBALS['prx3_t_comments'] = array();
+if ( ! defined( 'PRX3_DIR' ) ) {
+	define( 'PRX3_DIR', dirname( __DIR__ ) . '/' );
+}
+update_option( 'prx3_settings', array( 'max_shares' => 10 ) );
+$seeded = PRX3_Data_API::seed_sample();
+t_eq( $seeded['members'], 20, 'One-click loader imports all twenty members' );
+t_eq( $seeded['content'], 32, 'One-click loader inserts all thirty-two content items' );
+t_ok( $seeded['settings'] >= 5, 'One-click loader applies the targets and chat colours' );
+t_eq( count( $seeded['failed'] ), 0, 'One-click loader has zero failures (' . implode( '; ', $seeded['failed'] ) . ')' );
+t_ok( (int) get_option( 'prx3_sample_loaded' ) > 0, 'Loader stamps the loaded marker' );
+
+// The bundled copies can never drift from the integrations pack.
+foreach ( array( 'members', 'content', 'settings' ) as $prx3_part ) {
+	t_eq(
+		json_decode( (string) file_get_contents( PRX3_DIR . 'data/sample-' . $prx3_part . '.json' ), true ),
+		json_decode( (string) file_get_contents( $prx3_pack . '/' . $prx3_part . '.json' ), true ),
+		'Bundled ' . $prx3_part . ' matches the integrations pack byte-for-byte'
+	);
+}

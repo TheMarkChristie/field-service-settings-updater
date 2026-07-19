@@ -32,6 +32,8 @@ class PRX3_Data_API {
 		add_action( 'admin_post_prx3_data_api_provision', array( __CLASS__, 'handle_provision' ) );
 		add_action( 'admin_post_prx3_data_api_revoke', array( __CLASS__, 'handle_revoke' ) );
 		add_action( 'admin_post_prx3_data_api_profile', array( __CLASS__, 'handle_profile' ) );
+		add_action( 'admin_post_prx3_data_api_seed', array( __CLASS__, 'handle_seed_sample' ) );
+		add_action( 'admin_notices', array( __CLASS__, 'seed_notice' ) );
 	}
 
 	/**
@@ -407,6 +409,109 @@ class PRX3_Data_API {
 		if ( $key && ! (int) prx3_setting( 'data_api_enabled', 0 ) ) {
 			echo '<p>' . esc_html__( 'A key exists but the Data API is switched off above — enable it to make the connection live.', 'fan-ownership' ) . '</p>';
 		}
+		self::sample_panel();
+	}
+
+	/**
+	 * The one-click demo club loader: runs the bundled sample data
+	 * through the same Data API code paths, no key or terminal needed.
+	 */
+	public static function sample_panel() {
+		echo '<h2>' . esc_html__( 'Demo club (sample data)', 'fan-ownership' ) . '</h2>';
+		$loaded = (int) get_option( 'prx3_sample_loaded' );
+		if ( $loaded ) {
+			echo '<p>' . esc_html( sprintf( /* translators: %s date. */ __( 'Sample data was loaded on %s. Loading again will duplicate content and re-grant member shares.', 'fan-ownership' ), prx3_format_datetime( gmdate( 'Y-m-d H:i:s', $loaded ) ) ) ) . '</p>';
+		} else {
+			echo '<p>' . esc_html__( 'One click loads a complete demo club through the Data API code paths: 20 owners with shares via the money path, the squad, fixtures, an open ballot, ideas, questions, the AGM, decisions, videos, documents, chapters, and FanPress chats. Match and ballot chats then appear automatically. Every write is audited.', 'fan-ownership' ) . '</p>';
+		}
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"' . ( $loaded ? ' onsubmit="return confirm(\'' . esc_js( __( 'Sample data already loaded — load again and duplicate it?', 'fan-ownership' ) ) . '\');"' : '' ) . '>';
+		wp_nonce_field( 'prx3_data_api_seed' );
+		echo '<input type="hidden" name="action" value="prx3_data_api_seed">';
+		echo '<p><button class="button button-primary">' . esc_html__( 'Load demo club', 'fan-ownership' ) . '</button></p></form>';
+	}
+
+	/**
+	 * Load the bundled sample pack through the API's own upsert paths.
+	 *
+	 * @return array{members:int,content:int,settings:int,failed:string[]} Counts and failures.
+	 */
+	public static function seed_sample() {
+		$dir = PRX3_DIR . 'data/';
+		// phpcs:disable WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- bundled local files, not remote.
+		$members  = json_decode( (string) file_get_contents( $dir . 'sample-members.json' ), true );
+		$content  = json_decode( (string) file_get_contents( $dir . 'sample-content.json' ), true );
+		$settings = json_decode( (string) file_get_contents( $dir . 'sample-settings.json' ), true );
+		// phpcs:enable
+		$out = array(
+			'members'  => 0,
+			'content'  => 0,
+			'settings' => 0,
+			'failed'   => array(),
+		);
+		foreach ( (array) $members as $item ) {
+			$row = self::upsert_member( (array) $item );
+			if ( ! empty( $row['ok'] ) ) {
+				++$out['members'];
+			} else {
+				$out['failed'][] = ( $item['email'] ?? '?' ) . ': ' . ( $row['error'] ?? '?' );
+			}
+		}
+		foreach ( (array) $content as $item ) {
+			$row = self::upsert_content( (array) $item );
+			if ( ! empty( $row['ok'] ) ) {
+				++$out['content'];
+			} else {
+				$out['failed'][] = ( $item['title'] ?? '?' ) . ': ' . ( $row['error'] ?? '?' );
+			}
+		}
+		$known = PRX3_Config::defaults();
+		foreach ( (array) $settings as $key => $value ) {
+			$key = sanitize_key( $key );
+			if ( array_key_exists( $key, $known ) && ! in_array( $key, array( 'data_api_key', 'sync_api_key', 'sync_webhook_secret' ), true ) ) {
+				prx3_update_setting( $key, self::sanitize_value( $value ) );
+				++$out['settings'];
+			}
+		}
+		update_option( 'prx3_sample_loaded', time(), false );
+		PRX3_Audit::log( 'data_api_sample', sprintf( 'Demo club loaded: %d members, %d content items, %d settings, %d failures', $out['members'], $out['content'], $out['settings'], count( $out['failed'] ) ) );
+		return $out;
+	}
+
+	/**
+	 * Show the load result after the redirect.
+	 */
+	public static function seed_notice() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display of a one-time result.
+		if ( ! isset( $_GET['prx3_seeded'] ) ) {
+			return;
+		}
+		$result = get_transient( 'prx3_sample_result_' . get_current_user_id() );
+		if ( ! is_array( $result ) ) {
+			return;
+		}
+		delete_transient( 'prx3_sample_result_' . get_current_user_id() );
+		$class = $result['failed'] ? 'notice-warning' : 'notice-success';
+		echo '<div class="notice ' . esc_attr( $class ) . ' is-dismissible"><p>';
+		echo esc_html( sprintf( /* translators: 1 members, 2 content, 3 settings. */ __( 'Demo club loaded: %1$d members with shares, %2$d content items, %3$d settings. Match and ballot chats appear automatically in FanPress.', 'fan-ownership' ), (int) $result['members'], (int) $result['content'], (int) $result['settings'] ) );
+		echo '</p>';
+		foreach ( (array) $result['failed'] as $failure ) {
+			echo '<p>' . esc_html( sprintf( /* translators: %s failure detail. */ __( 'Failed: %s', 'fan-ownership' ), $failure ) ) . '</p>';
+		}
+		echo '</div>';
+	}
+
+	/**
+	 * Admin button: load the demo club.
+	 */
+	public static function handle_seed_sample() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_data_api_seed' );
+		$result = self::seed_sample();
+		set_transient( 'prx3_sample_result_' . get_current_user_id(), $result, 60 );
+		wp_safe_redirect( admin_url( 'admin.php?page=prx3-settings-api&prx3_seeded=1' ) );
+		exit;
 	}
 
 	/**

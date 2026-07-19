@@ -91,3 +91,11 @@ Provision the key under Settings → API & Integrations. Run once —
 re-running duplicates content and re-grants shares. Every payload in
 the pack is proven against the real API handlers by
 `tests/test-sample-data.php`, so the pack cannot drift from the API.
+
+### No terminal? One click.
+
+The same pack ships inside the plugin: **Settings → API & Integrations
+→ Demo club (sample data) → Load demo club**. Owner-Admins only,
+nonce-protected, runs through the identical API code paths, and shows
+a result notice with counts. Re-running warns you first — it
+duplicates content and re-grants shares.
