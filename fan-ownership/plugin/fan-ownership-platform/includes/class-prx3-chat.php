@@ -206,7 +206,7 @@ class PRX3_Chat {
 	 * @param string $body Message text.
 	 * @return bool
 	 */
-	private static function hits_word_filter( $body ) {
+	public static function hits_word_filter( $body ) {
 		$list = array_filter( array_map( 'trim', explode( "\n", (string) prx3_setting( 'chat_blocklist', '' ) ) ) );
 		foreach ( $list as $word ) {
 			if ( false !== stripos( $body, $word ) ) {

@@ -99,6 +99,12 @@ class PRX3_Admin_Columns {
 				'prx3_mstate'   => array( __( 'Status', 'fan-ownership' ), 'match_state', '' ),
 				'prx3_potm'     => array( __( 'Player of the Match', 'fan-ownership' ), 'match_potm', '' ),
 			),
+			'prx3_forum_topic' => array(
+				'prx3_board'   => array( __( 'Board', 'fan-ownership' ), 'topic_board', '' ),
+				'prx3_replies' => array( __( 'Replies', 'fan-ownership' ), 'topic_replies', '' ),
+				'prx3_origin'  => array( __( 'Origin', 'fan-ownership' ), 'topic_origin', '' ),
+				'prx3_tballot' => array( __( 'Ballot', 'fan-ownership' ), 'topic_ballot', '' ),
+			),
 			'prx3_player'      => array(
 				'prx3_number'   => array( __( 'No.', 'fan-ownership' ), 'player_number', 'prx3_number' ),
 				'prx3_position' => array( __( 'Position', 'fan-ownership' ), 'player_position', '' ),
@@ -449,6 +455,49 @@ class PRX3_Admin_Columns {
 	private static function match_potm( $post_id ) {
 		$winner = (int) get_post_meta( $post_id, '_prx3_potm_winner', true );
 		return $winner ? get_the_title( $winner ) : '—';
+	}
+
+	/**
+	 * Topic board terms.
+	 *
+	 * @param int $post_id Topic.
+	 * @return string
+	 */
+	private static function topic_board( $post_id ) {
+		$terms = get_the_terms( $post_id, 'prx3_forum_board' );
+		return $terms && ! is_wp_error( $terms ) ? implode( ', ', wp_list_pluck( $terms, 'name' ) ) : '—';
+	}
+
+	/**
+	 * Approved reply count.
+	 *
+	 * @param int $post_id Topic.
+	 * @return string
+	 */
+	private static function topic_replies( $post_id ) {
+		return (string) (int) get_comments_number( $post_id );
+	}
+
+	/**
+	 * Member-started or automated (and from what).
+	 *
+	 * @param int $post_id Topic.
+	 * @return string
+	 */
+	private static function topic_origin( $post_id ) {
+		$source = (string) get_post_meta( $post_id, '_prx3_source_key', true );
+		return $source ? sprintf( /* translators: %s source key. */ __( 'Automated (%s)', 'fan-ownership' ), $source ) : __( 'Member', 'fan-ownership' );
+	}
+
+	/**
+	 * The draft ballot this thread became, if converted.
+	 *
+	 * @param int $post_id Topic.
+	 * @return string
+	 */
+	private static function topic_ballot( $post_id ) {
+		$ballot = (int) get_post_meta( $post_id, '_prx3_ballot_id', true );
+		return $ballot ? sprintf( /* translators: %d ballot id. */ __( 'Converted (#%d)', 'fan-ownership' ), $ballot ) : '—';
 	}
 
 	/**

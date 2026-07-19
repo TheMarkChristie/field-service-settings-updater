@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Fan Ownership Platform
  * Description:       The fan-owned club platform: shares on a tiered ladder, weighted secret ballots, ideas, questions, meetings, financial transparency, decision register, board workspace, match centre, and the app API. Built to the Perth Panthers specification (spec v1.1, 139 decisions).
- * Version:           0.2.3
+ * Version:           0.3.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Mark Christie
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PRX3_VERSION', '0.2.3' );
+define( 'PRX3_VERSION', '0.3.0' );
 define( 'PRX3_FILE', __FILE__ );
 define( 'PRX3_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRX3_URL', plugin_dir_url( __FILE__ ) );
@@ -49,6 +49,7 @@ require_once PRX3_DIR . 'includes/class-prx3-meetings.php';
 require_once PRX3_DIR . 'includes/class-prx3-decisions.php';
 require_once PRX3_DIR . 'includes/class-prx3-financials.php';
 require_once PRX3_DIR . 'includes/class-prx3-community.php';
+require_once PRX3_DIR . 'includes/class-prx3-forum.php';
 require_once PRX3_DIR . 'includes/class-prx3-moderation.php';
 require_once PRX3_DIR . 'includes/class-prx3-chapters.php';
 require_once PRX3_DIR . 'includes/class-prx3-board.php';
@@ -101,6 +102,7 @@ function prx3_boot() {
 		'PRX3_Decisions',
 		'PRX3_Financials',
 		'PRX3_Community',
+		'PRX3_Forum',
 		'PRX3_Moderation',
 		'PRX3_Chapters',
 		'PRX3_Board',
@@ -221,9 +223,6 @@ function prx3_dependency_notices() {
 	$missing = array();
 	if ( '' === (string) prx3_setting( 'shopify_domain', '' ) || '' === (string) prx3_setting( 'shopify_webhook_secret', '' ) || '' === (string) prx3_setting( 'shopify_share_variants', '' ) ) {
 		$missing[] = __( 'Shopify configuration (set the store domain, webhook secret, and tier variant IDs under Settings > Shares & Checkout before selling shares)', 'fan-ownership' );
-	}
-	if ( ! class_exists( 'bbPress' ) ) {
-		$missing[] = __( 'bbPress (the member forum is disabled until it is active)', 'fan-ownership' );
 	}
 	if ( ! has_action( 'prx3_award_badge' ) && ! apply_filters( 'prx3_badge_provider_present', false ) ) {
 		$missing[] = __( 'Badge plugin integration (no handler found for the prx3_award_badge action — badges will queue until one is connected)', 'fan-ownership' );

@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.2.3
+Stable tag: 0.3.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -21,8 +21,9 @@ for any club and any sport:
   stamp, board countersignature, executed copies, and a board-only
   signatures register
 * Share-weighted secret ballots with electorate snapshots, quorum,
-  ideas, questions, meetings, financial transparency, and the decision
-  register, plus a private board workspace
+  ideas, questions, meetings, financial transparency, the decision
+  register, a native owners forum with automated threads and
+  thread-to-ballot conversion, plus a private board workspace
 * Match Centre with sport presets, live streams, chat, live player-of-
   the-match and player-of-the-month voting, and replays
 * Uploadable brand pack with a printable supplier pack at /brand-pack/
@@ -45,6 +46,15 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 0.3.0 =
+* Native owners forum - no bbPress/BuddyPress needed: gated topics
+  with comment replies and boards; ballots and matches auto-create
+  their discussion threads (idempotent); match chat transcripts are
+  archived into match-day threads at full time; governance staff
+  convert threads into draft ballots in one action with provenance
+  both ways; word-filter holds, mutes, kill switch, audit, admin
+  columns, and app API routes throughout.
 
 = 0.2.3 =
 * Legal, Targets, and Governance settings moved from the Settings

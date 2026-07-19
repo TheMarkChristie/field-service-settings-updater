@@ -74,6 +74,8 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-228 Board meetings & observers | Partial | Per-item expiring observer grants, recusal exclusion | In-platform WebRTC video (Jitsi embed) not built — meeting entity + agenda exist; video lands with Phase 3 real-time work as specced |
 | FO-229 Vault & departures | Done | View-only rendering, per-view name+time watermark, chair-visible access log (audit), instant revoke + session destroy, records preserved | |
 
+| FO-230 Native forum | Done | `class-prx3-forum.php` — gated topic CPT + comment replies + boards taxonomy, auto threads on ballot open and match publish (idempotent source keys), chat transcript archived on match end (anonymised, held/removed excluded), one-action thread→ballot conversion with provenance, REST routes for the app, admin columns, word-filter holds + mutes + kill switch | bbPress/BuddyPress dependency removed (T16 superseded by P109) |
+
 ## Phase 3 — Watch
 
 | Story | Status | Implementation | Gaps / notes |
@@ -115,7 +117,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 45 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+Done 46 · Partial 19 · Operational 1 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

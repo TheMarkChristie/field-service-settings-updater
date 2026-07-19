@@ -310,3 +310,21 @@ Acceptance criteria:
 2. The chair can see a complete access log of who viewed what and when.
 3. Removing a director's role revokes workspace access immediately, terminating any active session's access.
 4. A departed director's votes, declarations, and contributions remain permanently in the record; their ordinary owner account and shareholding are unaffected.
+
+### FO-230 Our own forum, wired into the club
+As the club, I want our own forum — no third-party forum plugin — where club events open their own threads, match chat is archived into match-day threads, and a strong thread can become a ballot, so that the conversation and the governance live in one system.
+Traceability: P109, T16 (superseded), P37, P38. Estimate: Design 1.5 / Build 1.5 / Develop 4 / Test 2
+
+Acceptance criteria:
+1. Owners browse boards, start topics, and reply behind the owner gate on web and app; the forum kill switch, word-filter holds, and mute sanctions apply to every post and reply.
+2. Every ballot that opens and every match that is published automatically gets its own discussion thread, exactly once, in the right board, linking back to the source.
+3. When a match ends, the live chat transcript (excluding held/removed messages) is archived into the match-day thread, with erased members anonymised.
+4. Governance staff can convert any topic into a draft ballot in one action; the ballot records its origin thread and the thread records its ballot, conversion is idempotent, and the normal second-approval and lifecycle rules still apply before it opens.
+5. Topic list screens show board, replies, origin (member or automated), and conversion status.
+
+Test script:
+1. Post a topic and a reply as an owner; attempt both as a non-owner, a muted member, and with the forum switched off — expect refusal in each case; post content hitting the word filter — expect it held for moderation.
+2. Open a ballot and publish a match — expect one discussion thread each, in the right boards; re-fire both events — expect no duplicates.
+3. End a match with chat messages (including one removed and one from an erased account) — expect a transcript reply on the match thread without the removed message and with the erased member anonymised.
+4. Convert a topic to a ballot — expect a draft ballot with provenance both ways; convert again — expect the same ballot returned; attempt to convert a non-topic — expect refusal.
+5. Check the Forum list screen shows board, reply count, origin, and converted status.

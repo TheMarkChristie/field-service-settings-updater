@@ -86,7 +86,7 @@ streams, Brave TV behind-the-scenes content, worldwide ownership community).
 | T13 | Stream delivery server | **OPEN** — OBS ingest target undecided (recommendation: Cloudflare Stream Live; alternatives: self-hosted Owncast/nginx-rtmp, private SaaS) |
 | T14 | Push | Firebase FCM direct (both platforms) |
 | T15 | Email | Brevo (transactional + marketing) |
-| T16 | Forum | bbPress inside WordPress, same login/gate |
+| T16 | Forum | ~~bbPress~~ **Superseded by P109**: native platform forum |
 | T17 | Vote storage | Full named records; secrecy enforced at display layer until close |
 | T18 | Ballot lifecycle | Fully automated: open/close, quorum check, results publish, auto re-run, push+email at each stage |
 | T19 | Idea threshold | 5% support auto-creates draft ballot; staff legality-check then schedule |
@@ -236,6 +236,12 @@ so the recommended options were applied — revisit any of these on request.
 |---|---|---|
 | P107 | Commerce seam ops | The Shopify seam is **operated, not just logged**: a Commerce Ops screen (Settings menu) lists held orders (mismatch/cap, released only by explicit audited human action) and unclaimed purchases; unclaimed buyers are chased at **3 and 10 days** and flagged for **refund review at 30 days** (refunds always issued in Shopify; the refund webhook cleans up); wrong-email purchases are **reassigned** in one action; staff alerted when webhooks go quiet 7+ days; dashboard attention tile; **monthly commerce reconciliation** seeded into the commitments calendar; **monthly register safeguard CSV** emailed automatically; Data API connections live 30+ days flagged on the dashboard |
 | P108 | Death & transmission | Members **nominate a beneficiary** on the account page (audited, in the data export, erased on erasure); a documented transmission procedure covers verification, register entries (surrender `transmission` + grant to the beneficiary under the cap and a signed agreement), and the solicitor questions on the articles' transmission clause |
+
+## Decisions — round 13: native forum (P109)
+
+| # | Topic | Decision |
+|---|---|---|
+| P109 | Native forum | The forum is **built into the platform** (no bbPress/BuddyPress): `prx3_forum_topic` behind the owner gate with WordPress comments as replies and a boards taxonomy (General, Match Days, Club Business & Ballots, Ideas). Wired into the club: **ballots opening and matches publishing auto-create their threads** (idempotent), **match chat transcripts archive into the match-day thread** at full time (held/removed messages excluded, erased members anonymised), and **governance staff convert any thread into a draft ballot in one action** with provenance both ways (second approval + lifecycle rules unchanged). Word-filter holds, mute sanctions, the forum kill switch, and the audit trail apply everywhere; REST routes give the apps full parity |
 
 ## Technical decisions — round 2 (T51–T75)
 

@@ -125,6 +125,9 @@ function get_posts( $args = array() ) {
 		if ( isset( $args['post_status'] ) && is_array( $args['post_status'] ) && ! in_array( $post['post_status'] ?? 'draft', $args['post_status'], true ) ) {
 			continue;
 		}
+		if ( isset( $args['meta_key'], $args['meta_value'] ) && (string) get_post_meta( $id, $args['meta_key'], true ) !== (string) $args['meta_value'] ) {
+			continue;
+		}
 		$out[] = (object) array(
 			'ID'           => $id,
 			'post_title'   => $post['post_title'] ?? '',
@@ -136,6 +139,52 @@ function get_posts( $args = array() ) {
 	$per  = isset( $args['posts_per_page'] ) && $args['posts_per_page'] > 0 ? (int) $args['posts_per_page'] : count( $out );
 	$page = isset( $args['paged'] ) ? max( 1, (int) $args['paged'] ) : 1;
 	return array_slice( $out, ( $page - 1 ) * $per, $per );
+}
+function get_post( $post_id ) {
+	if ( ! isset( $GLOBALS['prx3_t_posts'][ (int) $post_id ] ) ) {
+		return null;
+	}
+	$post = $GLOBALS['prx3_t_posts'][ (int) $post_id ];
+	return (object) array(
+		'ID'           => (int) $post_id,
+		'post_title'   => $post['post_title'] ?? '',
+		'post_content' => $post['post_content'] ?? '',
+		'post_type'    => $post['post_type'] ?? 'post',
+		'post_status'  => $post['post_status'] ?? 'draft',
+	);
+}
+function get_the_title( $post_id ) {
+	$post = get_post( $post_id );
+	return $post ? $post->post_title : '';
+}
+function term_exists( $term, $taxonomy = '' ) {
+	return 0;
+}
+function wp_insert_term( $name, $taxonomy, $args = array() ) {
+	return array( 'term_id' => 1 );
+}
+function get_terms( $args = array() ) {
+	return array();
+}
+$GLOBALS['prx3_t_comments'] = array();
+function wp_insert_comment( $data ) {
+	static $next = 9000;
+	$id                                = ++$next;
+	$data['comment_ID']                = $id;
+	$GLOBALS['prx3_t_comments'][ $id ] = $data;
+	return $id;
+}
+function get_comments_number( $post_id ) {
+	$n = 0;
+	foreach ( $GLOBALS['prx3_t_comments'] as $comment ) {
+		if ( (int) ( $comment['comment_post_ID'] ?? 0 ) === (int) $post_id ) {
+			++$n;
+		}
+	}
+	return $n;
+}
+function get_edit_post_link( $post_id, $context = 'display' ) {
+	return 'https://example.test/wp-admin/post.php?post=' . (int) $post_id . '&action=edit';
 }
 function update_post_meta( $post_id, $key, $value ) {
 	$GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] = $value;
@@ -530,6 +579,7 @@ require $prx3_base . '/includes/class-prx3-sync.php';
 require $prx3_base . '/includes/class-prx3-gifts.php';
 require $prx3_base . '/includes/class-prx3-shopify.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
+require $prx3_base . '/includes/class-prx3-forum.php';
 
 /* ---------------- Assertions ---------------- */
 

@@ -288,6 +288,7 @@ function prx3_format_datetime( $datetime ) {
  */
 function prx3_gated_post_types() {
 	return array(
+		'prx3_forum_topic',
 		'prx3_ballot',
 		'prx3_idea',
 		'prx3_question',

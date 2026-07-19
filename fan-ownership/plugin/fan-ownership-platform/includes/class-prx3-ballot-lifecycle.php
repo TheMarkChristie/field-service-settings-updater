@@ -119,6 +119,7 @@ class PRX3_Ballot_Lifecycle {
 		update_post_meta( $ballot_id, '_prx3_opened_at', prx3_now() );
 
 		PRX3_Audit::log( 'ballot_open', sprintf( 'Ballot %d opened; electorate %d members', $ballot_id, count( $electorate ) ) );
+		do_action( 'prx3_ballot_opened', $ballot_id );
 		self::notify_electorate(
 			$ballot_id,
 			__( 'Voting is open', 'fan-ownership' ),
