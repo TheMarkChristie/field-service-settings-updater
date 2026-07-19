@@ -48,6 +48,14 @@ class PRX3_Board {
 			'dashicons-shield',
 			3.2
 		);
+		// The board's working registers that live on standard screens.
+		add_submenu_page(
+			'prx3-board',
+			__( 'Decision Register', 'fan-ownership' ),
+			__( 'Decision Register', 'fan-ownership' ),
+			'edit_posts',
+			'edit.php?post_type=prx3_decision'
+		);
 	}
 
 	/* ---------------- Structured board actions (FO-225) ---------------- */

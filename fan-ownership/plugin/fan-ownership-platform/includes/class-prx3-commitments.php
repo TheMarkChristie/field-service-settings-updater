@@ -141,6 +141,26 @@ class PRX3_Commitments {
 	}
 
 	/**
+	 * Read-only calendar for board members: every obligation, who is
+	 * accountable, and what is overdue — no editing controls.
+	 */
+	private static function render_readonly() {
+		echo '<div class="wrap"><h1>' . esc_html__( 'Commitments calendar', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html__( 'The club\'s recurring promises to the owners and statutory deadlines. Editing is done by governance staff.', 'fan-ownership' ) . '</p>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Commitment', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Frequency', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Accountable', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Next due', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Status', 'fan-ownership' ) . '</th></tr></thead><tbody>';
+		foreach ( self::all() as $item ) {
+			$owner   = ! empty( $item['owner'] ) ? get_userdata( (int) $item['owner'] ) : null;
+			$due     = isset( $item['due'] ) ? (string) $item['due'] : '';
+			$overdue = $due && empty( $item['done'] ) && strtotime( $due ) < time();
+			echo '<tr><td>' . esc_html( $item['label'] ) . '</td><td>' . esc_html( $item['frequency'] ) . '</td>';
+			echo '<td>' . esc_html( $owner ? $owner->display_name : __( 'Unassigned', 'fan-ownership' ) ) . '</td>';
+			echo '<td>' . esc_html( $due ? $due : '—' ) . '</td>';
+			echo '<td>' . ( $overdue ? '<strong>' . esc_html__( 'Overdue', 'fan-ownership' ) . '</strong>' : esc_html__( 'Scheduled', 'fan-ownership' ) ) . '</td></tr>';
+		}
+		echo '</tbody></table></div>';
+	}
+
+	/**
 	 * Daily: flag overdue commitments and chase the accountable owner
 	 * (and admins after 3 days). SH01 only chases when shares were
 	 * actually issued since the last filing.
@@ -224,10 +244,10 @@ class PRX3_Commitments {
 	 */
 	public static function menu() {
 		add_submenu_page(
-			'prx3-owners',
+			'prx3-board',
 			__( 'Commitments', 'fan-ownership' ),
 			__( 'Commitments', 'fan-ownership' ),
-			'prx3_governance',
+			'prx3_view_tally',
 			'prx3-commitments',
 			array( __CLASS__, 'render' )
 		);
@@ -239,6 +259,12 @@ class PRX3_Commitments {
 	 */
 	public static function render() {
 		if ( ! current_user_can( 'prx3_governance' ) && ! current_user_can( 'prx3_admin' ) ) {
+			// Board members see their obligations read-only; edits stay
+			// with governance staff (the action handlers enforce it too).
+			if ( current_user_can( 'prx3_board' ) || current_user_can( 'prx3_view_tally' ) ) {
+				self::render_readonly();
+				return;
+			}
 			wp_die( esc_html__( 'Governance staff only.', 'fan-ownership' ) );
 		}
 		$items = self::all();

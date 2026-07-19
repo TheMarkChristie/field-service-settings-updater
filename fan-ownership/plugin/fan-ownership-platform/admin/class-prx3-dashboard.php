@@ -73,7 +73,7 @@ class PRX3_Dashboard {
 	 */
 	public static function render_owners_home() {
 		echo '<div class="wrap"><h1>' . esc_html__( 'Owners', 'fan-ownership' ) . '</h1>';
-		echo '<p>' . esc_html__( 'Everything the members see and do lives in this menu: ballots, ideas, questions, meetings, the video library, documents, behind-the-scenes posts, the decision register, chapters, the Match Centre, the squad, and the commitments calendar.', 'fan-ownership' ) . '</p>';
+		echo '<p>' . esc_html__( 'Everything the members see and do lives in this menu: ballots, ideas, questions, meetings, the video library, documents, behind-the-scenes posts, the decision register, chapters, the Match Centre, and the squad. Board-facing tools — the dashboard, decision register, commitments calendar, and owner signatures — are in the Board menu.', 'fan-ownership' ) . '</p>';
 		if ( self::can_view() ) {
 			echo '<p><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=prx3-dashboard' ) ) . '">' . esc_html__( 'Open the Club Dashboard (Board menu)', 'fan-ownership' ) . '</a></p>';
 		}
