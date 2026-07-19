@@ -45,11 +45,13 @@ class PRX3_Admin {
 			array( __CLASS__, 'render' )
 		);
 		foreach ( self::sections() as $section => $def ) {
+			// Board-level sections (Legal, Targets, Governance) live in the
+			// Board menu: readable by tally-view holders, edited by admins.
 			add_submenu_page(
-				'prx3-settings',
+				$def[2],
 				$def[0],
 				$def[0],
-				'prx3_admin',
+				'prx3-board' === $def[2] ? 'prx3_view_tally' : 'prx3_admin',
 				$def[1],
 				function () use ( $section ) {
 					self::render_section( $section );
@@ -65,14 +67,14 @@ class PRX3_Admin {
 	 */
 	private static function sections() {
 		return array(
-			'club'         => array( __( 'Club', 'fan-ownership' ), 'prx3-settings-club' ),
-			'brand pack'   => array( __( 'Brand Pack', 'fan-ownership' ), 'prx3-settings-brand' ),
-			'legal'        => array( __( 'Legal', 'fan-ownership' ), 'prx3-settings-legal' ),
-			'ticketing'    => array( __( 'Ticketing', 'fan-ownership' ), 'prx3-settings-ticketing' ),
-			'shares'       => array( __( 'Shares & Checkout', 'fan-ownership' ), 'prx3-settings-shares' ),
-			'targets'      => array( __( 'Targets', 'fan-ownership' ), 'prx3-settings-targets' ),
-			'governance'   => array( __( 'Governance', 'fan-ownership' ), 'prx3-settings-governance' ),
-			'integrations' => array( __( 'API & Integrations', 'fan-ownership' ), 'prx3-settings-api' ),
+			'club'         => array( __( 'Club', 'fan-ownership' ), 'prx3-settings-club', 'prx3-settings' ),
+			'brand pack'   => array( __( 'Brand Pack', 'fan-ownership' ), 'prx3-settings-brand', 'prx3-settings' ),
+			'legal'        => array( __( 'Legal', 'fan-ownership' ), 'prx3-settings-legal', 'prx3-board' ),
+			'ticketing'    => array( __( 'Ticketing', 'fan-ownership' ), 'prx3-settings-ticketing', 'prx3-settings' ),
+			'shares'       => array( __( 'Shares & Checkout', 'fan-ownership' ), 'prx3-settings-shares', 'prx3-settings' ),
+			'targets'      => array( __( 'Targets', 'fan-ownership' ), 'prx3-settings-targets', 'prx3-board' ),
+			'governance'   => array( __( 'Governance', 'fan-ownership' ), 'prx3-settings-governance', 'prx3-board' ),
+			'integrations' => array( __( 'API & Integrations', 'fan-ownership' ), 'prx3-settings-api', 'prx3-settings' ),
 		);
 	}
 
@@ -197,9 +199,36 @@ class PRX3_Admin {
 
 		echo '<h2>' . esc_html__( 'Settings sections', 'fan-ownership' ) . '</h2><ul class="ul-disc">';
 		foreach ( self::sections() as $def ) {
-			echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=' . $def[1] ) ) . '">' . esc_html( $def[0] ) . '</a></li>';
+			echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=' . $def[1] ) ) . '">' . esc_html( $def[0] ) . '</a>' . ( 'prx3-board' === $def[2] ? ' <em>' . esc_html__( '(in the Board menu)', 'fan-ownership' ) . '</em>' : '' ) . '</li>';
 		}
 		echo '</ul></div>';
+	}
+
+	/**
+	 * Read-only view of a board-level section for board members without
+	 * the admin capability: values only, no form, secrets masked.
+	 *
+	 * @param string $section Section key from fields().
+	 */
+	private static function render_section_readonly( $section ) {
+		$label = self::sections()[ $section ][0] ?? ucfirst( $section );
+		echo '<div class="wrap"><h1>' . esc_html( $label ) . '</h1>';
+		echo '<p>' . esc_html__( 'Read-only view — changes are made by an Owner-Admin.', 'fan-ownership' ) . '</p>';
+		echo '<table class="widefat striped"><tbody>';
+		foreach ( self::fields()[ $section ] ?? array() as $key => $def ) {
+			$value = prx3_setting( $key, PRX3_Config::defaults()[ $key ] ?? '' );
+			if ( 'password' === $def[1] ) {
+				$display = '' !== (string) $value ? '••••••••' : '—';
+			} elseif ( 'media' === $def[1] ) {
+				$display = $value ? sprintf( /* translators: %d attachment id. */ __( 'uploaded (attachment #%d)', 'fan-ownership' ), (int) $value ) : __( 'not set', 'fan-ownership' );
+			} elseif ( 'sport' === $def[1] ) {
+				$display = PRX3_Config::sports()[ $value ]['label'] ?? (string) $value;
+			} else {
+				$display = '' !== (string) $value ? wp_strip_all_tags( (string) $value ) : '—';
+			}
+			echo '<tr><th scope="row">' . esc_html( $def[0] ) . '</th><td>' . esc_html( $display ) . '</td></tr>';
+		}
+		echo '</tbody></table></div>';
 	}
 
 	/**
@@ -210,6 +239,11 @@ class PRX3_Admin {
 	 */
 	public static function render_section( $section ) {
 		if ( ! current_user_can( 'prx3_admin' ) ) {
+			$parent = self::sections()[ $section ][2] ?? 'prx3-settings';
+			if ( 'prx3-board' === $parent && ( current_user_can( 'prx3_view_tally' ) || current_user_can( 'prx3_board' ) ) ) {
+				self::render_section_readonly( $section );
+				return;
+			}
 			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
 		}
 		$label = self::sections()[ $section ][0] ?? ucfirst( $section );

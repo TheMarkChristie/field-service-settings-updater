@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.2.2
+Stable tag: 0.2.3
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,13 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 0.2.3 =
+* Legal, Targets, and Governance settings moved from the Settings
+  menu to the Board menu - board members see them read-only (secrets
+  masked), Owner-Admins edit as before. Settings keeps Features,
+  Club, Brand Pack, Ticketing, Shares & Checkout, and API &
+  Integrations.
 
 = 0.2.2 =
 * Commerce operations: new Commerce Ops screen (held orders with

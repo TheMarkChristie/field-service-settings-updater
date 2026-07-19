@@ -8,12 +8,12 @@ Agreement (stories FO-121 to FO-123; decisions P97/P98).
 1. **Publish the agreement.** Paste the solicitor-settled text into a
    WordPress page and publish it. Do not open the share checkout on the
    unsettled draft.
-2. **Point the platform at it.** Settings → Legal:
+2. **Point the platform at it.** Board → Legal:
    - *Shareholders' Agreement page ID* — the page from step 1.
    - *Shareholders' Agreement version* — start at `1.0`.
    - *Terms of Membership page ID* — the terms page, listed alongside
      the agreement in every member's documents.
-3. **Set the countersignatory.** Settings → Legal:
+3. **Set the countersignatory.** Board → Legal:
    - *Board signatory name* and *role* (e.g. "Director").
    - *Board signatory signature image* — a scan or photo of their
      signature; a transparent PNG on white looks best. The board should
@@ -50,7 +50,7 @@ can open any member's copy from the signatures register.
 ## Issuing a new version
 
 1. Update the agreement page text.
-2. Settings → Legal → bump the *version* (e.g. `1.0` → `1.1`).
+2. Board → Legal → bump the *version* (e.g. `1.0` → `1.1`).
 3. Every owner now sees a banner on their account asking them to read,
    re-accept, and re-sign. Each re-acceptance is recorded as a new
    entry — the original acceptance is never overwritten.
@@ -96,11 +96,11 @@ recent signature). Every acceptance is also written to the audit log.
   manual fallback.)
 - **Checkout doesn't show the checkbox or signature box** — the cart
   must contain the share product, and the agreement page must be
-  published with its ID set in Settings → Legal.
+  published with its ID set in Board → Legal.
 - **The signature box won't draw** — the member's browser has
   JavaScript disabled; the form says so and will not submit without a
   signature.
 - **The countersignature or stamp is missing from executed copies** —
   the images have not been uploaded, or the signatory name is blank, in
-  Settings → Legal / Brand Pack. Copies render without them and pick
+  Board → Legal / Brand Pack. Copies render without them and pick
   them up on the next view once configured.
