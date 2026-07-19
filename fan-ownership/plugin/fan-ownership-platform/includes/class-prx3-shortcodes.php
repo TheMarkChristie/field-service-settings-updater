@@ -37,11 +37,16 @@ class PRX3_Shortcodes {
 			'prx3_videos'          => 'videos',
 			'prx3_dashboard'       => 'dashboard',
 			'prx3_board_directory' => 'board_directory',
+			'prx3_voting_record'   => 'voting_record',
+			'prx3_referrals'       => 'referrals',
+			'prx3_chapters'        => 'chapters',
 			'prx3_share_ladder'    => 'share_ladder',
 		);
 		foreach ( $codes as $tag => $method ) {
 			add_shortcode( $tag, array( __CLASS__, $method ) );
 		}
+		add_action( 'admin_post_prx3_referral_optin', array( __CLASS__, 'handle_referral_optin' ) );
+		add_action( 'admin_post_prx3_welcome_done', array( __CLASS__, 'handle_welcome_done' ) );
 		// Event permalinks carry their full experience even when no
 		// shortcode page exists (FO-131): ballots vote in place.
 		add_filter( 'the_content', array( __CLASS__, 'single_content' ), 9 );
@@ -317,6 +322,9 @@ class PRX3_Shortcodes {
 		if ( in_array( $state, array( 'closed', 'published', 'rerun', 'unresolved' ), true ) ) {
 			return $content . '<p class="prx3-notice">' . esc_html__( 'Voting has closed — the result is announced in the decision register and on the owners dashboard.', 'fan-ownership' ) . '</p>';
 		}
+		if ( 'draft' === $state || '' === $state ) {
+			return $content . '<p class="prx3-notice">' . esc_html__( 'Draft ballot — voting has not been scheduled yet. The voting card and discussion chat appear here the moment it opens.', 'fan-ownership' ) . '</p>';
+		}
 		return $content;
 	}
 
@@ -496,11 +504,11 @@ class PRX3_Shortcodes {
 				echo ' <span class="prx3-badge prx3-badge--stalled">' . esc_html__( 'stalled — no recent update', 'fan-ownership' ) . '</span>';
 			}
 			echo '</p>';
-			$updates = (array) get_post_meta( $decision->ID, '_prx3_updates', true );
+			$updates = array_filter( (array) get_post_meta( $decision->ID, '_prx3_updates', true ), 'is_array' );
 			if ( $updates ) {
 				echo '<ul>';
 				foreach ( array_slice( array_reverse( $updates ), 0, 3 ) as $update ) {
-					echo '<li>' . esc_html( $update['at'] . ' — ' . $update['status'] . ( $update['note'] ? ': ' . $update['note'] : '' ) ) . '</li>';
+					echo '<li>' . esc_html( ( $update['at'] ?? '' ) . ' — ' . ( $update['status'] ?? '' ) . ( ! empty( $update['note'] ) ? ': ' . $update['note'] : '' ) ) . '</li>';
 				}
 				echo '</ul>';
 			}
@@ -589,10 +597,12 @@ class PRX3_Shortcodes {
 	 */
 	public static function dashboard() {
 		self::enqueue();
+		$prx3_welcome = self::welcome_panel();
 		if ( ! prx3_is_owner() ) {
 			return self::gate();
 		}
 		$out  = '<div class="prx3-dashboard">';
+		$out .= $prx3_welcome;
 		$out .= '<h2>' . esc_html( sprintf( /* translators: 1: club, 2: name. */ __( '%1$s — welcome back, %2$s', 'fan-ownership' ), prx3_club_name(), wp_get_current_user()->display_name ) ) . '</h2>';
 
 		$user_id = get_current_user_id();
@@ -647,4 +657,175 @@ class PRX3_Shortcodes {
 		}
 		return $out . '</div>';
 	}
+	/**
+	 * [prx3_voting_record] — the searchable archive of finished ballots (FO-209).
+	 *
+	 * @return string Archive HTML.
+	 */
+	public static function voting_record() {
+		self::enqueue();
+		if ( ! prx3_is_owner() ) {
+			return self::gate();
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only search.
+		$q    = isset( $_GET['prx3_vq'] ) ? sanitize_text_field( wp_unslash( $_GET['prx3_vq'] ) ) : '';
+		$out  = '<div class="prx3-voting-record"><h2>' . esc_html__( 'Voting record', 'fan-ownership' ) . '</h2>';
+		$out .= '<form method="get"><label class="screen-reader-text" for="prx3_vq">' . esc_html__( 'Search ballots', 'fan-ownership' ) . '</label><input type="search" id="prx3_vq" name="prx3_vq" value="' . esc_attr( $q ) . '" placeholder="' . esc_attr__( 'Search past ballots…', 'fan-ownership' ) . '"> <button class="prx3-button">' . esc_html__( 'Search', 'fan-ownership' ) . '</button></form><ul>';
+		$rows = 0;
+		foreach ( get_posts(
+			array(
+				'post_type'   => 'prx3_ballot',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+			)
+		) as $ballot ) {
+			$state = PRX3_Ballots::state( $ballot->ID );
+			if ( ! in_array( $state, array( 'closed', 'published', 'rerun', 'unresolved' ), true ) ) {
+				continue;
+			}
+			if ( '' !== $q && false === stripos( $ballot->post_title, $q ) ) {
+				continue;
+			}
+			++$rows;
+			$number = PRX3_Ballots::number( $ballot->ID );
+			$out   .= '<li><a href="' . esc_url( get_permalink( $ballot->ID ) ) . '">' . ( $number ? '#' . (int) $number . ' — ' : '' ) . esc_html( $ballot->post_title ) . '</a> <span class="prx3-badge">' . esc_html( $state ) . '</span></li>';
+		}
+		if ( ! $rows ) {
+			$out .= '<li>' . esc_html__( 'No finished ballots match.', 'fan-ownership' ) . '</li>';
+		}
+		return $out . '</ul></div>';
+	}
+
+	/**
+	 * [prx3_referrals] — my referral link, opt-in, and the leaderboard (FO-223).
+	 *
+	 * @return string Referrals HTML.
+	 */
+	public static function referrals() {
+		self::enqueue();
+		if ( ! prx3_is_owner() ) {
+			return self::gate();
+		}
+		$me    = get_current_user_id();
+		$out   = '<div class="prx3-referrals"><h2>' . esc_html__( 'Bring a fellow fan', 'fan-ownership' ) . '</h2>';
+		$out  .= '<p>' . esc_html__( 'Share your link — when they become an owner, the recruit is credited to you. Recognition only: prices never change.', 'fan-ownership' ) . '</p>';
+		$out  .= '<p><code>' . esc_html( add_query_arg( 'ref', $me, home_url( '/' ) ) ) . '</code></p>';
+		$optin = (bool) get_user_meta( $me, 'prx3_referral_optin', true );
+		$out  .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">' . wp_nonce_field( 'prx3_referral_optin', '_wpnonce', true, false );
+		$out  .= '<input type="hidden" name="action" value="prx3_referral_optin"><button class="prx3-button">' . esc_html( $optin ? __( 'Leave the public leaderboard', 'fan-ownership' ) : __( 'Join the public leaderboard', 'fan-ownership' ) ) . '</button></form>';
+		$out  .= '<h3>' . esc_html__( 'Leaderboard', 'fan-ownership' ) . '</h3><ol>';
+		$board = array();
+		foreach ( get_users( array( 'number' => -1 ) ) as $member ) {
+			if ( ! get_user_meta( $member->ID, 'prx3_referral_optin', true ) ) {
+				continue;
+			}
+			$count = (int) get_user_meta( $member->ID, 'prx3_referrals', true );
+			if ( $count > 0 ) {
+				$board[] = array( $member->display_name, $count );
+			}
+		}
+		usort( $board, fn( $x, $y ) => $y[1] <=> $x[1] );
+		foreach ( array_slice( $board, 0, 10 ) as $row ) {
+			$out .= '<li>' . esc_html( $row[0] ) . ' — ' . (int) $row[1] . '</li>';
+		}
+		if ( ! $board ) {
+			$out .= '<li>' . esc_html__( 'No opted-in referrers yet — be the first.', 'fan-ownership' ) . '</li>';
+		}
+		return $out . '</ol></div>';
+	}
+
+	/**
+	 * Toggle the leaderboard opt-in.
+	 */
+	public static function handle_referral_optin() {
+		if ( ! is_user_logged_in() || ! prx3_is_owner() ) {
+			wp_die( esc_html__( 'Owners only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_referral_optin' );
+		$me = get_current_user_id();
+		update_user_meta( $me, 'prx3_referral_optin', get_user_meta( $me, 'prx3_referral_optin', true ) ? '' : 1 );
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
+		exit;
+	}
+
+	/**
+	 * [prx3_chapters] — the chapter directory, with a map when chapters
+	 * carry coordinates (_prx3_lat/_prx3_lng) (FO-222).
+	 *
+	 * @return string Directory HTML.
+	 */
+	public static function chapters() {
+		self::enqueue();
+		if ( ! prx3_is_owner() ) {
+			return self::gate();
+		}
+		$chapters = get_posts(
+			array(
+				'post_type'   => 'prx3_chapter',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+			)
+		);
+		$pins     = array();
+		$out      = '<div class="prx3-chapters"><h2>' . esc_html__( 'Owner chapters', 'fan-ownership' ) . '</h2><ul>';
+		foreach ( $chapters as $chapter ) {
+			$city = get_post_meta( $chapter->ID, '_prx3_city', true );
+			$lat  = (float) get_post_meta( $chapter->ID, '_prx3_lat', true );
+			$lng  = (float) get_post_meta( $chapter->ID, '_prx3_lng', true );
+			if ( $lat && $lng ) {
+				$pins[] = array(
+					'name' => $chapter->post_title,
+					'lat'  => $lat,
+					'lng'  => $lng,
+				);
+			}
+			$out .= '<li><a href="' . esc_url( get_permalink( $chapter->ID ) ) . '">' . esc_html( $chapter->post_title ) . '</a>' . ( $city ? ' — ' . esc_html( $city ) : '' ) . '</li>';
+		}
+		if ( ! $chapters ) {
+			$out .= '<li>' . esc_html__( 'No chapters yet — owners anywhere can start one.', 'fan-ownership' ) . '</li>';
+		}
+		$out .= '</ul>';
+		if ( $pins ) {
+			wp_enqueue_style( 'prx3-leaflet' );
+			wp_enqueue_script( 'prx3-leaflet' );
+			$out .= '<div id="prx3-chapter-map" style="height:360px;"></div>';
+			$out .= '<script>window.addEventListener("load",function(){if(!window.L){return;}var m=L.map("prx3-chapter-map");var b=[];L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(m);' . wp_json_encode( $pins ) . '.forEach(function(p){L.marker([p.lat,p.lng]).addTo(m).bindPopup(p.name);b.push([p.lat,p.lng]);});m.fitBounds(b,{padding:[30,30]});});</script>';
+		}
+		return $out . '</div>';
+	}
+
+	/**
+	 * First-run welcome: shown on the owners hub until dismissed (FO-115).
+	 *
+	 * @return string Panel HTML, '' once dismissed.
+	 */
+	public static function welcome_panel() {
+		$me = get_current_user_id();
+		if ( ! $me || get_user_meta( $me, 'prx3_welcome_done', true ) ) {
+			return '';
+		}
+		$video = (string) prx3_setting( 'welcome_video_url', '' );
+		$out   = '<div class="prx3-card prx3-welcome"><h3>' . esc_html( sprintf( /* translators: %s club. */ __( 'Welcome to %s — you own this', 'fan-ownership' ), prx3_club_name() ) ) . '</h3>';
+		if ( $video ) {
+			$out .= '<p><iframe class="prx3-welcome__video" width="560" height="315" src="' . esc_url( $video ) . '" title="' . esc_attr__( 'Welcome from the club', 'fan-ownership' ) . '" loading="lazy" allowfullscreen style="max-width:100%;"></iframe></p>';
+		}
+		$out .= '<p>' . esc_html__( 'Cast your first vote in the starter ballot, say hello in FanPress Chat, and set up your profile.', 'fan-ownership' ) . '</p>';
+		$out .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">' . wp_nonce_field( 'prx3_welcome_done', '_wpnonce', true, false );
+		$out .= '<input type="hidden" name="action" value="prx3_welcome_done"><button class="prx3-button">' . esc_html__( "Got it — let's go", 'fan-ownership' ) . '</button></form></div>';
+		return $out;
+	}
+
+	/**
+	 * Dismiss the welcome panel.
+	 */
+	public static function handle_welcome_done() {
+		if ( ! is_user_logged_in() ) {
+			wp_die( esc_html__( 'Owners only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_welcome_done' );
+		update_user_meta( get_current_user_id(), 'prx3_welcome_done', 1 );
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
+		exit;
+	}
 }
+

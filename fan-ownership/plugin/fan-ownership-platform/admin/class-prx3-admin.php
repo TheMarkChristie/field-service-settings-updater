@@ -19,6 +19,7 @@ class PRX3_Admin {
 	 * Hook the menu page and the settings save handler.
 	 */
 	public static function init() {
+		add_action( 'admin_post_prx3_merge_members', array( __CLASS__, 'handle_merge' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_prx3_save_settings', array( __CLASS__, 'save' ) );
 	}
@@ -35,6 +36,14 @@ class PRX3_Admin {
 			array( __CLASS__, 'render' ),
 			'dashicons-admin-generic',
 			3.4
+		);
+		add_submenu_page(
+			'prx3-settings',
+			__( 'Member Tools', 'fan-ownership' ),
+			__( 'Member Tools', 'fan-ownership' ),
+			'prx3_admin',
+			'prx3-member-tools',
+			array( __CLASS__, 'render_member_tools' )
 		);
 		add_submenu_page(
 			'prx3-settings',
@@ -87,9 +96,11 @@ class PRX3_Admin {
 	private static function fields() {
 		return array(
 			'club'         => array(
-				'club_name'       => array( __( 'Club name', 'fan-ownership' ), 'text' ),
-				'sport'           => array( __( 'Sport (drives Match Centre events and language)', 'fan-ownership' ), 'sport' ),
-				'currency_symbol' => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
+				'club_name'         => array( __( 'Club name', 'fan-ownership' ), 'text' ),
+				'sport'             => array( __( 'Sport (drives Match Centre events and language)', 'fan-ownership' ), 'sport' ),
+				'currency_symbol'   => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
+				'welcome_video_url' => array( __( 'Welcome video URL (embed URL, shown to new owners on the hub)', 'fan-ownership' ), 'text' ),
+				'weekly_show_day'   => array( __( 'Weekly show day (0 = Sunday … 6 = Saturday; blank = no standing slot)', 'fan-ownership' ), 'text' ),
 			),
 			'brand pack'   => array(
 				'club_mission'              => array( __( 'Mission statement (rich text — shown on the brand pack and available to the app)', 'fan-ownership' ), 'richtext' ),
@@ -421,6 +432,74 @@ class PRX3_Admin {
 		$slug  = isset( $_POST['prx3_redirect'] ) ? sanitize_key( wp_unslash( $_POST['prx3_redirect'] ) ) : 'prx3-settings';
 		$valid = array_merge( array( 'prx3-settings' ), wp_list_pluck( self::sections(), 1 ) );
 		wp_safe_redirect( admin_url( 'admin.php?page=' . ( in_array( $slug, $valid, true ) ? $slug : 'prx3-settings' ) . '&saved=1' ) );
+		exit;
+	}
+	/**
+	 * Member Tools: merge duplicate accounts (FO-110). Shares move from
+	 * the duplicate to the kept account through the register, the SHA
+	 * acceptance is preserved, and the duplicate loses its owner role.
+	 */
+	public static function render_member_tools() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		echo '<div class="wrap"><h1>' . esc_html__( 'Member Tools', 'fan-ownership' ) . '</h1>';
+		echo '<h2>' . esc_html__( 'Merge duplicate accounts', 'fan-ownership' ) . '</h2>';
+		echo '<p>' . esc_html__( 'Moves every share from the duplicate to the kept account (both movements recorded in the register), keeps the earlier agreement acceptance, removes the duplicate\'s owner role, and audits the merge. The duplicate account itself is not deleted — close it from the Users screen when you are satisfied.', 'fan-ownership' ) . '</p>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" onsubmit="return confirm(\'' . esc_js( __( 'Merge the duplicate into the kept account?', 'fan-ownership' ) ) . '\');">';
+		wp_nonce_field( 'prx3_merge_members' );
+		echo '<input type="hidden" name="action" value="prx3_merge_members">';
+		echo '<p><label for="prx3_merge_from">' . esc_html__( 'Duplicate account (user ID)', 'fan-ownership' ) . '</label> <input type="number" id="prx3_merge_from" name="from" required min="1"></p>';
+		echo '<p><label for="prx3_merge_into">' . esc_html__( 'Kept account (user ID)', 'fan-ownership' ) . '</label> <input type="number" id="prx3_merge_into" name="into" required min="1"></p>';
+		echo '<p><button class="button button-primary">' . esc_html__( 'Merge accounts', 'fan-ownership' ) . '</button></p></form></div>';
+	}
+
+	/**
+	 * Perform the merge: register-recorded share movement, cap enforced.
+	 *
+	 * @param int $from Duplicate account.
+	 * @param int $into Kept account.
+	 * @return true|WP_Error
+	 */
+	public static function merge_members( $from, $into ) {
+		$from = (int) $from;
+		$into = (int) $into;
+		if ( ! $from || ! $into || $from === $into || ! get_userdata( $from ) || ! get_userdata( $into ) ) {
+			return new WP_Error( 'prx3_merge_bad', __( 'Both accounts must exist and differ.', 'fan-ownership' ) );
+		}
+		$moving = prx3_shares( $from );
+		if ( $moving > 0 ) {
+			$granted = PRX3_Shares::grant_shares( $into, $moving, 'merge_in', array( 'from' => $from ) );
+			if ( is_wp_error( $granted ) ) {
+				return $granted;
+			}
+			PRX3_Shares::surrender_all( $from, 'merge_out', array( 'into' => $into ) );
+		}
+		$sha = get_user_meta( $from, 'prx3_sha_accepted', true );
+		if ( $sha && ! get_user_meta( $into, 'prx3_sha_accepted', true ) ) {
+			update_user_meta( $into, 'prx3_sha_accepted', $sha );
+		}
+		$user = get_userdata( $from );
+		if ( $user && method_exists( $user, 'remove_role' ) ) {
+			$user->remove_role( 'fan_owner' );
+		}
+		PRX3_Audit::log( 'members_merged', sprintf( 'Member %1$d merged into %2$d (%3$d shares moved)', $from, $into, $moving ) );
+		return true;
+	}
+
+	/**
+	 * Merge from the Member Tools form.
+	 */
+	public static function handle_merge() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_merge_members' );
+		$result = self::merge_members( isset( $_POST['from'] ) ? absint( $_POST['from'] ) : 0, isset( $_POST['into'] ) ? absint( $_POST['into'] ) : 0 );
+		if ( is_wp_error( $result ) ) {
+			wp_die( esc_html( $result->get_error_message() ) );
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=prx3-member-tools&merged=1' ) );
 		exit;
 	}
 }

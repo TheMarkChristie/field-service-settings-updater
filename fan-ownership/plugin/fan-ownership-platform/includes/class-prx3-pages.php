@@ -47,6 +47,9 @@ class PRX3_Pages {
 			'notifications' => array( __( 'Notifications', 'fan-ownership' ), '[prx3_notifications]' ),
 			'board'         => array( __( 'The Board', 'fan-ownership' ), '[prx3_board_directory]' ),
 			'redeem'        => array( __( 'Redeem a Gift', 'fan-ownership' ), '[prx3_redeem_gift]' ),
+			'voting-record' => array( __( 'Voting Record', 'fan-ownership' ), '[prx3_voting_record]' ),
+			'referrals'     => array( __( 'Bring a Fellow Fan', 'fan-ownership' ), '[prx3_referrals]' ),
+			'chapters'      => array( __( 'Owner Chapters', 'fan-ownership' ), '[prx3_chapters]' ),
 		);
 	}
 

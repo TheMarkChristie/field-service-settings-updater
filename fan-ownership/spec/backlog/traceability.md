@@ -33,6 +33,7 @@ before shipping.
 | 3.7.0 | Ballot/match permalinks render fully (block-theme safe), "Create member pages" installer |
 | 3.8.0 | Sequential numbered ballot URLs |
 | 3.9.0 | Rich HTML/image ballot questions, answers with descriptions |
+| 3.10.0.0 | The smaller-ones round: certificate QR, member merge tool, voting-record archive, referral leaderboard, chapters map, Live Q&A presenter, annual-report workspace, weekly-show flag, player honours, first-run welcome, draft-ballot state note, identity scan + GitHub Actions CI, render smoke tests (every member surface proven; fixed a decisions-page fatal) |
 
 ## Phase 1 — Own
 
@@ -41,18 +42,18 @@ before shipping.
 | FO-101 Members-only areas | Done | 0.1.0 | `class-prx3-access.php` — redirect to join page, search/feed exclusion, teaser layer, instant loss on closure | |
 | FO-102 Roles & permissions | Done | 0.1.0 | `class-prx3-roles.php` — six roles, capability matrix in file header, audited changes, session destroy on board removal | 2FA enforced via provider contract (`prx3_2fa_provider_active`); pair with a 2FA plugin at deploy |
 | FO-103 Kill switches | Done | 0.1.0 | `class-prx3-config.php` — per-feature toggles, audit with reason, member notice; API routes honour switches | |
-| FO-104 Identity as config | Partial | 0.1.0 | `helpers.php` (`prx3_club_name`), used across emails/certificates/API; historical identity frozen on certificates | AC2's automated hard-coded-name check not built (add a CI grep) |
+| FO-104 Identity as config | Done | 0.1.0; 3.10.0.0 | `helpers.php` (`prx3_club_name`), used across emails/certificates/API; historical identity frozen on certificates + CI-grade identity scan lives in the suite (test-identity.php); helpers default now sourced from config | |
 | FO-105 Registration | Partial | 0.1.0 | `class-prx3-membership.php` — 18+ confirm, terms, email verification gate, duplicate email routing | Apple/Google sign-in needs a social-login companion plugin; app login is email/password until Firebase project exists |
 | FO-106 Tiered share checkout | Done | 0.2.0–0.2.1 | **Shopify (P105)**: `class-prx3-shopify.php` — tier-per-variant cart permalinks, HMAC webhooks, ladder re-verification (mismatches held), sign-to-claim gate, refund clawback (WooCommerce removed entirely, P106) | Requires the Shopify store, two webhooks, and tier variant IDs (Settings → Shares & Checkout) |
 | FO-107 Top-ups | Done | 0.1.0 | Ladder continues from held position; cap explained at max | |
 | FO-108 Gifting | Done | 0.1.0 | `class-prx3-gifts.php` — codes, indefinite validity, recipient cap/age at redemption, failure preserves code | Giver's unredeemed-gift list is API-only (`PRX3_Gifts::unredeemed_for`), not yet on the account page |
 | FO-109 Invoices | Operational | 0.2.0 | Shopify issues the order confirmation/receipt for every purchase; the platform's register holds the permanent ownership record | A branded PDF invoice app on the Shopify store covers T58 if formal invoices are required |
-| FO-110 One person one account | Partial | 0.1.0 | Email-heuristic + payment-fingerprint flagging (`prx3_payment_identity` hook), audited | Admin merge/close UI is manual via Users screen; no dedicated merge tool |
+| FO-110 One person one account | Done | 0.1.0; 3.10.0.0 | Email-heuristic + payment-fingerprint flagging (`prx3_payment_identity` hook), audited + Member Tools → Merge duplicate accounts: register-recorded share move, SHA acceptance kept, owner role removed, audited | |
 | FO-111 Share register | Done | 0.1.0 | `class-prx3-register.php` — append-only table, holding-after, consideration, CSV export, audited | |
 | FO-112 Owner numbers | Done | 0.1.0 | Atomic sequence, never reused, on certificate/profile/API | |
-| FO-113 Certificates | Partial | 0.1.0 | Instant issue + re-issue with history, print-to-PDF view, public verification endpoint with consent-gated name, surrendered state | Verify link is textual; QR image generation not yet rendered on the certificate |
+| FO-113 Certificates | Done | 0.1.0; 3.10.0.0 | Instant issue + re-issue with history, print-to-PDF view, public verification endpoint with consent-gated name, surrendered state + QR code rendered on the certificate linking /verify-owner/CODE/ (remote QR image service) | |
 | FO-114 Badges | Done | 0.1.0 | `class-prx3-badges.php` — contract (`prx3_award_badge`/`prx3_get_member_badges`), queue + hourly retry, founders cutoff, configurable milestone rules | Needs the club's badge plugin to implement the contract |
-| FO-115 Onboarding | Partial | 0.1.2–0.1.9 | Journey state, 3-step email series stopping early, dismissible, starter-ballot prompt via dashboard | Welcome video is club content on the join/dashboard page rather than a bespoke first-run screen |
+| FO-115 Onboarding | Done | 0.1.2–0.1.9; 3.10.0.0 | Journey state, 3-step email series stopping early, dismissible, starter-ballot prompt via dashboard + First-run welcome panel on the owners hub: club welcome video (setting), starter pointers, dismissible | |
 | FO-116 Email foundations | Done | 0.1.0 | `class-prx3-comms.php` — one branded template from config, category prefs (email+push in one centre), governance always sends, prefs link | Campaign sending itself rides Brevo SMTP site-wide |
 | FO-117 My data | Done | 0.1.0 | `class-prx3-privacy.php` — core exporter/eraser integration, self-serve closure with surrender + session destroy, retention sweeps | |
 | FO-118 Exclusive content | Done | 0.1.0 | `prx3_exclusive` CPT + teaser meta + gating | |
@@ -80,21 +81,21 @@ before shipping.
 | FO-206 Automated lifecycle | Done | 0.1.0 | 5-minute cron: open/close/publish, notifications each stage, pre-publish snapshot + audit | Weekly video wrap is editorial output; result pages link once the video is attached |
 | FO-207 Constitutional | Done | 0.1.0 | 75% check at close, labelled in web/app UI | |
 | FO-208 Ties | Done | 0.1.0 | Result withheld, board casting-vote flow with mandatory reasoning, published with trail | Escalation timer for overdue casting votes not built |
-| FO-209 Voting record | Partial | 0.1.0 | Closed ballots with results via API + archive pages; aggregates only | Dedicated searchable archive UI is the plain CPT archive for now |
+| FO-209 Voting record | Done | 0.1.0; 3.10.0.0 | Closed ballots with results via API + archive pages; aggregates only + [prx3_voting_record] searchable archive of finished ballots + installer page | |
 | FO-210 Ideas pipeline | Done | 0.1.0 | Pending → moderation → support → 5% auto-draft ballot + staff/supporter notifications, milestone event | Declining to schedule the drafted ballot records a reason on the idea, not a separate published statement |
 | FO-211 Idea lifecycle | Done | 0.1.0 | Six statuses, history, notifications, decline reason required | |
 | FO-212 Questions | Done | 0.1.0 | Submission, upvotes, monthly video selection + link, written answers, SLA flagging | |
 | FO-213 Meetings & RSVP | Done | 0.1.0 | RSVP toggle, per-member tokenised ICS feed (meetings + ballot closes), reminders | App shows site-timezone datetimes; device-local conversion at app build-out |
-| FO-214 Live participation | Partial | 0.1.0 | Gated stream embed + meeting chat room via the shared chat service; questions module handles upvoting | Presenter view ranking questions in real time not built — presenter uses the questions admin list |
+| FO-214 Live participation | Done | 0.1.0; 3.10.0.0 | Gated stream embed + meeting chat room via the shared chat service; questions module handles upvoting + Board → Live Q&A presenter: open questions ranked by upvotes, 20s auto-refresh | |
 | FO-215 Meeting record | Done | 0.1.0 | Recording + action minutes fields, permanent archive, audited recording publication | 24h is an operational commitment; platform flags nothing yet |
 | FO-216 AGM resolutions | Done | 0.1.0 | AGM-flagged meetings; resolutions as ballots with formal recorded outcomes; articles-dependence explicitly flagged | |
 | FO-217 Financial publishing | Done | 0.1.0 | Monthly-summary document type, in-portal inline streaming viewer (no download route), missed-month flag, second approval | |
 | FO-218 Decision register | Done | 0.1.0 | Auto entry on pass, statuses + dated updates, stall detection + board alerts, board releases | |
-| FO-219 Annual report | Partial | 0.1.0 | `assemble_annual_report()` compiles ballots/decisions/growth from records | Draft-edit-publish UI not built; staff publish via a document for now |
+| FO-219 Annual report | Done | 0.1.0; 3.10.0.0 | `assemble_annual_report()` compiles ballots/decisions/growth from records + Board → Annual Report: drafts list + one-click structured draft into the vault (documents, dtype annual-report) | |
 | FO-220 Forum & comments | Done | 0.1.0; native rebuild 0.3.0 | Native forum (see FO-230) gated, owner-only comments, [Board]/[Club] tags, reporting into queue | bbPress dependency superseded by P109 |
 | FO-221 Moderation & sanctions | Done | 0.1.0 | Queue, warn/mute/expel ladder, reasons mandatory, expel = admin-only + surrender + session destroy, audited | Edit-with-note moderation action not built |
-| FO-222 Chapters | Partial | 0.1.0 | 5+ founders, naming convention, approval, membership toggle, annual re-affirmation, de-recognition | Directory map is a list; no geographic map rendering |
-| FO-223 Referrals | Partial | 0.1.0 | Links, cookie attribution, credit on first purchase, milestone badges, zero price impact | Opt-in leaderboard not built |
+| FO-222 Chapters | Done | 0.1.0; 3.10.0.0 | 5+ founders, naming convention, approval, membership toggle, annual re-affirmation, de-recognition + [prx3_chapters] directory + OpenStreetMap/Leaflet map when chapters carry _prx3_lat/_prx3_lng | |
+| FO-223 Referrals | Done | 0.1.0; 3.10.0.0 | Links, cookie attribution, credit on first purchase, milestone badges, zero price impact + [prx3_referrals]: personal link, opt-in public leaderboard (top ten), recognition-only | |
 | FO-224 Board role & directory | Done | 0.1.0 | Role caps exactly per P79, votes only via own shares, directory shortcode with conflicts, tagged posts | |
 | FO-225 Structured board actions | Done | 0.1.0 | Recommendations on ballots, casting votes, reserved/failed-quorum decisions with mandatory published reasoning → register | |
 | FO-226 Board workspace | Done | 0.1.0 | Board-only CPTs (papers/threads/votes/vault/meetings), capability-walled incl. admins-except-break-glass (audited), open internal voting, chair casting vote, auto-minutes | |
@@ -125,11 +126,11 @@ before shipping.
 | FO-309 Stream sponsorship | Done | 0.1.0 | Staff-controlled ad slot URLs per match, served via API, no ad network | |
 | FO-310 Replays in the hour | Done | 0.1.0 | Auto-publish 15-min retries after full-time, Cloudflare recording lookup, one-hour staff alert, push on publish | |
 | FO-311 TV library | Done | 0.1.0 | Types, search, resume positions, teaser layer, signed/gated playback | |
-| FO-312 Weekly show pipeline | Partial | 0.1.0 | Interviews attach to fixtures via video-type + match meta; sensitive gating applies | Standing weekly slot with missed-slot flag not built |
+| FO-312 Weekly show pipeline | Done | 0.1.0; 3.10.0.0 | Interviews attach to fixtures via video-type + match meta; sensitive gating applies + Standing weekly slot setting; missed-slot flag + staff notice when no episode in 8 days, self-clearing | |
 | FO-313 Matchday health | Partial | 0.1.0 | Kill switches, delayed-stream member messaging, replay/stream failure alerts, Sentry hooks | UptimeRobot/status page are external services to configure; pre-kickoff checklist lives in the runbook |
 | FO-314 Documentation | Not built | 0.1.0 | — | The five-document suite (admin guide, matchday runbook, dev docs, API reference, volunteer handbooks) is the next writing task |
 | FO-315 Full dashboard | Partial | 0.1.2–0.1.9 | Membership/revenue/ballot-health/community/moderation/stalled-decisions | Stream concurrents + episode completion need the analytics/Cloudflare data feeds |
-| FO-316 The squad | Partial | 0.1.0 | `class-prx3-players.php` — `prx3_player` CPT at `/squad/` (number, position, active flag, featured-image photo), staff-only editing, active-only poll options | Honours (POTM/month wins) stored in meta; front-end profile rendering of honours is theme-template build-out |
+| FO-316 The squad | Done | 0.1.0; 3.10.0.0 | `class-prx3-players.php` — `prx3_player` CPT at `/squad/` (number, position, active flag, featured-image photo), staff-only editing, active-only poll options + Player pages render number, position, and POTM/month honours (block-theme safe) | |
 | FO-317 Player of the match live | Done | 0.1.0 | Opens on match live, closes 30 min after `_prx3_ended_at`, one changeable vote per member, live tallies, roster validation, auto winner + push + player honours on ballot tick; REST GET/POST `/matches/{id}/potm` | Web/app poll UI consumes the REST routes; native screen is scheduled app build-out |
 | FO-318 Player of the month | Done | 0.1.0 | Last-7-days window, one changeable vote per member, per-month archive option, auto winner + push on daily tick; REST GET/POST `/potm-month` | Same UI note as FO-317 |
 
@@ -151,7 +152,7 @@ before shipping.
 
 ## Honest summary
 
-Done 62 · Partial 18 · Operational 2 · Not built 1 (remainder of the
+Done 73 · Partial 7 · Operational 2 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

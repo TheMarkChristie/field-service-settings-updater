@@ -23,6 +23,8 @@ class PRX3_Media {
 	 * Register the replay pipeline and video edit screen hooks.
 	 */
 	public static function init() {
+		add_action( 'prx3_ballot_tick', array( __CLASS__, 'check_weekly_show' ) );
+		add_action( 'admin_notices', array( __CLASS__, 'show_missed_notice' ) );
 		add_action( 'prx3_publish_replay', array( __CLASS__, 'publish_replay' ) );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_box' ) );
 		add_action( 'save_post_prx3_video', array( __CLASS__, 'save_meta' ), 10, 2 );
@@ -233,5 +235,47 @@ class PRX3_Media {
 		}
 		update_post_meta( $post_id, '_prx3_cf_uid', isset( $_POST['prx3_cf_uid'] ) ? sanitize_text_field( wp_unslash( $_POST['prx3_cf_uid'] ) ) : '' );
 		update_post_meta( $post_id, '_prx3_media_url', isset( $_POST['prx3_media_url'] ) ? esc_url_raw( wp_unslash( $_POST['prx3_media_url'] ) ) : '' );
+	}
+	/**
+	 * The weekly show has a standing slot (FO-312): if no show episode
+	 * has been published within 8 days of the configured slot day, a
+	 * missed-slot flag is raised for staff and cleared on the next episode.
+	 */
+	public static function check_weekly_show() {
+		$day = prx3_setting( 'weekly_show_day', '' );
+		if ( '' === $day ) {
+			delete_option( 'prx3_show_missed' );
+			return;
+		}
+		$latest = get_posts(
+			array(
+				'post_type'   => 'prx3_video',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+				'meta_key'    => '_prx3_vtype', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded weekly check.
+				'meta_value'  => 'show', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			)
+		);
+		$newest = 0;
+		foreach ( $latest as $episode ) {
+			$newest = max( $newest, strtotime( (string) ( $episode->post_date ?? '' ) ) );
+		}
+		if ( time() - $newest > 8 * DAY_IN_SECONDS ) {
+			if ( ! get_option( 'prx3_show_missed' ) ) {
+				update_option( 'prx3_show_missed', time(), false );
+				PRX3_Audit::log( 'show_missed', 'Weekly show slot missed — no episode published in 8 days' );
+			}
+		} else {
+			delete_option( 'prx3_show_missed' );
+		}
+	}
+
+	/**
+	 * Staff notice while the weekly slot is missed.
+	 */
+	public static function show_missed_notice() {
+		if ( get_option( 'prx3_show_missed' ) && current_user_can( 'edit_posts' ) ) {
+			echo '<div class="notice notice-warning"><p>' . esc_html__( 'The weekly show slot has been missed — no episode published in over 8 days. Publish this week\'s episode or clear the standing slot in Fan App Settings → Club.', 'fan-ownership' ) . '</p></div>';
+		}
 	}
 }

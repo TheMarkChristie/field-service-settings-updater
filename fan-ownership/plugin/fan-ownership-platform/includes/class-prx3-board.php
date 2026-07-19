@@ -23,6 +23,7 @@ class PRX3_Board {
 	 * fields, and vault rendering.
 	 */
 	public static function init() {
+		add_action( 'admin_post_prx3_annual_draft', array( __CLASS__, 'handle_annual_draft' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_prx3_board_action', array( __CLASS__, 'handle_structured_action' ) );
 		add_action( 'admin_post_prx3_board_vote', array( __CLASS__, 'handle_internal_vote' ) );
@@ -55,6 +56,22 @@ class PRX3_Board {
 			__( 'Decision Register', 'fan-ownership' ),
 			'edit_posts',
 			'edit.php?post_type=prx3_decision'
+		);
+		add_submenu_page(
+			'prx3-board',
+			__( 'Live Q&A Presenter', 'fan-ownership' ),
+			__( 'Live Q&A', 'fan-ownership' ),
+			'prx3_view_tally',
+			'prx3-presenter',
+			array( __CLASS__, 'render_presenter' )
+		);
+		add_submenu_page(
+			'prx3-board',
+			__( 'Annual Report', 'fan-ownership' ),
+			__( 'Annual Report', 'fan-ownership' ),
+			'prx3_governance',
+			'prx3-annual-report',
+			array( __CLASS__, 'render_annual_report' )
 		);
 	}
 
@@ -390,5 +407,95 @@ class PRX3_Board {
 			echo '<p><button class="button button-primary">' . esc_html__( 'Record board action', 'fan-ownership' ) . '</button></p></form>';
 		}
 		echo '<p>' . esc_html__( 'Papers, internal votes, threads, and the vault live in the Board menu items. Meetings run by video within the workspace (embedded conferencing per the specification).', 'fan-ownership' ) . '</p></div>';
+	}
+	/**
+	 * Live Q&A presenter (FO-214): published questions ranked by member
+	 * upvotes, auto-refreshing every 20 seconds for the person on stage.
+	 */
+	public static function render_presenter() {
+		if ( ! current_user_can( 'prx3_view_tally' ) ) {
+			wp_die( esc_html__( 'Board and staff only.', 'fan-ownership' ) );
+		}
+		echo '<meta http-equiv="refresh" content="20">';
+		echo '<div class="wrap"><h1>' . esc_html__( 'Live Q&A — ranked by owner upvotes', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html__( 'Refreshes every 20 seconds. Answered questions drop off when marked answered on the Questions screen.', 'fan-ownership' ) . '</p>';
+		$ranked = array();
+		foreach ( get_posts(
+			array(
+				'post_type'   => 'prx3_question',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+			)
+		) as $question ) {
+			if ( get_post_meta( $question->ID, '_prx3_answered', true ) ) {
+				continue;
+			}
+			$ranked[] = array( $question, count( array_filter( (array) get_post_meta( $question->ID, '_prx3_upvotes', true ) ) ) );
+		}
+		usort( $ranked, fn( $x, $y ) => $y[1] <=> $x[1] );
+		if ( ! $ranked ) {
+			echo '<p>' . esc_html__( 'No open questions.', 'fan-ownership' ) . '</p>';
+		}
+		echo '<ol style="font-size:1.35em;max-width:820px;">';
+		foreach ( $ranked as $row ) {
+			echo '<li style="margin-bottom:14px;"><strong>' . esc_html( $row[0]->post_title ) . '</strong> <span style="color:#666;">(' . (int) $row[1] . ' ' . esc_html__( 'upvotes', 'fan-ownership' ) . ')</span> <a href="' . esc_url( get_edit_post_link( $row[0]->ID ) ) . '">' . esc_html__( 'open', 'fan-ownership' ) . '</a></li>';
+		}
+		echo '</ol></div>';
+	}
+
+	/**
+	 * Annual report workspace (FO-219): the year\'s report drafts and a
+	 * one-click starting point, published into the owner document vault.
+	 */
+	public static function render_annual_report() {
+		if ( ! current_user_can( 'prx3_governance' ) && ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Governance staff only.', 'fan-ownership' ) );
+		}
+		echo '<div class="wrap"><h1>' . esc_html__( 'Annual Report', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html__( 'Draft here, publish to the owner vault when the board signs it off. Reports are documents of type annual-report.', 'fan-ownership' ) . '</p><ul>';
+		$found = false;
+		foreach ( get_posts(
+			array(
+				'post_type'   => 'prx3_document',
+				'post_status' => array( 'publish', 'draft', 'pending' ),
+				'numberposts' => -1,
+				'meta_key'    => '_prx3_dtype', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- small bounded list.
+				'meta_value'  => 'annual-report', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			)
+		) as $report ) {
+			$found = true;
+			echo '<li><a href="' . esc_url( get_edit_post_link( $report->ID ) ) . '">' . esc_html( $report->post_title ) . '</a> — ' . esc_html( $report->post_status ) . '</li>';
+		}
+		if ( ! $found ) {
+			echo '<li>' . esc_html__( 'No annual reports yet.', 'fan-ownership' ) . '</li>';
+		}
+		echo '</ul><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'prx3_annual_draft' );
+		echo '<input type="hidden" name="action" value="prx3_annual_draft">';
+		echo '<p><button class="button button-primary">' . esc_html__( "Start this year's draft", 'fan-ownership' ) . '</button></p></form></div>';
+	}
+
+	/**
+	 * Create the current year\'s annual report draft.
+	 */
+	public static function handle_annual_draft() {
+		if ( ! current_user_can( 'prx3_governance' ) && ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Governance staff only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_annual_draft' );
+		$report = wp_insert_post(
+			array(
+				'post_type'    => 'prx3_document',
+				'post_status'  => 'draft',
+				'post_title'   => sprintf( /* translators: 1 club, 2 year. */ __( '%1$s Annual Report %2$s', 'fan-ownership' ), prx3_club_name(), gmdate( 'Y' ) ),
+				'post_content' => '<h2>' . esc_html__( 'Season review', 'fan-ownership' ) . '</h2><p></p><h2>' . esc_html__( 'Accounts summary', 'fan-ownership' ) . '</h2><p></p><h2>' . esc_html__( 'Governance and ballots', 'fan-ownership' ) . '</h2><p></p><h2>' . esc_html__( 'The year ahead', 'fan-ownership' ) . '</h2><p></p>',
+			)
+		);
+		if ( $report && ! is_wp_error( $report ) ) {
+			update_post_meta( $report, '_prx3_dtype', 'annual-report' );
+			PRX3_Audit::log( 'annual_report_draft', sprintf( 'Annual report draft #%d created', $report ) );
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=prx3-annual-report' ) );
+		exit;
 	}
 }

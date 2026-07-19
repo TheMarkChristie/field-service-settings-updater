@@ -37,7 +37,7 @@ function prx3_update_setting( $key, $value ) {
  * @return string
  */
 function prx3_club_name() {
-	return prx3_setting( 'club_name', 'Perth Panthers' );
+	return prx3_setting( 'club_name', (string) ( PRX3_Config::defaults()['club_name'] ?? '' ) );
 }
 
 /**

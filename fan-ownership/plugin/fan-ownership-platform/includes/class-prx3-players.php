@@ -37,6 +37,7 @@ class PRX3_Players {
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 		add_action( 'prx3_commitments_tick', array( __CLASS__, 'monthly_tick' ) );
 		add_action( 'prx3_ballot_tick', array( __CLASS__, 'close_due_potm' ) );
+		add_filter( 'the_content', array( __CLASS__, 'single_content' ) );
 	}
 
 	/**
@@ -423,5 +424,34 @@ class PRX3_Players {
 				),
 			)
 		);
+	}
+	/**
+	 * A player's own page shows their number, position, and honours
+	 * (block-theme safe: keyed off the queried post).
+	 *
+	 * @param string $content Post content.
+	 * @return string Content plus the player card.
+	 */
+	public static function single_content( $content ) {
+		if ( is_admin() || ! function_exists( 'is_singular' ) || ! is_singular( 'prx3_player' ) ) {
+			return $content;
+		}
+		$post_id = get_queried_object_id();
+		if ( get_the_ID() && (int) get_the_ID() !== (int) $post_id ) {
+			return $content;
+		}
+		$number   = (int) get_post_meta( $post_id, '_prx3_number', true );
+		$position = (string) get_post_meta( $post_id, '_prx3_position', true );
+		$potm     = (int) get_post_meta( $post_id, '_prx3_wins', true );
+		$months   = (int) get_post_meta( $post_id, '_prx3_month_wins', true );
+		$html     = '<div class="prx3-player-card"><p>';
+		if ( $number ) {
+			$html .= '<strong>#' . (int) $number . '</strong> ';
+		}
+		$html .= esc_html( $position ) . '</p>';
+		if ( $potm || $months ) {
+			$html .= '<p class="prx3-player-honours">' . esc_html( trim( ( $potm ? sprintf( /* translators: %d wins. */ _n( '%d Player of the Match award', '%d Player of the Match awards', $potm, 'fan-ownership' ), $potm ) : '' ) . ( $months ? ' · ' . sprintf( /* translators: %d wins. */ _n( '%d Player of the Month', '%d Players of the Month', $months, 'fan-ownership' ), $months ) : '' ), ' ·' ) ) . '</p>';
+		}
+		return $content . $html . '</div>';
 	}
 }

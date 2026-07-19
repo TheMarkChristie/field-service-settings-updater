@@ -175,7 +175,7 @@ class PRX3_Certificates {
 					date_i18n( get_option( 'date_format' ), $cert['issued_at'] )
 				)
 			) . '</p>'
-			. '<p class="verify">' . esc_html__( 'Verify this certificate:', 'fan-ownership' ) . ' ' . esc_html( $verify ) . '</p>'
+			. '<p class="verify">' . esc_html__( 'Verify this certificate:', 'fan-ownership' ) . ' ' . esc_html( $verify ) . '<br><img class="prx3-cert-qr" width="120" height="120" alt="' . esc_attr( home_url( '/verify-owner/' . $verify . '/' ) ) . '" src="' . esc_url( 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . rawurlencode( home_url( '/verify-owner/' . $verify . '/' ) ) ) . '"></p>'
 			. '<p class="noprint"><button onclick="window.print()">' . esc_html__( 'Print or save as PDF', 'fan-ownership' ) . '</button></p>'
 			. '</div></body></html>';
 

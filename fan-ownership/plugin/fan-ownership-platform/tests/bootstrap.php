@@ -293,6 +293,12 @@ function apply_filters( $hook, $value, ...$args ) {
 }
 
 // phpcs-style i18n/escaping shims: identity is fine under test.
+function _n( $single, $plural, $number, $domain = null ) {
+	return 1 === (int) $number ? $single : $plural;
+}
+function get_term_link( $term ) {
+	return 'https://example.test/board/' . ( is_object( $term ) ? $term->slug : $term ) . '/';
+}
 function __( $text, $domain = null ) {
 	return $text;
 }
@@ -357,6 +363,76 @@ function rest_ensure_response( $value ) {
 function register_rest_route( ...$args ) {
 	return true;
 }
+function wp_nonce_field( $action = -1, $name = '_wpnonce', $referer = true, $display = true ) {
+	$field = '<input type="hidden" name="' . $name . '" value="test-nonce">';
+	if ( $display ) {
+		echo $field; // phpcs:ignore
+	}
+	return $field;
+}
+function add_query_arg( ...$args ) {
+	return 'https://example.test/page/?args';
+}
+function remove_query_arg( $keys, $url = false ) {
+	return 'https://example.test/page/';
+}
+function checked( $checked, $current = true, $display = true ) {
+	$out = (string) $checked === (string) $current ? " checked='checked'" : '';
+	if ( $display ) {
+		echo $out; // phpcs:ignore
+	}
+	return $out;
+}
+function selected( $selected, $current = true, $display = true ) {
+	$out = (string) $selected === (string) $current ? " selected='selected'" : '';
+	if ( $display ) {
+		echo $out; // phpcs:ignore
+	}
+	return $out;
+}
+function wpautop( $text ) {
+	return '<p>' . str_replace( "\n\n", '</p><p>', (string) $text ) . '</p>';
+}
+$GLOBALS['prx3_t_query'] = array( 'singular' => '', 'id' => 0 );
+function is_admin() {
+	return false;
+}
+function is_singular( $types = '' ) {
+	$current = $GLOBALS['prx3_t_query']['singular'];
+	if ( ! $current ) {
+		return false;
+	}
+	return ! $types || in_array( $current, (array) $types, true );
+}
+function get_queried_object_id() {
+	return (int) $GLOBALS['prx3_t_query']['id'];
+}
+function get_the_ID() {
+	return (int) $GLOBALS['prx3_t_query']['id'];
+}
+function date_i18n( $format, $timestamp = null ) {
+	return gmdate( $format, $timestamp ? $timestamp : time() );
+}
+function wp_date( $format, $timestamp = null ) {
+	return gmdate( $format, $timestamp ? $timestamp : time() );
+}
+function wp_login_url( $redirect = '' ) {
+	return 'https://example.test/wp-login.php';
+}
+function shortcode_atts( $defaults, $atts ) {
+	return array_merge( $defaults, array_intersect_key( (array) $atts, $defaults ) );
+}
+function esc_textarea( $text ) {
+	return htmlspecialchars( (string) $text, ENT_QUOTES );
+}
+function esc_js( $text ) {
+	return addslashes( (string) $text );
+}
+function esc_html_e( $text, $domain = null ) {
+	echo esc_html( $text ); // phpcs:ignore
+}
+function wp_enqueue_style( $handle ) {}
+function wp_enqueue_script( $handle ) {}
 function home_url( $path = '' ) {
 	return 'https://example.test' . $path;
 }
@@ -604,6 +680,32 @@ class PRX3_Register {
 		self::$records[] = compact( 'user_id', 'event', 'shares', 'source', 'context' );
 	}
 }
+class PRX3_Moderation {
+	public static function is_muted( $user_id ) {
+		return ! empty( $GLOBALS['prx3_t']['user_meta'][ $user_id ]['prx3_muted'] );
+	}
+}
+class PRX3_Access {
+	public static function gate_content( $content ) {
+		return '<div class="prx3-notice prx3-notice--join">JOIN-GATE</div>';
+	}
+}
+class PRX3_Ideas {
+	public static function threshold_count() {
+		return 5;
+	}
+}
+class PRX3_Meetings {
+	public static function upcoming( $limit = 0 ) {
+		return array();
+	}
+	public static function member_ics_url( $user_id ) {
+		return 'https://example.test/calendar.ics';
+	}
+	public static function rsvp_count( $meeting_id ) {
+		return 0;
+	}
+}
 class PRX3_Onboarding {
 	public static function mark_complete( $user_id, $step ) {}
 }
@@ -633,6 +735,7 @@ require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
 require $prx3_base . '/includes/class-prx3-social.php';
 require $prx3_base . '/includes/class-prx3-pages.php';
+require $prx3_base . '/includes/class-prx3-shortcodes.php';
 
 /* ---------------- Assertions ---------------- */
 

@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.9.0
+Stable tag: 3.10.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,24 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.10.0.0 =
+* The completeness round (first four-part build number). Certificates
+  carry a scannable QR to their public verification page. New Member
+  Tools screen merges duplicate accounts through the register. New
+  member pages: Voting Record (searchable archive of finished
+  ballots), Bring a Fellow Fan (referral link + opt-in leaderboard),
+  and Owner Chapters (directory + OpenStreetMap map when chapters
+  have coordinates). Board menu gains Live Q&A (questions ranked by
+  upvotes, auto-refreshing) and Annual Report (structured drafts into
+  the vault). Weekly show slot setting with a missed-week staff flag.
+  Player pages show number, position, and POTM honours. New owners
+  get a dismissible welcome panel with the club welcome video. Draft
+  ballots now say so on their page instead of showing nothing. Render
+  smoke tests now prove every member surface outputs real content
+  (and caught a decision-register page crash, fixed); an identity
+  scan keeps club names out of code; GitHub Actions CI runs the full
+  suite on every change.
 
 = 3.9.0 =
 * Rich ballot questions: the question is the ballot's post content -
