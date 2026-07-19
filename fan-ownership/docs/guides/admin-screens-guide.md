@@ -1,9 +1,9 @@
 # Admin Screens — Club Guide
 
-Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
-**FanPress Chat**, **Board**, **FanPress Settings**, **FanPress Technical Setup**.
+Where everything lives in wp-admin (V3.15.1.9). Five menus: **FanPress Owners**,
+**FanPress Chat**, **FanPress Board**, **FanPress Settings**, **FanPress Technical Setup**.
 
-## Owners
+## FanPress Owners
 - **Gift Codes** — every code: shares, buyer, status (outstanding /
   redeemed / voided), redeemer.
 - All member content types as data tables. (The Share Register moved
@@ -13,7 +13,7 @@ Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
 - **Overview, Topics, Boards, Held Replies** — plus **Reports**: member
   reports (reporter, item, reason) for moderators.
 
-## Board
+## FanPress Board
 - Workspace, Dashboard, Decision Register, Commitments, Owner
   Signatures, Live Q&A presenter, Annual Report, Legal/Targets/
   Governance (read-only for board).

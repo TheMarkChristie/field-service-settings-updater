@@ -42,8 +42,8 @@ class PRX3_Board {
 	 */
 	public static function menu() {
 		add_menu_page(
-			__( 'Board Workspace', 'fan-ownership' ),
-			__( 'Board', 'fan-ownership' ),
+			__( 'FanPress Board', 'fan-ownership' ),
+			__( 'FanPress Board', 'fan-ownership' ),
 			'prx3_view_tally',
 			'prx3-board',
 			array( __CLASS__, 'render_workspace_home' ),
@@ -400,7 +400,7 @@ class PRX3_Board {
 		if ( ! current_user_can( 'prx3_board' ) ) {
 			// Staff with tally view see the menu for the Club Dashboard, but
 			// the workspace itself stays behind the board hard wall (FO-226).
-			echo '<div class="wrap"><h1>' . esc_html__( 'Board', 'fan-ownership' ) . '</h1><p>' . esc_html__( 'The Board Workspace is restricted to board members. The Club Dashboard is available from this menu.', 'fan-ownership' ) . '</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'FanPress Board', 'fan-ownership' ) . '</h1><p>' . esc_html__( 'The Board Workspace is restricted to board members. The Club Dashboard is available from this menu.', 'fan-ownership' ) . '</p></div>';
 			return;
 		}
 		$actions = array_filter( get_option( 'prx3_board_actions', array() ), fn( $a ) => empty( $a['done'] ) );

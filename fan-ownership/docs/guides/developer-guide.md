@@ -28,9 +28,9 @@ Layers, bottom-up:
 - **Watch** — match centre, chat transport, media/VOD, ticketing,
   brand pack, commitments, players, agreements.
 - **API** — `includes/api/`: JWT, the app REST API, the Data API.
-- **Admin** — five menus (Owners, FanPress Chat, Board, Fan App
-  Settings, FanPress Technical Setup), dashboard, admin columns,
-  shortcodes, the member pages installer.
+- **Admin** — five menus (FanPress Owners, FanPress Chat, FanPress
+  Board, FanPress Settings, FanPress Technical Setup), dashboard, admin
+  columns, shortcodes, the member pages installer.
 
 ## Conventions that matter
 
