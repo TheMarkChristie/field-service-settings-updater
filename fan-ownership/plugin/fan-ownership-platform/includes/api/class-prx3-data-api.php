@@ -505,6 +505,7 @@ class PRX3_Data_API {
 				$out['failed'][] = ( $item['title'] ?? '?' ) . ': ' . ( $row['error'] ?? '?' );
 			}
 		}
+		self::heal_sample_ballots();
 		$known = PRX3_Config::defaults();
 		foreach ( (array) $settings as $key => $value ) {
 			$key = sanitize_key( $key );
@@ -543,6 +544,42 @@ class PRX3_Data_API {
 			echo '<p>' . esc_html( sprintf( /* translators: %s failure detail. */ __( 'Failed: %s', 'fan-ownership' ), $failure ) ) . '</p>';
 		}
 		echo '</div>';
+	}
+
+	/**
+	 * Make the pack's open ballots genuinely live: any published ballot
+	 * marked open without an electorate snapshot is opened through the
+	 * real lifecycle (snapshot of current owners, quorum denominator,
+	 * audit, discussion chat), and a past close date is pushed out two
+	 * weeks so demos never arrive dead. Runs on every load, so a
+	 * re-click of "Load demo club" heals a broken ballot.
+	 */
+	public static function heal_sample_ballots() {
+		if ( ! class_exists( 'PRX3_Ballot_Lifecycle' ) ) {
+			return;
+		}
+		foreach ( get_posts(
+			array(
+				'post_type'   => 'prx3_ballot',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+			)
+		) as $ballot ) {
+			if ( 'open' !== get_post_meta( $ballot->ID, '_prx3_state', true ) ) {
+				continue;
+			}
+			$closes = strtotime( (string) get_post_meta( $ballot->ID, '_prx3_closes', true ) );
+			if ( ! $closes || $closes < time() ) {
+				update_post_meta( $ballot->ID, '_prx3_closes', gmdate( 'Y-m-d H:i:s', time() + 14 * DAY_IN_SECONDS ) );
+			}
+			if ( ! get_post_meta( $ballot->ID, '_prx3_approved_by', true ) ) {
+				update_post_meta( $ballot->ID, '_prx3_approved_by', 1 );
+			}
+			$electorate = get_post_meta( $ballot->ID, '_prx3_electorate', true );
+			if ( ! is_array( $electorate ) || empty( $electorate ) ) {
+				PRX3_Ballot_Lifecycle::open_ballot( $ballot->ID );
+			}
+		}
 	}
 
 	/**

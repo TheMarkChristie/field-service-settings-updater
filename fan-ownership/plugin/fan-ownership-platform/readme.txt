@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.12.1.0
+Stable tag: 3.12.1.1
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,15 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.12.1.1 =
+* Fix: the demo's open ballot is now genuinely live. The loader opens
+  it through the real ballot lifecycle - electorate snapshot of the
+  demo owners with their share weights, quorum denominator, audit
+  entry, and discussion chat - instead of just stamping the state, so
+  demo owners can actually vote. Re-clicking "Load demo club" heals a
+  ballot that was seeded dead (missing electorate or past close date,
+  which is pushed out two weeks).
 
 = 3.12.1.0 =
 * The WordPress user screens now link to the live owner profile: a

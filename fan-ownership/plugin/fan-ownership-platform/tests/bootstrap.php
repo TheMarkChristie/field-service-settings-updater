@@ -695,6 +695,9 @@ class PRX3_Comms {
 		self::$sent[] = compact( 'to', 'subject', 'body', 'category' );
 		return true;
 	}
+	public static function push( ...$args ) {
+		return true;
+	}
 }
 class PRX3_Moderation {
 	public static function is_muted( $user_id ) {
@@ -743,6 +746,7 @@ require $prx3_base . '/includes/helpers.php';
 require $prx3_base . '/includes/class-prx3-config.php';
 require $prx3_base . '/includes/class-prx3-shares.php';
 require $prx3_base . '/includes/class-prx3-ballots.php';
+require $prx3_base . '/includes/class-prx3-ballot-lifecycle.php';
 require $prx3_base . '/includes/class-prx3-agreements.php';
 require $prx3_base . '/includes/class-prx3-sync.php';
 require $prx3_base . '/includes/class-prx3-gifts.php';

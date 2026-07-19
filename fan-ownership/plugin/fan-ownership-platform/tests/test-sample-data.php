@@ -146,3 +146,19 @@ t_eq( PRX3_Social::identity( $prx3_aileen->ID )['pep'], 'no', 'PEP declaration s
 t_ok( '' !== (string) get_user_meta( $prx3_aileen->ID, 'prx3_bio', true ), 'Seeded bios land' );
 $prx3_morag = get_user_by( 'email', 'morag.sinclair@example.test' );
 t_eq( PRX3_Social::identity( $prx3_morag->ID )['pep'], 'yes', 'A PEP=yes example exists for compliance demos' );
+
+// Fix 3.12.1.1: the seeded open ballot is genuinely live — a real
+// electorate snapshot of the demo owners, so they can actually vote.
+$prx3_kit = $prx3_open2[0]->ID;
+$prx3_electorate = get_post_meta( $prx3_kit, '_prx3_electorate', true );
+t_ok( is_array( $prx3_electorate ) && count( $prx3_electorate ) >= 15, 'Open ballot snapshots the demo owners as its electorate' );
+t_eq( (int) get_post_meta( $prx3_kit, '_prx3_quorum_denominator', true ), count( $prx3_electorate ), 'Quorum denominator matches the snapshot' );
+$prx3_voter = get_user_by( 'email', 'stuart.mcrae@example.test' );
+t_eq( $prx3_electorate[ $prx3_voter->ID ] ?? 0, 10, 'Weights carry shares (Stuart votes with ten)' );
+$GLOBALS['prx3_t']['caps'][ $prx3_voter->ID ]['prx3_member'] = true;
+$prx3_cast = PRX3_Ballots::cast( $prx3_kit, $prx3_voter->ID, 1 );
+t_ok( ! is_wp_error( $prx3_cast ), 'A demo owner can actually cast a vote on the seeded ballot' );
+// Healing: wipe the electorate, re-run the loader, expect it restored.
+update_post_meta( $prx3_kit, '_prx3_electorate', array() );
+PRX3_Data_API::seed_sample();
+t_ok( count( (array) get_post_meta( $prx3_kit, '_prx3_electorate', true ) ) >= 15, 'Re-running Load demo club heals a dead ballot' );
