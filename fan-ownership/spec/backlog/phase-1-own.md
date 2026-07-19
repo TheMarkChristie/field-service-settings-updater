@@ -359,6 +359,7 @@ Test script:
 
 ### FO-127 Work screens that show the data
 As club staff, I want every list screen to show the data its items hold — sortable where it matters — and the admin organised into four menus (Owners, FanPress Chat, Board, Fan App Settings), so that running the club never means opening items one by one to find a number.
+Screens completed at 3.12.1.2: Share Register (Owners — holdings, owner numbers, totals, latest 50 events), Audit Log (Fan App Settings — latest 100, event filter), Reports queue (FanPress Chat), and Gift Codes (Owners) — closing the last data stores that had no admin surface.
 Traceability: P103. Estimate: Design 1 / Build 1 / Develop 2 / Test 1
 
 Acceptance criteria:
@@ -436,7 +437,7 @@ Acceptance criteria:
 1. A ballot's own page renders the complete experience for owners: the description, then the live voting card (options, weighted cast button, change-vote, secrecy note) when open, a "voting opens…" note when scheduled, and a closed/announced note afterwards — with its FanPress chat beside it.
 2. A match's own page renders the Match Centre experience the same way, with the match-day chat beside it.
 3. Both work on block themes: the renderers key off the queried post, never off classic-loop state.
-4. "Create member pages" (Fan App Settings landing, Owner-Admins, nonce-protected) builds every missing shortcode page — join, account, owners hub, ballots, ideas, questions, meetings, decisions, videos, match centre, FanPress Chat, activity, owners directory, messages, notifications, board directory, gift redemption — publishes them, and wires the join and account gate destinations; existing pages are never touched and re-running is a no-op.
+4. Member pages create themselves on every version change (stamped self-heal, 3.12.1.3); the "Create member pages" button (Fan App Settings landing, Owner-Admins, nonce-protected) remains for manual re-runs and builds every missing shortcode page — join, account, owners hub, ballots, ideas, questions, meetings, decisions, videos, match centre, FanPress Chat, activity, owners directory, messages, notifications, board directory, gift redemption — publishes them, and wires the join and account gate destinations; existing pages are never touched and re-running is a no-op.
 5. Logged-out visitors bounced from gated content land on the created join page (the owner pitch), not the bare login screen.
 
 Test script:
@@ -451,7 +452,7 @@ Traceability: P122, FO-235, T29. Estimate: Design 0.5 / Build 0.5 / Develop 2 / 
 
 Acceptance criteria:
 1. The profile's private Identity section stores all six fields; the owner card shows only full birth name and nationality; residence, DOB, government ID, and PEP never render anywhere member-facing.
-2. Owner-Admins have an audited Identity Lookup in Member Tools (every view logged), with the government ID masked to its last four characters.
+2. Owner-Admins have an audited Identity Lookup in Member Tools, and board members have the same lookup in the Board menu (P122 as amended at 3.12.1.4) — every view logged, the government ID always masked to its last four characters, and no on-screen full-ID reveal anywhere.
 3. Owners upload a profile picture and up to five gallery photos of themselves through the media pipeline; a sixth is refused; a consent checkbox governs the club's social-media use of the gallery; photos show on the owner card.
 4. The identity record, photos, and consent are included in the GDPR export and wiped by the eraser; identity edits are audited.
 
