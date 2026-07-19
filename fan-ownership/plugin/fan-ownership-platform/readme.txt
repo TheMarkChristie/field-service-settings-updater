@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.2.0
+Stable tag: 3.3.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,18 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.3.0 =
+* FanPress Chat now looks and feels like WhatsApp: the forum page is a
+  chat list split by category chips with last-message snippets and
+  unread badges; conversations render as bubbles - yours on the right,
+  everyone else's on the left, board members highlighted in their own
+  colour with a Board tag - with a compose box at the bottom. Match
+  and ballot chats still activate automatically with the event and now
+  embed directly on the match and ballot pages for owners. Settings >
+  FanPress Chat adds three colour settings: my bubbles, other owners'
+  bubbles, and board members' bubbles. Unread badges count visible
+  messages only and clear on opening (web) or fetching (app API).
 
 = 3.2.0 =
 * FanPress Chat community round-out: the owner directory gains search

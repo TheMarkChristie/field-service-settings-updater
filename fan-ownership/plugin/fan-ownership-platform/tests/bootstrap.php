@@ -176,6 +176,25 @@ function wp_insert_comment( $data ) {
 	$GLOBALS['prx3_t_comments'][ $id ] = $data;
 	return $id;
 }
+function sanitize_hex_color( $color ) {
+	return preg_match( '/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', (string) $color ) ? $color : null;
+}
+function get_comments( $args = array() ) {
+	$out = array();
+	foreach ( $GLOBALS['prx3_t_comments'] as $comment ) {
+		if ( isset( $args['post_id'] ) && (int) ( $comment['comment_post_ID'] ?? 0 ) !== (int) $args['post_id'] ) {
+			continue;
+		}
+		if ( isset( $args['status'] ) && 'approve' === $args['status'] && isset( $comment['comment_approved'] ) && 1 !== (int) $comment['comment_approved'] ) {
+			continue;
+		}
+		$out[] = $comment;
+	}
+	return $out;
+}
+function wp_html_excerpt( $text, $length, $more = '' ) {
+	return strlen( $text ) > $length ? substr( $text, 0, $length ) . $more : $text;
+}
 function get_comments_number( $post_id ) {
 	$n = 0;
 	foreach ( $GLOBALS['prx3_t_comments'] as $comment ) {

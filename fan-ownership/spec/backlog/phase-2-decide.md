@@ -380,3 +380,23 @@ Test script:
 3. Cheer a feed item as two different members — expect the count to read 2; cheer again as one — expect it withdrawn and the count to read 1; attempt to cheer logged out — expect refusal.
 4. Sign in as a Moderator — expect Topics and Held Replies in the FanPress menu but not Boards; as a Content Editor — expect Boards too; upgrade an existing install — expect the same without touching roles by hand.
 5. Call the suggest endpoint as a non-owner — expect a 403.
+
+### FO-234 FanPress Chat feels like WhatsApp
+As an owner, I want FanPress to look and feel like a WhatsApp group — a list of chats split by category with unread badges, and conversations as bubbles with mine on the right and everyone else's on the left — with match and ballot chats appearing on the match and ballot pages, and the club able to set my colour, other owners' colour, and a board-member colour, so that chatting feels instantly familiar.
+Traceability: P113, P109, P111. Estimate: Design 1 / Build 1.5 / Develop 3 / Test 1.5
+
+Acceptance criteria:
+1. The forum page is a chat list: rows show the chat name, the last message (sender and snippet), the time of the latest activity, and a WhatsApp-style unread badge; rows sort by newest activity and filter by category chips (the boards).
+2. Opening a chat shows the conversation as bubbles: the viewer's own messages right-aligned in "my" colour, other owners left-aligned in "theirs" colour, and board members' messages left-aligned in the board colour with a Board tag; a compose box sits at the bottom and opening the chat clears its unread badge.
+3. Unread counts track visible messages only — held (word-filtered) messages never appear in a conversation and never inflate a badge; new messages bring the badge back.
+4. Creating a match or opening a ballot activates its chat automatically (existing automation), and that chat is embedded on the match page and the ballot page for owners, so the conversation lives where the event lives.
+5. Settings → FanPress Chat holds three colour settings — my bubble, other owners' bubbles, board members' bubbles — with sensible defaults and invalid values falling back safely; the colours apply everywhere the conversation renders, including embeds.
+6. All existing rails hold: owner gate, forum kill switch, mutes, word-filter holds, @mention suggestions, and the app API (which now reports per-chat unread counts and marks chats read when fetched).
+
+Test script:
+1. Open the forum page — expect a chat list with category chips, last-message snippets, times, and unread badges; filter by a category — expect only its chats.
+2. Open a chat with two other participants (one a board member) — expect your messages right in your colour, the owner's left in the standard colour, and the board member's left in the board colour with a Board tag.
+3. Have someone post while you're away — expect the badge to count it; open the chat — expect the badge cleared; have a message tripped by the word filter — expect it absent from the thread and the badge unchanged.
+4. Publish a match and open a ballot — expect their chats on the match and ballot pages for owners (and absent for non-owners); post from the embed — expect it in the same thread everywhere.
+5. Change the three colours in Settings → FanPress Chat — expect every conversation to re-colour; enter an invalid value — expect the default used.
+6. Fetch topics from the app API as a member — expect an unread count per chat that clears after fetching replies.

@@ -127,3 +127,25 @@ change role):
 
 Existing installs pick the capabilities up automatically on upgrade —
 the plugin re-verifies roles whenever the version changes.
+
+## The WhatsApp look (V3.3)
+
+FanPress now presents as a messenger, not a classic forum:
+
+- **Chat list** — every thread is a chat row: name, last message
+  (sender + snippet), time, and a green unread badge, sorted by newest
+  activity. Category chips (the boards) filter the list.
+- **Conversations as bubbles** — your messages sit on the right in
+  your colour; everyone else's sit on the left. Board members' bubbles
+  use the board colour and carry a small "Board" tag.
+- **Unread counts** — the badge counts messages you haven't seen and
+  clears when you open the chat (or when the app fetches replies).
+  Held (word-filtered) messages never show and never count.
+- **Match & ballot chats on their own pages** — publishing a match or
+  opening a ballot activates its chat (as before), and the whole
+  conversation now also renders on the match page and the ballot page
+  for owners — chat where the event is.
+- **Colours** — Settings → FanPress Chat sets three hex colours: my
+  bubbles, other owners' bubbles, and board members' bubbles.
+  Defaults: WhatsApp green / white / soft gold. Invalid values fall
+  back to the defaults.

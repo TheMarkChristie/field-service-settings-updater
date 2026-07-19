@@ -78,6 +78,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-231 Social layer | Done | `class-prx3-social.php` — activity feed merging topics/ballots/decisions/videos, member directory with one-way follows, private messages over the moderated chat transport (participant-guarded rooms, dual inboxes), capped notifications with unread counts and mark-read, @mentions by login/slug, four shortcodes plus REST `/activity`, `/notifications`, `/messages/{with}` | Native BuddyPress-parity build (P110); literal BuddyPress code reuse ruled out on GPL licensing |
 | FO-232 FanPress Chat menu | Done | Top-level FanPress Chat admin menu (Overview with live counts + latest topics, Topics, Boards, Held Replies), forum post type moved out of Owners, FanPress Chat branding across admin labels and the member forum heading | Amends the three-menu rule (FO-127) to four menus by user decision P111 |
 | FO-233 Community round-out | Done | Directory search + pagination (`PRX3_Social::directory`), @mention autosuggest (`assets/js/prx3-mentions.js` + owner-gated `/members/suggest`), activity cheers (`toggle_cheer`/`cheer_count`, nonce + owner gate), FanPress capabilities tied to platform roles via versioned self-heal | Remaining BuddyPress gaps by choice: email notifications, avatars/cover images, online presence, widgets/blocks |
+| FO-234 WhatsApp-style chat | Done | Chat-list UI with category chips, last-message snippets, and unread badges (`prx3_thread_reads`, visible-only counting); bubble conversations (`render_thread_view`/`bubble_role`: mine right, theirs left, board highlighted + tagged); configurable colours in Settings → FanPress Chat (`chat_colors` with safe fallbacks); match/ballot chats embedded on their pages via `the_content` + `topic_for_source`; front-end send handler; app API unread counts + mark-read | |
 
 ## Phase 3 — Watch
 
@@ -120,7 +121,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 49 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+Done 50 · Partial 19 · Operational 1 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

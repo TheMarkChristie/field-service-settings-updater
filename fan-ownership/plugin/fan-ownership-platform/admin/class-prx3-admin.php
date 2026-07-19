@@ -74,6 +74,7 @@ class PRX3_Admin {
 			'shares'       => array( __( 'Shares & Checkout', 'fan-ownership' ), 'prx3-settings-shares', 'prx3-settings' ),
 			'targets'      => array( __( 'Targets', 'fan-ownership' ), 'prx3-settings-targets', 'prx3-board' ),
 			'governance'   => array( __( 'Governance', 'fan-ownership' ), 'prx3-settings-governance', 'prx3-board' ),
+			'fanpress'     => array( __( 'FanPress Chat', 'fan-ownership' ), 'prx3-settings-fanpress', 'prx3-settings' ),
 			'integrations' => array( __( 'API & Integrations', 'fan-ownership' ), 'prx3-settings-api', 'prx3-settings' ),
 		);
 	}
@@ -158,6 +159,11 @@ class PRX3_Admin {
 				'board_chair_id'      => array( __( 'Board chair user ID (casting vote in board votes)', 'fan-ownership' ), 'number' ),
 				'question_sla_days'   => array( __( 'Question answer target (days)', 'fan-ownership' ), 'number' ),
 				'decision_stale_days' => array( __( 'Decision stalled after (days)', 'fan-ownership' ), 'number' ),
+			),
+			'fanpress'     => array(
+				'chat_color_mine'   => array( __( 'My chat bubble colour (hex, e.g. #dcf8c6)', 'fan-ownership' ), 'text' ),
+				'chat_color_theirs' => array( __( "Other owners' bubble colour (hex)", 'fan-ownership' ), 'text' ),
+				'chat_color_board'  => array( __( "Board members' bubble colour (hex)", 'fan-ownership' ), 'text' ),
 			),
 			'integrations' => array(
 				'cf_account_id'       => array( __( 'Cloudflare account ID', 'fan-ownership' ), 'text' ),
