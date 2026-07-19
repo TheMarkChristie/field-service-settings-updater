@@ -114,6 +114,19 @@ class PRX3_Helpbot {
 		);
 	}
 
+	/**
+	 * A local chat-bubble glyph (inline SVG, no third-party request) used
+	 * wherever the bot has no configured avatar — so the launcher and the
+	 * chat header never fall back to a bare "?" character.
+	 *
+	 * @param int $size Pixel size of the square glyph.
+	 * @return string Inline SVG markup.
+	 */
+	public static function chat_glyph( $size = 26 ) {
+		$size = (int) $size;
+		return '<svg class="prx3-bot-glyph" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" fill="currentColor"/><circle cx="8.5" cy="10.5" r="1.25" fill="#fff"/><circle cx="12" cy="10.5" r="1.25" fill="#fff"/><circle cx="15.5" cy="10.5" r="1.25" fill="#fff"/></svg>';
+	}
+
 	/* ---------------- Answering ---------------- */
 
 	/**
@@ -489,6 +502,8 @@ class PRX3_Helpbot {
 		echo '<div class="prx3-bot__head">';
 		if ( '' !== $c['avatar'] ) {
 			echo '<img class="prx3-bot__avatar" src="' . esc_url( $c['avatar'] ) . '" alt="" width="28" height="28">';
+		} else {
+			echo '<span class="prx3-bot__avatar prx3-bot__avatar--placeholder">' . self::chat_glyph( 18 ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG.
 		}
 		echo '<strong>' . esc_html( $c['name'] ) . '</strong></div>';
 		echo '<div class="prx3-bot__scroll"' . $bg . ' data-prx3-bot-log>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $bg is an escaped inline style.
@@ -525,8 +540,10 @@ class PRX3_Helpbot {
 		}
 		wp_enqueue_script( 'prx3-helpbot' );
 		wp_enqueue_style( 'prx3' );
+		$avatar = (int) prx3_setting( 'bot_avatar_id', 0 );
+		$face   = $avatar ? '<img src="' . esc_url( (string) wp_get_attachment_image_url( $avatar, array( 96, 96 ) ) ) . '" alt="" width="56" height="56">' : self::chat_glyph( 26 );
 		echo '<div class="prx3-bot-launch" data-prx3-bot-launch>';
-		echo '<button type="button" class="prx3-bot-launch__btn" aria-label="' . esc_attr__( 'Open help', 'fan-ownership' ) . '" style="background:' . esc_attr( (string) prx3_setting( 'bot_color', '#1a1a2e' ) ) . '">?</button>';
+		echo '<button type="button" class="prx3-bot-launch__btn" aria-label="' . esc_attr__( 'Open help', 'fan-ownership' ) . '" style="background:' . esc_attr( (string) prx3_setting( 'bot_color', '#1a1a2e' ) ) . '">' . $face . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $face is an escaped <img> or a static inline SVG.
 		echo '<div class="prx3-bot-launch__panel" hidden>' . self::widget_html() . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- widget_html() escapes its own output.
 		echo '</div>';
 	}

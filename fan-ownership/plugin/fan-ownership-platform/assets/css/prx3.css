@@ -463,5 +463,8 @@ a.prx3-tile:focus-visible {
 .prx3-bot__ticket input, .prx3-bot__ticket textarea { padding: 0.5em; border: 1px solid #ccd0d4; border-radius: 6px; font: inherit; }
 
 .prx3-bot-launch { position: fixed; right: 18px; bottom: 18px; z-index: 9999; }
-.prx3-bot-launch__btn { width: 56px; height: 56px; border: 0; border-radius: 50%; color: #fff; font-size: 26px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.prx3-bot-launch__btn { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); overflow: hidden; }
+.prx3-bot-launch__btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .prx3-bot-launch__panel { position: absolute; right: 0; bottom: 68px; width: min(92vw, 420px); box-shadow: 0 8px 30px rgba(0,0,0,.3); border-radius: 12px; }
+.prx3-bot__avatar--placeholder { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #d7dade; color: #6b7177; }
+.prx3-bot-glyph { display: block; }

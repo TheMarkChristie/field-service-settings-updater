@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.16.0.0
+Stable tag: 3.16.0.1
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,13 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.16.0.1 =
+* Fix: the website help-bot launcher no longer shows a bare "?" — it now
+  uses the bot's configured avatar, and when none is set it shows a clean
+  local chat-bubble icon (inline, no third-party request). The chat
+  header matches: your avatar if set, otherwise a tidy grey placeholder,
+  so the bot is consistent everywhere it appears.
 
 = 3.16.0.0 =
 * New: FanPress Bot — a configurable help bot for the website and app.
