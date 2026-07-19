@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.6
+Stable tag: 3.15.1.7
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,14 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.1.7 =
+* "Players come from" (FanPress Settings > Club) now lists any
+  players table that has an admin screen - public or admin-only - so
+  an external club plugin's Players type (e.g. a Hockey Club plugin)
+  can be connected, not just fully-public types. The platform's own
+  content types and WordPress internals are no longer offered.
+* The built-in option is renamed "FanPress players (built-in)".
 
 = 3.15.1.6 =
 * Fixes from an adversarial code review of the recent screens:

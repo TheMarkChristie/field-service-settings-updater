@@ -333,9 +333,9 @@ class PRX3_Admin {
 				echo '</select>';
 			} elseif ( 'player_source' === $def[1] ) {
 				echo '<select id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">';
-				echo '<option value="prx3_player" ' . selected( $value, 'prx3_player', false ) . '>' . esc_html__( 'Fan Ownership players (built-in)', 'fan-ownership' ) . '</option>';
-				foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $pt ) {
-					if ( in_array( $pt->name, array( 'prx3_player', 'attachment' ), true ) ) {
+				echo '<option value="prx3_player" ' . selected( $value, 'prx3_player', false ) . '>' . esc_html__( 'FanPress players (built-in)', 'fan-ownership' ) . '</option>';
+				foreach ( get_post_types( array( 'show_ui' => true ), 'objects' ) as $pt ) {
+					if ( 0 === strpos( $pt->name, 'prx3_' ) || in_array( $pt->name, array( 'attachment', 'nav_menu_item', 'wp_block', 'wp_template', 'wp_template_part', 'wp_global_styles', 'wp_navigation', 'revision', 'post', 'page' ), true ) ) {
 						continue;
 					}
 					echo '<option value="' . esc_attr( $pt->name ) . '" ' . selected( $value, $pt->name, false ) . '>' . esc_html( $pt->labels->name . ' (' . $pt->name . ')' ) . '</option>';
