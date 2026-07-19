@@ -328,3 +328,21 @@ Test script:
 3. End a match with chat messages (including one removed and one from an erased account) — expect a transcript reply on the match thread without the removed message and with the erased member anonymised.
 4. Convert a topic to a ballot — expect a draft ballot with provenance both ways; convert again — expect the same ballot returned; attempt to convert a non-topic — expect refusal.
 5. Check the Forum list screen shows board, reply count, origin, and converted status.
+### FO-231 A social layer with BuddyPress-style features
+As an owner, I want the community features members expect from a social network — an activity feed, a member directory with follows, private messages, notifications, and @mentions — built natively on our own forum and chat, so that we never depend on a third-party community plugin.
+Traceability: P110, P109. Estimate: Design 1 / Build 1 / Develop 3 / Test 1.5
+
+Acceptance criteria:
+1. An owner-gated activity feed merges new forum topics, opening ballots, published decisions, and new videos, newest first, and can be filtered to only the members someone follows.
+2. The member directory lists owners with owner number and badges, and lets a member follow or unfollow anyone but themselves; follows are one-way (a follow, not a friendship contract).
+3. Private messages run between exactly two owners over the same moderated chat transport as public chat (word filter, mutes, and kill switch all apply); only the two participants can ever read a conversation, and each side gets a conversation inbox.
+4. Notifications are generated for replies to your topic, @mentions in topics and replies, and incoming private messages; the store is capped at fifty per member, shows unread counts, and marks read on viewing.
+5. @mentions resolve by login or profile slug, never notify the author about themselves, and ignore unknown handles.
+6. Everything is available as shortcodes for the site and as authenticated REST endpoints for the app.
+
+Test script:
+1. Publish a topic, open a ballot, publish a decision and a video — expect all four in the activity feed, newest first; follow one author and filter the feed — expect only their items.
+2. Follow a member from the directory, then unfollow — expect the follow state to toggle; attempt to follow yourself — expect refusal.
+3. Send a private message — expect it delivered through the chat rails, a notification for the recipient, and the thread listed in both inboxes; attempt to read another pair's conversation — expect refusal; send a message hitting the word filter — expect it held exactly as in public chat.
+4. Reply to someone's topic mentioning a third member — expect a reply notification for the author and a mention notification for the third member, and none for yourself; pile in more than fifty notifications — expect the store capped at the newest fifty.
+5. Open the notifications screen — expect unread badges to clear; call the activity, notifications, and messages REST endpoints as an owner and as a non-owner — expect data for the owner and refusal otherwise.

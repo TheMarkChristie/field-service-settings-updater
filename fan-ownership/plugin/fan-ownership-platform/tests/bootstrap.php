@@ -34,6 +34,8 @@ function prx3_test_reset() {
 class PRX3_Test_User {
 	public $ID;
 	public $user_email;
+	public $user_login;
+	public $user_nicename;
 	public $user_registered = '2026-01-01 00:00:00';
 	public $first_name      = 'Test';
 	public $last_name;
@@ -200,6 +202,12 @@ function get_user_by( $field, $value ) {
 			return $user;
 		}
 		if ( ( 'id' === $field || 'ID' === $field ) && (int) $value === (int) $user->ID ) {
+			return $user;
+		}
+		if ( 'login' === $field && isset( $user->user_login ) && 0 === strcasecmp( $user->user_login, $value ) ) {
+			return $user;
+		}
+		if ( 'slug' === $field && isset( $user->user_nicename ) && 0 === strcasecmp( $user->user_nicename, $value ) ) {
 			return $user;
 		}
 	}
@@ -580,6 +588,7 @@ require $prx3_base . '/includes/class-prx3-gifts.php';
 require $prx3_base . '/includes/class-prx3-shopify.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
+require $prx3_base . '/includes/class-prx3-social.php';
 
 /* ---------------- Assertions ---------------- */
 

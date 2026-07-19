@@ -63,7 +63,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-217 Financial publishing | Done | Monthly-summary document type, in-portal inline streaming viewer (no download route), missed-month flag, second approval | |
 | FO-218 Decision register | Done | Auto entry on pass, statuses + dated updates, stall detection + board alerts, board releases | |
 | FO-219 Annual report | Partial | `assemble_annual_report()` compiles ballots/decisions/growth from records | Draft-edit-publish UI not built; staff publish via a document for now |
-| FO-220 Forum & comments | Done | bbPress gated, owner-only comments, [Board]/[Club] tags, reporting into queue | |
+| FO-220 Forum & comments | Done | Native forum (see FO-230) gated, owner-only comments, [Board]/[Club] tags, reporting into queue | bbPress dependency superseded by P109 |
 | FO-221 Moderation & sanctions | Done | Queue, warn/mute/expel ladder, reasons mandatory, expel = admin-only + surrender + session destroy, audited | Edit-with-note moderation action not built |
 | FO-222 Chapters | Partial | 5+ founders, naming convention, approval, membership toggle, annual re-affirmation, de-recognition | Directory map is a list; no geographic map rendering |
 | FO-223 Referrals | Partial | Links, cookie attribution, credit on first purchase, milestone badges, zero price impact | Opt-in leaderboard not built |
@@ -75,6 +75,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-229 Vault & departures | Done | View-only rendering, per-view name+time watermark, chair-visible access log (audit), instant revoke + session destroy, records preserved | |
 
 | FO-230 Native forum | Done | `class-prx3-forum.php` — gated topic CPT + comment replies + boards taxonomy, auto threads on ballot open and match publish (idempotent source keys), chat transcript archived on match end (anonymised, held/removed excluded), one-action thread→ballot conversion with provenance, REST routes for the app, admin columns, word-filter holds + mutes + kill switch | bbPress/BuddyPress dependency removed (T16 superseded by P109) |
+| FO-231 Social layer | Done | `class-prx3-social.php` — activity feed merging topics/ballots/decisions/videos, member directory with one-way follows, private messages over the moderated chat transport (participant-guarded rooms, dual inboxes), capped notifications with unread counts and mark-read, @mentions by login/slug, four shortcodes plus REST `/activity`, `/notifications`, `/messages/{with}` | Native BuddyPress-parity build (P110); literal BuddyPress code reuse ruled out on GPL licensing |
 
 ## Phase 3 — Watch
 
@@ -113,11 +114,11 @@ named gaps), **Operational** (satisfied by process/services, not code),
 - **Kill switches (T74)**: registration, checkout, voting, forum, chat, streams, meetings, ideas, questions — all honoured at both web and API layers.
 - **Data residency/GDPR (T29/T30)**: exporter/eraser/retention implemented; residency is a hosting choice.
 - **Rebrand-proofing (T46)**: club name/colours from config everywhere member-facing; app reads identity from `/me`.
-- **Straight-to-production risk (T34)**: the automated money/vote-path suite (T35) now exists — `plugin/fan-ownership-platform/tests/` (`php tests/run-tests.php`, 88 assertions over the ladder, cap, register, ballot casting/weighting/secrecy, agreement signatures/versioning, and sync matching rules). Wire it into the reviewed-PR pipeline (T55) so it gates every deploy.
+- **Straight-to-production risk (T34)**: the automated money/vote-path suite (T35) now exists — `plugin/fan-ownership-platform/tests/` (`php tests/run-tests.php`, 172 assertions over the ladder, cap, register, ballot casting/weighting/secrecy, agreement signatures/versioning, and sync matching rules). Wire it into the reviewed-PR pipeline (T55) so it gates every deploy.
 
 ## Honest summary
 
-Done 46 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+Done 47 · Partial 19 · Operational 1 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

@@ -118,7 +118,7 @@ Monthly one-page income/spend summary published as portal content + full annual 
 
 ## 5. Community (P37–P40)
 
-- **Comments** on ballots, ideas, videos, and news, **plus a full member forum** (bbPress), all behind the owner gate with one identity.
+- **Comments** on ballots, ideas, videos, and news, **plus the platform's own native forum and social layer** (boards, automated threads, activity feed, follows, private messages, notifications, @mentions — P109/P110), all behind the owner gate with one identity.
 - **Code of conduct** with graduated sanctions: warn → mute (temporary loss of comment/submission rights) → expel (shares surrendered). Voting rights removed only at expulsion.
 - **Comms channels:** app push (Firebase), email (Brevo — weekly digest, ballot notices, receipts), public social media as the teaser layer. No SMS.
 - **Onboarding (P40):** guided first week — welcome video from the manager, Boardroom tour, a live "starter ballot" to cast a first vote, and a welcome email series.
@@ -155,7 +155,7 @@ Monthly one-page income/spend summary published as portal content + full annual 
 
 ### 6.4 Supporting services (T14–T16, T21–T24, T41, T44)
 
-Firebase FCM push · Brevo email · bbPress forum · self-hosted websocket chat service (match + meeting chat, portal identities, in-house moderation) · members-only ICS calendar feed + add-to-calendar buttons · in-portal document viewer (no downloads) · auto-PDF certificate generation + automatic badge issue · scoped member search across all accessible content.
+Firebase FCM push · Brevo email · native forum + social layer (P109/P110) · self-hosted websocket chat service (match + meeting chat, portal identities, in-house moderation) · members-only ICS calendar feed + add-to-calendar buttons · in-portal document viewer (no downloads) · auto-PDF certificate generation + automatic badge issue · scoped member search across all accessible content.
 
 ### 6.5 Club-side tooling (T25–T28, T42, P78–P81)
 

@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.3.0
+Stable tag: 3.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -46,6 +46,21 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.0.0 =
+* V3 release. Native social layer with the community features members
+  know from BuddyPress, built on our own forum and chat: activity feed
+  (topics, opening ballots, decisions, videos - filterable to people
+  you follow), member directory with follow/unfollow, private messages
+  over the moderated chat transport (word filter, mutes, and kill
+  switch apply; only the two participants can read a conversation),
+  notifications for replies, @mentions, and messages (capped at fifty,
+  unread counts, mark-read on view), and @mentions by login or profile
+  slug. Shortcodes prx3_activity, prx3_members, prx3_messages,
+  prx3_notifications plus app API routes /activity, /notifications,
+  and /messages/{user}. Full codebase check: WordPress coding
+  standards clean across all 48 files, 172 automated assertions
+  passing.
 
 = 0.3.0 =
 * Native owners forum - no bbPress/BuddyPress needed: gated topics

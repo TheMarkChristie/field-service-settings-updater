@@ -243,6 +243,12 @@ so the recommended options were applied — revisit any of these on request.
 |---|---|---|
 | P109 | Native forum | The forum is **built into the platform** (no bbPress/BuddyPress): `prx3_forum_topic` behind the owner gate with WordPress comments as replies and a boards taxonomy (General, Match Days, Club Business & Ballots, Ideas). Wired into the club: **ballots opening and matches publishing auto-create their threads** (idempotent), **match chat transcripts archive into the match-day thread** at full time (held/removed messages excluded, erased members anonymised), and **governance staff convert any thread into a draft ballot in one action** with provenance both ways (second approval + lifecycle rules unchanged). Word-filter holds, mute sanctions, the forum kill switch, and the audit trail apply everywhere; REST routes give the apps full parity |
 
+## Decisions — round 14: social layer, V3 (P110)
+
+| # | Question | Decision |
+|---|----------|----------|
+| P110 | BuddyPress parity | The community layer is **built natively, not copied from BuddyPress** — line-for-line reuse was ruled out (BuddyPress is GPL, ~500k lines; this plugin is the club's own codebase) in favour of feature parity on our own rails: **activity feed** (topics, opening ballots, decisions, videos, filterable to followed members), **member directory with one-way follows**, **private messages** carried over the moderated chat transport (deterministic two-party rooms, participant-only reads, dual inboxes), **notifications** (replies, @mentions, DMs; capped at fifty, unread counts, mark-read on view), and **@mentions** by login or profile slug. Groups are the existing chapters. Everything ships as shortcodes and authenticated REST (`/activity`, `/notifications`, `/messages/{with}`). Not built by choice: xprofile custom fields and two-way friend requests |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

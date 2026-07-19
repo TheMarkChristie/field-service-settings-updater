@@ -165,7 +165,7 @@ class PRX3_Forum {
 			sprintf( /* translators: %s ballot title. */ __( 'Discussion: %s', 'fan-ownership' ), $title ),
 			sprintf(
 				/* translators: 1: URL, 2: title. */
-				__( '<p>Voting is open on <a href="%1$s">%2$s</a>. Make the case for your side here — then cast your vote. Your ballot stays secret; the debate does not have to be.</p>', 'fan-ownership' ),
+				'<p>' . __( 'Voting is open on <a href="%1$s">%2$s</a>. Make the case for your side here — then cast your vote. Your ballot stays secret; the debate does not have to be.', 'fan-ownership' ) . '</p>',
 				esc_url( get_permalink( $ballot_id ) ),
 				esc_html( $title )
 			),
@@ -187,7 +187,7 @@ class PRX3_Forum {
 			sprintf( /* translators: %s match title. */ __( 'Match day: %s', 'fan-ownership' ), $opponent ? $title . ' — ' . $opponent : $title ),
 			sprintf(
 				/* translators: %s URL. */
-				__( '<p>The match-day thread. Build-up, line-up reactions, and the post-mortem all live here. Watch live in the <a href="%s">Match Centre</a> — the live chat transcript is archived into this thread after the final buzzer.</p>', 'fan-ownership' ),
+				'<p>' . __( 'The match-day thread. Build-up, line-up reactions, and the post-mortem all live here. Watch live in the <a href="%s">Match Centre</a> — the live chat transcript is archived into this thread after the final buzzer.', 'fan-ownership' ) . '</p>',
 				esc_url( get_permalink( $post_id ) )
 			),
 			'match-days'
@@ -309,7 +309,7 @@ class PRX3_Forum {
 				'post_title'   => $topic ? $topic->post_title : '',
 				'post_content' => ( $topic ? $topic->post_content : '' ) . sprintf(
 					/* translators: %s URL. */
-					__( '<p><em>Raised by the owners on the forum: <a href="%s">read the discussion</a>.</em></p>', 'fan-ownership' ),
+					'<p><em>' . __( 'Raised by the owners on the forum: <a href="%s">read the discussion</a>.', 'fan-ownership' ) . '</em></p>',
 					esc_url( get_permalink( $topic_id ) )
 				),
 			)

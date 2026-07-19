@@ -51,3 +51,31 @@ scheduling, quorum.
 `prx3/v1` member-JWT routes: `GET/POST /forum/topics`
 (`?board=&page=&per_page=`), `GET/POST /forum/topics/{id}/replies`.
 Held content returns `held: true` so the app can explain moderation.
+
+## The social layer (V3)
+
+The forum carries a native social layer with the features members know
+from BuddyPress-style communities — built into the platform, no plugin.
+
+- **Activity feed** — `[prx3_activity]` merges new topics, opening
+  ballots, published decisions, and new videos, newest first. Members
+  can filter it to only the people they follow.
+- **Member directory & follows** — `[prx3_members]` lists owners with
+  owner number and badges, with a follow/unfollow button. Follows are
+  one-way (like Twitter, not a friend-request handshake).
+- **Private messages** — `[prx3_messages]` runs owner-to-owner DMs over
+  the *same moderated chat transport* as match chat: the word filter,
+  mutes, and the chat kill switch all apply. Only the two participants
+  can read a conversation; each side gets an inbox of threads.
+- **Notifications** — `[prx3_notifications]` shows replies to your
+  topics, @mentions, and incoming DMs. The store keeps the newest fifty
+  per member; opening the screen marks everything read.
+- **@mentions** — write `@login` (or the member's profile slug) in a
+  topic or reply and they're notified. You're never notified about
+  mentioning yourself; unknown handles are ignored.
+
+App routes (member JWT): `GET /activity` (`?following=1`),
+`GET /notifications` (marks read), `GET/POST /messages/{user_id}`.
+
+Groups: use **chapters** — they already provide membership, pages, and
+gating, so the social layer doesn't duplicate them.
