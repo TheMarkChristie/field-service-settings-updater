@@ -219,6 +219,10 @@ function update_post_meta( $post_id, $key, $value ) {
 	$GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] = $value;
 	return true;
 }
+function delete_post_meta( $post_id, $key ) {
+	unset( $GLOBALS['prx3_t']['post_meta'][ $post_id ][ $key ] );
+	return true;
+}
 
 function get_userdata( $user_id ) {
 	return isset( $GLOBALS['prx3_t']['users'][ $user_id ] ) ? $GLOBALS['prx3_t']['users'][ $user_id ] : false;
@@ -335,6 +339,16 @@ function esc_attr( $text ) {
 	return $text;
 }
 function esc_url( $url ) {
+	// Model WordPress: only allow-listed protocols survive. data: and
+	// javascript: are stripped to '' — so tests catch code that wrongly
+	// runs a data: URI through esc_url().
+	$url = (string) $url;
+	if ( preg_match( '#^(https?|ftp|mailto|tel):#i', $url ) || '' === $url || '/' === substr( $url, 0, 1 ) || '#' === substr( $url, 0, 1 ) ) {
+		return $url;
+	}
+	if ( preg_match( '#^[a-z][a-z0-9+.-]*:#i', $url ) ) {
+		return ''; // Disallowed protocol (data:, javascript:, …).
+	}
 	return $url;
 }
 function esc_url_raw( $url ) {

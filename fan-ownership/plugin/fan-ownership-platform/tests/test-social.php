@@ -151,3 +151,11 @@ $actions = PRX3_Social::user_row_actions( array( 'edit' => 'x' ), get_userdata( 
 t_ok( isset( $actions['prx3_profile'] ), 'Users list gains the View owner profile action for owners' );
 $actions = PRX3_Social::user_row_actions( array( 'edit' => 'x' ), prx3_test_user( 99 ) );
 t_ok( ! isset( $actions['prx3_profile'] ), 'Non-owners get no profile action' );
+
+// Private messages address by owner number (the public identifier),
+// not raw user IDs — resolver maps number -> user, 0 when unknown (P132).
+prx3_test_user( 120, array( 'display_name' => 'Number Holder' ) );
+update_user_meta( 120, 'prx3_owner_number', 34 );
+t_eq( PRX3_Social::user_by_owner_number( 34 ), 120, 'An owner number resolves to that owner\'s user ID' );
+t_eq( PRX3_Social::user_by_owner_number( 999 ), 0, 'An unknown owner number resolves to 0 (no misdelivery)' );
+t_eq( PRX3_Social::user_by_owner_number( 0 ), 0, 'A blank recipient resolves to 0' );

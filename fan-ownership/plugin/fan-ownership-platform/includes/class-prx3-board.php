@@ -453,7 +453,7 @@ class PRX3_Board {
 				'numberposts' => -1,
 			)
 		) as $question ) {
-			if ( get_post_meta( $question->ID, '_prx3_answered', true ) ) {
+			if ( '' !== trim( (string) get_post_meta( $question->ID, '_prx3_answer', true ) ) ) {
 				continue;
 			}
 			if ( $active && PRX3_Questions::category( $question->ID ) !== $active ) {

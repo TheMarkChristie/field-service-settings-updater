@@ -76,6 +76,19 @@ $member_jwt     = PRX3_Meetings::jaas_jwt( $room, get_userdata( 60 ), false );
 $member_payload = json_decode( $b64d( explode( '.', $member_jwt )[1] ), true );
 t_eq( $member_payload['context']['user']['moderator'], 'false', 'Ordinary owners join without moderator rights' );
 
+// kid normalisation: a bare key fragment is prefixed with the App ID
+// (8x8 requires kid = "<AppID>/<KeyID>").
+update_option(
+	'prx3_settings',
+	array(
+		'jaas_app_id'      => 'vpaas-magic-cookie-testapp',
+		'jaas_api_key_id'  => 'abc123',
+		'jaas_private_key' => $pem,
+	)
+);
+$bare_header = json_decode( $b64d( explode( '.', PRX3_Meetings::jaas_jwt( $room, $user, true ) )[0] ), true );
+t_eq( $bare_header['kid'], 'vpaas-magic-cookie-testapp/abc123', 'A bare key ID is normalised to AppID/KeyID for the kid header' );
+
 // ---------------- video_content routing ----------------
 update_post_meta( $meeting, '_prx3_meeting_start', gmdate( 'Y-m-d H:i:s', time() ) );
 $GLOBALS['prx3_t']['current']                 = 60;

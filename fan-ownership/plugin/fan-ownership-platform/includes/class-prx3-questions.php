@@ -145,7 +145,13 @@ class PRX3_Questions {
 			update_post_meta( $post_id, '_prx3_category', $category );
 		}
 		$had = get_post_meta( $post_id, '_prx3_answer', true );
-		update_post_meta( $post_id, '_prx3_answer', $answer );
+		// Keep the meta absent (not an empty string) when there is no
+		// answer, so the overdue sweep's NOT EXISTS query still finds it.
+		if ( '' !== $answer ) {
+			update_post_meta( $post_id, '_prx3_answer', $answer );
+		} else {
+			delete_post_meta( $post_id, '_prx3_answer' );
+		}
 		update_post_meta( $post_id, '_prx3_video_answer', $video );
 		update_post_meta( $post_id, '_prx3_selected_for_video', $selected );
 		if ( $answer && ! $had ) {

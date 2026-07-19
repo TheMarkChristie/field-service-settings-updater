@@ -30,6 +30,9 @@ t_ok( false !== strpos( $a90, 'width="96"' ), 'The avatar is rendered at the req
 $a91 = PRX3_Social::filter_avatar( $default, 91, 96, 'mystery', 'Bare Owner' );
 t_ok( false !== strpos( $a91, 'data:image/svg+xml' ), 'An owner with no picture gets a local SVG placeholder' );
 t_ok( false === strpos( $a91, 'gravatar' ), 'No Gravatar request is made for an owner without a photo' );
+// Regression guard: the data: URI must NOT be routed through esc_url()
+// (which strips it), leaving a broken empty src.
+t_ok( false === strpos( $a91, 'src=""' ), 'The placeholder avatar has a real src, not an empty one' );
 
 // Non-owner -> untouched WP default.
 $a92 = PRX3_Social::filter_avatar( $default, 92, 96, 'mystery', 'Random Visitor' );

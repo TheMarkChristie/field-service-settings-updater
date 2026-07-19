@@ -256,6 +256,29 @@ class PRX3_Social {
 	}
 
 	/**
+	 * Resolve an owner number (the public identifier members actually
+	 * see) to a user ID.
+	 *
+	 * @param int $number Owner number.
+	 * @return int User ID, or 0 when no owner holds that number.
+	 */
+	public static function user_by_owner_number( $number ) {
+		$number = (int) $number;
+		if ( ! $number ) {
+			return 0;
+		}
+		$found = get_users(
+			array(
+				'meta_key'   => 'prx3_owner_number', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- exact-match lookup, one row.
+				'meta_value' => $number, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'fields'     => 'ID',
+				'number'     => 1,
+			)
+		);
+		return $found ? (int) $found[0] : 0;
+	}
+
+	/**
 	 * Send a private message: same moderation rails as public chat,
 	 * plus a notification and a conversation index for both inboxes.
 	 *
@@ -315,7 +338,7 @@ class PRX3_Social {
 		check_admin_referer( 'prx3_send_dm' );
 		$result = self::send_dm(
 			get_current_user_id(),
-			isset( $_POST['to'] ) ? absint( $_POST['to'] ) : 0,
+			self::user_by_owner_number( isset( $_POST['to'] ) ? absint( $_POST['to'] ) : 0 ),
 			isset( $_POST['body'] ) ? sanitize_textarea_field( wp_unslash( $_POST['body'] ) ) : ''
 		);
 		if ( is_wp_error( $result ) ) {
@@ -870,21 +893,19 @@ class PRX3_Social {
 			return $avatar;
 		}
 		$photo = (int) get_user_meta( $user_id, 'prx3_photo', true );
-		$src   = '';
-		if ( $photo && function_exists( 'wp_get_attachment_image_url' ) ) {
-			$src = wp_get_attachment_image_url( $photo, array( (int) $size, (int) $size ) );
-		}
-		if ( ! $src ) {
-			$src = self::placeholder_avatar( (int) $size );
-		}
+		$url   = ( $photo && function_exists( 'wp_get_attachment_image_url' ) ) ? wp_get_attachment_image_url( $photo, array( (int) $size, (int) $size ) ) : '';
 		$class = array( 'avatar', 'avatar-' . (int) $size, 'photo', 'prx3-avatar' );
 		if ( ! empty( $args['class'] ) ) {
 			$class = array_merge( $class, (array) $args['class'] );
 		}
+		// An uploaded photo is a normal URL (esc_url); the no-photo fallback
+		// is a self-built inline SVG data: URI, which esc_url() would strip
+		// as a disallowed protocol, so it is escaped for the attribute
+		// context instead.
 		return sprintf(
 			'<img alt="%1$s" src="%2$s" class="%3$s" height="%4$d" width="%4$d" loading="lazy" decoding="async" />',
 			esc_attr( $alt ),
-			esc_url( $src ),
+			$url ? esc_url( $url ) : esc_attr( self::placeholder_avatar( (int) $size ) ),
 			esc_attr( implode( ' ', array_unique( $class ) ) ),
 			(int) $size
 		);
@@ -1211,7 +1232,7 @@ class PRX3_Social {
 		$out .= '<form class="prx3-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		$out .= wp_nonce_field( 'prx3_send_dm', '_wpnonce', true, false );
 		$out .= '<input type="hidden" name="action" value="prx3_send_dm">';
-		$out .= '<p><label for="prx3_dm_to">' . esc_html__( 'To (owner number or user ID)', 'fan-ownership' ) . '</label><input type="number" id="prx3_dm_to" name="to" required></p>';
+		$out .= '<p><label for="prx3_dm_to">' . esc_html__( 'To (owner number)', 'fan-ownership' ) . '</label><input type="number" id="prx3_dm_to" name="to" min="1" required></p>';
 		$out .= '<p><label for="prx3_dm_body">' . esc_html__( 'Message', 'fan-ownership' ) . '</label><textarea id="prx3_dm_body" name="body" rows="3" required></textarea></p>';
 		$out .= '<p><button type="submit" class="prx3-button">' . esc_html__( 'Send', 'fan-ownership' ) . '</button></p></form></div>';
 		return $out;

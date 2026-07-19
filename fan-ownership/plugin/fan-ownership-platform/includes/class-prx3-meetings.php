@@ -307,10 +307,18 @@ class PRX3_Meetings {
 	 * @return string Signed JWT, or '' when signing fails.
 	 */
 	public static function jaas_jwt( $room, $user, $moderator ) {
+		// 8x8 JaaS requires the header kid to be "<AppID>/<KeyID>". Accept
+		// either the full value or just the key fragment and normalise, so
+		// the token always resolves to the right signing key.
+		$app_id = (string) prx3_setting( 'jaas_app_id', '' );
+		$kid    = (string) prx3_setting( 'jaas_api_key_id', '' );
+		if ( '' !== $app_id && '' !== $kid && false === strpos( $kid, '/' ) ) {
+			$kid = $app_id . '/' . $kid;
+		}
 		$header  = array(
 			'alg' => 'RS256',
 			'typ' => 'JWT',
-			'kid' => (string) prx3_setting( 'jaas_api_key_id', '' ),
+			'kid' => $kid,
 		);
 		$now     = time();
 		$payload = array(

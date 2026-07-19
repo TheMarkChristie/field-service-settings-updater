@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.5
+Stable tag: 3.15.1.6
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,25 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.1.6 =
+* Fixes from an adversarial code review of the recent screens:
+  - Owner avatars: the local grey placeholder is no longer routed
+    through esc_url() (which strips data: URIs), so owners without an
+    uploaded photo now show the placeholder instead of a broken
+    empty image.
+  - Meeting video (8x8 JaaS): the JWT "kid" header is normalised to
+    the required <AppID>/<KeyID> form, so tokens authenticate whether
+    the full key ID or just the key fragment was pasted.
+  - Live Q&A presenter: answered questions now correctly drop off the
+    ranked list (it was reading a meta key the answer flow never set).
+  - Questions overdue sweep: saving a question with an empty answer no
+    longer hides it from the "past the answer target" reminder.
+  - Private messages: the "To" field is addressed by owner number (the
+    identifier members actually see) and resolved to the right
+    account, preventing misdelivery.
+* Test harness hardened so this class of bug is caught: esc_url() now
+  models WordPress protocol stripping; new avatar/JaaS/DM assertions.
 
 = 3.15.1.5 =
 * Code-standards pass: full WordPress Coding Standards check back to

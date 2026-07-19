@@ -52,6 +52,7 @@ before shipping.
 | 3.15.1.3 | Fix (P130): owner avatars use the uploaded photo (local grey placeholder, no Gravatar) everywhere WordPress asks for one; Share Register drills into a per-owner share record and each row links to WP account, web profile, and Owner Management |
 | 3.15.1.4 | Fix (P131): selectable squad source — point the player-of-the-match / player-of-the-month features at an existing players table from another plugin (FanPress Settings → Club); the built-in Players list is hidden when an external one is chosen, so there is never a second squad |
 | 3.15.1.5 | Full code scan: WPCS back to 0/0 across the plugin (four standards findings in recent screens corrected, no behaviour change); requirements + specification refreshed for question categories, Owner Management, owner avatars, and the selectable squad source |
+| 3.15.1.6 | Review-driven fixes (P132): avatar placeholder no longer stripped by esc_url; 8×8 JaaS kid normalised to AppID/KeyID; Live Q&A presenter drops answered questions; empty-answer save no longer hides a question from the overdue sweep; private messages resolve the owner number instead of a raw user ID. Test harness models esc_url protocol stripping; 401 assertions |
 
 ## Phase 1 — Own
 
