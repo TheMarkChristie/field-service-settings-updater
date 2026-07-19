@@ -394,3 +394,52 @@ a.prx3-tile:focus-visible {
 	max-width: 100%;
 	height: auto;
 }
+
+/* FanPress comms round (FO-236) + profiles (FO-235) */
+.prx3-bubble-quote {
+	display: block;
+	border-left: 3px solid rgba(0, 0, 0, 0.25);
+	padding: 3px 8px;
+	margin-bottom: 4px;
+	font-size: 0.8rem;
+	opacity: 0.85;
+	background: rgba(0, 0, 0, 0.05);
+	border-radius: 4px;
+}
+
+.prx3-bubble-tools {
+	display: block;
+	font-size: 0.7rem;
+	margin-top: 3px;
+	opacity: 0.6;
+}
+
+.prx3-chat-pinned {
+	background: #fff8e1;
+	border: 1px solid #e2b007;
+	border-radius: 6px;
+	padding: 6px 12px;
+	font-size: 0.85rem;
+}
+
+.prx3-chat-mute {
+	font-size: 0.75rem;
+	text-decoration: none;
+	margin-left: 8px;
+}
+
+.prx3-compose-quoting {
+	position: absolute;
+	top: -22px;
+	left: 14px;
+	font-size: 0.75rem;
+	color: #5f6672;
+}
+
+.prx3-profile__meta {
+	color: #5f6672;
+}
+
+.prx3-profile__socials .prx3-badge {
+	margin-right: 6px;
+}

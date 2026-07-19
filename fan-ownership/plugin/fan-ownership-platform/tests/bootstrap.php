@@ -416,6 +416,9 @@ function date_i18n( $format, $timestamp = null ) {
 function wp_date( $format, $timestamp = null ) {
 	return gmdate( $format, $timestamp ? $timestamp : time() );
 }
+function wp_nonce_url( $url, $action = -1 ) {
+	return $url . '&_wpnonce=test';
+}
 function wp_login_url( $redirect = '' ) {
 	return 'https://example.test/wp-login.php';
 }
@@ -678,6 +681,13 @@ class PRX3_Register {
 	public static $records = array();
 	public static function record( $user_id, $event, $shares, $source, $context = array() ) {
 		self::$records[] = compact( 'user_id', 'event', 'shares', 'source', 'context' );
+	}
+}
+class PRX3_Comms {
+	public static $sent = array();
+	public static function send( $to, $subject, $body, $category = '' ) {
+		self::$sent[] = compact( 'to', 'subject', 'body', 'category' );
+		return true;
 	}
 }
 class PRX3_Moderation {

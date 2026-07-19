@@ -46,6 +46,9 @@ class PRX3_Social {
 		add_action( 'admin_post_prx3_follow', array( __CLASS__, 'handle_follow' ) );
 		add_action( 'admin_post_prx3_send_dm', array( __CLASS__, 'handle_send_dm' ) );
 		add_action( 'admin_post_prx3_cheer', array( __CLASS__, 'handle_cheer' ) );
+		add_shortcode( 'prx3_profile', array( __CLASS__, 'shortcode_profile' ) );
+		add_action( 'admin_post_prx3_save_profile', array( __CLASS__, 'handle_save_profile' ) );
+		add_action( 'admin_post_prx3_notify_email', array( __CLASS__, 'handle_notify_email' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 	}
 
@@ -57,9 +60,10 @@ class PRX3_Social {
 	 * @param int    $user_id Recipient.
 	 * @param string $type    Type key: reply|mention|dm.
 	 * @param string $text    Human text.
-	 * @param string $link    Destination URL.
+	 * @param string $link     Destination URL.
+	 * @param int    $topic_id Related chat (respects per-chat mute), 0 for none.
 	 */
-	public static function notify( $user_id, $type, $text, $link ) {
+	public static function notify( $user_id, $type, $text, $link, $topic_id = 0 ) {
 		if ( ! $user_id ) {
 			return;
 		}
@@ -75,6 +79,19 @@ class PRX3_Social {
 			$list = array_slice( $list, -self::NOTIFICATIONS_CAP );
 		}
 		update_user_meta( $user_id, 'prx3_notifications', $list );
+
+		// Email too (FO-236), unless the member switched chat emails off
+		// or muted this chat.
+		if ( '' !== (string) get_user_meta( $user_id, 'prx3_notify_email_off', true ) ) {
+			return;
+		}
+		if ( $topic_id && in_array( (int) $topic_id, array_map( 'intval', (array) get_user_meta( $user_id, 'prx3_muted_chats', true ) ), true ) ) {
+			return;
+		}
+		$user = get_userdata( $user_id );
+		if ( $user && class_exists( 'PRX3_Comms' ) ) {
+			PRX3_Comms::send( $user->user_email, sanitize_text_field( $text ), sanitize_text_field( $text ) . "\n" . esc_url_raw( $link ), 'community' );
+		}
 	}
 
 	/**
@@ -147,10 +164,10 @@ class PRX3_Social {
 		$topic     = get_post( $post_id );
 		$owner     = $topic ? (int) $topic->post_author : 0;
 		if ( $owner && $owner !== $author_id ) {
-			self::notify( $owner, 'reply', sprintf( /* translators: %s topic. */ __( 'New reply on your topic "%s"', 'fan-ownership' ), $topic->post_title ), get_permalink( $post_id ) );
+			self::notify( $owner, 'reply', sprintf( /* translators: %s topic. */ __( 'New reply on your topic "%s"', 'fan-ownership' ), $topic->post_title ), get_permalink( $post_id ), $post_id );
 		}
 		foreach ( self::mention_targets( $content, $author_id ) as $target ) {
-			self::notify( $target, 'mention', sprintf( /* translators: %s topic. */ __( 'You were mentioned in "%s"', 'fan-ownership' ), $topic ? $topic->post_title : '' ), get_permalink( $post_id ) );
+			self::notify( $target, 'mention', sprintf( /* translators: %s topic. */ __( 'You were mentioned in "%s"', 'fan-ownership' ), $topic ? $topic->post_title : '' ), get_permalink( $post_id ), $post_id );
 		}
 	}
 
@@ -298,6 +315,205 @@ class PRX3_Social {
 		if ( is_wp_error( $result ) ) {
 			wp_die( esc_html( $result->get_error_message() ) );
 		}
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
+		exit;
+	}
+
+	/* ---------------- Owner activity & profile (FO-235) ---------------- */
+
+	/**
+	 * An owner's activity percentage: the average of three engagement
+	 * components — voting (ballots voted of those closed this year),
+	 * community (FanPress posts in the last 90 days, 10 = full marks),
+	 * and watching (matches watched/listened of those in the last 90
+	 * days, tracked when an owner opens a match page or stream).
+	 *
+	 * @param int $user_id The owner.
+	 * @return array{percent:int,voting:int,community:int,watching:int}
+	 */
+	public static function activity_score( $user_id ) {
+		$user_id = (int) $user_id;
+		$voted   = 0;
+		$closed  = 0;
+		foreach ( get_posts(
+			array(
+				'post_type'   => 'prx3_ballot',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+			)
+		) as $ballot ) {
+			if ( ! in_array( PRX3_Ballots::state( $ballot->ID ), array( 'closed', 'published', 'open' ), true ) ) {
+				continue;
+			}
+			++$closed;
+			if ( PRX3_Ballots::member_choice( $ballot->ID, $user_id ) ) {
+				++$voted;
+			}
+		}
+		$voting = $closed ? (int) round( 100 * $voted / $closed ) : 0;
+
+		$posts  = 0;
+		$recent = strtotime( '-90 days' );
+		foreach ( get_comments( array( 'status' => 'approve' ) ) as $comment ) {
+			$uid = (int) ( is_object( $comment ) ? $comment->user_id : ( $comment['user_id'] ?? 0 ) );
+			$at  = strtotime( (string) ( is_object( $comment ) ? $comment->comment_date : ( $comment['comment_date'] ?? '' ) ) );
+			if ( $uid === $user_id && ( ! $at || $at >= $recent ) ) {
+				++$posts;
+			}
+		}
+		$community = (int) min( 100, round( 100 * $posts / 10 ) );
+
+		$watched = count( array_filter( (array) get_user_meta( $user_id, 'prx3_matches_watched', true ) ) );
+		$held    = 0;
+		foreach ( get_posts(
+			array(
+				'post_type'   => 'prx3_match',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+			)
+		) as $match ) {
+			++$held;
+		}
+		$watching = $held ? (int) min( 100, round( 100 * $watched / $held ) ) : 0;
+
+		return array(
+			'percent'   => (int) round( ( $voting + $community + $watching ) / 3 ),
+			'voting'    => $voting,
+			'community' => $community,
+			'watching'  => $watching,
+		);
+	}
+
+	/**
+	 * Record that an owner watched or listened to a match (once each).
+	 *
+	 * @param int $user_id  The owner.
+	 * @param int $match_id The match.
+	 */
+	public static function record_match_watch( $user_id, $match_id ) {
+		if ( ! $user_id || ! $match_id ) {
+			return;
+		}
+		$watched = array_map( 'intval', array_filter( (array) get_user_meta( $user_id, 'prx3_matches_watched', true ) ) );
+		if ( ! in_array( (int) $match_id, $watched, true ) ) {
+			$watched[] = (int) $match_id;
+			update_user_meta( $user_id, 'prx3_matches_watched', $watched );
+		}
+	}
+
+	/**
+	 * [prx3_profile] — the owner profile: personal details, socials,
+	 * owner since, shares, badges, and the activity meter. Own profile
+	 * is editable; other owners see the public card (?prx3_member=ID).
+	 *
+	 * @return string Profile HTML.
+	 */
+	public static function shortcode_profile() {
+		if ( ! prx3_is_owner() ) {
+			return PRX3_Access::gate_content( '' );
+		}
+		wp_enqueue_style( 'prx3' );
+		$me = get_current_user_id();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only profile selector.
+		$who    = isset( $_GET['prx3_member'] ) ? absint( $_GET['prx3_member'] ) : $me;
+		$member = get_userdata( $who );
+		if ( ! $member || ! prx3_is_owner( $who ) ) {
+			return '<p>' . esc_html__( 'Owner not found.', 'fan-ownership' ) . '</p>';
+		}
+		$own     = $who === $me;
+		$score   = self::activity_score( $who );
+		$socials = (array) get_user_meta( $who, 'prx3_socials', true );
+		$bio     = (string) get_user_meta( $who, 'prx3_bio', true );
+		$badges  = class_exists( 'PRX3_Badges' ) ? (array) PRX3_Badges::member_badges( $who ) : array();
+
+		$out  = '<div class="prx3-profile"><div class="prx3-profile__head">';
+		$out .= '<h2>' . esc_html( $member->display_name ) . '</h2>';
+		$out .= '<p class="prx3-profile__meta">' . esc_html( sprintf( /* translators: %d owner number. */ __( 'Owner #%d', 'fan-ownership' ), PRX3_Shares::owner_number( $who ) ) );
+		$out .= ' · ' . esc_html( sprintf( /* translators: %s date. */ __( 'Owner since %s', 'fan-ownership' ), prx3_format_datetime( (string) $member->user_registered ) ) ) . '</p></div>';
+		if ( $bio ) {
+			$out .= '<p class="prx3-profile__bio">' . esc_html( $bio ) . '</p>';
+		}
+		$out .= '<div class="prx3-tiles">';
+		$out .= '<div class="prx3-tile"><span class="prx3-tile-label">' . esc_html__( 'Activity', 'fan-ownership' ) . '</span><strong class="prx3-tile-value">' . (int) $score['percent'] . '%</strong><span class="prx3-tile-note">' . esc_html( sprintf( /* translators: 1-3 percents. */ __( 'Voting %1$d%% · Community %2$d%% · Watching %3$d%%', 'fan-ownership' ), $score['voting'], $score['community'], $score['watching'] ) ) . '</span></div>';
+		if ( $own || get_user_meta( $who, 'prx3_shares_public', true ) ) {
+			$out .= '<div class="prx3-tile"><span class="prx3-tile-label">' . esc_html__( 'Shares', 'fan-ownership' ) . '</span><strong class="prx3-tile-value">' . (int) prx3_shares( $who ) . '</strong><span class="prx3-tile-note">' . esc_html( sprintf( /* translators: %d votes. */ __( '%d votes in every ballot', 'fan-ownership' ), prx3_shares( $who ) ) ) . '</span></div>';
+		}
+		$out  .= '<div class="prx3-tile"><span class="prx3-tile-label">' . esc_html__( 'Badges', 'fan-ownership' ) . '</span><strong class="prx3-tile-value">' . (int) count( $badges ) . '</strong><span class="prx3-tile-note">' . esc_html( $badges ? implode( ', ', array_slice( $badges, 0, 4 ) ) : __( 'Owner', 'fan-ownership' ) ) . '</span></div>';
+		$out  .= '</div>';
+		$known = array(
+			'x'         => 'X',
+			'instagram' => 'Instagram',
+			'facebook'  => 'Facebook',
+			'bluesky'   => 'Bluesky',
+		);
+		$links = '';
+		foreach ( $known as $key => $label ) {
+			if ( ! empty( $socials[ $key ] ) ) {
+				$links .= '<a class="prx3-badge" rel="nofollow noopener" href="' . esc_url( $socials[ $key ] ) . '">' . esc_html( $label ) . '</a> ';
+			}
+		}
+		if ( $links ) {
+			$out .= '<p class="prx3-profile__socials">' . $links . '</p>';
+		}
+		if ( ! $own ) {
+			$following = self::following( $me );
+			$out      .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">' . wp_nonce_field( 'prx3_follow', '_wpnonce', true, false );
+			$out      .= '<input type="hidden" name="action" value="prx3_follow"><input type="hidden" name="target" value="' . esc_attr( (string) $who ) . '">';
+			$out      .= '<button class="prx3-button">' . ( in_array( $who, $following, true ) ? esc_html__( 'Unfollow', 'fan-ownership' ) : esc_html__( 'Follow', 'fan-ownership' ) ) . '</button></form>';
+			return $out . '</div>';
+		}
+
+		// Own profile: personal details + edit form.
+		$out .= '<h3>' . esc_html__( 'My details', 'fan-ownership' ) . '</h3>';
+		$out .= '<p>' . esc_html( $member->user_email ) . '</p>';
+		$out .= '<form class="prx3-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">' . wp_nonce_field( 'prx3_save_profile', '_wpnonce', true, false );
+		$out .= '<input type="hidden" name="action" value="prx3_save_profile">';
+		$out .= '<p><label for="prx3_bio">' . esc_html__( 'Bio (public to fellow owners)', 'fan-ownership' ) . '</label><textarea id="prx3_bio" name="bio" rows="2" maxlength="300">' . esc_textarea( $bio ) . '</textarea></p>';
+		foreach ( $known as $key => $label ) {
+			$out .= '<p><label for="prx3_social_' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><input type="url" id="prx3_social_' . esc_attr( $key ) . '" name="socials[' . esc_attr( $key ) . ']" value="' . esc_attr( (string) ( $socials[ $key ] ?? '' ) ) . '" placeholder="https://"></p>';
+		}
+		$out .= '<p><label><input type="checkbox" name="shares_public" value="1" ' . checked( (string) get_user_meta( $who, 'prx3_shares_public', true ), '1', false ) . '> ' . esc_html__( 'Show my share count to fellow owners', 'fan-ownership' ) . '</label></p>';
+		$out .= '<p><button class="prx3-button">' . esc_html__( 'Save profile', 'fan-ownership' ) . '</button></p></form>';
+		$off  = (string) get_user_meta( $me, 'prx3_notify_email_off', true );
+		$out .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">' . wp_nonce_field( 'prx3_notify_email', '_wpnonce', true, false );
+		$out .= '<input type="hidden" name="action" value="prx3_notify_email"><button class="prx3-button prx3-button--secondary">' . esc_html( $off ? __( 'Turn chat emails on', 'fan-ownership' ) : __( 'Turn chat emails off', 'fan-ownership' ) ) . '</button></form>';
+		return $out . '</div>';
+	}
+
+	/**
+	 * Save bio, socials, and the share-visibility choice.
+	 */
+	public static function handle_save_profile() {
+		if ( ! is_user_logged_in() || ! prx3_is_owner() ) {
+			wp_die( esc_html__( 'Owners only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_save_profile' );
+		$me = get_current_user_id();
+		update_user_meta( $me, 'prx3_bio', isset( $_POST['bio'] ) ? sanitize_textarea_field( wp_unslash( $_POST['bio'] ) ) : '' );
+		$socials     = array();
+		$raw_socials = isset( $_POST['socials'] ) ? (array) wp_unslash( $_POST['socials'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitised per entry below.
+		foreach ( $raw_socials as $key => $url ) {
+			$url = esc_url_raw( $url );
+			if ( $url ) {
+				$socials[ sanitize_key( $key ) ] = $url;
+			}
+		}
+		update_user_meta( $me, 'prx3_socials', $socials );
+		update_user_meta( $me, 'prx3_shares_public', isset( $_POST['shares_public'] ) ? '1' : '' );
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
+		exit;
+	}
+
+	/**
+	 * Toggle chat email notifications.
+	 */
+	public static function handle_notify_email() {
+		if ( ! is_user_logged_in() ) {
+			wp_die( esc_html__( 'Owners only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_notify_email' );
+		$me = get_current_user_id();
+		update_user_meta( $me, 'prx3_notify_email_off', get_user_meta( $me, 'prx3_notify_email_off', true ) ? '' : '1' );
 		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
 		exit;
 	}
@@ -560,7 +776,7 @@ class PRX3_Social {
 			$badges = class_exists( 'PRX3_Badges' ) ? (array) PRX3_Badges::member_badges( $member->ID ) : array();
 			$out   .= '<div class="prx3-tile">';
 			$out   .= '<span class="prx3-tile-label">' . esc_html( sprintf( /* translators: %d owner number. */ __( 'Owner #%d', 'fan-ownership' ), PRX3_Shares::owner_number( $member->ID ) ) ) . '</span>';
-			$out   .= '<strong class="prx3-tile-value">' . esc_html( $member->display_name ) . '</strong>';
+			$out   .= '<strong class="prx3-tile-value"><a href="' . esc_url( add_query_arg( 'prx3_member', $member->ID, home_url( '/profile/' ) ) ) . '">' . esc_html( $member->display_name ) . '</a></strong>';
 			$out   .= '<span class="prx3-tile-note">' . esc_html( $badges ? implode( ', ', array_slice( $badges, 0, 3 ) ) : __( 'Owner', 'fan-ownership' ) ) . '</span>';
 			if ( get_current_user_id() !== (int) $member->ID ) {
 				$out .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';

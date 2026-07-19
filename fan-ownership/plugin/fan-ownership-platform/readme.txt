@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.10.0.0
+Stable tag: 3.11.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,20 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.11.0.0 =
+* Owner profiles: [prx3_profile] (installer adds the page) shows name,
+  owner number, owner since, bio, social links, badges, a
+  private-by-default share count, and an activity percentage - the
+  average of voting (ballots voted of ballots held), community
+  (FanPress posts in 90 days), and watching (matches watched or
+  listened, tracked once per match). Directory names link to
+  profiles; other owners see the public card with a Follow button.
+* FanPress comms round: replies, @mentions, and private messages now
+  email you through the club rails (one-toggle opt-out on your
+  profile; the bell always works); quote any message with Reply;
+  staff can pin a message to the top of a chat; mute any chat to
+  silence its badge and emails.
 
 = 3.10.0.0 =
 * The completeness round (first four-part build number). Certificates

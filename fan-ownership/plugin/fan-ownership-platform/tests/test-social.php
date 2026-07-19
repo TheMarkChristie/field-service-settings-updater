@@ -82,3 +82,47 @@ t_ok( PRX3_Social::has_cheered( 101, $topic ), 'Cheer state is per member' );
 t_ok( ! PRX3_Social::toggle_cheer( 101, $topic ), 'Second toggle withdraws the cheer' );
 t_eq( PRX3_Social::cheer_count( $topic ), 1, 'Withdrawn cheer leaves the rest' );
 t_ok( ! PRX3_Social::has_cheered( 101, $topic ), 'Withdrawn member no longer shows cheered' );
+
+// FanPress comms round (FO-236) + profiles (FO-235).
+prx3_test_reset();
+$GLOBALS['prx3_t_posts']    = array();
+$GLOBALS['prx3_t_comments'] = array();
+PRX3_Comms::$sent           = array();
+prx3_test_user( 80, array( 'display_name' => 'Aileen' ) );
+prx3_test_user( 81, array( 'display_name' => 'Stuart' ) );
+$chat80 = wp_insert_post( array( 'post_type' => 'prx3_forum_topic', 'post_status' => 'publish', 'post_title' => 'Comms', 'post_content' => '', 'post_author' => 80 ) );
+
+// Email rides the notification unless switched off or the chat is muted.
+PRX3_Social::notify( 80, 'reply', 'New reply', 'https://example.test', $chat80 );
+t_eq( count( PRX3_Comms::$sent ), 1, 'Notification sends an email through the club rails' );
+update_user_meta( 80, 'prx3_notify_email_off', '1' );
+PRX3_Social::notify( 80, 'reply', 'Another', 'https://example.test', $chat80 );
+t_eq( count( PRX3_Comms::$sent ), 1, 'Email opt-out stops chat emails, keeps the bell' );
+t_eq( PRX3_Social::unread_count( 80 ), 2, 'On-site notifications continue regardless' );
+delete_user_meta( 80, 'prx3_notify_email_off' );
+PRX3_Forum::toggle_chat_mute( 80, $chat80 );
+PRX3_Social::notify( 80, 'reply', 'Muted chat', 'https://example.test', $chat80 );
+t_eq( count( PRX3_Comms::$sent ), 1, 'A muted chat never emails' );
+t_ok( PRX3_Forum::is_chat_muted( 80, $chat80 ), 'Mute state readable' );
+t_ok( ! PRX3_Forum::toggle_chat_mute( 80, $chat80 ), 'Second toggle unmutes' );
+
+// Activity score: voting + community + watching.
+$b = wp_insert_post( array( 'post_type' => 'prx3_ballot', 'post_status' => 'publish', 'post_title' => 'Score ballot', 'post_content' => '' ) );
+update_post_meta( $b, '_prx3_state', 'open' );
+update_post_meta( $b, '_prx3_options', array( 'A', 'B' ) );
+update_post_meta( $b, '_prx3_electorate', array( 80 => 1 ) );
+$GLOBALS['prx3_t']['caps'][80]['prx3_member'] = true;
+update_user_meta( 80, 'prx3_email_verified', time() );
+PRX3_Shares::grant_shares( 80, 1, 'test' );
+PRX3_Ballots::cast( $b, 80, 0 );
+$m = wp_insert_post( array( 'post_type' => 'prx3_match', 'post_status' => 'publish', 'post_title' => 'Score match', 'post_content' => '' ) );
+PRX3_Social::record_match_watch( 80, $m );
+PRX3_Social::record_match_watch( 80, $m );
+wp_insert_comment( array( 'comment_post_ID' => $chat80, 'comment_content' => 'hi', 'comment_approved' => 1, 'user_id' => 80, 'comment_date' => gmdate( 'Y-m-d H:i:s' ) ) );
+$score = PRX3_Social::activity_score( 80 );
+t_eq( $score['voting'], 100, 'Voted in every ballot: voting 100%' );
+t_eq( $score['watching'], 100, 'Watched the only match (deduped): watching 100%' );
+t_eq( $score['community'], 10, 'One post in 90 days: community 10%' );
+t_eq( $score['percent'], 70, 'Overall activity is the average of the three' );
+$score81 = PRX3_Social::activity_score( 81 );
+t_eq( $score81['percent'], 0, 'A dormant owner scores zero' );

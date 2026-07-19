@@ -50,6 +50,7 @@ class PRX3_Pages {
 			'voting-record' => array( __( 'Voting Record', 'fan-ownership' ), '[prx3_voting_record]' ),
 			'referrals'     => array( __( 'Bring a Fellow Fan', 'fan-ownership' ), '[prx3_referrals]' ),
 			'chapters'      => array( __( 'Owner Chapters', 'fan-ownership' ), '[prx3_chapters]' ),
+			'profile'       => array( __( 'My Profile', 'fan-ownership' ), '[prx3_profile]' ),
 		);
 	}
 

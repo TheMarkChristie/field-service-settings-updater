@@ -110,6 +110,8 @@ before shipping.
 | FO-234 WhatsApp-style chat | Done | 3.3.0–3.3.1 | Chat-list UI with category chips, last-message snippets, and unread badges (`prx3_thread_reads`, visible-only counting); bubble conversations (`render_thread_view`/`bubble_role`: mine right, theirs left, board highlighted + tagged); configurable colours in Settings → FanPress Chat (`chat_colors` with safe fallbacks); match/ballot chats embedded on their pages via `the_content` + `topic_for_source`; front-end send handler; app API unread counts + mark-read | |
 | FO-130 Sample data pack | Done | 3.4.0–3.6.0 | `integrations/sample-data/` — 20 members (money-path grants), 32 content items across all 12 Data API types incl. FanPress chats, targets + chat colours via settings route, one-command `seed.sh` plus bundled one-click "Load demo club" / "Remove demo data" admin buttons (no key/terminal needed; loading idempotent — skips existing content, tops holdings up to pack amounts; removal deletes the exact demo footprint incl. auto-chats and register rows); `tests/test-sample-data.php` proves every payload through the real API handlers; `prx3_forum_topic` added to Data API allowed types; chat colours registered as known settings | |
 | FO-131 Renders out of the box | Done | 3.7.0 | Ballot permalinks render the voting card/state (`PRX3_Shortcodes::single_content`), match permalinks render the Match Centre, both block-theme safe (queried-post keyed; chat embed fixed likewise); `PRX3_Pages` one-click installer creates all 17 member shortcode pages idempotently and wires join/account gate destinations | Root-caused from the live Perth Panthers site showing bare ballot pages |
+| FO-235 Owner profile | Done | 3.11.0.0 | `PRX3_Social::activity_score`/`record_match_watch`/`shortcode_profile` — activity ring (voting/community/watching), bio + socials + share-visibility choice, public card with follow, directory links, profile page in the installer | |
+| FO-236 FanPress comms | Done | 3.11.0.0 | Chat emails via PRX3_Comms with profile opt-out, quote replies (comment_parent + excerpt), staff pins (audited, banner), per-chat mute (badge + email suppression) | |
 
 ## Phase 3 — Watch
 
@@ -152,7 +154,7 @@ before shipping.
 
 ## Honest summary
 
-Done 73 · Partial 7 · Operational 2 · Not built 1 (remainder of the
+Done 75 · Partial 7 · Operational 2 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

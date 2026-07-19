@@ -46,6 +46,8 @@ class PRX3_Forum {
 
 		add_action( 'admin_post_prx3_forum_new_topic', array( __CLASS__, 'handle_new_topic' ) );
 		add_action( 'admin_post_prx3_forum_reply', array( __CLASS__, 'handle_reply' ) );
+		add_action( 'admin_post_prx3_pin_message', array( __CLASS__, 'handle_pin' ) );
+		add_action( 'admin_post_prx3_mute_chat', array( __CLASS__, 'handle_mute_chat' ) );
 		add_action( 'admin_post_prx3_forum_to_ballot', array( __CLASS__, 'handle_to_ballot' ) );
 		add_filter( 'the_content', array( __CLASS__, 'embed_chat' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
@@ -318,6 +320,69 @@ class PRX3_Forum {
 				'order'   => 'ASC',
 			)
 		);
+	}
+
+	/**
+	 * Has a member muted a chat?
+	 *
+	 * @param int $user_id  Member.
+	 * @param int $topic_id Chat.
+	 * @return bool
+	 */
+	public static function is_chat_muted( $user_id, $topic_id ) {
+		return in_array( (int) $topic_id, array_map( 'intval', (array) get_user_meta( $user_id, 'prx3_muted_chats', true ) ), true );
+	}
+
+	/**
+	 * Toggle a member's mute on one chat.
+	 *
+	 * @param int $user_id  Member.
+	 * @param int $topic_id Chat.
+	 * @return bool True when now muted.
+	 */
+	public static function toggle_chat_mute( $user_id, $topic_id ) {
+		$muted = array_map( 'intval', array_filter( (array) get_user_meta( $user_id, 'prx3_muted_chats', true ) ) );
+		if ( in_array( (int) $topic_id, $muted, true ) ) {
+			$muted = array_values( array_diff( $muted, array( (int) $topic_id ) ) );
+			$now   = false;
+		} else {
+			$muted[] = (int) $topic_id;
+			$now     = true;
+		}
+		update_user_meta( $user_id, 'prx3_muted_chats', $muted );
+		return $now;
+	}
+
+	/**
+	 * Mute/unmute from the thread header.
+	 */
+	public static function handle_mute_chat() {
+		if ( ! is_user_logged_in() || ! prx3_is_owner() ) {
+			wp_die( esc_html__( 'Owners only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_mute_chat' );
+		self::toggle_chat_mute( get_current_user_id(), isset( $_GET['topic'] ) ? absint( $_GET['topic'] ) : 0 );
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
+		exit;
+	}
+
+	/**
+	 * Pin/unpin a message to the top of its chat (staff/moderators).
+	 */
+	public static function handle_pin() {
+		if ( ! current_user_can( 'prx3_moderate' ) && ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'Moderators only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_pin_message' );
+		$topic   = isset( $_GET['topic'] ) ? absint( $_GET['topic'] ) : 0;
+		$message = isset( $_GET['message'] ) ? absint( $_GET['message'] ) : 0;
+		if ( 'prx3_forum_topic' === get_post_type( $topic ) ) {
+			$current = (int) get_post_meta( $topic, '_prx3_pinned', true );
+			update_post_meta( $topic, '_prx3_pinned', $current === $message ? 0 : $message );
+			PRX3_Audit::log( 'chat_pin', sprintf( 'Message %1$d %2$s in chat %3$d', $message, $current === $message ? 'unpinned' : 'pinned', $topic ) );
+		}
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
+		exit;
 	}
 
 	/* ---------------- Automation: threads from club events ---------------- */
@@ -676,7 +741,7 @@ class PRX3_Forum {
 				'last_at' => $last_at,
 				'snippet' => wp_html_excerpt( wp_strip_all_tags( $snippet ), 64, '…' ),
 				'who'     => $who,
-				'unread'  => self::unread_replies( $viewer, $topic->ID ),
+				'unread'  => self::is_chat_muted( $viewer, $topic->ID ) ? 0 : self::unread_replies( $viewer, $topic->ID ),
 			);
 		}
 		usort( $rows, fn( $x, $y ) => strcmp( $y['last_at'], $x['last_at'] ) );
@@ -749,22 +814,49 @@ class PRX3_Forum {
 		if ( $back_link ) {
 			$out .= '<p><a class="prx3-chat-back" href="' . esc_url( remove_query_arg( 'prx3_topic' ) ) . '">&larr; ' . esc_html__( 'All chats', 'fan-ownership' ) . '</a></p>';
 		}
-		$out .= '<h3 class="prx3-chat-title">' . esc_html( $topic->post_title ) . '</h3>';
+		$out   .= '<h3 class="prx3-chat-title">' . esc_html( $topic->post_title );
+		$out   .= ' <a class="prx3-chat-mute" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_mute_chat&topic=' . $topic_id ), 'prx3_mute_chat' ) ) . '">' . ( self::is_chat_muted( $viewer, $topic_id ) ? '&#128263; ' . esc_html__( 'Unmute', 'fan-ownership' ) : '&#128276; ' . esc_html__( 'Mute', 'fan-ownership' ) ) . '</a></h3>';
+		$pinned = (int) get_post_meta( $topic_id, '_prx3_pinned', true );
+		if ( $pinned ) {
+			foreach ( self::replies_for( $topic_id ) as $reply ) {
+				$rid = (int) ( is_object( $reply ) ? $reply->comment_ID : ( $reply['comment_ID'] ?? 0 ) );
+				if ( $rid === $pinned ) {
+					$out .= '<p class="prx3-chat-pinned">&#128204; ' . esc_html( wp_html_excerpt( wp_strip_all_tags( (string) ( is_object( $reply ) ? $reply->comment_content : ( $reply['comment_content'] ?? '' ) ) ), 120, '…' ) ) . '</p>';
+				}
+			}
+		}
 		$out .= '<div class="prx3-chat-scroll">';
 
 		// The opening message.
-		$out .= self::bubble(
+		$out  .= self::bubble(
 			(int) $topic->post_author,
 			(int) $topic->post_author ? '' : prx3_club_name(),
 			(string) $topic->post_content,
 			(string) $topic->post_date,
 			$viewer
 		);
+		$by_id = array();
 		foreach ( self::replies_for( $topic_id ) as $reply ) {
+			$rid           = (int) ( is_object( $reply ) ? $reply->comment_ID : ( $reply['comment_ID'] ?? 0 ) );
+			$by_id[ $rid ] = $reply;
+		}
+		foreach ( $by_id as $rid => $reply ) {
 			$author  = (int) ( is_object( $reply ) ? $reply->user_id : ( $reply['user_id'] ?? 0 ) );
 			$content = (string) ( is_object( $reply ) ? $reply->comment_content : ( $reply['comment_content'] ?? '' ) );
 			$when    = (string) ( is_object( $reply ) ? $reply->comment_date : ( $reply['comment_date'] ?? '' ) );
-			$out    .= self::bubble( $author, '', $content, $when, $viewer );
+			$parent  = (int) ( is_object( $reply ) ? ( $reply->comment_parent ?? 0 ) : ( $reply['comment_parent'] ?? 0 ) );
+			$quote   = '';
+			if ( $parent && isset( $by_id[ $parent ] ) ) {
+				$q     = $by_id[ $parent ];
+				$qname = get_userdata( (int) ( is_object( $q ) ? $q->user_id : ( $q['user_id'] ?? 0 ) ) );
+				$quote = '<span class="prx3-bubble-quote"><strong>' . esc_html( $qname ? $qname->display_name : '' ) . '</strong> ' . esc_html( wp_html_excerpt( wp_strip_all_tags( (string) ( is_object( $q ) ? $q->comment_content : ( $q['comment_content'] ?? '' ) ) ), 80, '…' ) ) . '</span>';
+			}
+			$tools = '<span class="prx3-bubble-tools"><a href="' . esc_url( add_query_arg( 'prx3_reply_to', $rid ) ) . '#prx3_reply_body">' . esc_html__( 'Reply', 'fan-ownership' ) . '</a>';
+			if ( current_user_can( 'prx3_moderate' ) || current_user_can( 'edit_posts' ) ) {
+				$tools .= ' · <a href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_pin_message&topic=' . $topic_id . '&message=' . $rid ), 'prx3_pin_message' ) ) . '">' . esc_html__( 'Pin', 'fan-ownership' ) . '</a>';
+			}
+			$tools .= '</span>';
+			$out   .= self::bubble( $author, '', $quote . wp_kses_post( $content ) . $tools, $when, $viewer );
 		}
 		$out .= '</div>';
 
@@ -777,6 +869,11 @@ class PRX3_Forum {
 			$out .= '<form class="prx3-chat-compose" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 			$out .= wp_nonce_field( 'prx3_forum_reply', '_wpnonce', true, false );
 			$out .= '<input type="hidden" name="action" value="prx3_forum_reply"><input type="hidden" name="topic" value="' . esc_attr( (string) $topic_id ) . '">';
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only quote selector.
+			$reply_to = isset( $_GET['prx3_reply_to'] ) ? absint( $_GET['prx3_reply_to'] ) : 0;
+			if ( $reply_to ) {
+				$out .= '<input type="hidden" name="reply_to" value="' . esc_attr( (string) $reply_to ) . '"><span class="prx3-compose-quoting">' . esc_html__( 'Replying to a message', 'fan-ownership' ) . ' · <a href="' . esc_url( remove_query_arg( 'prx3_reply_to' ) ) . '">' . esc_html__( 'cancel', 'fan-ownership' ) . '</a></span>';
+			}
 			$out .= '<label class="screen-reader-text" for="prx3_reply_body">' . esc_html__( 'Message', 'fan-ownership' ) . '</label>';
 			$out .= '<textarea id="prx3_reply_body" name="reply_body" rows="2" required placeholder="' . esc_attr__( 'Message…', 'fan-ownership' ) . '"></textarea>';
 			$out .= '<button type="submit" class="prx3-button">' . esc_html__( 'Send', 'fan-ownership' ) . '</button></form>';
@@ -851,6 +948,7 @@ class PRX3_Forum {
 					'comment_content'  => $text,
 					'comment_approved' => $held ? 0 : 1,
 					'user_id'          => $user->ID,
+					'comment_parent'   => isset( $_POST['reply_to'] ) ? absint( $_POST['reply_to'] ) : 0,
 				)
 			);
 			self::mark_thread_read( $user->ID, $topic_id );
@@ -886,6 +984,9 @@ class PRX3_Forum {
 		}
 		wp_enqueue_style( 'prx3' );
 		wp_enqueue_script( 'prx3-mentions' );
+		if ( 'prx3_match' === get_post_type( $post_id ) && class_exists( 'PRX3_Social' ) ) {
+			PRX3_Social::record_match_watch( get_current_user_id(), $post_id );
+		}
 		return '<div class="prx3-event-layout"><div class="prx3-event-main">' . $content . '</div><div class="prx3-event-chat">' . self::render_thread_view( $topic, false ) . '</div></div>';
 	}
 

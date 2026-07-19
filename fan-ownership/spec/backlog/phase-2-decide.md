@@ -416,3 +416,34 @@ Test script:
 4. Publish a match and open a ballot — expect their chats on the match and ballot pages for owners (and absent for non-owners); post from the embed — expect it in the same thread everywhere.
 5. Change the three colours in Settings → FanPress Chat — expect every conversation to re-colour; enter an invalid value — expect the default used.
 6. Fetch topics from the app API as a member — expect an unread count per chat that clears after fetching replies.
+
+### FO-235 The owner profile
+As an owner, I want a profile page — my details, bio and social links, owner since, my shares (visible to others only if I choose), badges, and an activity percentage — so that the community can see who I am and how engaged I am.
+Traceability: P121, P110. Estimate: Design 0.5 / Build 0.5 / Develop 2 / Test 1
+
+Acceptance criteria:
+1. My profile shows name, owner number, owner-since date, bio, social links (X/Instagram/Facebook/Bluesky), badges, share count with a public/private choice (private by default), and my activity percentage with its three components.
+2. Activity % is the average of voting (ballots voted ÷ ballots held), community (FanPress posts in the last 90 days, ten posts = 100%), and watching (matches watched or listened ÷ matches held, recorded once per match when I open its page).
+3. Other owners see the public card (no email, no edit form, shares only if I opted in) with a Follow button; directory names link to profiles; non-owners are gated.
+4. I can edit bio and socials, toggle share visibility, and switch chat emails on/off from my profile.
+
+Test script:
+1. Vote in the only ballot, post once, watch the only match — expect voting 100 / community 10 / watching 100 and the average overall; a dormant owner scores 0.
+2. Save a bio and socials — expect them public to owners; leave shares private — expect no share tile on the public view; opt in — expect it shown.
+3. Open another owner's profile — expect the public card and a working follow; open as a non-owner — expect the join gate.
+
+### FO-236 FanPress comms round
+As an owner, I want chat emails, reply-quoting, pinned messages, and per-chat mute, so that FanPress keeps me informed without drowning me.
+Traceability: P121, FO-234. Estimate: Design 0.5 / Build 0.5 / Develop 2 / Test 1
+
+Acceptance criteria:
+1. Replies to my topics, @mentions, and private messages email me through the club rails as well as the bell; one toggle on my profile switches chat emails off; the bell keeps working regardless.
+2. Any message can be quoted: Reply on a bubble quotes it above my message (stored as the comment parent, shown as an excerpt with the author's name).
+3. Moderators/staff can pin one message per chat; it shows in a banner at the top; pinning again unpins; pins are audited.
+4. Muting a chat hides its unread badge and stops its emails; unmuting restores both; mute is per member per chat.
+
+Test script:
+1. Trigger a reply notification — expect one email; switch emails off — expect bell only; mute the chat — expect no email even with emails on.
+2. Quote a message — expect the excerpt above the reply in the thread.
+3. Pin a message as staff — expect the banner; pin again — expect it cleared; attempt as a plain owner — expect refusal.
+4. Mute then unmute a chat — expect the unread badge to vanish and return.
