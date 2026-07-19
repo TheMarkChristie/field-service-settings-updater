@@ -34,6 +34,9 @@ before shipping.
 | 3.8.0 | Sequential numbered ballot URLs |
 | 3.9.0 | Rich HTML/image ballot questions, answers with descriptions |
 | 3.10.0.0 | The smaller-ones round: certificate QR, member merge tool, voting-record archive, referral leaderboard, chapters map, Live Q&A presenter, annual-report workspace, weekly-show flag, player honours, first-run welcome, draft-ballot state note, identity scan + GitHub Actions CI, render smoke tests (every member surface proven; fixed a decisions-page fatal) |
+| 3.11.0.0 | Comms round: chat emails with opt-out, reply-quoting, pinned messages, per-chat mute; owner profiles with the activity percentage (voting/community/watching) and match-watch tracking |
+| 3.12.0.0 | Identity round: six-field private identity record with PEP declaration, audited masked compliance lookup, profile picture + five-photo consent gallery, GDPR wiring |
+| 3.12.0.1 | Fix: demo ballots pre-approved (no four-eyes hold on demo sites), kit ballot live to 31 Aug; member import seeds bios/socials/identity incl. a PEP=yes example |
 
 ## Phase 1 — Own
 
