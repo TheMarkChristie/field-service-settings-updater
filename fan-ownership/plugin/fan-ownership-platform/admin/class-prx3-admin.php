@@ -451,7 +451,32 @@ class PRX3_Admin {
 		echo '<input type="hidden" name="action" value="prx3_merge_members">';
 		echo '<p><label for="prx3_merge_from">' . esc_html__( 'Duplicate account (user ID)', 'fan-ownership' ) . '</label> <input type="number" id="prx3_merge_from" name="from" required min="1"></p>';
 		echo '<p><label for="prx3_merge_into">' . esc_html__( 'Kept account (user ID)', 'fan-ownership' ) . '</label> <input type="number" id="prx3_merge_into" name="into" required min="1"></p>';
-		echo '<p><button class="button button-primary">' . esc_html__( 'Merge accounts', 'fan-ownership' ) . '</button></p></form></div>';
+		echo '<p><button class="button button-primary">' . esc_html__( 'Merge accounts', 'fan-ownership' ) . '</button></p></form>';
+
+		echo '<h2>' . esc_html__( 'Identity lookup (compliance)', 'fan-ownership' ) . '</h2>';
+		echo '<p>' . esc_html__( 'View a member\'s identity record — every lookup is audited. Government ID shows last four characters only.', 'fan-ownership' ) . '</p>';
+		echo '<form method="get"><input type="hidden" name="page" value="prx3-member-tools">';
+		echo '<p><label for="prx3_id_lookup">' . esc_html__( 'User ID', 'fan-ownership' ) . '</label> <input type="number" id="prx3_id_lookup" name="identity_user" min="1"> <button class="button">' . esc_html__( 'Look up', 'fan-ownership' ) . '</button></p></form>';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only audited lookup behind prx3_admin.
+		$lookup = isset( $_GET['identity_user'] ) ? absint( $_GET['identity_user'] ) : 0;
+		if ( $lookup && get_userdata( $lookup ) && class_exists( 'PRX3_Social' ) ) {
+			$identity = PRX3_Social::identity( $lookup );
+			PRX3_Audit::log( 'identity_viewed', sprintf( 'Identity record for member %1$d viewed by admin %2$d', $lookup, get_current_user_id() ) );
+			echo '<table class="widefat" style="max-width:640px;"><tbody>';
+			$rows = array(
+				__( 'Full birth name', 'fan-ownership' ) => $identity['birth_name'],
+				__( 'Nationality', 'fan-ownership' )     => $identity['nationality'],
+				__( 'Country of residence', 'fan-ownership' ) => $identity['residence'],
+				__( 'Date of birth', 'fan-ownership' )   => $identity['dob'],
+				__( 'Government ID', 'fan-ownership' )   => PRX3_Social::mask_gov_id( $identity['gov_id'] ),
+				__( 'Politically exposed', 'fan-ownership' ) => $identity['pep'] ? $identity['pep'] : __( 'not declared', 'fan-ownership' ),
+			);
+			foreach ( $rows as $label => $value ) {
+				echo '<tr><th style="text-align:left;">' . esc_html( $label ) . '</th><td>' . esc_html( $value ) . '</td></tr>';
+			}
+			echo '</tbody></table>';
+		}
+		echo '</div>';
 	}
 
 	/**

@@ -112,6 +112,7 @@ before shipping.
 | FO-131 Renders out of the box | Done | 3.7.0 | Ballot permalinks render the voting card/state (`PRX3_Shortcodes::single_content`), match permalinks render the Match Centre, both block-theme safe (queried-post keyed; chat embed fixed likewise); `PRX3_Pages` one-click installer creates all 17 member shortcode pages idempotently and wires join/account gate destinations | Root-caused from the live Perth Panthers site showing bare ballot pages |
 | FO-235 Owner profile | Done | 3.11.0.0 | `PRX3_Social::activity_score`/`record_match_watch`/`shortcode_profile` — activity ring (voting/community/watching), bio + socials + share-visibility choice, public card with follow, directory links, profile page in the installer | |
 | FO-236 FanPress comms | Done | 3.11.0.0 | Chat emails via PRX3_Comms with profile opt-out, quote replies (comment_parent + excerpt), staff pins (audited, banner), per-chat mute (badge + email suppression) | |
+| FO-237 Identity & photos | Done | 3.12.0.0 | `PRX3_Social::identity`/`identity_public`/`mask_gov_id`/`add_gallery_photo` — six-field private identity record (public slice: birth name + nationality), PEP yes/no, audited masked compliance lookup in Member Tools, profile + five-photo gallery via the media pipeline with social-use consent, GDPR export/erase wiring | Government ID stored as WordPress user meta — standard plugin practice; DB access equals record access |
 
 ## Phase 3 — Watch
 
@@ -154,7 +155,7 @@ before shipping.
 
 ## Honest summary
 
-Done 75 · Partial 7 · Operational 2 · Not built 1 (remainder of the
+Done 76 · Partial 7 · Operational 2 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

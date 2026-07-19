@@ -444,3 +444,19 @@ Test script:
 2. Open a match permalink as an owner — expect the Match Centre and chat beside it.
 3. Click "Create member pages" on a fresh install — expect all pages created and join/account settings wired; click again — expect zero new pages and every existing one untouched.
 4. Repeat on a block theme — expect identical results.
+
+### FO-237 Identity record and member photos
+As the club, I want each owner's full birth name, nationality, country of residence, date of birth, government registration ID (for their country of residence), and a politically-exposed-person declaration on file — with only birth name and nationality ever public — plus a profile picture and up to five photos of themselves the club may use on socials with consent, so that the statutory register and compliance checks are complete without exposing anyone's private data.
+Traceability: P122, FO-235, T29. Estimate: Design 0.5 / Build 0.5 / Develop 2 / Test 1
+
+Acceptance criteria:
+1. The profile's private Identity section stores all six fields; the owner card shows only full birth name and nationality; residence, DOB, government ID, and PEP never render anywhere member-facing.
+2. Owner-Admins have an audited Identity Lookup in Member Tools (every view logged), with the government ID masked to its last four characters.
+3. Owners upload a profile picture and up to five gallery photos of themselves through the media pipeline; a sixth is refused; a consent checkbox governs the club's social-media use of the gallery; photos show on the owner card.
+4. The identity record, photos, and consent are included in the GDPR export and wiped by the eraser; identity edits are audited.
+
+Test script:
+1. Save all six fields — expect the public card to show birth name and nationality only, and the private fields absent from every member-facing render.
+2. Look up the record as an Owner-Admin — expect the masked ID (last four), the PEP answer, and an audit entry for the view.
+3. Upload six gallery photos — expect the sixth refused; untick consent — expect it stored.
+4. Run the GDPR export — expect the identity and photo records included; run the eraser — expect them gone.

@@ -402,6 +402,68 @@ class PRX3_Social {
 	}
 
 	/**
+	 * Identity fields (FO-237): stored per member, sensitive by default.
+	 * Only full birth name and nationality are ever shown to fellow
+	 * owners; everything else is member + Owner-Admin only.
+	 *
+	 * @param int $user_id Member.
+	 * @return array{birth_name:string,nationality:string,residence:string,dob:string,gov_id:string,pep:string}
+	 */
+	public static function identity( $user_id ) {
+		$stored = (array) get_user_meta( $user_id, 'prx3_identity', true );
+		return array(
+			'birth_name'  => (string) ( $stored['birth_name'] ?? '' ),
+			'nationality' => (string) ( $stored['nationality'] ?? '' ),
+			'residence'   => (string) ( $stored['residence'] ?? '' ),
+			'dob'         => (string) ( $stored['dob'] ?? '' ),
+			'gov_id'      => (string) ( $stored['gov_id'] ?? '' ),
+			'pep'         => in_array( $stored['pep'] ?? '', array( 'yes', 'no' ), true ) ? $stored['pep'] : '',
+		);
+	}
+
+	/**
+	 * The public slice of an identity: full birth name and nationality.
+	 *
+	 * @param int $user_id Member.
+	 * @return array{birth_name:string,nationality:string}
+	 */
+	public static function identity_public( $user_id ) {
+		$identity = self::identity( $user_id );
+		return array(
+			'birth_name'  => $identity['birth_name'],
+			'nationality' => $identity['nationality'],
+		);
+	}
+
+	/**
+	 * Government ID masked for admin display: last four only.
+	 *
+	 * @param string $gov_id The stored ID.
+	 * @return string Masked value.
+	 */
+	public static function mask_gov_id( $gov_id ) {
+		$gov_id = (string) $gov_id;
+		return strlen( $gov_id ) > 4 ? str_repeat( '•', strlen( $gov_id ) - 4 ) . substr( $gov_id, -4 ) : $gov_id;
+	}
+
+	/**
+	 * Add a gallery photo attachment, capped at five.
+	 *
+	 * @param int $user_id       Member.
+	 * @param int $attachment_id New photo.
+	 * @return bool False when the gallery is full.
+	 */
+	public static function add_gallery_photo( $user_id, $attachment_id ) {
+		$gallery = array_map( 'intval', array_filter( (array) get_user_meta( $user_id, 'prx3_gallery', true ) ) );
+		if ( count( $gallery ) >= 5 ) {
+			return false;
+		}
+		$gallery[] = (int) $attachment_id;
+		update_user_meta( $user_id, 'prx3_gallery', $gallery );
+		return true;
+	}
+
+	/**
 	 * [prx3_profile] — the owner profile: personal details, socials,
 	 * owner since, shares, badges, and the activity meter. Own profile
 	 * is editable; other owners see the public card (?prx3_member=ID).
@@ -426,8 +488,16 @@ class PRX3_Social {
 		$bio     = (string) get_user_meta( $who, 'prx3_bio', true );
 		$badges  = class_exists( 'PRX3_Badges' ) ? (array) PRX3_Badges::member_badges( $who ) : array();
 
-		$out  = '<div class="prx3-profile"><div class="prx3-profile__head">';
+		$identity = self::identity_public( $who );
+		$photo    = (int) get_user_meta( $who, 'prx3_photo', true );
+		$out      = '<div class="prx3-profile"><div class="prx3-profile__head">';
+		if ( $photo && function_exists( 'wp_get_attachment_image' ) ) {
+			$out .= wp_get_attachment_image( $photo, 'thumbnail', false, array( 'class' => 'prx3-profile__photo' ) );
+		}
 		$out .= '<h2>' . esc_html( $member->display_name ) . '</h2>';
+		if ( $identity['birth_name'] || $identity['nationality'] ) {
+			$out .= '<p class="prx3-profile__identity">' . esc_html( trim( $identity['birth_name'] . ( $identity['nationality'] ? ' · ' . $identity['nationality'] : '' ) ) ) . '</p>';
+		}
 		$out .= '<p class="prx3-profile__meta">' . esc_html( sprintf( /* translators: %d owner number. */ __( 'Owner #%d', 'fan-ownership' ), PRX3_Shares::owner_number( $who ) ) );
 		$out .= ' · ' . esc_html( sprintf( /* translators: %s date. */ __( 'Owner since %s', 'fan-ownership' ), prx3_format_datetime( (string) $member->user_registered ) ) ) . '</p></div>';
 		if ( $bio ) {
@@ -438,8 +508,16 @@ class PRX3_Social {
 		if ( $own || get_user_meta( $who, 'prx3_shares_public', true ) ) {
 			$out .= '<div class="prx3-tile"><span class="prx3-tile-label">' . esc_html__( 'Shares', 'fan-ownership' ) . '</span><strong class="prx3-tile-value">' . (int) prx3_shares( $who ) . '</strong><span class="prx3-tile-note">' . esc_html( sprintf( /* translators: %d votes. */ __( '%d votes in every ballot', 'fan-ownership' ), prx3_shares( $who ) ) ) . '</span></div>';
 		}
-		$out  .= '<div class="prx3-tile"><span class="prx3-tile-label">' . esc_html__( 'Badges', 'fan-ownership' ) . '</span><strong class="prx3-tile-value">' . (int) count( $badges ) . '</strong><span class="prx3-tile-note">' . esc_html( $badges ? implode( ', ', array_slice( $badges, 0, 4 ) ) : __( 'Owner', 'fan-ownership' ) ) . '</span></div>';
-		$out  .= '</div>';
+		$out    .= '<div class="prx3-tile"><span class="prx3-tile-label">' . esc_html__( 'Badges', 'fan-ownership' ) . '</span><strong class="prx3-tile-value">' . (int) count( $badges ) . '</strong><span class="prx3-tile-note">' . esc_html( $badges ? implode( ', ', array_slice( $badges, 0, 4 ) ) : __( 'Owner', 'fan-ownership' ) ) . '</span></div>';
+		$out    .= '</div>';
+		$gallery = array_map( 'intval', array_filter( (array) get_user_meta( $who, 'prx3_gallery', true ) ) );
+		if ( $gallery && function_exists( 'wp_get_attachment_image' ) ) {
+			$out .= '<div class="prx3-profile__gallery">';
+			foreach ( array_slice( $gallery, 0, 5 ) as $pic ) {
+				$out .= wp_get_attachment_image( $pic, 'thumbnail' );
+			}
+			$out .= '</div>';
+		}
 		$known = array(
 			'x'         => 'X',
 			'instagram' => 'Instagram',
@@ -466,12 +544,25 @@ class PRX3_Social {
 		// Own profile: personal details + edit form.
 		$out .= '<h3>' . esc_html__( 'My details', 'fan-ownership' ) . '</h3>';
 		$out .= '<p>' . esc_html( $member->user_email ) . '</p>';
-		$out .= '<form class="prx3-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">' . wp_nonce_field( 'prx3_save_profile', '_wpnonce', true, false );
+		$out .= '<form class="prx3-form" method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">' . wp_nonce_field( 'prx3_save_profile', '_wpnonce', true, false );
 		$out .= '<input type="hidden" name="action" value="prx3_save_profile">';
 		$out .= '<p><label for="prx3_bio">' . esc_html__( 'Bio (public to fellow owners)', 'fan-ownership' ) . '</label><textarea id="prx3_bio" name="bio" rows="2" maxlength="300">' . esc_textarea( $bio ) . '</textarea></p>';
 		foreach ( $known as $key => $label ) {
 			$out .= '<p><label for="prx3_social_' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><input type="url" id="prx3_social_' . esc_attr( $key ) . '" name="socials[' . esc_attr( $key ) . ']" value="' . esc_attr( (string) ( $socials[ $key ] ?? '' ) ) . '" placeholder="https://"></p>';
 		}
+		$full = self::identity( $who );
+		$out .= '<h3>' . esc_html__( 'Identity (private — seen only by you and club compliance)', 'fan-ownership' ) . '</h3>';
+		$out .= '<p class="description">' . esc_html__( 'Full birth name and nationality appear on your owner card; everything else stays private and is held for the statutory register and compliance checks.', 'fan-ownership' ) . '</p>';
+		$out .= '<p><label for="prx3_birth_name">' . esc_html__( 'Full birth name (public)', 'fan-ownership' ) . '</label><input type="text" id="prx3_birth_name" name="identity[birth_name]" value="' . esc_attr( $full['birth_name'] ) . '"></p>';
+		$out .= '<p><label for="prx3_nationality">' . esc_html__( 'Nationality (public)', 'fan-ownership' ) . '</label><input type="text" id="prx3_nationality" name="identity[nationality]" value="' . esc_attr( $full['nationality'] ) . '"></p>';
+		$out .= '<p><label for="prx3_residence">' . esc_html__( 'Country of residence (private)', 'fan-ownership' ) . '</label><input type="text" id="prx3_residence" name="identity[residence]" value="' . esc_attr( $full['residence'] ) . '"></p>';
+		$out .= '<p><label for="prx3_dob">' . esc_html__( 'Date of birth (private)', 'fan-ownership' ) . '</label><input type="date" id="prx3_dob" name="identity[dob]" value="' . esc_attr( $full['dob'] ) . '"></p>';
+		$out .= '<p><label for="prx3_gov_id">' . esc_html__( 'Government registration ID for your country of residence (private)', 'fan-ownership' ) . '</label><input type="text" id="prx3_gov_id" name="identity[gov_id]" value="' . esc_attr( $full['gov_id'] ) . '" autocomplete="off"></p>';
+		$out .= '<p><label for="prx3_pep">' . esc_html__( 'Are you a politically exposed person? (private)', 'fan-ownership' ) . '</label> <select id="prx3_pep" name="identity[pep]"><option value=""></option><option value="no" ' . selected( $full['pep'], 'no', false ) . '>' . esc_html__( 'No', 'fan-ownership' ) . '</option><option value="yes" ' . selected( $full['pep'], 'yes', false ) . '>' . esc_html__( 'Yes', 'fan-ownership' ) . '</option></select></p>';
+		$out .= '<h3>' . esc_html__( 'Photos', 'fan-ownership' ) . '</h3>';
+		$out .= '<p><label for="prx3_photo">' . esc_html__( 'Profile picture', 'fan-ownership' ) . '</label><input type="file" id="prx3_photo" name="profile_photo" accept="image/*"></p>';
+		$out .= '<p><label for="prx3_gallery_new">' . esc_html__( 'Add a photo of you (up to five — you at a game, in colours; the club may use these on socials if you consent below)', 'fan-ownership' ) . '</label><input type="file" id="prx3_gallery_new" name="gallery_photo" accept="image/*"></p>';
+		$out .= '<p><label><input type="checkbox" name="photo_consent" value="1" ' . checked( (string) get_user_meta( $who, 'prx3_photo_consent', true ), '1', false ) . '> ' . esc_html__( 'The club may use my gallery photos on its social channels', 'fan-ownership' ) . '</label></p>';
 		$out .= '<p><label><input type="checkbox" name="shares_public" value="1" ' . checked( (string) get_user_meta( $who, 'prx3_shares_public', true ), '1', false ) . '> ' . esc_html__( 'Show my share count to fellow owners', 'fan-ownership' ) . '</label></p>';
 		$out .= '<p><button class="prx3-button">' . esc_html__( 'Save profile', 'fan-ownership' ) . '</button></p></form>';
 		$off  = (string) get_user_meta( $me, 'prx3_notify_email_off', true );
@@ -500,6 +591,41 @@ class PRX3_Social {
 		}
 		update_user_meta( $me, 'prx3_socials', $socials );
 		update_user_meta( $me, 'prx3_shares_public', isset( $_POST['shares_public'] ) ? '1' : '' );
+		update_user_meta( $me, 'prx3_photo_consent', isset( $_POST['photo_consent'] ) ? '1' : '' );
+		$raw_identity = isset( $_POST['identity'] ) ? (array) wp_unslash( $_POST['identity'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitised per field below.
+		update_user_meta(
+			$me,
+			'prx3_identity',
+			array(
+				'birth_name'  => sanitize_text_field( (string) ( $raw_identity['birth_name'] ?? '' ) ),
+				'nationality' => sanitize_text_field( (string) ( $raw_identity['nationality'] ?? '' ) ),
+				'residence'   => sanitize_text_field( (string) ( $raw_identity['residence'] ?? '' ) ),
+				'dob'         => sanitize_text_field( (string) ( $raw_identity['dob'] ?? '' ) ),
+				'gov_id'      => sanitize_text_field( (string) ( $raw_identity['gov_id'] ?? '' ) ),
+				'pep'         => in_array( $raw_identity['pep'] ?? '', array( 'yes', 'no' ), true ) ? $raw_identity['pep'] : '',
+			)
+		);
+		PRX3_Audit::log( 'identity_updated', sprintf( 'Member %d updated their identity record', $me ) );
+		// Photo uploads through the WordPress media pipeline.
+		if ( function_exists( 'media_handle_upload' ) || ( defined( 'ABSPATH' ) && file_exists( ABSPATH . 'wp-admin/includes/media.php' ) ) ) {
+			if ( ! function_exists( 'media_handle_upload' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/media.php';
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+				require_once ABSPATH . 'wp-admin/includes/image.php';
+			}
+			if ( ! empty( $_FILES['profile_photo']['name'] ) ) {
+				$photo = media_handle_upload( 'profile_photo', 0 );
+				if ( ! is_wp_error( $photo ) ) {
+					update_user_meta( $me, 'prx3_photo', (int) $photo );
+				}
+			}
+			if ( ! empty( $_FILES['gallery_photo']['name'] ) ) {
+				$pic = media_handle_upload( 'gallery_photo', 0 );
+				if ( ! is_wp_error( $pic ) ) {
+					self::add_gallery_photo( $me, (int) $pic );
+				}
+			}
+		}
 		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
 		exit;
 	}

@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.11.0.0
+Stable tag: 3.12.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,20 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.12.0.0 =
+* Identity record: profiles gain a private Identity section - full
+  birth name, nationality, country of residence, date of birth,
+  government registration ID, and a politically-exposed-person
+  declaration. Only birth name and nationality appear on the owner
+  card; everything else is visible to the member and Owner-Admins
+  only, via an audited Identity Lookup in Member Tools with the ID
+  masked to its last four characters. Owners can upload a profile
+  picture and up to five photos of themselves (sixth refused) with a
+  consent checkbox for club social-media use; photos show on the
+  owner card. Identity and photos are included in GDPR export and
+  wiped by the eraser; identity edits and compliance views are
+  audited.
 
 = 3.11.0.0 =
 * Owner profiles: [prx3_profile] (installer adds the page) shows name,

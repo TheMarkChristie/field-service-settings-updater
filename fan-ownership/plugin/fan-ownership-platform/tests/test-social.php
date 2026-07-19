@@ -126,3 +126,18 @@ t_eq( $score['community'], 10, 'One post in 90 days: community 10%' );
 t_eq( $score['percent'], 70, 'Overall activity is the average of the three' );
 $score81 = PRX3_Social::activity_score( 81 );
 t_eq( $score81['percent'], 0, 'A dormant owner scores zero' );
+
+// Identity record (FO-237): sensitive by default, public slice only.
+update_user_meta( 80, 'prx3_identity', array( 'birth_name' => 'Aileen Margaret Munro', 'nationality' => 'British', 'residence' => 'United Kingdom', 'dob' => '1988-03-14', 'gov_id' => 'AB123456C', 'pep' => 'no' ) );
+$pub = PRX3_Social::identity_public( 80 );
+t_eq( $pub, array( 'birth_name' => 'Aileen Margaret Munro', 'nationality' => 'British' ), 'Public slice carries only birth name and nationality' );
+t_ok( ! isset( $pub['gov_id'] ) && ! isset( $pub['dob'] ) && ! isset( $pub['residence'] ) && ! isset( $pub['pep'] ), 'DOB, residence, government ID, and PEP never leave the private record' );
+t_eq( PRX3_Social::mask_gov_id( 'AB123456C' ), '•••••456C', 'Government ID masks to last four for compliance views' );
+t_eq( PRX3_Social::identity( 80 )['pep'], 'no', 'PEP declaration stored as yes/no' );
+
+// Gallery caps at five photos.
+foreach ( array( 501, 502, 503, 504, 505 ) as $pic ) {
+	t_ok( PRX3_Social::add_gallery_photo( 80, $pic ), 'Gallery accepts photo ' . $pic );
+}
+t_ok( ! PRX3_Social::add_gallery_photo( 80, 506 ), 'A sixth photo is refused' );
+t_eq( count( (array) get_user_meta( 80, 'prx3_gallery', true ) ), 5, 'Gallery holds exactly five' );
