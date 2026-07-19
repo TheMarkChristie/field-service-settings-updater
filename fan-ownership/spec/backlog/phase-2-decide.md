@@ -346,3 +346,19 @@ Test script:
 3. Send a private message — expect it delivered through the chat rails, a notification for the recipient, and the thread listed in both inboxes; attempt to read another pair's conversation — expect refusal; send a message hitting the word filter — expect it held exactly as in public chat.
 4. Reply to someone's topic mentioning a third member — expect a reply notification for the author and a mention notification for the third member, and none for yourself; pile in more than fifty notifications — expect the store capped at the newest fifty.
 5. Open the notifications screen — expect unread badges to clear; call the activity, notifications, and messages REST endpoints as an owner and as a non-owner — expect data for the owner and refusal otherwise.
+
+### FO-232 FanPress Chat has its own home
+As club staff, I want the community — branded FanPress Chat — to have its own top-level admin menu with an overview, topics, boards, and the moderation queue in one place, so that running the conversation never means hunting through the Owners content menu.
+Traceability: P111, P109, P110. Estimate: Design 0.5 / Build 0.5 / Develop 1 / Test 0.5
+
+Acceptance criteria:
+1. A FanPress Chat top-level admin menu sits between Owners and Board, holding an Overview, Topics (the forum post type list), Boards (the taxonomy), and Held Replies (the moderation queue) — the forum no longer appears under Owners.
+2. The Overview shows live community counts (topics, replies, automated threads, threads converted to ballots), the ten latest topics with reply counts, and points staff at the member-facing shortcodes and moderation controls.
+3. The FanPress Chat name is used consistently: admin menu, post-type labels, and the member-facing forum heading.
+4. Menu items respect WordPress capabilities: overview and topics for content staff, boards for taxonomy managers, held replies for comment moderators.
+
+Test script:
+1. As an admin, confirm the FanPress Chat menu appears with Overview, Topics, Boards, and Held Replies, and that the forum is gone from the Owners menu.
+2. Create topics (one by hand, one automated, one converted to a ballot) and replies — expect the overview tiles to count each correctly and the latest-topics list to link to them.
+3. View the member forum page — expect the FanPress Chat heading.
+4. Sign in as a user without moderate_comments — expect Held Replies hidden while Overview and Topics remain.

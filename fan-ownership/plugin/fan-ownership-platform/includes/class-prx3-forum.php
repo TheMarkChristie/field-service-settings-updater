@@ -32,6 +32,7 @@ class PRX3_Forum {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_type' ) );
 		add_action( 'init', array( __CLASS__, 'seed_boards' ), 20 );
+		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_shortcode( 'prx3_forum', array( __CLASS__, 'shortcode' ) );
 
 		// Automation: club events open their own threads.
@@ -57,7 +58,7 @@ class PRX3_Forum {
 			array(
 				'public'          => true,
 				'show_ui'         => true,
-				'show_in_menu'    => 'prx3-owners',
+				'show_in_menu'    => 'prx3-fanpress',
 				'show_in_rest'    => false,
 				'menu_icon'       => 'dashicons-format-chat',
 				'has_archive'     => true,
@@ -66,8 +67,9 @@ class PRX3_Forum {
 				'map_meta_cap'    => true,
 				'supports'        => array( 'title', 'editor', 'author', 'comments' ),
 				'labels'          => array(
-					'name'          => __( 'Forum', 'fan-ownership' ),
-					'singular_name' => __( 'Forum Topic', 'fan-ownership' ),
+					'name'          => __( 'FanPress Chat', 'fan-ownership' ),
+					'singular_name' => __( 'Topic', 'fan-ownership' ),
+					'all_items'     => __( 'Topics', 'fan-ownership' ),
 				),
 			)
 		);
@@ -105,6 +107,112 @@ class PRX3_Forum {
 			}
 		}
 		update_option( 'prx3_forum_boards_seeded', 1, false );
+	}
+
+	/**
+	 * The FanPress Chat top-level menu: the community home in one place —
+	 * topics attach beneath it via show_in_menu, plus boards and the
+	 * held-replies moderation queue.
+	 */
+	public static function menu() {
+		add_menu_page(
+			__( 'FanPress Chat', 'fan-ownership' ),
+			__( 'FanPress Chat', 'fan-ownership' ),
+			'edit_posts',
+			'prx3-fanpress',
+			array( __CLASS__, 'render_home' ),
+			'dashicons-format-chat',
+			3.1
+		);
+		add_submenu_page(
+			'prx3-fanpress',
+			__( 'FanPress Chat', 'fan-ownership' ),
+			__( 'Overview', 'fan-ownership' ),
+			'edit_posts',
+			'prx3-fanpress',
+			array( __CLASS__, 'render_home' )
+		);
+		add_submenu_page(
+			'prx3-fanpress',
+			__( 'Boards', 'fan-ownership' ),
+			__( 'Boards', 'fan-ownership' ),
+			'manage_categories',
+			'edit-tags.php?taxonomy=prx3_forum_board&post_type=prx3_forum_topic'
+		);
+		add_submenu_page(
+			'prx3-fanpress',
+			__( 'Held Replies', 'fan-ownership' ),
+			__( 'Held Replies', 'fan-ownership' ),
+			'moderate_comments',
+			'edit-comments.php?comment_status=moderated'
+		);
+	}
+
+	/**
+	 * Community counts for the FanPress overview.
+	 *
+	 * @return array{topics:int,replies:int,automated:int,converted:int}
+	 */
+	public static function stats() {
+		$topics = get_posts(
+			array(
+				'post_type'   => 'prx3_forum_topic',
+				'post_status' => array( 'publish' ),
+				'numberposts' => -1,
+			)
+		);
+		$stats  = array(
+			'topics'    => count( $topics ),
+			'replies'   => 0,
+			'automated' => 0,
+			'converted' => 0,
+		);
+		foreach ( $topics as $topic ) {
+			$stats['replies'] += (int) get_comments_number( $topic->ID );
+			if ( get_post_meta( $topic->ID, '_prx3_source_key', true ) ) {
+				++$stats['automated'];
+			}
+			if ( get_post_meta( $topic->ID, '_prx3_ballot_id', true ) ) {
+				++$stats['converted'];
+			}
+		}
+		return $stats;
+	}
+
+	/**
+	 * The FanPress Chat overview screen.
+	 */
+	public static function render_home() {
+		$stats = self::stats();
+		$tiles = array(
+			__( 'Topics', 'fan-ownership' )               => (string) $stats['topics'],
+			__( 'Replies', 'fan-ownership' )              => (string) $stats['replies'],
+			__( 'Automated threads', 'fan-ownership' )    => (string) $stats['automated'],
+			__( 'Converted to ballots', 'fan-ownership' ) => (string) $stats['converted'],
+		);
+		echo '<div class="wrap"><h1>' . esc_html__( 'FanPress Chat', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html__( 'The club community in one place: forum topics and boards, the activity feed, follows, private messages, notifications, and @mentions — built into the platform, no third-party forum plugin.', 'fan-ownership' ) . '</p>';
+		echo '<div style="display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;">';
+		foreach ( $tiles as $label => $value ) {
+			echo '<div style="border:1px solid #ccd0d4;background:#fff;padding:16px 24px;min-width:140px;"><div style="font-size:28px;font-weight:600;">' . esc_html( $value ) . '</div><div>' . esc_html( $label ) . '</div></div>';
+		}
+		echo '</div>';
+		echo '<h2>' . esc_html__( 'Latest topics', 'fan-ownership' ) . '</h2><ul>';
+		$latest = get_posts(
+			array(
+				'post_type'   => 'prx3_forum_topic',
+				'post_status' => array( 'publish' ),
+				'numberposts' => 10,
+			)
+		);
+		if ( ! $latest ) {
+			echo '<li>' . esc_html__( 'No topics yet — ballots and matches will open their own threads automatically.', 'fan-ownership' ) . '</li>';
+		}
+		foreach ( $latest as $topic ) {
+			echo '<li><a href="' . esc_url( get_edit_post_link( $topic->ID ) ) . '">' . esc_html( get_the_title( $topic->ID ) ) . '</a> — ' . (int) get_comments_number( $topic->ID ) . ' ' . esc_html__( 'replies', 'fan-ownership' ) . '</li>';
+		}
+		echo '</ul>';
+		echo '<p>' . esc_html__( 'Member-facing screens: put the shortcodes prx3_forum, prx3_activity, prx3_members, prx3_messages, and prx3_notifications on owner-gated pages. Word-filter holds land in Held Replies; mutes and the forum kill switch are in Settings.', 'fan-ownership' ) . '</p></div>';
 	}
 
 	/* ---------------- Automation: threads from club events ---------------- */
@@ -395,7 +503,7 @@ class PRX3_Forum {
 			return PRX3_Access::gate_content( '' );
 		}
 		wp_enqueue_style( 'prx3' );
-		$out    = '<div class="prx3-forum"><h2>' . esc_html__( 'Owners forum', 'fan-ownership' ) . '</h2>';
+		$out    = '<div class="prx3-forum"><h2>' . esc_html__( 'FanPress Chat', 'fan-ownership' ) . '</h2>';
 		$boards = get_terms(
 			array(
 				'taxonomy'   => 'prx3_forum_board',

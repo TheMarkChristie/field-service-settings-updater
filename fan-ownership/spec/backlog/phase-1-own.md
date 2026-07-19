@@ -358,7 +358,7 @@ Test script:
 5. Revoke the connection — expect all further calls refused and the events audited.
 
 ### FO-127 Work screens that show the data
-As club staff, I want every list screen to show the data its items hold — sortable where it matters — and the admin organised into three menus (Owners, Board, Settings), so that running the club never means opening items one by one to find a number.
+As club staff, I want every list screen to show the data its items hold — sortable where it matters — and the admin organised into four menus (Owners, FanPress Chat, Board, Settings), so that running the club never means opening items one by one to find a number.
 Traceability: P103. Estimate: Design 1 / Build 1 / Develop 2 / Test 1
 
 Acceptance criteria:

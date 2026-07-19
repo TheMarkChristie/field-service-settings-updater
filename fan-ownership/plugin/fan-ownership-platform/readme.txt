@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.0.0
+Stable tag: 3.1.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -22,8 +22,10 @@ for any club and any sport:
   signatures register
 * Share-weighted secret ballots with electorate snapshots, quorum,
   ideas, questions, meetings, financial transparency, the decision
-  register, a native owners forum with automated threads and
-  thread-to-ballot conversion, plus a private board workspace
+  register, FanPress Chat (the native forum and social layer with
+  automated threads, thread-to-ballot conversion, activity feed,
+  follows, private messages, and notifications), plus a private
+  board workspace
 * Match Centre with sport presets, live streams, chat, live player-of-
   the-match and player-of-the-month voting, and replays
 * Uploadable brand pack with a printable supplier pack at /brand-pack/
@@ -46,6 +48,15 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.1.0 =
+* The community layer is now branded FanPress Chat with its own
+  top-level admin menu between Owners and Board: an Overview with
+  live counts (topics, replies, automated threads, ballot
+  conversions) and the latest topics, plus Topics, Boards, and the
+  Held Replies moderation queue. The forum has moved out of the
+  Owners menu; the member-facing forum heading now reads FanPress
+  Chat.
 
 = 3.0.0 =
 * V3 release. Native social layer with the community features members

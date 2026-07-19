@@ -248,6 +248,7 @@ so the recommended options were applied — revisit any of these on request.
 | # | Question | Decision |
 |---|----------|----------|
 | P110 | BuddyPress parity | The community layer is **built natively, not copied from BuddyPress** — line-for-line reuse was ruled out (BuddyPress is GPL, ~500k lines; this plugin is the club's own codebase) in favour of feature parity on our own rails: **activity feed** (topics, opening ballots, decisions, videos, filterable to followed members), **member directory with one-way follows**, **private messages** carried over the moderated chat transport (deterministic two-party rooms, participant-only reads, dual inboxes), **notifications** (replies, @mentions, DMs; capped at fifty, unread counts, mark-read on view), and **@mentions** by login or profile slug. Groups are the existing chapters. Everything ships as shortcodes and authenticated REST (`/activity`, `/notifications`, `/messages/{with}`). Not built by choice: xprofile custom fields and two-way friend requests |
+| P111 | FanPress Chat | The community layer is branded **FanPress Chat** and gets its **own top-level admin menu** (between Owners and Board): Overview with live community counts and latest topics, Topics, Boards, and the Held Replies moderation queue. Amends the earlier three-menu rule — the admin now has four homes: Owners, FanPress Chat, Board, Settings |
 
 ## Technical decisions — round 2 (T51–T75)
 

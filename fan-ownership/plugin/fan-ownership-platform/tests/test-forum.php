@@ -41,3 +41,14 @@ t_eq( (int) get_post_meta( $topic, '_prx3_ballot_id', true ), $draft, 'Thread re
 t_eq( PRX3_Forum::convert_to_ballot( $topic, 5 ), $draft, 'Converting twice returns the same ballot' );
 $non_topic = PRX3_Forum::convert_to_ballot( $ballot, 5 );
 t_error_code( $non_topic, 'prx3_not_topic', 'Only topics convert' );
+
+// FanPress Chat overview stats count topics, replies, and provenance.
+$before = PRX3_Forum::stats();
+$plain  = wp_insert_post( array( 'post_type' => 'prx3_forum_topic', 'post_status' => 'publish', 'post_title' => 'Away travel', 'post_content' => '' ) );
+wp_insert_comment( array( 'comment_post_ID' => $plain, 'comment_content' => 'Bus from Perth?', 'user_id' => 30 ) );
+wp_insert_comment( array( 'comment_post_ID' => $plain, 'comment_content' => 'Count me in.', 'user_id' => 30 ) );
+PRX3_Forum::auto_thread( 'ballot-stats-1', 'Discussion: Stats', '<p>Talk.</p>', 'club-business' );
+$after = PRX3_Forum::stats();
+t_eq( $after['topics'] - $before['topics'], 2, 'Stats count new topics' );
+t_eq( $after['replies'] - $before['replies'], 2, 'Stats count replies' );
+t_eq( $after['automated'] - $before['automated'], 1, 'Stats count automated threads' );

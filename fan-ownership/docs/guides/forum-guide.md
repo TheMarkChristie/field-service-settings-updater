@@ -1,4 +1,8 @@
-# Owners Forum — Club Guide
+# FanPress Chat — Club Guide
+
+The club community — forum, activity feed, follows, private messages,
+notifications, and @mentions — is branded **FanPress Chat** and has its
+own top-level admin menu.
 
 The platform's own forum (P109/FO-230) — no forum plugin needed.
 
@@ -79,3 +83,20 @@ App routes (member JWT): `GET /activity` (`?following=1`),
 
 Groups: use **chapters** — they already provide membership, pages, and
 gating, so the social layer doesn't duplicate them.
+
+## The FanPress Chat admin menu (V3.1)
+
+FanPress Chat has its own top-level menu in wp-admin, between Owners
+and Board:
+
+- **Overview** — live counts (topics, replies, automated threads,
+  threads converted to ballots) and the ten latest topics.
+- **Topics** — the forum topic list (the same table columns as every
+  other work screen: board, replies, origin, ballot).
+- **Boards** — manage the boards taxonomy.
+- **Held Replies** — the moderation queue for word-filter holds.
+
+Capabilities are respected per item: content staff see Overview and
+Topics, taxonomy managers see Boards, comment moderators see Held
+Replies. The forum kill switch, word filter, and mutes stay in
+Settings, where the rest of the platform switches live.
