@@ -106,3 +106,41 @@ $gifts = get_option( 'prx3_gift_codes', array() );
 t_eq( empty( array_filter( $gifts, fn( $g ) => empty( $g['voided'] ) ) ), true, 'Gift code voided on refund' );
 $surrenders = array_filter( PRX3_Register::$records, fn( $r ) => 'surrender' === $r['event'] );
 t_eq( count( $surrenders ), 1, 'Surrender recorded in the register' );
+
+// Commerce seam ops (P107): counts, chasing, reassign, release, drop.
+$held = PRX3_Shopify::counts();
+t_eq( $held['held'] >= 1, true, 'Held count includes the mismatched order' );
+
+// Backdate the unclaimed gift-era pending? Create a fresh unclaimed purchase and backdate it.
+$order4 = array(
+	'id'         => '9005',
+	'email'      => 'slow@example.test',
+	'line_items' => array( array( 'variant_id' => 'v1', 'quantity' => 1, 'price' => '50.00' ) ),
+);
+PRX3_Shopify::process_order( $order4 );
+$pending = get_option( 'prx3_shopify_pending', array() );
+$pending['slow@example.test'][0]['at'] = gmdate( 'Y-m-d H:i:s', time() - 11 * DAY_IN_SECONDS );
+update_option( 'prx3_shopify_pending', $pending, false );
+PRX3_Shopify::daily_ops();
+$pending = get_option( 'prx3_shopify_pending', array() );
+t_eq( $pending['slow@example.test'][0]['reminded'], array( 3, 10 ), 'Both reminders recorded for an 11-day-old purchase' );
+
+// Reassign to a signed member claims immediately.
+t_eq( PRX3_Shopify::reassign_pending( 'slow@example.test', '9005', 'new@example.test' ), true, 'Reassign moves the purchase' );
+t_eq( prx3_shares( 21 ), 2, 'Reassigned purchase claimed by the signed member' );
+
+// Release a held order after review.
+$release = PRX3_Shopify::release_pending( 'buyer@example.test', '9002' );
+t_eq( $release, true, 'Held order released after review' );
+t_eq( prx3_shares( 20 ), 1, 'Release granted through the money path' );
+t_eq( PRX3_Shopify::counts()['held'], 0, 'No held orders after release' );
+
+// Drop removes a pending entry.
+$order5 = array(
+	'id'         => '9006',
+	'email'      => 'gone@example.test',
+	'line_items' => array( array( 'variant_id' => 'v1', 'quantity' => 1, 'price' => '50.00' ) ),
+);
+PRX3_Shopify::process_order( $order5 );
+t_eq( PRX3_Shopify::drop_pending( 'gone@example.test', '9006' ), true, 'Refunded pending dropped' );
+t_eq( PRX3_Shopify::pending_for( 'gone@example.test' ), 0, 'Dropped purchase no longer pending' );

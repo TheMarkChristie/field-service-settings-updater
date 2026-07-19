@@ -216,6 +216,12 @@ class PRX3_Dashboard {
 				'review' => count( (array) get_option( 'prx3_sync_review', array() ) ),
 			),
 			'overdue'              => $overdue,
+			'commerce'             => class_exists( 'PRX3_Shopify' ) ? PRX3_Shopify::counts() : array(
+		'held'        => 0,
+		'unclaimed'   => 0,
+		'oldest_days' => 0,
+		),
+			'api_age'              => (int) prx3_setting( 'data_api_enabled', 0 ) && get_option( 'prx3_data_api_provisioned' ) ? (int) floor( ( time() - (int) get_option( 'prx3_data_api_provisioned' ) ) / DAY_IN_SECONDS ) : -1,
 			'links'                => array(
 				'owners'      => admin_url( 'users.php?role=fan_owner' ),
 				'ballots'     => admin_url( 'edit.php?post_type=prx3_ballot' ),
@@ -338,6 +344,11 @@ class PRX3_Dashboard {
 		self::tile( 'overdue', __( 'Commitments overdue', 'fan-ownership' ), (string) $d['overdue'], $d['links']['commitments'], '', $d['overdue'] ? 'serious' : 'good' );
 		self::tile( 'syncReview', __( 'CRM sync review', 'fan-ownership' ), (string) $d['sync']['review'], $d['links']['sync'], sprintf( /* translators: %d outbox. */ __( '%d awaiting delivery', 'fan-ownership' ), $d['sync']['outbox'] ), $d['sync']['review'] ? 'warning' : 'good' );
 		self::tile( 'videos', __( 'Videos in the library', 'fan-ownership' ), (string) $d['videos'], $d['links']['videos'] );
+		$commerce_open = $d['commerce']['held'] + $d['commerce']['unclaimed'];
+		self::tile( 'commerce', __( 'Commerce: held + unclaimed', 'fan-ownership' ), $d['commerce']['held'] . ' + ' . $d['commerce']['unclaimed'], admin_url( 'admin.php?page=prx3-commerce' ), $d['commerce']['oldest_days'] >= 30 ? __( 'refund review due', 'fan-ownership' ) : __( 'orders awaiting review or signature', 'fan-ownership' ), $commerce_open ? ( $d['commerce']['held'] || $d['commerce']['oldest_days'] >= 30 ? 'serious' : 'warning' ) : 'good' );
+		if ( $d['api_age'] >= 0 ) {
+			self::tile( 'apiAge', __( 'Data API connection', 'fan-ownership' ), sprintf( /* translators: %d days. */ __( 'live %d day(s)', 'fan-ownership' ), $d['api_age'] ), admin_url( 'admin.php?page=prx3-settings-api' ), __( 'revoke when the job is done', 'fan-ownership' ), $d['api_age'] > 30 ? 'warning' : '' );
+		}
 		echo '</section>';
 
 		// Accessible table view of everything on the tiles.

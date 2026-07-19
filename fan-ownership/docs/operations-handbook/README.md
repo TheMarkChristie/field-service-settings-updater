@@ -14,6 +14,8 @@ policies create.
 | `financial-controls-policy.md` | Board adoption |
 | `safeguarding-policy.md` | Board adoption + named safeguarding officer |
 | `complaints-procedure.md` | Board adoption |
+| `expulsion-procedure.md` | Solicitor review + board adoption (due process for SHA clause 5) |
+| `death-and-transmission.md` | Solicitor review (articles transmission clause) |
 | `league-and-streaming-rights.md` | League confirmations in writing |
 | `trademark-and-identity-change.md` | Trademark filings instructed |
 | `insurance-checklist.md` | Broker quotes obtained |

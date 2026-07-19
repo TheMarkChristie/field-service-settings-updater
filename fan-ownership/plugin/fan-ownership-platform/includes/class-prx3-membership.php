@@ -19,6 +19,7 @@ class PRX3_Membership {
 	 * Hook the registration and verification handlers.
 	 */
 	public static function init() {
+		add_action( 'admin_post_prx3_beneficiary', array( __CLASS__, 'handle_beneficiary' ) );
 		add_action( 'init', array( __CLASS__, 'maybe_handle_registration' ) );
 		add_action( 'init', array( __CLASS__, 'maybe_handle_verification' ) );
 	}
@@ -223,6 +224,22 @@ class PRX3_Membership {
 	private static function back_with( $args ) {
 		$url = wp_get_referer() ? wp_get_referer() : home_url();
 		wp_safe_redirect( add_query_arg( $args, remove_query_arg( array( 'prx3_error', 'prx3_registered' ), $url ) ) );
+		exit;
+	}
+
+	/**
+	 * Save the member's nominated beneficiary (P30): the person their
+	 * shares transmit to on death, alongside the estate route.
+	 */
+	public static function handle_beneficiary() {
+		if ( ! is_user_logged_in() ) {
+			wp_die( esc_html__( 'Please sign in.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_beneficiary' );
+		$value = isset( $_POST['prx3_beneficiary'] ) ? substr( sanitize_text_field( wp_unslash( $_POST['prx3_beneficiary'] ) ), 0, 300 ) : '';
+		update_user_meta( get_current_user_id(), 'prx3_beneficiary', $value );
+		PRX3_Audit::log( 'beneficiary_updated', sprintf( 'User %d updated their nominated beneficiary', get_current_user_id() ) );
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
 		exit;
 	}
 }

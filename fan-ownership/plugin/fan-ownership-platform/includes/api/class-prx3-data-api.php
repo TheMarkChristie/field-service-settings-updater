@@ -430,6 +430,7 @@ class PRX3_Data_API {
 			prx3_update_setting( 'data_api_key', wp_generate_password( 48, false, false ) );
 		}
 		prx3_update_setting( 'data_api_enabled', 1 );
+		update_option( 'prx3_data_api_provisioned', time(), false );
 		PRX3_Audit::log( 'data_api_provisioned', sprintf( 'Data API connection provisioned by user %d', get_current_user_id() ) );
 		wp_safe_redirect( admin_url( 'admin.php?page=prx3-settings-api&saved=1' ) );
 		exit;
@@ -445,6 +446,7 @@ class PRX3_Data_API {
 		check_admin_referer( 'prx3_data_api_revoke' );
 		prx3_update_setting( 'data_api_key', '' );
 		prx3_update_setting( 'data_api_enabled', 0 );
+		delete_option( 'prx3_data_api_provisioned' );
 		PRX3_Audit::log( 'data_api_revoked', sprintf( 'Data API connection revoked by user %d', get_current_user_id() ) );
 		wp_safe_redirect( admin_url( 'admin.php?page=prx3-settings-api&saved=1' ) );
 		exit;

@@ -224,6 +224,15 @@ class PRX3_Shortcodes {
 				<p><button class="prx3-button" type="submit"><?php esc_html_e( 'Save preferences', 'fan-ownership' ); ?></button></p>
 			</form>
 			<?php echo wp_kses_post( PRX3_Agreements::account_block( $user_id ) ); ?>
+			<h3><?php esc_html_e( 'My nominated beneficiary', 'fan-ownership' ); ?></h3>
+			<p><?php esc_html_e( 'On death, your shares pass to your estate or the person you nominate here (P30). Give a name and a way to reach them.', 'fan-ownership' ); ?></p>
+			<form class="prx3-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'prx3_beneficiary' ); ?>
+				<input type="hidden" name="action" value="prx3_beneficiary">
+				<p><label for="prx3_beneficiary"><?php esc_html_e( 'Beneficiary (name and contact)', 'fan-ownership' ); ?></label>
+				<input type="text" id="prx3_beneficiary" name="prx3_beneficiary" maxlength="300" value="<?php echo esc_attr( (string) get_user_meta( $user_id, 'prx3_beneficiary', true ) ); ?>"></p>
+				<p><button type="submit" class="prx3-button"><?php esc_html_e( 'Save beneficiary', 'fan-ownership' ); ?></button></p>
+			</form>
 			<h3><?php esc_html_e( 'My data', 'fan-ownership' ); ?></h3>
 			<p><?php esc_html_e( 'You can request a full export of your data from your profile, or close your account below. Closing surrenders your shares to the club with no payout, as the terms provide.', 'fan-ownership' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('<?php echo esc_js( __( 'Close your account and surrender your shares? This cannot be undone.', 'fan-ownership' ) ); ?>');">

@@ -230,6 +230,13 @@ so the recommended options were applied — revisit any of these on request.
 |---|---|---|
 | P106 | WooCommerce removed | The dormant WooCommerce path is **deleted entirely** — one cart, one code path. Removed: the Woo checkout module, the Woo-hook agreement checkbox/signature (the sign-to-claim flow covers all buyers), the Woo dispute handler (Shopify refund clawback covers it), the commerce-provider switch, and the Woo settings fields. Receipts/invoices come from Shopify (FO-109 now operational); the platform register remains the statutory ownership record |
 
+## Decisions — round 12: commerce seam operations & transmission (P107–P108)
+
+| # | Topic | Decision |
+|---|---|---|
+| P107 | Commerce seam ops | The Shopify seam is **operated, not just logged**: a Commerce Ops screen (Settings menu) lists held orders (mismatch/cap, released only by explicit audited human action) and unclaimed purchases; unclaimed buyers are chased at **3 and 10 days** and flagged for **refund review at 30 days** (refunds always issued in Shopify; the refund webhook cleans up); wrong-email purchases are **reassigned** in one action; staff alerted when webhooks go quiet 7+ days; dashboard attention tile; **monthly commerce reconciliation** seeded into the commitments calendar; **monthly register safeguard CSV** emailed automatically; Data API connections live 30+ days flagged on the dashboard |
+| P108 | Death & transmission | Members **nominate a beneficiary** on the account page (audited, in the data export, erased on erasure); a documented transmission procedure covers verification, register entries (surrender `transmission` + grant to the beneficiary under the cap and a signed agreement), and the solicitor questions on the articles' transmission clause |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

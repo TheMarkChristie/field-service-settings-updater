@@ -48,6 +48,16 @@ class PRX3_Commitments {
 	public static function all() {
 		$items = get_option( 'prx3_commitments', null );
 		if ( null !== $items ) {
+			// Upgraded installs: ensure later-added obligations exist.
+			$keys = array_column( $items, 'key' );
+			if ( ! in_array( 'commerce_reconciliation', $keys, true ) ) {
+				$items[] = array(
+					'key'       => 'commerce_reconciliation',
+					'label'     => __( 'Monthly commerce reconciliation — Shopify payouts vs share register (P106/P107)', 'fan-ownership' ),
+					'frequency' => 'monthly',
+				);
+				update_option( 'prx3_commitments', $items, false );
+			}
 			return $items;
 		}
 		$items = array(
@@ -55,6 +65,11 @@ class PRX3_Commitments {
 				'key'       => 'weekly_show',
 				'label'     => __( 'Weekly club show episode (P35)', 'fan-ownership' ),
 				'frequency' => 'weekly',
+			),
+			array(
+				'key'       => 'commerce_reconciliation',
+				'label'     => __( 'Monthly commerce reconciliation — Shopify payouts vs share register (P106/P107)', 'fan-ownership' ),
+				'frequency' => 'monthly',
 			),
 			array(
 				'key'       => 'monthly_qa',

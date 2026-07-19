@@ -287,6 +287,9 @@ class PRX3_Admin {
 		if ( 'ticketing' === $section ) {
 			echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=prx3_export_ticketing' ), 'prx3_export_ticketing' ) ) . '">' . esc_html( sprintf( /* translators: %s ticketing provider. */ __( 'Export %s discount codes (CSV)', 'fan-ownership' ), PRX3_Ticketing::provider() ) ) . '</a></p>';
 		}
+		if ( 'legal' === $section ) {
+			echo '<p class="description"><strong>' . esc_html__( 'Before bumping the agreement version:', 'fan-ownership' ) . '</strong> ' . esc_html__( 'a material adverse change to the Shareholders\' Agreement must pass a member ballot first (agreement clause 7). Bumping the version re-prompts every owner to re-sign.', 'fan-ownership' ) . '</p>';
+		}
 		if ( 'integrations' === $section ) {
 			PRX3_Data_API::connection_panel();
 		}

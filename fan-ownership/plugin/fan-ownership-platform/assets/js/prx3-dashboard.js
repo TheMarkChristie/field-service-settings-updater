@@ -190,6 +190,7 @@
 			[ 'Stalled decisions', data.stalled ],
 			[ 'Commitments overdue', data.overdue ],
 			[ 'CRM sync review / outbox', ( data.sync || {} ).review + ' / ' + ( data.sync || {} ).outbox ],
+			[ 'Commerce held / unclaimed', ( data.commerce || {} ).held + ' / ' + ( data.commerce || {} ).unclaimed ],
 			[ 'Videos', data.videos ],
 		];
 		( data.dist || [] ).forEach( function ( count, i ) {
@@ -228,6 +229,7 @@
 			overdue: data.overdue,
 			syncReview: ( data.sync || {} ).review,
 			videos: data.videos,
+			commerce: ( data.commerce || {} ).held + ' + ' + ( data.commerce || {} ).unclaimed,
 		};
 		Object.keys( map ).forEach( function ( key ) {
 			var node = root.querySelector( '[data-bind="' + key + '"]' );

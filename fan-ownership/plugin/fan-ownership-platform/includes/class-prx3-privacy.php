@@ -85,6 +85,10 @@ class PRX3_Privacy {
 					'value' => wp_json_encode( PRX3_Ballots::member_vote_history( $user->ID ) ),
 				),
 				array(
+					'name'  => __( 'Nominated beneficiary', 'fan-ownership' ),
+					'value' => (string) get_user_meta( $user->ID, 'prx3_beneficiary', true ),
+				),
+				array(
 					'name'  => __( 'Shareholders\' Agreement acceptances', 'fan-ownership' ),
 					'value' => wp_json_encode( get_user_meta( $user->ID, 'prx3_sha_acceptances', true ) ),
 				),
@@ -132,7 +136,7 @@ class PRX3_Privacy {
 		if ( $user ) {
 			// The signature image goes; the acceptance log (version/date/context)
 			// stays with the share register as the contractual legal minimum.
-			foreach ( array( 'prx3_comms_prefs', 'prx3_prefs_consent_log', 'prx3_push_tokens', 'prx3_duplicate_suspects', 'prx3_payment_fingerprint', 'prx3_milestone_counts', 'prx3_sha_signature' ) as $key ) {
+			foreach ( array( 'prx3_comms_prefs', 'prx3_prefs_consent_log', 'prx3_push_tokens', 'prx3_duplicate_suspects', 'prx3_payment_fingerprint', 'prx3_milestone_counts', 'prx3_sha_signature', 'prx3_beneficiary' ) as $key ) {
 				delete_user_meta( $user->ID, $key );
 			}
 			PRX3_Audit::log( 'privacy_erase', sprintf( 'Personal data erased for user %d (register/ballot legal minimum retained)', $user->ID ) );

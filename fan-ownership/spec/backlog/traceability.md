@@ -37,6 +37,8 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-125 Inbound matching rules | Done | `/sync/upsert` — ID → email → owner number exact matching, allow-listed enrichment fields (`prx3_sync_inbound_fields`), review queue for no-match/ambiguous/conflict with admin link-or-discard (audited), permanent linking, no outbound echo | |
 | FO-126 Guarded automation API | Done | `class-prx3-data-api.php` — key-gated data routes (schema/content-list/content/members/settings), one-click provision/revoke + connection card + JSON profile, platform-types/prx3-meta/allow-list guard rails, money-path member imports, full audit | |
 | FO-127 Data-rich work screens | Done | `class-prx3-admin-columns.php` (all 16 types audited, P103), interactive tile dashboard with configurable targets, three-menu structure with the Board menu gathering the board's tools | |
+| FO-128 Commerce seam ops | Done | `class-prx3-shopify.php` ops layer — Commerce Ops screen (held/unclaimed with release/reassign/remind/drop), 3/10-day chasing + 30-day refund-review flag, webhook-quiet alert, dashboard tile, seeded reconciliation commitment, monthly register safeguard email (`class-prx3-register.php`) | Refunds themselves are issued in Shopify by policy |
+| FO-129 Beneficiary nomination | Done | Account-page nomination (audited), privacy export/erasure wiring, `death-and-transmission.md` runbook | Solicitor to confirm articles transmission clause |
 
 ## Phase 2 — Decide
 
@@ -113,7 +115,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 43 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+Done 45 · Partial 19 · Operational 1 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

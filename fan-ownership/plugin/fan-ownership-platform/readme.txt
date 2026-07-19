@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.2.1
+Stable tag: 0.2.2
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -45,6 +45,18 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 0.2.2 =
+* Commerce operations: new Commerce Ops screen (held orders with
+  audited Release, unclaimed purchases with resend/reassign/drop),
+  automatic chasing at 3 and 10 days with a 30-day refund-review
+  flag, webhook-quiet staff alerts, a dashboard attention tile, a
+  seeded monthly commerce reconciliation commitment, and an automatic
+  monthly register safeguard email.
+* Members can nominate a beneficiary on the account page (P30), with
+  export/erasure wiring and a documented transmission procedure; new
+  expulsion procedure checklist; Legal settings warn before agreement
+  version bumps; long-lived Data API connections flagged.
 
 = 0.2.1 =
 * WooCommerce removed entirely: one cart, one code path. The Woo

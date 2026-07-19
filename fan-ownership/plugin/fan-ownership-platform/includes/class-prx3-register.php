@@ -22,6 +22,7 @@ class PRX3_Register {
 	 */
 	public static function init() {
 		add_action( 'admin_post_prx3_export_register', array( __CLASS__, 'handle_export' ) );
+		add_action( 'prx3_commitments_tick', array( __CLASS__, 'maybe_monthly_backup' ) );
 	}
 
 	/**
@@ -126,6 +127,36 @@ class PRX3_Register {
 			),
 			array( '%s', '%d', '%s', '%d', '%d', '%s', '%f', '%s' )
 		);
+	}
+
+	/**
+	 * Monthly safeguard: email the full register CSV to the site admin
+	 * on the first tick of each month, so the statutory record survives
+	 * anything that happens to the site (P107 / continuity policy).
+	 */
+	public static function maybe_monthly_backup() {
+		$month = gmdate( 'Y-m' );
+		if ( get_option( 'prx3_register_backup_last' ) === $month ) {
+			return;
+		}
+		update_option( 'prx3_register_backup_last', $month, false );
+		global $wpdb;
+		$rows = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}prx3_share_register ORDER BY id ASC", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- statutory backup reads the authoritative register directly.
+		$csv  = "Entry,Recorded at,User,Event,Shares,Holding after,Source,Consideration\n";
+		foreach ( $rows as $row ) {
+			$csv .= implode( ',', array( $row['id'], $row['recorded_at'], $row['user_id'], $row['event'], $row['shares'], $row['holding_after'], $row['source'], (string) $row['consideration'] ) ) . "\n";
+		}
+		$path = get_temp_dir() . 'prx3-register-' . $month . '.csv';
+		file_put_contents( $path, $csv ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- transient temp file for the mail attachment, removed below.
+		wp_mail(
+			get_option( 'admin_email' ),
+			sprintf( /* translators: %s month. */ __( 'Register of members — monthly safeguard copy (%s)', 'fan-ownership' ), $month ),
+			__( 'Attached is the automatic monthly export of the register of members. Store it with the continuity records (two officers should hold copies).', 'fan-ownership' ),
+			array( 'Content-Type: text/plain; charset=UTF-8' ),
+			array( $path )
+		);
+		unlink( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- removing our own temp file.
+		PRX3_Audit::log( 'register_backup', sprintf( 'Monthly register safeguard emailed (%s)', $month ) );
 	}
 
 	/**

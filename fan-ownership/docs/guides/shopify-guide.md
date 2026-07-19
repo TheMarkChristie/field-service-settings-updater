@@ -64,6 +64,26 @@ unredeemed gift codes from that order are voided, redeemed ones are
 surrendered from the redeemer, and unclaimed pending purchases are
 cancelled. Idempotent — Shopify's retries do no harm.
 
+## Operating the seam (Commerce Ops)
+
+Settings → **Commerce Ops** is the daily surface (P107):
+
+- **Webhook health** — the last webhook received; staff are emailed if
+  the store is configured but nothing has arrived for 7+ days.
+- **Held orders** (price mismatch or cap): review, then either
+  **Release** (grants through the money path) or refund in Shopify —
+  the refund webhook clears the hold automatically. Held orders are
+  never granted without a human decision.
+- **Unclaimed purchases**: chased automatically at 3 and 10 days; at
+  30 days the row is flagged **refund review due** — the working
+  policy is refund at 30 days unclaimed (solicitor to confirm the
+  terms wording). **Resend invite** and **Reassign** (the buyer used a
+  different email than their platform account) are one click.
+- The Club Dashboard carries a commerce tile (held + unclaimed) so the
+  queue is never invisible, and the **monthly commerce reconciliation**
+  (Shopify payouts vs the share register) is a seeded commitment with
+  an accountable owner.
+
 ## Troubleshooting
 
 - **Webhook rejected (401)** — the signing secret on the platform

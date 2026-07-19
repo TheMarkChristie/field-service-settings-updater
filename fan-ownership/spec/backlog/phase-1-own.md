@@ -372,3 +372,38 @@ Test script:
 2. Sort ballots by closing time, matches by kick-off, and players by number — expect date/number order, not alphabetical.
 3. As an administrator confirm exactly three platform menus, with the dashboard under Board and each Settings section saving without touching the others.
 4. As a board member confirm the Board menu shows the workspace and registers; as a content editor confirm board content is not reachable.
+
+### FO-128 Operate the commerce seam
+As club staff, I want one screen where every purchase that could not complete sits with its resolution — held orders, unclaimed purchases, wrong-email cases — plus automatic chasing and webhook health alerts, so that money never arrives without shares moving and nobody has to read a log to notice.
+Traceability: P107, P105. Estimate: Design 1 / Build 1 / Develop 2.5 / Test 1.5
+
+Acceptance criteria:
+1. A Commerce Operations screen lists every held order (with its reason) and every unclaimed purchase, with buyer email, amount, and age.
+2. Unclaimed purchases are chased automatically at 3 and 10 days, and flagged for refund review at 30 days; staff can resend the invitation at any time.
+3. A purchase made with a different email than the member's account can be reassigned to the correct member in one action, claiming immediately if they have already signed.
+4. A held order is only ever granted through an explicit Release action (audited, through the standard grant rules); refunds are issued in the store and clean up automatically via the refund webhook.
+5. Staff are alerted when the store is configured but no webhook has arrived for seven days.
+6. The dashboard shows the held + unclaimed count as an attention tile, and a monthly commerce reconciliation (store payouts vs the register) exists in the commitments calendar with an accountable owner.
+7. A monthly safeguard copy of the register of members is emailed automatically for continuity.
+
+Test script:
+1. Create a held (mismatched) order and an unclaimed purchase — expect both listed with reason and age; expect neither granted.
+2. Backdate an unclaimed purchase and run the daily tick — expect reminder records at 3 and 10 days and a refund-review flag at 30.
+3. Reassign an unclaimed purchase to a signed member's email — expect it claimed immediately with a register entry.
+4. Release a held order for a signed member — expect the grant to pass cap and register rules and the hold to clear; drop a pending after refunding — expect it removed and audited.
+5. Configure the store, receive no webhook for seven days, run the tick — expect one staff alert (not repeated daily).
+6. Confirm the dashboard commerce tile counts match the screen, the reconciliation commitment exists, and the monthly register email arrives with the CSV attached.
+
+### FO-129 Nominate who my shares pass to
+As an owner, I want to record who my shares should pass to if I die, so that the club can honour the transmission promise without my family fighting paperwork.
+Traceability: P30, P108. Estimate: Design 0.5 / Build 0.5 / Develop 1 / Test 0.5
+
+Acceptance criteria:
+1. The account page lets a member record and update a nominated beneficiary (name and contact); changes are audited.
+2. The nomination appears in the member's personal data export and is removed by erasure.
+3. A documented transmission procedure covers notification, verification, the register entries, cap handling, and the solicitor questions.
+
+Test script:
+1. Save a beneficiary on the account page, reload — expect it shown; change it — expect the update saved and audited.
+2. Run a data export — expect the nomination included; erase the account — expect it removed.
+3. Confirm the transmission procedure document exists in the operations handbook with its solicitor questions.
