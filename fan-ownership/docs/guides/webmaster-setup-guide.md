@@ -16,9 +16,9 @@ the whole front end) · **Ticketing** · **FanPress Chat** (bubble
 colours, chat word filter).
 Board-level sections (Legal, Targets, Governance) live in the Board menu.
 
-## 3. Technical setup (the Setup menu)
+## 3. Technical setup (the Fan Club Technical Setup menu)
 Everything that needs an API key or an outside account lives under the
-top-level **Setup** menu. Every field carries a plain-English note and a
+top-level **Fan Club Technical Setup** menu. Every field carries a plain-English note and a
 "Where to get this" link to the exact console page. The **Overview**
 page is a status checklist — green when an integration is configured,
 grey when it still needs keys.
@@ -54,6 +54,6 @@ Officer, Content Editor, Moderator, Board Member. Fan Owner is granted
 automatically by the money path. Staff/board need 2FA enrolment.
 
 ## 6. Verify
-Load the demo club (Setup → Data API & Claude) on a staging site: check
+Load the demo club (Fan Club Technical Setup → Data API & Claude) on a staging site: check
 the register, the live kit ballot, FanPress, profiles, then Remove demo
 data. The audit log records everything you just did.

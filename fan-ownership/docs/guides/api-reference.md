@@ -7,9 +7,9 @@ under one namespace:
 https://your-site.example/wp-json/prx3/v1/
 ```
 
-This reference is also available inside the install at **Setup →
-Developers**, generated from the same endpoint registry so the two can
-never drift.
+This reference is also available inside the install at **Fan Club
+Technical Setup → Developers**, generated from the same endpoint
+registry so the two can never drift.
 
 ## Authentication
 
@@ -17,9 +17,9 @@ never drift.
 |---|---|
 | Web front end | The WordPress session cookie plus an `X-WP-Nonce` header (the plugin localises `restUrl` and `nonce` into `prx3Config` for its own JS). |
 | Mobile app | `POST /auth/login` with username + password returns a JWT pair. Send `Authorization: Bearer <access_token>` on every call; access tokens last **1 hour**, refresh tokens **30 days** — swap at `/auth/refresh`. |
-| Data API (Claude, automation) | `X-Prx3-Data-Key: <key>` header. Keys are provisioned under **Setup → Data API & Claude**; the API must also be enabled there. |
-| Power Platform sync | `X-Prx3-Api-Key: <key>` header, configured under **Setup → Power Platform**. |
-| Shopify webhooks | `X-Shopify-Hmac-Sha256` signature verified against the webhook secret from **Setup → Commerce — Shopify**. |
+| Data API (Claude, automation) | `X-Prx3-Data-Key: <key>` header. Keys are provisioned under **Fan Club Technical Setup → Data API & Claude**; the API must also be enabled there. |
+| Power Platform sync | `X-Prx3-Api-Key: <key>` header, configured under **Fan Club Technical Setup → Power Platform**. |
+| Shopify webhooks | `X-Shopify-Hmac-Sha256` signature verified against the webhook secret from **Fan Club Technical Setup → Commerce — Shopify**. |
 
 "Owner" below means the caller must hold the `prx3_member` capability
 (granted automatically by the money path) — the same registration wall
@@ -137,7 +137,7 @@ plus the refreshed ballot payload.
 
 ## Data API (server-to-server writes)
 
-Header `X-Prx3-Data-Key`, enabled + provisioned under **Setup → Data
+Header `X-Prx3-Data-Key`, enabled + provisioned under **Fan Club Technical Setup → Data
 API & Claude**. Full walkthrough with payload formats:
 [data-api-guide.md](data-api-guide.md).
 

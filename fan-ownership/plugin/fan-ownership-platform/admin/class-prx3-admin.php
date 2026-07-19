@@ -29,8 +29,8 @@ class PRX3_Admin {
 	 */
 	public static function menu() {
 		add_menu_page(
-			__( 'Setup & Integrations', 'fan-ownership' ),
-			__( 'Setup', 'fan-ownership' ),
+			__( 'Fan Club Technical Setup', 'fan-ownership' ),
+			__( 'Fan Club Technical Setup', 'fan-ownership' ),
 			'prx3_admin',
 			'prx3-setup',
 			array( __CLASS__, 'render_setup_overview' ),
@@ -39,7 +39,7 @@ class PRX3_Admin {
 		);
 		add_submenu_page(
 			'prx3-setup',
-			__( 'Setup overview', 'fan-ownership' ),
+			__( 'Fan Club Technical Setup — overview', 'fan-ownership' ),
 			__( 'Overview', 'fan-ownership' ),
 			'prx3_admin',
 			'prx3-setup',
@@ -600,7 +600,7 @@ class PRX3_Admin {
 			array( __( 'Data API & Claude', 'fan-ownership' ), (bool) prx3_setting( 'data_api_key', '' ) && (int) prx3_setting( 'data_api_enabled', 0 ), 'prx3-setup-dataapi', __( 'Key-gated write API for trusted automation; one-click Claude connection and the demo club loader.', 'fan-ownership' ) ),
 			array( __( 'Power Platform sync', 'fan-ownership' ), (bool) prx3_setting( 'sync_api_key', '' ) && (int) prx3_setting( 'sync_enabled', 0 ), 'prx3-setup-sync', __( 'Bidirectional Dataverse sync with matching rules.', 'fan-ownership' ) ),
 		);
-		echo '<div class="wrap"><h1>' . esc_html__( 'Setup & Integrations', 'fan-ownership' ) . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__( 'Fan Club Technical Setup', 'fan-ownership' ) . '</h1>';
 		echo '<p>' . esc_html__( 'Everything technical in one place. Each page explains every field and links to where the value comes from. Green means configured; grey means not yet.', 'fan-ownership' ) . '</p>';
 		echo '<table class="widefat striped" style="max-width:900px;"><tbody>';
 		foreach ( $rows as $row ) {

@@ -1,7 +1,7 @@
 # Admin Screens — Club Guide
 
-Where everything lives in wp-admin (V3.14.0.0). Five menus: **Owners**,
-**FanPress Chat**, **Board**, **Fan App Settings**, **Setup**.
+Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
+**FanPress Chat**, **Board**, **Fan App Settings**, **Fan Club Technical Setup**.
 
 ## Owners
 - **Share Register** — the statutory list on screen: every holder with
@@ -33,7 +33,7 @@ Where everything lives in wp-admin (V3.14.0.0). Five menus: **Owners**,
   Lookup), and the **Audit Log** — latest 100 entries, filterable by
   event key (`ballot_open`, `identity_viewed`, `data_api_member`, …).
 
-## Setup
+## Fan Club Technical Setup
 Everything technical, in one place, with a note and a "Where to get
 this" link on every field:
 - **Overview** — status checklist: green dot when an integration is

@@ -45,6 +45,7 @@ before shipping.
 | 3.13.0.0 | Meeting video: in-platform Jitsi rooms on every meeting page (member + board, never matches), windowed one hour before to six after, audited joins, self-hostable domain setting |
 | 3.14.0.0 | Setup menu + 8×8 JaaS (P124): dedicated top-level Setup menu (Overview status checklist, Commerce — Shopify, Streaming, Meeting Video, Push, Data API, Sync) with a note and "Where to get this" link on every field; meeting video signs RS256 8×8 JaaS room tokens (board/governance/admin moderate, owners join as guests, no 8×8 accounts needed for joiners) with the open meet.jit.si fallback kept |
 | 3.15.0.0 | Documentation complete (P125, closes FO-314): developer guide + full API reference in docs/guides (auth models, error codes, rate limits, payload examples, webhooks, tokenised feeds) and a Setup → Developers page inside every install, generated from the plugin's own endpoint registry |
+| 3.15.0.1 | Fix: the technical admin menu is named "Fan Club Technical Setup" (was "Setup") — menu label, page headings, and guides updated |
 
 ## Phase 1 — Own
 
