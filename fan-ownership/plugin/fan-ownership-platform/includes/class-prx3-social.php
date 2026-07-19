@@ -52,6 +52,8 @@ class PRX3_Social {
 		add_filter( 'user_row_actions', array( __CLASS__, 'user_row_actions' ), 10, 2 );
 		add_action( 'show_user_profile', array( __CLASS__, 'wp_profile_panel' ) );
 		add_action( 'edit_user_profile', array( __CLASS__, 'wp_profile_panel' ) );
+		add_action( 'edit_user_profile_update', array( __CLASS__, 'wp_profile_moderate_save' ) );
+		add_action( 'personal_options_update', array( __CLASS__, 'wp_profile_moderate_save' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 	}
 
@@ -705,6 +707,100 @@ class PRX3_Social {
 			echo '<tr><th></th><td><a class="button button-primary" href="' . esc_url( $url ) . '">' . esc_html__( 'View live owner profile', 'fan-ownership' ) . '</a></td></tr>';
 		}
 		echo '</tbody></table>';
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			return;
+		}
+		// Content moderation only: what the member shows the community.
+		// Identity (name, address, ID, PEP), and contact details are the
+		// member's own — never editable here.
+		wp_nonce_field( 'prx3_profile_moderate', 'prx3_profile_moderate_nonce' );
+		echo '<h2>' . esc_html__( 'Profile moderation', 'fan-ownership' ) . '</h2>';
+		echo '<p class="description">' . esc_html__( 'For inappropriate pictures or text only. Bio, social links, and photos can be edited or removed here; the identity record (name, address, ID, PEP), and contact details belong to the member and cannot be changed. Every change is audited.', 'fan-ownership' ) . '</p>';
+		echo '<table class="form-table"><tbody>';
+		echo '<tr><th><label for="prx3_mod_bio">' . esc_html__( 'Bio', 'fan-ownership' ) . '</label></th><td><textarea id="prx3_mod_bio" name="prx3_mod_bio" class="regular-text" rows="2" maxlength="300">' . esc_textarea( (string) get_user_meta( $user->ID, 'prx3_bio', true ) ) . '</textarea></td></tr>';
+		$socials = array_filter( (array) get_user_meta( $user->ID, 'prx3_socials', true ) );
+		echo '<tr><th>' . esc_html__( 'Social links', 'fan-ownership' ) . '</th><td>' . ( $socials ? esc_html( implode( '  ', array_map( 'strval', $socials ) ) ) : esc_html__( 'None', 'fan-ownership' ) ) . ( $socials ? '<br><label><input type="checkbox" name="prx3_mod_clear_socials" value="1"> ' . esc_html__( 'Remove all social links', 'fan-ownership' ) . '</label>' : '' ) . '</td></tr>';
+		$photo = (int) get_user_meta( $user->ID, 'prx3_photo', true );
+		if ( $photo ) {
+			echo '<tr><th>' . esc_html__( 'Profile picture', 'fan-ownership' ) . '</th><td>' . wp_kses_post( wp_get_attachment_image( $photo, 'thumbnail' ) ) . '<br><label><input type="checkbox" name="prx3_mod_remove_photo" value="1"> ' . esc_html__( 'Remove the profile picture', 'fan-ownership' ) . '</label></td></tr>';
+		}
+		$gallery = array_map( 'intval', array_filter( (array) get_user_meta( $user->ID, 'prx3_gallery', true ) ) );
+		if ( $gallery ) {
+			echo '<tr><th>' . esc_html__( 'Gallery photos', 'fan-ownership' ) . '</th><td>';
+			foreach ( $gallery as $pic ) {
+				echo '<label style="display:inline-block;margin:0 12px 8px 0;text-align:center;">' . wp_kses_post( wp_get_attachment_image( $pic, 'thumbnail' ) ) . '<br><input type="checkbox" name="prx3_mod_gallery[]" value="' . (int) $pic . '"> ' . esc_html__( 'Remove', 'fan-ownership' ) . '</label>';
+			}
+			echo '</td></tr>';
+		}
+		echo '</tbody></table>';
+	}
+
+	/**
+	 * Save the moderation panel from the wp-admin user screen. Content
+	 * only — bio, socials, photos; the identity record and contact
+	 * details are untouchable by design (P127).
+	 *
+	 * @param int $user_id The profile being saved.
+	 */
+	public static function wp_profile_moderate_save( $user_id ) {
+		if ( ! isset( $_POST['prx3_profile_moderate_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['prx3_profile_moderate_nonce'] ), 'prx3_profile_moderate' ) ) {
+			return;
+		}
+		self::moderate_profile(
+			get_current_user_id(),
+			(int) $user_id,
+			array(
+				'bio'            => isset( $_POST['prx3_mod_bio'] ) ? sanitize_textarea_field( wp_unslash( $_POST['prx3_mod_bio'] ) ) : null,
+				'clear_socials'  => ! empty( $_POST['prx3_mod_clear_socials'] ),
+				'remove_photo'   => ! empty( $_POST['prx3_mod_remove_photo'] ),
+				'remove_gallery' => isset( $_POST['prx3_mod_gallery'] ) ? array_map( 'intval', (array) $_POST['prx3_mod_gallery'] ) : array(),
+			)
+		);
+	}
+
+	/**
+	 * Admin moderation of a member's community-facing profile content:
+	 * bio text, social links, profile picture, gallery photos. The
+	 * identity record (name, address, ID, PEP), display name, and
+	 * contact details are deliberately not accepted here — those stay
+	 * the member's own (P127). Every applied change is audited.
+	 *
+	 * @param int   $admin_id The acting admin.
+	 * @param int   $user_id  The member whose profile is moderated.
+	 * @param array $changes  bio (string|null), clear_socials (bool),
+	 *                        remove_photo (bool), remove_gallery (int[]).
+	 * @return array|WP_Error Applied change keys, or error for non-admins.
+	 */
+	public static function moderate_profile( $admin_id, $user_id, $changes ) {
+		if ( ! user_can( $admin_id, 'prx3_admin' ) ) {
+			return new WP_Error( 'prx3_admin_only', __( 'Only Owner-Admins can moderate profiles.', 'fan-ownership' ) );
+		}
+		$applied = array();
+		if ( isset( $changes['bio'] ) && null !== $changes['bio'] && (string) $changes['bio'] !== (string) get_user_meta( $user_id, 'prx3_bio', true ) ) {
+			update_user_meta( $user_id, 'prx3_bio', sanitize_textarea_field( (string) $changes['bio'] ) );
+			$applied[] = 'bio';
+		}
+		if ( ! empty( $changes['clear_socials'] ) && array_filter( (array) get_user_meta( $user_id, 'prx3_socials', true ) ) ) {
+			update_user_meta( $user_id, 'prx3_socials', array() );
+			$applied[] = 'socials';
+		}
+		if ( ! empty( $changes['remove_photo'] ) && (int) get_user_meta( $user_id, 'prx3_photo', true ) ) {
+			update_user_meta( $user_id, 'prx3_photo', 0 );
+			$applied[] = 'photo';
+		}
+		$remove = array_map( 'intval', (array) ( $changes['remove_gallery'] ?? array() ) );
+		if ( $remove ) {
+			$gallery = array_map( 'intval', array_filter( (array) get_user_meta( $user_id, 'prx3_gallery', true ) ) );
+			$kept    = array_values( array_diff( $gallery, $remove ) );
+			if ( count( $kept ) !== count( $gallery ) ) {
+				update_user_meta( $user_id, 'prx3_gallery', $kept );
+				$applied[] = 'gallery';
+			}
+		}
+		if ( $applied ) {
+			PRX3_Audit::log( 'profile_moderated', sprintf( 'Admin %1$d moderated the profile of member %2$d (%3$s)', $admin_id, $user_id, implode( ', ', $applied ) ) );
+		}
+		return $applied;
 	}
 
 	/* ---------------- Cheers (activity likes) ---------------- */

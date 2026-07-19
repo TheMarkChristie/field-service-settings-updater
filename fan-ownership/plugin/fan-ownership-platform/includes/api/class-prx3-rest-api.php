@@ -349,26 +349,31 @@ class PRX3_REST_API {
 				array(
 					'methods'             => 'GET',
 					'permission_callback' => array( __CLASS__, 'owner_permission' ),
-					'callback'            => function () {
-						return array_map(
-							function ( $q ) {
-								return array(
-									'id'      => $q->ID,
-									'title'   => $q->post_title,
-									'answer'  => get_post_meta( $q->ID, '_prx3_answer', true ),
-									'video'   => get_post_meta( $q->ID, '_prx3_video_answer', true ),
-									'upvotes' => count( (array) get_post_meta( $q->ID, '_prx3_upvotes', true ) ),
-								);
-							},
-							get_posts(
-								array(
-									'post_type'      => 'prx3_question',
-									'post_status'    => 'publish',
-									'posts_per_page' => 50,
-									'no_found_rows'  => true,
-								)
+					'callback'            => function ( WP_REST_Request $request ) {
+						$filter = sanitize_key( (string) $request['category'] );
+						$out    = array();
+						foreach ( get_posts(
+							array(
+								'post_type'      => 'prx3_question',
+								'post_status'    => 'publish',
+								'posts_per_page' => 100,
+								'no_found_rows'  => true,
 							)
-						);
+						) as $q ) {
+							$category = PRX3_Questions::category( $q->ID );
+							if ( $filter && $category !== $filter ) {
+								continue;
+							}
+							$out[] = array(
+								'id'       => $q->ID,
+								'title'    => $q->post_title,
+								'category' => $category,
+								'answer'   => get_post_meta( $q->ID, '_prx3_answer', true ),
+								'video'    => get_post_meta( $q->ID, '_prx3_video_answer', true ),
+								'upvotes'  => count( (array) get_post_meta( $q->ID, '_prx3_upvotes', true ) ),
+							);
+						}
+						return $out;
 					},
 				),
 				array(
@@ -379,7 +384,7 @@ class PRX3_REST_API {
 						if ( is_wp_error( $limited ) ) {
 							return $limited;
 						}
-						$id = PRX3_Questions::submit( get_current_user_id(), (string) $request['title'], (string) $request['body'] );
+						$id = PRX3_Questions::submit( get_current_user_id(), (string) $request['title'], (string) $request['body'], sanitize_key( (string) $request['category'] ) );
 						return is_wp_error( $id ) ? $id : array(
 							'id'     => $id,
 							'status' => 'pending-moderation',

@@ -72,7 +72,8 @@
 		var kind = form.getAttribute( 'data-prx3-submit' );
 		var payload = {
 			title: ( form.querySelector( '[name="title"]' ) || {} ).value || '',
-			body: ( form.querySelector( '[name="body"]' ) || {} ).value || ''
+			body: ( form.querySelector( '[name="body"]' ) || {} ).value || '',
+			category: ( form.querySelector( '[name="category"]' ) || {} ).value || ''
 		};
 		feedback( form, prx3Config.i18n.working, false );
 		api( kind, 'POST', payload )

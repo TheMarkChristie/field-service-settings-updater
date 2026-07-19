@@ -46,6 +46,7 @@ before shipping.
 | 3.14.0.0 | Setup menu + 8×8 JaaS (P124): dedicated top-level Setup menu (Overview status checklist, Commerce — Shopify, Streaming, Meeting Video, Push, Data API, Sync) with a note and "Where to get this" link on every field; meeting video signs RS256 8×8 JaaS room tokens (board/governance/admin moderate, owners join as guests, no 8×8 accounts needed for joiners) with the open meet.jit.si fallback kept |
 | 3.15.0.0 | Documentation complete (P125, closes FO-314): developer guide + full API reference in docs/guides (auth models, error codes, rate limits, payload examples, webhooks, tokenised feeds) and a Setup → Developers page inside every install, generated from the plugin's own endpoint registry |
 | 3.15.0.1 | Fix: the technical admin menu is named "Fan Club Technical Setup" (was "Setup") — menu label, page headings, and guides updated |
+| 3.15.1.0 | Question categories (P126): Board / Manager — pre-match / Manager — weekly / Captain on submit, lists, API, and the Live Q&A presenter. Profile content moderation (P127): admins can fix inappropriate bio/socials/photos from the WP user screen; identity, name, and contact details stay untouchable; all audited |
 
 ## Phase 1 — Own
 
@@ -96,7 +97,7 @@ before shipping.
 | FO-209 Voting record | Done | 0.1.0; 3.10.0.0 | Closed ballots with results via API + archive pages; aggregates only + [prx3_voting_record] searchable archive of finished ballots + installer page | |
 | FO-210 Ideas pipeline | Done | 0.1.0 | Pending → moderation → support → 5% auto-draft ballot + staff/supporter notifications, milestone event | Declining to schedule the drafted ballot records a reason on the idea, not a separate published statement |
 | FO-211 Idea lifecycle | Done | 0.1.0 | Six statuses, history, notifications, decline reason required | |
-| FO-212 Questions | Done | 0.1.0 | Submission, upvotes, monthly video selection + link, written answers, SLA flagging | |
+| FO-212 Questions | Done | 0.1.0; categories 3.15.1.0 | Submission, upvotes, monthly video selection + link, written answers, SLA flagging. Categories (P126): every question is put to Board, Manager — pre-match, Manager — weekly, or Captain (filterable list); owners pick on submit, staff can re-file, lists/app/API and the Live Q&A presenter filter by category | |
 | FO-213 Meetings & RSVP | Done | 0.1.0 | RSVP toggle, per-member tokenised ICS feed (meetings + ballot closes), reminders | App shows site-timezone datetimes; device-local conversion at app build-out |
 | FO-214 Live participation | Done | 0.1.0; 3.10.0.0 | Gated stream embed + meeting chat room via the shared chat service; questions module handles upvoting + Board → Live Q&A presenter: open questions ranked by upvotes, 20s auto-refresh | |
 | FO-215 Meeting record | Done | 0.1.0 | Recording + action minutes fields, permanent archive, audited recording publication | 24h is an operational commitment; platform flags nothing yet |

@@ -708,6 +708,7 @@ class PRX3_Moderation {
 	public static function is_muted( $user_id ) {
 		return ! empty( $GLOBALS['prx3_t']['user_meta'][ $user_id ]['prx3_muted'] );
 	}
+	public static function enqueue( $post_id, $kind ) {}
 }
 class PRX3_Access {
 	public static function gate_content( $content ) {
@@ -746,6 +747,7 @@ require $prx3_base . '/includes/class-prx3-sync.php';
 require $prx3_base . '/includes/class-prx3-gifts.php';
 require $prx3_base . '/includes/class-prx3-shopify.php';
 require $prx3_base . '/includes/class-prx3-meetings.php';
+require $prx3_base . '/includes/class-prx3-questions.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
 require $prx3_base . '/includes/class-prx3-social.php';

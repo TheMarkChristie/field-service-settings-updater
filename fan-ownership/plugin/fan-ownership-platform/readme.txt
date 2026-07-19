@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.0.1
+Stable tag: 3.15.1.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,18 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.1.0 =
+* Question categories: every question is put to someone - Board,
+  Manager (pre-match), Manager (weekly), or Captain. Owners pick on
+  submit (web and app), staff can re-file in the answer box, the
+  questions page filters by chips, and the Live Q&A presenter
+  filters to the person on stage.
+* Profile moderation: Owner-Admins can fix inappropriate profile
+  content from the WP user screen - edit or clear the bio, remove
+  social links, the profile picture, or individual gallery photos.
+  The identity record (name, address, ID, PEP) and contact details
+  are never editable by admins; every change is audited.
 
 = 3.15.0.1 =
 * Fix: the technical admin menu is named "Fan Club Technical Setup"

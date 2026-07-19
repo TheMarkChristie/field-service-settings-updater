@@ -20,7 +20,9 @@ Welcome — you own this club. Your places:
 - **Match Centre** — live streams, chat, minute-by-minute, replays,
   and the live player-of-the-match vote.
 - **Ideas & Questions** — propose anything; 5% owner support sends an
-  idea to a full ballot. Ask the club questions; upvote others'.
+  idea to a full ballot. Ask the club questions — pick who each one
+  is for (Board, Manager pre-match, Manager weekly, Captain) — and
+  upvote others'.
 - **The Owners / Chapters / Bring a Fellow Fan** — the directory,
   local chapters (watch parties!), and your referral link.
 

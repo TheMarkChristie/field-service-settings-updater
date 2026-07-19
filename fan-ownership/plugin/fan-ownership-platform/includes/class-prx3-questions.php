@@ -27,15 +27,46 @@ class PRX3_Questions {
 	}
 
 	/**
+	 * Who a question can be put to. Filterable so a club can add its
+	 * own audiences (e.g. a youth coach) without code changes.
+	 *
+	 * @return array<string,string> key => label.
+	 */
+	public static function categories() {
+		return apply_filters(
+			'prx3_question_categories',
+			array(
+				'board'            => __( 'Board', 'fan-ownership' ),
+				'manager-prematch' => __( 'Manager — pre-match', 'fan-ownership' ),
+				'manager-weekly'   => __( 'Manager — weekly', 'fan-ownership' ),
+				'captain'          => __( 'Captain', 'fan-ownership' ),
+			)
+		);
+	}
+
+	/**
+	 * A question's category key, defaulting to the board for anything
+	 * unset or no longer in the list.
+	 *
+	 * @param int $question_id Question post ID.
+	 * @return string Category key.
+	 */
+	public static function category( $question_id ) {
+		$key = (string) get_post_meta( $question_id, '_prx3_category', true );
+		return isset( self::categories()[ $key ] ) ? $key : 'board';
+	}
+
+	/**
 	 * Submit a question (REST + shortcode both call this). Pending until
 	 * staff moderation.
 	 *
-	 * @param int    $user_id Asking owner.
-	 * @param string $title   The question.
-	 * @param string $detail  Optional detail.
+	 * @param int    $user_id  Asking owner.
+	 * @param string $title    The question.
+	 * @param string $detail   Optional detail.
+	 * @param string $category Who it's for (categories() key; default board).
 	 * @return int|WP_Error Post ID.
 	 */
-	public static function submit( $user_id, $title, $detail ) {
+	public static function submit( $user_id, $title, $detail, $category = 'board' ) {
 		if ( ! prx3_feature_on( 'questions' ) ) {
 			return new WP_Error( 'prx3_off', __( 'Question submission is temporarily unavailable.', 'fan-ownership' ) );
 		}
@@ -59,6 +90,7 @@ class PRX3_Questions {
 			return $post_id;
 		}
 		update_post_meta( $post_id, '_prx3_upvotes', array( $user_id ) );
+		update_post_meta( $post_id, '_prx3_category', isset( self::categories()[ $category ] ) ? $category : 'board' );
 		update_post_meta( $post_id, '_prx3_accepted_at', '' );
 		PRX3_Moderation::enqueue( $post_id, 'question' );
 		prx3_touch_activity( $user_id );
@@ -108,7 +140,11 @@ class PRX3_Questions {
 		$answer   = isset( $_POST['prx3_answer'] ) ? sanitize_textarea_field( wp_unslash( $_POST['prx3_answer'] ) ) : '';
 		$video    = isset( $_POST['prx3_video_answer'] ) ? esc_url_raw( wp_unslash( $_POST['prx3_video_answer'] ) ) : '';
 		$selected = isset( $_POST['prx3_selected_for_video'] ) ? '1' : '';
-		$had      = get_post_meta( $post_id, '_prx3_answer', true );
+		$category = isset( $_POST['prx3_q_category'] ) ? sanitize_key( wp_unslash( $_POST['prx3_q_category'] ) ) : '';
+		if ( isset( self::categories()[ $category ] ) ) {
+			update_post_meta( $post_id, '_prx3_category', $category );
+		}
+		$had = get_post_meta( $post_id, '_prx3_answer', true );
 		update_post_meta( $post_id, '_prx3_answer', $answer );
 		update_post_meta( $post_id, '_prx3_video_answer', $video );
 		update_post_meta( $post_id, '_prx3_selected_for_video', $selected );
@@ -175,6 +211,11 @@ class PRX3_Questions {
 			__( "The Club's Answer", 'fan-ownership' ),
 			function ( $post ) {
 				wp_nonce_field( 'prx3_question_meta', 'prx3_question_nonce' );
+				echo '<p><label>' . esc_html__( 'Who is this question for?', 'fan-ownership' ) . '</label> <select name="prx3_q_category">';
+				foreach ( self::categories() as $key => $label ) {
+					echo '<option value="' . esc_attr( $key ) . '" ' . selected( self::category( $post->ID ), $key, false ) . '>' . esc_html( $label ) . '</option>';
+				}
+				echo '</select></p>';
 				echo '<p><label>' . esc_html__( 'Written answer', 'fan-ownership' ) . '</label>';
 				echo '<textarea class="widefat" rows="5" name="prx3_answer">' . esc_textarea( get_post_meta( $post->ID, '_prx3_answer', true ) ) . '</textarea></p>';
 				echo '<p><label><input type="checkbox" name="prx3_selected_for_video" ' . checked( get_post_meta( $post->ID, '_prx3_selected_for_video', true ), '1', false ) . '> ' . esc_html__( 'Selected for the monthly Q&A video', 'fan-ownership' ) . '</label></p>';

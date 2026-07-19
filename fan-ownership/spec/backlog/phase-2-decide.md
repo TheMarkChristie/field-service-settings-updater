@@ -137,6 +137,7 @@ Acceptance criteria:
 3. Declined ideas show a reason.
 
 ### FO-212 Question the club
+*(Extended 3.15.1.0 (P126): every question carries a category — Board, Manager — pre-match, Manager — weekly, Captain (filter `prx3_question_categories` to add more). Owners pick who the question is for on submit, staff can re-file in the answer box, the questions page and app API filter by category, and the Live Q&A presenter filters to the person on stage.)*
 As an owner, I want to submit questions and upvote others', with the most-supported answered on video monthly and the rest in writing, so that the club answers to its owners.
 Traceability: P17. Estimate: Design 1 / Build 1 / Develop 2 / Test 1
 

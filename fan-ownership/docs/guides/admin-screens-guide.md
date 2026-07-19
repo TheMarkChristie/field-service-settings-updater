@@ -57,5 +57,10 @@ this" link on every field:
 - Identity records: only full birth name and nationality ever appear
   member-facing. Residence, DOB, government ID, and the PEP flag are
   member + admin/board only; the ID is never shown in full on screen.
+- Profile moderation (Users → edit user): Owner-Admins can fix
+  inappropriate profile content — edit/clear the bio, remove social
+  links, the profile picture, or individual gallery photos. The
+  identity record (name, address, ID, PEP) and contact details are
+  never editable there; every moderation change is audited.
 - Every identity view, identity edit, merge, pin, demo load/remove,
   and money/vote event lands in the Audit Log permanently.

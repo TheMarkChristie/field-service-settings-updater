@@ -106,7 +106,7 @@ plus the refreshed ballot payload.
 |---|---|---|
 | `/ideas` | GET, POST | List with support counts and threshold; submit `{title, body}` (rate-limited, enters moderation). |
 | `/ideas/{id}/support` | POST | Toggle support; at threshold the idea goes to the board. |
-| `/questions` | GET, POST | List and submit questions. |
+| `/questions` | GET, POST | List (`?category=` filters) and submit questions; `category` is one of `board`, `manager-prematch`, `manager-weekly`, `captain` (default `board`). |
 | `/questions/{id}/upvote` | POST | Ranks the live Q&A. |
 | `/meetings` | GET | Upcoming meetings with start and RSVP state. |
 | `/meetings/{id}/rsvp` | POST | Toggle attendance (feeds badges). |

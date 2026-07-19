@@ -632,7 +632,7 @@ class PRX3_Admin {
 				array( '/ballots/{id}/vote', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Cast a weighted secret vote on an open ballot.', 'fan-ownership' ) ),
 				array( '/ideas', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'List ideas with support counts; submit a new idea (rate-limited, moderated).', 'fan-ownership' ) ),
 				array( '/ideas/{id}/support', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Toggle support; at threshold the idea goes to the board.', 'fan-ownership' ) ),
-				array( '/questions', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'List and submit questions to the club.', 'fan-ownership' ) ),
+				array( '/questions', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'List and submit questions to the club; each carries a category (board, manager-prematch, manager-weekly, captain) and ?category= filters.', 'fan-ownership' ) ),
 				array( '/questions/{id}/upvote', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Upvote a question for the live Q&A ranking.', 'fan-ownership' ) ),
 				array( '/meetings', 'GET', __( 'Owner', 'fan-ownership' ), __( 'Upcoming meetings with start times and RSVP state.', 'fan-ownership' ) ),
 				array( '/meetings/{id}/rsvp', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Toggle attendance (feeds milestone badges).', 'fan-ownership' ) ),

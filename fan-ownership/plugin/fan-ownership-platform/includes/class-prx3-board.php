@@ -426,7 +426,16 @@ class PRX3_Board {
 		}
 		echo '<meta http-equiv="refresh" content="20">';
 		echo '<div class="wrap"><h1>' . esc_html__( 'Live Q&A — ranked by owner upvotes', 'fan-ownership' ) . '</h1>';
-		echo '<p>' . esc_html__( 'Refreshes every 20 seconds. Answered questions drop off when marked answered on the Questions screen.', 'fan-ownership' ) . '</p>';
+		echo '<p>' . esc_html__( 'Refreshes every 20 seconds. Answered questions drop off when marked answered on the Questions screen. Filter to the person on stage.', 'fan-ownership' ) . '</p>';
+		$categories = PRX3_Questions::categories();
+		$active     = isset( $_GET['qcat'] ) ? sanitize_key( wp_unslash( $_GET['qcat'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only presenter filter.
+		$active     = isset( $categories[ $active ] ) ? $active : '';
+		echo '<p>';
+		echo '<a class="button' . ( '' === $active ? ' button-primary' : '' ) . '" href="' . esc_url( remove_query_arg( 'qcat' ) ) . '">' . esc_html__( 'All', 'fan-ownership' ) . '</a> ';
+		foreach ( $categories as $key => $label ) {
+			echo '<a class="button' . ( $key === $active ? ' button-primary' : '' ) . '" href="' . esc_url( add_query_arg( 'qcat', $key ) ) . '">' . esc_html( $label ) . '</a> ';
+		}
+		echo '</p>';
 		$ranked = array();
 		foreach ( get_posts(
 			array(
@@ -438,6 +447,9 @@ class PRX3_Board {
 			if ( get_post_meta( $question->ID, '_prx3_answered', true ) ) {
 				continue;
 			}
+			if ( $active && PRX3_Questions::category( $question->ID ) !== $active ) {
+				continue;
+			}
 			$ranked[] = array( $question, count( array_filter( (array) get_post_meta( $question->ID, '_prx3_upvotes', true ) ) ) );
 		}
 		usort( $ranked, fn( $x, $y ) => $y[1] <=> $x[1] );
@@ -446,7 +458,7 @@ class PRX3_Board {
 		}
 		echo '<ol style="font-size:1.35em;max-width:820px;">';
 		foreach ( $ranked as $row ) {
-			echo '<li style="margin-bottom:14px;"><strong>' . esc_html( $row[0]->post_title ) . '</strong> <span style="color:#666;">(' . (int) $row[1] . ' ' . esc_html__( 'upvotes', 'fan-ownership' ) . ')</span> <a href="' . esc_url( get_edit_post_link( $row[0]->ID ) ) . '">' . esc_html__( 'open', 'fan-ownership' ) . '</a></li>';
+			echo '<li style="margin-bottom:14px;"><strong>' . esc_html( $row[0]->post_title ) . '</strong> <span style="color:#666;">[' . esc_html( $categories[ PRX3_Questions::category( $row[0]->ID ) ] ) . '] (' . (int) $row[1] . ' ' . esc_html__( 'upvotes', 'fan-ownership' ) . ')</span> <a href="' . esc_url( get_edit_post_link( $row[0]->ID ) ) . '">' . esc_html__( 'open', 'fan-ownership' ) . '</a></li>';
 		}
 		echo '</ol></div>';
 	}

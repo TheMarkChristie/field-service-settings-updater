@@ -10,7 +10,8 @@ Everything you can do lives in the **Board** menu.
   commerce health.
 - **Decision Register** — every decision, tracked to delivery. Yours
   to keep current; stalled items are flagged.
-- **Live Q&A** — the presenter view for meetings: owner questions
+- **Live Q&A** — the presenter view for meetings: owner questions,
+  filterable to the person on stage (Board, Manager, Captain);
   ranked by upvotes, refreshing automatically.
 - **Annual Report** — draft the year's report straight into the vault.
 - **Identity Lookup** — a member's full identity record (birth name,

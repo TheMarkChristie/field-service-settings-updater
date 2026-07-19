@@ -425,21 +425,40 @@ class PRX3_Shortcodes {
 		if ( ! prx3_is_owner() ) {
 			return self::gate();
 		}
+		$categories = PRX3_Questions::categories();
+		$active     = isset( $_GET['prx3_qcat'] ) ? sanitize_key( wp_unslash( $_GET['prx3_qcat'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only list filter.
+		$active     = isset( $categories[ $active ] ) ? $active : '';
 		ob_start();
 		echo '<div data-prx3-app="questions"><h2>' . esc_html__( 'Ask the club', 'fan-ownership' ) . '</h2>';
 		echo '<form class="prx3-form" data-prx3-submit="questions"><p><label for="prx3-q-title">' . esc_html__( 'Your question', 'fan-ownership' ) . '</label><input id="prx3-q-title" type="text" name="title" required maxlength="200"></p>';
+		echo '<p><label for="prx3-q-category">' . esc_html__( 'Who is it for?', 'fan-ownership' ) . '</label><select id="prx3-q-category" name="category">';
+		foreach ( $categories as $key => $label ) {
+			echo '<option value="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</option>';
+		}
+		echo '</select></p>';
 		echo '<p><button class="prx3-button" type="submit">' . esc_html__( 'Submit question', 'fan-ownership' ) . '</button></p><p class="prx3-feedback" role="status" aria-live="polite"></p></form>';
+		echo '<nav class="prx3-chips" aria-label="' . esc_attr__( 'Filter questions by who they are for', 'fan-ownership' ) . '">';
+		echo '<a class="prx3-chip' . ( '' === $active ? ' prx3-chip--active' : '' ) . '" href="' . esc_url( remove_query_arg( 'prx3_qcat' ) ) . '">' . esc_html__( 'All', 'fan-ownership' ) . '</a>';
+		foreach ( $categories as $key => $label ) {
+			echo '<a class="prx3-chip' . ( $key === $active ? ' prx3-chip--active' : '' ) . '" href="' . esc_url( add_query_arg( 'prx3_qcat', $key ) ) . '">' . esc_html( $label ) . '</a>';
+		}
+		echo '</nav>';
+		$shown = 0;
 		foreach ( get_posts(
 			array(
 				'post_type'      => 'prx3_question',
 				'post_status'    => 'publish',
-				'posts_per_page' => 30,
+				'posts_per_page' => 100,
 				'no_found_rows'  => true,
 			)
 		) as $q ) {
+			if ( ( $active && PRX3_Questions::category( $q->ID ) !== $active ) || $shown >= 30 ) {
+				continue;
+			}
+			++$shown;
 			$answer = get_post_meta( $q->ID, '_prx3_answer', true );
 			$video  = get_post_meta( $q->ID, '_prx3_video_answer', true );
-			echo '<article class="prx3-card"><h3>' . esc_html( $q->post_title ) . '</h3>';
+			echo '<article class="prx3-card"><h3>' . esc_html( $q->post_title ) . ' <span class="prx3-badge">' . esc_html( $categories[ PRX3_Questions::category( $q->ID ) ] ) . '</span></h3>';
 			echo '<p><button class="prx3-button prx3-button--secondary" data-prx3-upvote="' . (int) $q->ID . '">' . esc_html( sprintf( /* translators: %d upvotes. */ __( 'Upvote (%d)', 'fan-ownership' ), count( (array) get_post_meta( $q->ID, '_prx3_upvotes', true ) ) ) ) . '</button></p>';
 			if ( $answer ) {
 				echo '<p><strong>' . esc_html__( 'Answer:', 'fan-ownership' ) . '</strong> ' . esc_html( $answer ) . '</p>';
