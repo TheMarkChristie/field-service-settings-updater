@@ -28,8 +28,8 @@ class PRX3_Admin {
 	 */
 	public static function menu() {
 		add_menu_page(
-			__( 'Fan Ownership Settings', 'fan-ownership' ),
-			__( 'Settings', 'fan-ownership' ),
+			__( 'Fan App Settings', 'fan-ownership' ),
+			__( 'Fan App Settings', 'fan-ownership' ),
 			'prx3_admin',
 			'prx3-settings',
 			array( __CLASS__, 'render' ),

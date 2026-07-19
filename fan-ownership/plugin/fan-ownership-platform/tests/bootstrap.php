@@ -373,6 +373,23 @@ function wp_insert_post( $args, $wp_error = false ) {
 	$GLOBALS['prx3_t_posts'][ $id ] = $args;
 	return $id;
 }
+function wp_delete_post( $post_id, $force = false ) {
+	unset( $GLOBALS['prx3_t_posts'][ (int) $post_id ], $GLOBALS['prx3_t']['post_meta'][ (int) $post_id ] );
+	return true;
+}
+function wp_delete_user( $user_id ) {
+	unset( $GLOBALS['prx3_t']['users'][ (int) $user_id ], $GLOBALS['prx3_t']['user_meta'][ (int) $user_id ] );
+	return true;
+}
+function delete_transient( $key ) {
+	return delete_option( $key );
+}
+function set_transient( $key, $value, $ttl = 0 ) {
+	return update_option( $key, $value );
+}
+function get_transient( $key ) {
+	return get_option( $key );
+}
 function wp_update_post( $args, $wp_error = false ) {
 	$id = (int) ( $args['ID'] ?? 0 );
 	if ( ! isset( $GLOBALS['prx3_t_posts'][ $id ] ) ) {

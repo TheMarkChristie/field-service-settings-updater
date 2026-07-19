@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.5.0
+Stable tag: 3.6.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,17 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.6.0 =
+* Demo club lifecycle: loading is now idempotent - re-running skips
+  content that already exists and tops member holdings up to the pack
+  amounts instead of granting again, so double clicks or earlier
+  partial runs can never duplicate data or hit the share cap. New
+  "Remove demo data" button deletes exactly the demo footprint (pack
+  posts, their auto-created match/ballot chats, the twenty demo
+  members, and their register rows) with confirmation; load after
+  remove rebuilds the full club. The result notice now reports skips.
+* The Settings top-level admin menu is renamed "Fan App Settings".
 
 = 3.5.0 =
 * One-click demo club: the sample data pack now ships inside the

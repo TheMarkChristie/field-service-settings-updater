@@ -94,8 +94,15 @@ the pack is proven against the real API handlers by
 
 ### No terminal? One click.
 
-The same pack ships inside the plugin: **Settings → API & Integrations
-→ Demo club (sample data) → Load demo club**. Owner-Admins only,
-nonce-protected, runs through the identical API code paths, and shows
-a result notice with counts. Re-running warns you first — it
-duplicates content and re-grants shares.
+The same pack ships inside the plugin: **Fan App Settings → API &
+Integrations → Demo club (sample data) → Load demo club**.
+Owner-Admins only, nonce-protected, runs through the identical API
+code paths, and shows a result notice with counts.
+
+Loading is **safe to repeat**: content that already exists is skipped
+and member holdings top up to the pack amounts instead of doubling —
+so a second click (or an earlier partial run) fills the gaps rather
+than duplicating. **Remove demo data** (confirmation required)
+deletes exactly the demo footprint — the pack posts, their
+auto-created match/ballot chats, the twenty demo members, and their
+register rows — and load-after-remove rebuilds the club fresh.

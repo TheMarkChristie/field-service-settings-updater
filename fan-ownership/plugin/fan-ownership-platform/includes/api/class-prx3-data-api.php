@@ -33,6 +33,7 @@ class PRX3_Data_API {
 		add_action( 'admin_post_prx3_data_api_revoke', array( __CLASS__, 'handle_revoke' ) );
 		add_action( 'admin_post_prx3_data_api_profile', array( __CLASS__, 'handle_profile' ) );
 		add_action( 'admin_post_prx3_data_api_seed', array( __CLASS__, 'handle_seed_sample' ) );
+		add_action( 'admin_post_prx3_data_api_unseed', array( __CLASS__, 'handle_remove_sample' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'seed_notice' ) );
 	}
 
@@ -269,10 +270,11 @@ class PRX3_Data_API {
 	/**
 	 * Create (or find by email) one member and optionally grant shares.
 	 *
-	 * @param array $item Member payload.
+	 * @param array $item   Member payload.
+	 * @param bool  $top_up Loader mode: grant only the shortfall to the target holding.
 	 * @return array Result row.
 	 */
-	private static function upsert_member( $item ) {
+	private static function upsert_member( $item, $top_up = false ) {
 		$email = isset( $item['email'] ) ? sanitize_email( $item['email'] ) : '';
 		if ( ! $email ) {
 			return array(
@@ -309,6 +311,11 @@ class PRX3_Data_API {
 
 		$granted = 0;
 		$shares  = isset( $item['shares'] ) ? (int) $item['shares'] : 0;
+		if ( $top_up ) {
+			// Loader mode: converge on the target holding instead of
+			// granting again — safe to re-run.
+			$shares = max( 0, $shares - (int) prx3_shares( $user_id ) );
+		}
 		if ( $shares > 0 ) {
 			$source = isset( $item['source'] ) ? sanitize_key( $item['source'] ) : 'api_import';
 			$result = PRX3_Shares::grant_shares( $user_id, $shares, $source, array( 'via' => 'data_api' ) );
@@ -420,14 +427,19 @@ class PRX3_Data_API {
 		echo '<h2>' . esc_html__( 'Demo club (sample data)', 'fan-ownership' ) . '</h2>';
 		$loaded = (int) get_option( 'prx3_sample_loaded' );
 		if ( $loaded ) {
-			echo '<p>' . esc_html( sprintf( /* translators: %s date. */ __( 'Sample data was loaded on %s. Loading again will duplicate content and re-grant member shares.', 'fan-ownership' ), prx3_format_datetime( gmdate( 'Y-m-d H:i:s', $loaded ) ) ) ) . '</p>';
+			echo '<p>' . esc_html( sprintf( /* translators: %s date. */ __( 'Sample data was loaded on %s. Loading again is safe — it only fills gaps.', 'fan-ownership' ), prx3_format_datetime( gmdate( 'Y-m-d H:i:s', $loaded ) ) ) ) . '</p>';
 		} else {
 			echo '<p>' . esc_html__( 'One click loads a complete demo club through the Data API code paths: 20 owners with shares via the money path, the squad, fixtures, an open ballot, ideas, questions, the AGM, decisions, videos, documents, chapters, and FanPress chats. Match and ballot chats then appear automatically. Every write is audited.', 'fan-ownership' ) . '</p>';
 		}
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"' . ( $loaded ? ' onsubmit="return confirm(\'' . esc_js( __( 'Sample data already loaded — load again and duplicate it?', 'fan-ownership' ) ) . '\');"' : '' ) . '>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline-block;margin-right:8px;">';
 		wp_nonce_field( 'prx3_data_api_seed' );
 		echo '<input type="hidden" name="action" value="prx3_data_api_seed">';
 		echo '<p><button class="button button-primary">' . esc_html__( 'Load demo club', 'fan-ownership' ) . '</button></p></form>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline-block;" onsubmit="return confirm(\'' . esc_js( __( 'Remove all demo posts, demo members, and their register rows?', 'fan-ownership' ) ) . '\');">';
+		wp_nonce_field( 'prx3_data_api_unseed' );
+		echo '<input type="hidden" name="action" value="prx3_data_api_unseed">';
+		echo '<p><button class="button">' . esc_html__( 'Remove demo data', 'fan-ownership' ) . '</button></p></form>';
+		echo '<p class="description">' . esc_html__( 'Loading is safe to repeat: existing demo content is skipped and member holdings top up to the pack amounts instead of doubling.', 'fan-ownership' ) . '</p>';
 	}
 
 	/**
@@ -446,10 +458,11 @@ class PRX3_Data_API {
 			'members'  => 0,
 			'content'  => 0,
 			'settings' => 0,
+			'skipped'  => 0,
 			'failed'   => array(),
 		);
 		foreach ( (array) $members as $item ) {
-			$row = self::upsert_member( (array) $item );
+			$row = self::upsert_member( (array) $item, true );
 			if ( ! empty( $row['ok'] ) ) {
 				++$out['members'];
 			} else {
@@ -457,7 +470,13 @@ class PRX3_Data_API {
 			}
 		}
 		foreach ( (array) $content as $item ) {
-			$row = self::upsert_content( (array) $item );
+			if ( self::sample_post_exists( (string) ( $item['type'] ?? '' ), (string) ( $item['title'] ?? '' ) ) ) {
+				++$out['skipped'];
+				continue;
+			}
+			$item['meta']                 = (array) ( $item['meta'] ?? array() );
+			$item['meta']['_prx3_sample'] = 1;
+			$row                          = self::upsert_content( (array) $item );
 			if ( ! empty( $row['ok'] ) ) {
 				++$out['content'];
 			} else {
@@ -490,14 +509,131 @@ class PRX3_Data_API {
 			return;
 		}
 		delete_transient( 'prx3_sample_result_' . get_current_user_id() );
-		$class = $result['failed'] ? 'notice-warning' : 'notice-success';
+		$class = ! empty( $result['failed'] ) ? 'notice-warning' : 'notice-success';
 		echo '<div class="notice ' . esc_attr( $class ) . ' is-dismissible"><p>';
-		echo esc_html( sprintf( /* translators: 1 members, 2 content, 3 settings. */ __( 'Demo club loaded: %1$d members with shares, %2$d content items, %3$d settings. Match and ballot chats appear automatically in FanPress.', 'fan-ownership' ), (int) $result['members'], (int) $result['content'], (int) $result['settings'] ) );
+		if ( isset( $result['removed'] ) ) {
+			echo esc_html( sprintf( /* translators: 1 posts, 2 users. */ __( 'Demo club removed: %1$d posts and %2$d demo members (register rows included).', 'fan-ownership' ), (int) $result['removed']['posts'], (int) $result['removed']['users'] ) );
+		} else {
+			echo esc_html( sprintf( /* translators: 1 members, 2 content, 3 settings, 4 skipped. */ __( 'Demo club loaded: %1$d members with shares, %2$d content items (%4$d already present, skipped), %3$d settings. Match and ballot chats appear automatically in FanPress.', 'fan-ownership' ), (int) $result['members'], (int) $result['content'], (int) $result['settings'], (int) ( $result['skipped'] ?? 0 ) ) );
+		}
 		echo '</p>';
 		foreach ( (array) $result['failed'] as $failure ) {
 			echo '<p>' . esc_html( sprintf( /* translators: %s failure detail. */ __( 'Failed: %s', 'fan-ownership' ), $failure ) ) . '</p>';
 		}
 		echo '</div>';
+	}
+
+	/**
+	 * Does a post of this type and title already exist?
+	 *
+	 * @param string $type  Post type.
+	 * @param string $title Exact title.
+	 * @return bool
+	 */
+	private static function sample_post_exists( $type, $title ) {
+		foreach ( get_posts(
+			array(
+				'post_type'   => $type,
+				'post_status' => array( 'publish', 'draft', 'pending' ),
+				'numberposts' => -1,
+			)
+		) as $post ) {
+			if ( $post->post_title === $title ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Remove the demo club: sample posts (matched by pack type+title or
+	 * the sample marker, plus their auto-created event chats), sample
+	 * members (matched by the pack's example emails), and their share
+	 * register rows.
+	 *
+	 * @return array{posts:int,users:int} Removal counts.
+	 */
+	public static function remove_sample() {
+		$dir = PRX3_DIR . 'data/';
+		// phpcs:disable WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- bundled local files, not remote.
+		$members = json_decode( (string) file_get_contents( $dir . 'sample-members.json' ), true );
+		$content = json_decode( (string) file_get_contents( $dir . 'sample-content.json' ), true );
+		// phpcs:enable
+		$out = array(
+			'posts' => 0,
+			'users' => 0,
+		);
+
+		$titles = array();
+		foreach ( (array) $content as $item ) {
+			$titles[ (string) ( $item['type'] ?? '' ) ][] = (string) ( $item['title'] ?? '' );
+		}
+		foreach ( self::allowed_types() as $type ) {
+			foreach ( get_posts(
+				array(
+					'post_type'   => $type,
+					'post_status' => array( 'publish', 'draft', 'pending' ),
+					'numberposts' => -1,
+				)
+			) as $post ) {
+				$pack_match = isset( $titles[ $type ] ) && in_array( $post->post_title, $titles[ $type ], true );
+				$tagged     = (bool) get_post_meta( $post->ID, '_prx3_sample', true );
+				if ( ! $pack_match && ! $tagged ) {
+					continue;
+				}
+				if ( in_array( $type, array( 'prx3_match', 'prx3_ballot' ), true ) && class_exists( 'PRX3_Forum' ) ) {
+					$chat = PRX3_Forum::topic_for_source( ( 'prx3_match' === $type ? 'match-' : 'ballot-' ) . $post->ID );
+					if ( $chat ) {
+						wp_delete_post( $chat, true );
+						++$out['posts'];
+					}
+				}
+				wp_delete_post( $post->ID, true );
+				++$out['posts'];
+			}
+		}
+
+		global $wpdb;
+		foreach ( (array) $members as $item ) {
+			$user = get_user_by( 'email', sanitize_email( (string) ( $item['email'] ?? '' ) ) );
+			if ( ! $user ) {
+				continue;
+			}
+			if ( is_callable( array( $wpdb, 'delete' ) ) ) {
+				$wpdb->delete( $wpdb->prefix . 'prx3_share_register', array( 'user_id' => (int) $user->ID ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- plugin-owned register table, demo cleanup.
+			}
+			if ( ! function_exists( 'wp_delete_user' ) && defined( 'ABSPATH' ) && file_exists( ABSPATH . 'wp-admin/includes/user.php' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/user.php';
+			}
+			if ( function_exists( 'wp_delete_user' ) ) {
+				wp_delete_user( $user->ID );
+				++$out['users'];
+			}
+		}
+		delete_option( 'prx3_sample_loaded' );
+		PRX3_Audit::log( 'data_api_sample', sprintf( 'Demo club removed: %d posts, %d users', $out['posts'], $out['users'] ) );
+		return $out;
+	}
+
+	/**
+	 * Admin button: remove the demo club.
+	 */
+	public static function handle_remove_sample() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_data_api_unseed' );
+		$result = self::remove_sample();
+		set_transient(
+			'prx3_sample_result_' . get_current_user_id(),
+			array(
+				'removed' => $result,
+				'failed'  => array(),
+			),
+			60
+		);
+		wp_safe_redirect( admin_url( 'admin.php?page=prx3-settings-api&prx3_seeded=1' ) );
+		exit;
 	}
 
 	/**

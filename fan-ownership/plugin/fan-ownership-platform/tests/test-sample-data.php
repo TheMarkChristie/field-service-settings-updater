@@ -95,3 +95,25 @@ foreach ( array( 'members', 'content', 'settings' ) as $prx3_part ) {
 		'Bundled ' . $prx3_part . ' matches the integrations pack byte-for-byte'
 	);
 }
+
+// Re-running the loader converges instead of duplicating (idempotent).
+$again = PRX3_Data_API::seed_sample();
+t_eq( $again['content'], 0, 'Second load inserts no duplicate content' );
+t_eq( $again['skipped'], 32, 'Second load skips everything already present' );
+t_eq( count( $again['failed'] ), 0, 'Second load has zero failures — no cap errors' );
+$prx3_stuart = get_user_by( 'email', 'stuart.mcrae@example.test' );
+t_eq( prx3_shares( $prx3_stuart->ID ), 10, 'Top-up mode leaves the capped member at exactly ten shares' );
+t_eq( count( get_posts( array( 'post_type' => 'prx3_player', 'post_status' => array( 'publish' ) ) ) ), 8, 'Squad still has eight players after a re-run' );
+
+// Removal takes out exactly the demo data.
+$removed = PRX3_Data_API::remove_sample();
+t_ok( $removed['posts'] >= 32, 'Removal deletes the demo posts' );
+t_eq( $removed['users'], 20, 'Removal deletes the twenty demo members' );
+t_eq( count( get_posts( array( 'post_type' => 'prx3_player', 'post_status' => array( 'publish' ) ) ) ), 0, 'No demo players remain' );
+t_ok( ! get_user_by( 'email', 'aileen.munro@example.test' ), 'Demo member accounts are gone' );
+t_eq( (int) get_option( 'prx3_sample_loaded' ), 0, 'Loaded marker cleared so the panel resets' );
+
+// Load-after-remove restores the full demo club.
+$reloaded = PRX3_Data_API::seed_sample();
+t_eq( $reloaded['members'], 20, 'Reload after removal imports all members again' );
+t_eq( $reloaded['content'], 32, 'Reload after removal inserts all content again' );
