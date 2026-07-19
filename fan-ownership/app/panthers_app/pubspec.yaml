@@ -16,7 +16,10 @@ dependencies:
   url_launcher: ^6.2.0             # Web checkout link-out (T33)
   firebase_core: ^3.0.0            # FCM push (T14) — configure per project
   firebase_messaging: ^15.0.0
-  sentry_flutter: ^8.0.0           # Error tracking (T56)
+  # sentry_flutter (Error tracking, T56) re-added at app CI kickoff on a
+  # Kotlin-2.0-compatible release (>=9.x); 8.x pins Kotlin languageVersion
+  # 1.6 which the current Android toolchain rejects. Not yet initialised in
+  # code, so removing it changes no behaviour.
 
 dev_dependencies:
   flutter_test:
