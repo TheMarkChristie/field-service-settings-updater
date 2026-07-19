@@ -113,6 +113,16 @@ function prx3_brand_pack() {
 }
 
 /**
+ * The active commerce provider for share sales (P105).
+ *
+ * @return string 'shopify' (default) or 'woocommerce'.
+ */
+function prx3_commerce_provider() {
+	$provider = (string) prx3_setting( 'commerce_provider', 'shopify' );
+	return in_array( $provider, array( 'shopify', 'woocommerce' ), true ) ? $provider : 'shopify';
+}
+
+/**
  * Is a feature enabled? Kill switches per FO-103 / T74.
  *
  * @param string $feature One of: registration, checkout, voting, forum, chat, streams, meetings, ideas, questions.

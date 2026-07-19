@@ -218,6 +218,12 @@ so the recommended options were applied — revisit any of these on request.
 |---|---|---|
 | P104 | Data API | A **key-gated write API** (`prx3/v1/data/*`: schema/content/members/settings) so trusted automation (Claude, imports, scheduled jobs) can insert data. Off by default; `X-Prx3-Data-Key` auth; batches capped at 100; every write audited. Guard rails: platform post types only, meta restricted to the `_prx3_` prefix (core meta like capabilities refused), member share grants go **through the money path** (cap, age gate, owner numbers, register record with source label), settings allow-listed with API keys never self-rotating, board-only types excluded |
 
+## Decisions — round 10: Shopify commerce (P105)
+
+| # | Topic | Decision |
+|---|---|---|
+| P105 | Commerce provider | **Shopify replaces WooCommerce** for share sales (provider switchable via `commerce_provider`; the Woo path remains in the code but dormant). Each ladder tier is a Shopify **variant**; the platform builds cart permalinks for the member's exact next tiers and **re-verifies the paid amount against the ladder** when the `orders/paid` webhook (HMAC-verified) arrives — mismatches are held for review, never granted. Because Shopify checkout cannot capture the drawn signature, **grants are immediate only for members who have already signed the current Shareholders' Agreement; everyone else's purchase waits as a pending claim** and is granted the moment they sign on the platform (email invitation sent) — P97/P98 hold. Gifts via a `gift` line property issue codes as before; `refunds/create` surrenders granted shares and voids the order's gift codes (chargeback rules P28). All grants still travel the money path: cap, age gate, owner numbers, register |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

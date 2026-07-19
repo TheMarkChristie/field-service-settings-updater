@@ -133,6 +133,10 @@ class PRX3_Admin {
 				'season_ticket_discount_per_share'   => array( __( 'Season ticket discount % per share', 'fan-ownership' ), 'number' ),
 			),
 			'shares'       => array(
+				'commerce_provider'      => array( __( 'Commerce provider (shopify or woocommerce)', 'fan-ownership' ), 'text' ),
+				'shopify_domain'         => array( __( 'Shopify store domain (e.g. club.myshopify.com)', 'fan-ownership' ), 'text' ),
+				'shopify_webhook_secret' => array( __( 'Shopify webhook signing secret', 'fan-ownership' ), 'password' ),
+				'shopify_share_variants' => array( __( 'Shopify variant IDs per tier, comma-separated, tier 1 first', 'fan-ownership' ), 'textarea' ),
 				'share_base_price'  => array( __( 'Share 1 price', 'fan-ownership' ), 'number' ),
 				'share_tier_growth' => array( __( 'Tier growth (0.25 = +25% per share)', 'fan-ownership' ), 'number' ),
 				'max_shares'        => array( __( 'Maximum shares per member', 'fan-ownership' ), 'number' ),

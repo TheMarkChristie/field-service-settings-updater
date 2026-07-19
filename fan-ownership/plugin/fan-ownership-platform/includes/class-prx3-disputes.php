@@ -28,7 +28,7 @@ class PRX3_Disputes {
 	 * Hook the WooCommerce refunded and on-hold status transitions.
 	 */
 	public static function init() {
-		if ( ! class_exists( 'WooCommerce' ) ) {
+		if ( ! class_exists( 'WooCommerce' ) || 'woocommerce' !== prx3_commerce_provider() ) {
 			return;
 		}
 		add_action( 'woocommerce_order_status_refunded', array( __CLASS__, 'handle_clawback' ) );

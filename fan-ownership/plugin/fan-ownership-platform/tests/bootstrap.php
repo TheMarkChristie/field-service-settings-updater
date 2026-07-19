@@ -373,6 +373,9 @@ class PRX3_Test_Request {
 	public function get_header( $key ) {
 		return isset( $this->headers[ $key ] ) ? $this->headers[ $key ] : '';
 	}
+	public function get_body() {
+		return json_encode( $this->json );
+	}
 }
 
 /* ---------------- Fake wpdb (ballot votes + register + options seq) ---------------- */
@@ -524,6 +527,8 @@ require $prx3_base . '/includes/class-prx3-shares.php';
 require $prx3_base . '/includes/class-prx3-ballots.php';
 require $prx3_base . '/includes/class-prx3-agreements.php';
 require $prx3_base . '/includes/class-prx3-sync.php';
+require $prx3_base . '/includes/class-prx3-gifts.php';
+require $prx3_base . '/includes/class-prx3-shopify.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 
 /* ---------------- Assertions ---------------- */

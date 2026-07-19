@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Fan Ownership Platform
  * Description:       The fan-owned club platform: shares on a tiered ladder, weighted secret ballots, ideas, questions, meetings, financial transparency, decision register, board workspace, match centre, and the app API. Built to the Perth Panthers specification (spec v1.1, 139 decisions).
- * Version:           0.1.10
+ * Version:           0.2.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Mark Christie
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PRX3_VERSION', '0.1.10' );
+define( 'PRX3_VERSION', '0.2.0' );
 define( 'PRX3_FILE', __FILE__ );
 define( 'PRX3_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRX3_URL', plugin_dir_url( __FILE__ ) );
@@ -31,6 +31,7 @@ require_once PRX3_DIR . 'includes/class-prx3-audit.php';
 require_once PRX3_DIR . 'includes/class-prx3-membership.php';
 require_once PRX3_DIR . 'includes/class-prx3-shares.php';
 require_once PRX3_DIR . 'includes/class-prx3-woocommerce.php';
+require_once PRX3_DIR . 'includes/class-prx3-shopify.php';
 require_once PRX3_DIR . 'includes/class-prx3-gifts.php';
 require_once PRX3_DIR . 'includes/class-prx3-register.php';
 require_once PRX3_DIR . 'includes/class-prx3-certificates.php';
@@ -86,6 +87,7 @@ function prx3_boot() {
 		'PRX3_Membership',
 		'PRX3_Shares',
 		'PRX3_WooCommerce',
+		'PRX3_Shopify',
 		'PRX3_Gifts',
 		'PRX3_Register',
 		'PRX3_Certificates',
@@ -221,8 +223,11 @@ function prx3_dependency_notices() {
 		return;
 	}
 	$missing = array();
-	if ( ! class_exists( 'WooCommerce' ) ) {
+	if ( 'woocommerce' === prx3_commerce_provider() && ! class_exists( 'WooCommerce' ) ) {
 		$missing[] = __( 'WooCommerce (share checkout is disabled until it is active)', 'fan-ownership' );
+	}
+	if ( 'shopify' === prx3_commerce_provider() && ( '' === (string) prx3_setting( 'shopify_domain', '' ) || '' === (string) prx3_setting( 'shopify_webhook_secret', '' ) || '' === (string) prx3_setting( 'shopify_share_variants', '' ) ) ) {
+		$missing[] = __( 'Shopify configuration (set the store domain, webhook secret, and tier variant IDs under Settings > Shares & Checkout before selling shares)', 'fan-ownership' );
 	}
 	if ( ! class_exists( 'bbPress' ) ) {
 		$missing[] = __( 'bbPress (the member forum is disabled until it is active)', 'fan-ownership' );

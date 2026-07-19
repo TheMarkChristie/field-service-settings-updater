@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.10
+Stable tag: 0.2.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -31,8 +31,8 @@ for any club and any sport:
 * Feature kill switches, audit log, GDPR export/erasure, commitments
   calendar
 
-Companion plugins: WooCommerce (checkout) and a Stripe gateway are
-required for share sales; a PDF invoice plugin, a 2FA plugin, and the
+Commerce: shares sell through Shopify by default (WooCommerce path
+available via the commerce provider setting); a PDF invoice plugin, a 2FA plugin, and the
 club badge plugin integrate through documented contracts.
 
 == Installation ==
@@ -45,6 +45,16 @@ club badge plugin integrate through documented contracts.
    numbers, and integrations.
 
 == Changelog ==
+
+= 0.2.0 =
+* Shopify replaces WooCommerce as the default commerce provider
+  (switchable). Tier variants, HMAC-verified orders/paid and
+  refunds/create webhooks, ladder price re-verification with held
+  mismatches, cart permalinks for the buyer's exact next tiers,
+  sign-to-claim flow preserving the Shareholders' Agreement
+  signature rules, gift line properties, and refund clawback
+  (surrender + gift-code voiding). All grants still travel the money
+  path. 22 new test assertions (132 total).
 
 = 0.1.10 =
 * The Board menu now gathers everything the board deals with:

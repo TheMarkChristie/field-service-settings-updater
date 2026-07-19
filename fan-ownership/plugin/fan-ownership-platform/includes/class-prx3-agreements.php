@@ -33,7 +33,7 @@ class PRX3_Agreements {
 	 * endpoint, and the board signatures register.
 	 */
 	public static function init() {
-		if ( class_exists( 'WooCommerce' ) ) {
+		if ( class_exists( 'WooCommerce' ) && 'woocommerce' === prx3_commerce_provider() ) {
 			add_action( 'woocommerce_review_order_before_submit', array( __CLASS__, 'checkout_checkbox' ) );
 			add_action( 'woocommerce_checkout_process', array( __CLASS__, 'checkout_validate' ) );
 			add_action( 'woocommerce_checkout_order_processed', array( __CLASS__, 'record_from_order' ), 10, 1 );

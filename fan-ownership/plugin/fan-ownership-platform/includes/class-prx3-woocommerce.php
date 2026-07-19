@@ -27,6 +27,9 @@ class PRX3_WooCommerce {
 	 * WooCommerce is absent — B3 decision).
 	 */
 	public static function init() {
+		if ( 'woocommerce' !== prx3_commerce_provider() ) {
+			return; // Shopify (or another provider) is handling commerce (P105).
+		}
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
 		}

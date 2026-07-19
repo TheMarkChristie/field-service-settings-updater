@@ -198,8 +198,21 @@ class PRX3_Shortcodes {
 				<li><?php echo esc_html( sprintf( /* translators: %s ticketing provider. */ __( 'Your %s ticket discount code:', 'fan-ownership' ), PRX3_Ticketing::provider() ) ); ?> <code><?php echo esc_html( PRX3_Ticketing::member_code( $user_id ) ); ?></code></li>
 				<li><?php esc_html_e( 'My referral link:', 'fan-ownership' ); ?> <code><?php echo esc_html( add_query_arg( 'ref', $user_id, home_url( '/' ) ) ); ?></code></li>
 			</ul>
-			<?php if ( $shares < prx3_max_shares() && prx3_feature_on( 'checkout' ) ) : ?>
-				<p><a class="prx3-button" href="<?php echo esc_url( prx3_setting( 'checkout_page_id' ) ? get_permalink( (int) prx3_setting( 'checkout_page_id' ) ) : '#' ); ?>">
+			<?php
+			$pending = 'shopify' === prx3_commerce_provider() ? PRX3_Shopify::pending_for( wp_get_current_user()->user_email ) : 0;
+			if ( $pending > 0 ) :
+				?>
+				<div class="prx3-notice" role="status"><p><?php echo esc_html( sprintf( /* translators: %d shares. */ _n( 'You have %d share waiting: sign the Shareholders\' Agreement below and it is yours.', 'You have %d shares waiting: sign the Shareholders\' Agreement below and they are yours.', $pending, 'fan-ownership' ), $pending ) ); ?></p></div>
+			<?php endif; ?>
+			<?php
+			if ( 'shopify' === prx3_commerce_provider() ) {
+				$buy_url = PRX3_Shopify::checkout_url( $user_id );
+			} else {
+				$buy_url = prx3_setting( 'checkout_page_id' ) ? get_permalink( (int) prx3_setting( 'checkout_page_id' ) ) : '';
+			}
+			?>
+			<?php if ( $shares < prx3_max_shares() && prx3_feature_on( 'checkout' ) && $buy_url ) : ?>
+				<p><a class="prx3-button" href="<?php echo esc_url( $buy_url ); ?>">
 					<?php echo esc_html( sprintf( /* translators: %s price. */ __( 'Buy another share — next one costs %s', 'fan-ownership' ), prx3_money( prx3_share_price( $shares + 1 ) ) ) ); ?></a></p>
 			<?php endif; ?>
 			<h3><?php esc_html_e( 'Communication preferences', 'fan-ownership' ); ?></h3>

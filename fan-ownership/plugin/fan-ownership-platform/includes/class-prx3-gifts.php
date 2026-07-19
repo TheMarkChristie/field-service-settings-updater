@@ -30,23 +30,37 @@ class PRX3_Gifts {
 	 * @param string   $recipient_email Optional recipient email for delivery.
 	 */
 	public static function issue( $order, $shares, $recipient_email = '' ) {
+		self::issue_code( $order->get_user_id(), $order->get_billing_email() ? $order->get_billing_email() : '', $shares, (string) $order->get_id(), (float) $order->get_total(), $recipient_email );
+	}
+
+	/**
+	 * Provider-agnostic gift issue: mint the code, store it against the
+	 * order reference, and email buyer (and recipient when known).
+	 *
+	 * @param int    $buyer_id        Buyer user id (0 when unknown).
+	 * @param string $buyer_email     Buyer email for delivery.
+	 * @param int    $shares          Shares gifted.
+	 * @param string $order_ref       Order reference (Woo id or Shopify id).
+	 * @param float  $consideration   Amount paid.
+	 * @param string $recipient_email Optional recipient email.
+	 * @return string The gift code.
+	 */
+	public static function issue_code( $buyer_id, $buyer_email, $shares, $order_ref, $consideration, $recipient_email = '' ) {
 		$code           = strtoupper( wp_generate_password( 12, false, false ) );
 		$gift           = array(
 			'code'          => $code,
 			'shares'        => (int) $shares,
-			'order'         => $order->get_id(),
-			'buyer'         => $order->get_user_id(),
+			'order'         => $order_ref,
+			'buyer'         => (int) $buyer_id,
 			'issued_at'     => time(),
 			'redeemed'      => 0,
 			'recipient'     => sanitize_email( $recipient_email ),
-			'consideration' => (float) $order->get_total(),
+			'consideration' => (float) $consideration,
 		);
 		$gifts          = get_option( 'prx3_gift_codes', array() );
 		$gifts[ $code ] = $gift;
 		update_option( 'prx3_gift_codes', $gifts, false );
 
-		$buyer   = get_userdata( $order->get_user_id() );
-		$to      = $buyer ? $buyer->user_email : $order->get_billing_email();
 		$message = sprintf(
 			/* translators: 1: share count, 2: club, 3: code, 4: redeem URL. */
 			__( "Your gift of %1\$d share(s) in %2\$s is ready.\n\nGift code: %3\$s\nThe recipient redeems it here: %4\$s\n\nGift codes never expire (FO-108).", 'fan-ownership' ),
@@ -55,8 +69,10 @@ class PRX3_Gifts {
 			$code,
 			home_url( '/?prx3_redeem=1' )
 		);
-		PRX3_Comms::send( $to, sprintf( /* translators: %s club. */ __( 'Your %s gift code', 'fan-ownership' ), prx3_club_name() ), $message, 'governance' );
-		if ( $gift['recipient'] ) {
+		if ( $buyer_email && class_exists( 'PRX3_Comms' ) && method_exists( 'PRX3_Comms', 'send' ) ) {
+			PRX3_Comms::send( $buyer_email, sprintf( /* translators: %s club. */ __( 'Your %s gift code', 'fan-ownership' ), prx3_club_name() ), $message, 'governance' );
+		}
+		if ( $gift['recipient'] && class_exists( 'PRX3_Comms' ) && method_exists( 'PRX3_Comms', 'send' ) ) {
 			PRX3_Comms::send(
 				$gift['recipient'],
 				sprintf( /* translators: %s club. */ __( 'Someone has gifted you shares in %s', 'fan-ownership' ), prx3_club_name() ),
@@ -64,6 +80,7 @@ class PRX3_Gifts {
 				'governance'
 			);
 		}
+		return $code;
 	}
 
 	/**
