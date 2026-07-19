@@ -121,7 +121,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 50 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+Done 60 · Partial 18 · Operational 2 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

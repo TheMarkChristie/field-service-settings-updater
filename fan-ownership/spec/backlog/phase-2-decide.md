@@ -212,7 +212,8 @@ Acceptance criteria:
 
 ### FO-220 Forum and comments
 As an owner, I want a members' forum and comments on ballots, ideas, videos, and news under one identity, so that owners can debate in the club's own home.
-Traceability: P37, T16. Estimate: Design 1 / Build 1.5 / Develop 2 / Test 1
+Traceability: P37, T16 (superseded by P109 — built natively, no bbPress). Estimate: Design 1 / Build 1.5 / Develop 2 / Test 1
+Delivered as: **FanPress Chat** (FO-230/FO-234) — the board identifier in AC 2 is the board bubble colour + Board tag.
 
 Acceptance criteria:
 1. Owners can create forum topics and reply, and comment on club content, with one profile and display name throughout.
@@ -312,6 +313,7 @@ Acceptance criteria:
 4. A departed director's votes, declarations, and contributions remain permanently in the record; their ordinary owner account and shareholding are unaffected.
 
 ### FO-230 Our own forum, wired into the club
+*(Now branded **FanPress Chat** (P111) and presented WhatsApp-style — chat list, bubbles, unread badges — per FO-234. The wiring below is unchanged.)*
 As the club, I want our own forum — no third-party forum plugin — where club events open their own threads, match chat is archived into match-day threads, and a strong thread can become a ballot, so that the conversation and the governance live in one system.
 Traceability: P109, T16 (superseded), P37, P38. Estimate: Design 1.5 / Build 1.5 / Develop 4 / Test 2
 
@@ -329,6 +331,7 @@ Test script:
 4. Convert a topic to a ballot — expect a draft ballot with provenance both ways; convert again — expect the same ballot returned; attempt to convert a non-topic — expect refusal.
 5. Check the Forum list screen shows board, reply count, origin, and converted status.
 ### FO-231 A social layer with BuddyPress-style features
+*(Extended by FO-233 — directory search + pagination, @mention autosuggest, activity cheers — and included in the FanPress Chat brand, P111.)*
 As an owner, I want the community features members expect from a social network — an activity feed, a member directory with follows, private messages, notifications, and @mentions — built natively on our own forum and chat, so that we never depend on a third-party community plugin.
 Traceability: P110, P109. Estimate: Design 1 / Build 1 / Develop 3 / Test 1.5
 

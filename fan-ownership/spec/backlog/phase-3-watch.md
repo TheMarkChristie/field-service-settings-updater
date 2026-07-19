@@ -76,7 +76,8 @@ Acceptance criteria:
 2. Moderation tools work live from any device: word filter with held messages, slow mode and rate limits, member reporting, and delete, timeout, and mute in-chat.
 3. Muted or sanctioned members (FO-221) are restricted in chat consistently with their sanction.
 4. Chat scales to the full membership online at once without degrading the stream.
-5. This chat service also powers meeting chat (FO-214) with one codebase and identical moderation.
+5. This chat service also powers meeting chat (FO-214) and FanPress private messages (FO-231) with one codebase and identical moderation.
+6. The match's FanPress chat thread (auto-created on publish, FO-230) renders beside the stream on the match page (FO-234); at full time the live chat transcript is archived into it.
 
 ### FO-307 Minute-by-minute, from the ground
 As a volunteer reporter, I want a big-button console that queues events when my signal dies, so that a goal is never lost to a dead spot.

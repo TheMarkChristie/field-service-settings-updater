@@ -118,7 +118,7 @@ Monthly one-page income/spend summary published as portal content + full annual 
 
 ## 5. Community (P37–P40)
 
-- **Comments** on ballots, ideas, videos, and news, **plus the platform's own native forum and social layer** (boards, automated threads, activity feed, follows, private messages, notifications, @mentions — P109/P110), all behind the owner gate with one identity.
+- **Comments** on ballots, ideas, videos, and news, **plus FanPress Chat — the platform's own native forum and social layer** (P109–P113): WhatsApp-style chat list with category chips and unread badges, bubble conversations (yours right, others left, board members in a configurable board colour with a Board tag), automated match/ballot chats embedded beside the event on its own page, activity feed with cheers, follows, searchable member directory, private messages, notifications, and @mentions with autosuggest — all behind the owner gate with one identity. Bubble colours (mine / other owners / board) are configurable under Settings → FanPress Chat.
 - **Code of conduct** with graduated sanctions: warn → mute (temporary loss of comment/submission rights) → expel (shares surrendered). Voting rights removed only at expulsion.
 - **Comms channels:** app push (Firebase), email (Brevo — weekly digest, ballot notices, receipts), public social media as the teaser layer. No SMS.
 - **Onboarding (P40):** guided first week — welcome video from the manager, Boardroom tour, a live "starter ballot" to cast a first vote, and a welcome email series.
@@ -155,12 +155,12 @@ Monthly one-page income/spend summary published as portal content + full annual 
 
 ### 6.4 Supporting services (T14–T16, T21–T24, T41, T44)
 
-Firebase FCM push · Brevo email · native forum + social layer (P109/P110) · self-hosted websocket chat service (match + meeting chat, portal identities, in-house moderation) · members-only ICS calendar feed + add-to-calendar buttons · in-portal document viewer (no downloads) · auto-PDF certificate generation + automatic badge issue · scoped member search across all accessible content.
+Firebase FCM push · Brevo email · FanPress Chat, the native forum + social layer (P109–P113) · self-hosted websocket chat service (match + meeting chat, portal identities, in-house moderation) · members-only ICS calendar feed + add-to-calendar buttons · in-portal document viewer (no downloads) · auto-PDF certificate generation + automatic badge issue · scoped member search across all accessible content.
 
 ### 6.5 Club-side tooling (T25–T28, T42, P78–P81)
 
 - **Five platform roles:** Owner-Admin, Content Editor, Governance Officer, Moderator, and **Board Member**.
-- **Board Member role (P78–P81):** full owner access plus running tallies on open ballots, decision-register editing, financial drafts before publish, and moderation-queue visibility — but no content publishing and no member/checkout admin. Board members vote in fan ballots **only via shares they personally own** (same 10-share cap); the role adds no ballot votes. A board directory page (photo, bio, responsibilities) and a "Board" badge on their forum/chat posts make it clear when the club is speaking. Formal board acts are structured platform flows with a permanent trail: recorded casting-vote actions on ties (P59), formal recommendations attached to ballots (P62), and reserved-matter or failed-quorum decisions (P7, P13) logged in the decision register with published reasoning.
+- **Board Member role (P78–P81):** full owner access plus running tallies on open ballots, decision-register editing, financial drafts before publish, and moderation-queue visibility — but no content publishing and no member/checkout admin. Board members vote in fan ballots **only via shares they personally own** (same 10-share cap); the role adds no ballot votes. A board directory page (photo, bio, responsibilities) and a "Board" badge and a distinct configurable bubble colour on their FanPress Chat and live-chat posts make it clear when the club is speaking. Formal board acts are structured platform flows with a permanent trail: recorded casting-vote actions on ties (P59), formal recommendations attached to ballots (P62), and reserved-matter or failed-quorum decisions (P7, P13) logged in the decision register with published reasoning.
 - **Draft → review → publish** workflow on everything member-facing; a second person approves every ballot.
 - **Engagement dashboard:** membership & revenue (tracking the 1,000-owner target), ballot health vs quorum, content performance, community health.
 - Match-reporter console for volunteer minute-by-minute reporting.
@@ -200,7 +200,7 @@ Built **in-house with Claude Code** in this repository. Budget: **bootstrap, < �
 | Phase | Scope | Target |
 |---|---|---|
 | **1 — Own** | Public site + gated portal, registration, Shopify share checkout (tier variants, gifting, sign-to-claim), certificate + Founders badge, onboarding journey, first content areas | Live 8–12 weeks from spec sign-off; founding-owner beta before public launch |
-| **2 — Decide** | The Boardroom: ballots (weighted, secret, automated), ideas pipeline, questions + monthly Q&A, meetings + RSVP + StreamYard embeds, financial publishing, forum, chapters | Follows Phase 1 |
+| **2 — Decide** | The Boardroom: ballots (weighted, secret, automated), ideas pipeline, questions + monthly Q&A, meetings + RSVP + StreamYard embeds, financial publishing, FanPress Chat, chapters | Follows Phase 1 |
 | **3 — Watch** | Flutter apps (both stores), Match Centre (live stream, chat, minute-by-minute), away audio, VOD library, push notifications | Follows Phase 2 |
 
 Testing: automated coverage on money and vote paths + the founding-owner beta group (T35).
