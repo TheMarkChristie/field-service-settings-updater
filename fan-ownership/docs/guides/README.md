@@ -18,10 +18,12 @@ covers setup, day-to-day operation, and troubleshooting for one area.
 | `volunteers-guide.md` | Volunteers | Rotas, moderation, reporting, content help, chapter leads |
 | `match-ballot-managers-guide.md` | Match & ballot managers | The matchday runbook and the ballot runbook, draft to declared result |
 | `owners-guide.md` | Owners | The member experience: voting, FanPress, profile, ownership, match centre |
+| `developer-guide.md` | Developers | Architecture, module map, conventions (self-heal, kill switches, audit, idempotency), hooks/filters, capabilities, post types, tests/CI/versioning |
+| `api-reference.md` | App & integration developers | Every endpoint under `prx3/v1`: auth models (JWT, nonce, per-integration keys), error codes, rate limits, payload examples, webhooks, tokenised feeds |
 
-Still to write (tracked as FO-314): developer docs and the API
-reference. The admin guide, setup guide, matchday/ballot runbooks,
-volunteer handbook, board guide, and owners guide all exist above.
+The documentation suite (FO-314) is complete — the same API reference
+ships inside every install at **Setup → Developers**, generated from
+the plugin's own endpoint registry.
 
 > Fresh install? **Fan App Settings → Create member pages** builds the
 > whole member site (join, account, hub, ballots, FanPress Chat, match

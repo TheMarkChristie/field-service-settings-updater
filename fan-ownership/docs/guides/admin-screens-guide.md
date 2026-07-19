@@ -49,6 +49,9 @@ this" link on every field:
 - **Data API & Claude** — connection panel, provisioned keys, demo
   club load/remove.
 - **Power Platform** — Dataverse sync key and toggles.
+- **Developers** — the API reference that ships with the install:
+  every endpoint with methods/auth/purpose, extension hooks,
+  capabilities, and error codes (matches `docs/guides/api-reference.md`).
 
 ## Compliance notes
 - Identity records: only full birth name and nationality ever appear

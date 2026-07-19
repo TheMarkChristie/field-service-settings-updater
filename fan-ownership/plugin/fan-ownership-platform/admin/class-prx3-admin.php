@@ -84,6 +84,14 @@ class PRX3_Admin {
 				}
 			);
 		}
+		add_submenu_page(
+			'prx3-setup',
+			__( 'Developers — API reference', 'fan-ownership' ),
+			__( 'Developers', 'fan-ownership' ),
+			'prx3_admin',
+			'prx3-setup-developers',
+			array( __CLASS__, 'render_developers' )
+		);
 	}
 
 	/**
@@ -602,5 +610,83 @@ class PRX3_Admin {
 		}
 		echo '</tbody></table>';
 		echo '<p class="description">' . esc_html__( 'Companion plugins (2FA, club badges) install from the Plugins screen — the platform detects them automatically. The chat word filter lives under Fan App Settings → FanPress Chat.', 'fan-ownership' ) . '</p></div>';
+	}
+
+	/**
+	 * The endpoint registry behind the Developers page: every REST route
+	 * the platform exposes, grouped, with methods, auth, and purpose.
+	 * One list serves the admin screen and keeps the reference honest.
+	 *
+	 * @return array group => rows of [route, methods, auth, purpose].
+	 */
+	public static function api_endpoints() {
+		return array(
+			__( 'App API — auth & profile', 'fan-ownership' ) => array(
+				array( '/auth/login', 'POST', __( 'Public (throttled)', 'fan-ownership' ), __( 'Username + password in, JWT pair out (access 1h, refresh 30d). Lockouts grow per IP and per username.', 'fan-ownership' ) ),
+				array( '/auth/refresh', 'POST', __( 'Refresh token', 'fan-ownership' ), __( 'Swap a valid refresh token for a fresh JWT pair.', 'fan-ownership' ) ),
+				array( '/me', 'GET', __( 'Signed in', 'fan-ownership' ), __( 'Profile, shares, ladder price, badges, discounts, brand pack, ticketing code, checkout URL, calendar URL — the app boots from this.', 'fan-ownership' ) ),
+				array( '/me/push-token', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Register a device push token (last five kept).', 'fan-ownership' ) ),
+			),
+			__( 'App API — decide', 'fan-ownership' ) => array(
+				array( '/ballots', 'GET', __( 'Owner', 'fan-ownership' ), __( 'Open and recent ballots with options, descriptions, and the caller\'s voting state.', 'fan-ownership' ) ),
+				array( '/ballots/{id}/vote', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Cast a weighted secret vote on an open ballot.', 'fan-ownership' ) ),
+				array( '/ideas', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'List ideas with support counts; submit a new idea (rate-limited, moderated).', 'fan-ownership' ) ),
+				array( '/ideas/{id}/support', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Toggle support; at threshold the idea goes to the board.', 'fan-ownership' ) ),
+				array( '/questions', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'List and submit questions to the club.', 'fan-ownership' ) ),
+				array( '/questions/{id}/upvote', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Upvote a question for the live Q&A ranking.', 'fan-ownership' ) ),
+				array( '/meetings', 'GET', __( 'Owner', 'fan-ownership' ), __( 'Upcoming meetings with start times and RSVP state.', 'fan-ownership' ) ),
+				array( '/meetings/{id}/rsvp', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Toggle attendance (feeds milestone badges).', 'fan-ownership' ) ),
+				array( '/decisions', 'GET', __( 'Owner', 'fan-ownership' ), __( 'The public decision register.', 'fan-ownership' ) ),
+			),
+			__( 'App API — watch & community', 'fan-ownership' ) => array(
+				array( '/matches/{id}', 'GET', __( 'Owner', 'fan-ownership' ), __( 'Match centre payload: score, events, stream state.', 'fan-ownership' ) ),
+				array( '/matches/{id}/events', 'POST', __( 'Reporter', 'fan-ownership' ), __( 'Push a live match event from the reporter console.', 'fan-ownership' ) ),
+				array( '/matches/{id}/potm', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'Player-of-the-match candidates, results, and voting.', 'fan-ownership' ) ),
+				array( '/potm-month', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'Player-of-the-month standings and voting.', 'fan-ownership' ) ),
+				array( '/chat/{room}', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'Moderated chat transport (match rooms, DMs ride the same rails). Posts rate-limited.', 'fan-ownership' ) ),
+				array( '/videos', 'GET', __( 'Owner', 'fan-ownership' ), __( 'Video library with playback positions.', 'fan-ownership' ) ),
+				array( '/videos/{id}/position', 'POST', __( 'Owner', 'fan-ownership' ), __( 'Save a resume position.', 'fan-ownership' ) ),
+				array( '/forum/topics', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'FanPress chat list; start a topic.', 'fan-ownership' ) ),
+				array( '/forum/topics/{id}/replies', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'Read a chat; post a reply (word filter and sanctions apply).', 'fan-ownership' ) ),
+				array( '/activity', 'GET', __( 'Owner', 'fan-ownership' ), __( 'The activity feed, filterable to followed members.', 'fan-ownership' ) ),
+				array( '/notifications', 'GET', __( 'Owner', 'fan-ownership' ), __( 'Replies, @mentions, DMs; unread counts, mark-read on view.', 'fan-ownership' ) ),
+				array( '/members/suggest', 'GET', __( 'Owner', 'fan-ownership' ), __( '@mention autosuggest (up to eight owners).', 'fan-ownership' ) ),
+				array( '/messages/{with}', 'GET/POST', __( 'Owner', 'fan-ownership' ), __( 'Private messages with one member.', 'fan-ownership' ) ),
+			),
+			__( 'Server-to-server', 'fan-ownership' ) => array(
+				array( '/shopify/webhook', 'POST', __( 'HMAC signature', 'fan-ownership' ), __( 'Shopify orders/paid and refunds/create — the money path. Verified against the webhook secret.', 'fan-ownership' ) ),
+				array( '/data/schema', 'GET', 'X-Prx3-Data-Key', __( 'Data API self-description: allowed types, settings keys, formats.', 'fan-ownership' ) ),
+				array( '/data/content', 'POST', 'X-Prx3-Data-Key', __( 'Batch-create platform content (bare array, max 100, idempotent by type + title).', 'fan-ownership' ) ),
+				array( '/data/content-list', 'GET', 'X-Prx3-Data-Key', __( 'Read content of any allowed type.', 'fan-ownership' ) ),
+				array( '/data/members', 'POST', 'X-Prx3-Data-Key', __( 'Batch-create members with shares, bio, socials, identity (top-up, never duplicate).', 'fan-ownership' ) ),
+				array( '/data/settings', 'POST', 'X-Prx3-Data-Key', __( 'Write known platform settings.', 'fan-ownership' ) ),
+				array( '/sync/members — /sync/register — /sync/upsert — /sync/review', 'GET/POST', 'X-Prx3-Api-Key', __( 'Power Platform sync: read members and register, upsert with matching rules, review queue.', 'fan-ownership' ) ),
+			),
+		);
+	}
+
+	/**
+	 * Setup → Developers: the API reference that ships with the install —
+	 * namespace, auth model, every endpoint, extension hooks, and
+	 * capabilities (FO-314).
+	 */
+	public static function render_developers() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		echo '<div class="wrap"><h1>' . esc_html__( 'Developers — API reference', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html( sprintf( /* translators: %s URL. */ __( 'Every route lives under %s. The web front end authenticates with the WordPress session and a REST nonce; the app signs in at /auth/login and sends Authorization: Bearer <access token>, refreshing at /auth/refresh. Server integrations use the header shown per route.', 'fan-ownership' ), rest_url( 'prx3/v1/' ) ) ) . '</p>';
+		foreach ( self::api_endpoints() as $group => $rows ) {
+			echo '<h2>' . esc_html( $group ) . '</h2>';
+			echo '<table class="widefat striped" style="max-width:1100px;"><thead><tr><th>' . esc_html__( 'Route', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Methods', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Auth', 'fan-ownership' ) . '</th><th>' . esc_html__( 'What it does', 'fan-ownership' ) . '</th></tr></thead><tbody>';
+			foreach ( $rows as $row ) {
+				echo '<tr><td><code>' . esc_html( $row[0] ) . '</code></td><td>' . esc_html( $row[1] ) . '</td><td>' . esc_html( $row[2] ) . '</td><td>' . esc_html( $row[3] ) . '</td></tr>';
+			}
+			echo '</tbody></table>';
+		}
+		echo '<h2>' . esc_html__( 'Extending the platform', 'fan-ownership' ) . '</h2>';
+		echo '<p>' . esc_html__( 'Actions: prx3_ballot_opened, prx3_member_became_owner, prx3_shares_granted, prx3_shares_surrendered, prx3_sha_accepted, prx3_milestone_event, prx3_award_badge, prx3_ticketing_entitlement. Filters: prx3_max_shares, prx3_sports, prx3_data_api_types, prx3_get_member_badges, prx3_badge_provider_present, prx3_2fa_provider_active, prx3_user_2fa_enrolled, prx3_user_is_manager, prx3_render_certificate_pdf.', 'fan-ownership' ) . '</p>';
+		echo '<p>' . esc_html__( 'Capabilities: prx3_member (owner gate), prx3_admin, prx3_governance, prx3_second_approve, prx3_board, prx3_moderate, prx3_edit_content, prx3_view_tally. Roles self-heal on every upgrade, so grant capabilities rather than editing roles.', 'fan-ownership' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Errors follow the WordPress REST envelope: {"code","message","data":{"status"}} — codes are prefixed prx3_ (e.g. prx3_login, prx3_owner_only, prx3_data_auth, prx3_rate_limited). The full developer guide and API reference with request/response examples ship in the repository under docs/guides/.', 'fan-ownership' ) . '</p></div>';
 	}
 }

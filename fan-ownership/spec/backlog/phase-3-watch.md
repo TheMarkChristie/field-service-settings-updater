@@ -156,6 +156,7 @@ Acceptance criteria:
 4. Sentry-class error tracking covers the plugin and both apps with alerting thresholds.
 
 ### FO-314 The documentation set
+*(Completed 3.15.0.0 (P125): fourteen guides in docs/guides — the developer guide and full API reference closed the set — plus an in-install API reference at Setup → Developers generated from the plugin's endpoint registry. Definition of done for every story has included updating affected documents since the trace discipline began.)*
 As the club, I want the full documentation suite live and current — admin guide, matchday runbook, developer docs, API reference, volunteer handbooks — so that no part of running the club lives only in someone's head.
 Traceability: T75. Estimate: Design 1 / Build 0 / Develop 3 / Test 0.5
 

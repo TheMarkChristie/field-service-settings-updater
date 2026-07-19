@@ -44,6 +44,7 @@ before shipping.
 | 3.12.1.4 | Board menu gains the audited Identity Lookup (masked government ID) — P122 amended: board members may view identity records |
 | 3.13.0.0 | Meeting video: in-platform Jitsi rooms on every meeting page (member + board, never matches), windowed one hour before to six after, audited joins, self-hostable domain setting |
 | 3.14.0.0 | Setup menu + 8×8 JaaS (P124): dedicated top-level Setup menu (Overview status checklist, Commerce — Shopify, Streaming, Meeting Video, Push, Data API, Sync) with a note and "Where to get this" link on every field; meeting video signs RS256 8×8 JaaS room tokens (board/governance/admin moderate, owners join as guests, no 8×8 accounts needed for joiners) with the open meet.jit.si fallback kept |
+| 3.15.0.0 | Documentation complete (P125, closes FO-314): developer guide + full API reference in docs/guides (auth models, error codes, rate limits, payload examples, webhooks, tokenised feeds) and a Setup → Developers page inside every install, generated from the plugin's own endpoint registry |
 
 ## Phase 1 — Own
 
@@ -141,7 +142,7 @@ before shipping.
 | FO-311 TV library | Done | 0.1.0 | Types, search, resume positions, teaser layer, signed/gated playback | |
 | FO-312 Weekly show pipeline | Done | 0.1.0; 3.10.0.0 | Interviews attach to fixtures via video-type + match meta; sensitive gating applies + Standing weekly slot setting; missed-slot flag + staff notice when no episode in 8 days, self-clearing | |
 | FO-313 Matchday health | Partial | 0.1.0 | Kill switches, delayed-stream member messaging, replay/stream failure alerts, Sentry hooks | UptimeRobot/status page are external services to configure; pre-kickoff checklist lives in the runbook |
-| FO-314 Documentation | Partial | 0.1.x–3.12.1.4 | Twelve guides in docs/guides: setup, admin screens, board, volunteers, match/ballot runbooks, owners, agreement, player voting, sync, data API, FanPress, Shopify | Remaining: developer docs, API reference |
+| FO-314 Documentation | Done | 0.1.x–3.12.1.4; developer docs + API reference 3.15.0.0 | Fourteen guides in docs/guides: setup, admin screens, board, volunteers, match/ballot runbooks, owners, agreement, player voting, sync, data API, FanPress, Shopify, developer guide, and the full API reference — plus the in-install reference at Setup → Developers, generated from the plugin's own endpoint registry so docs and code can't drift | |
 | FO-315 Full dashboard | Partial | 0.1.2–0.1.9 | Membership/revenue/ballot-health/community/moderation/stalled-decisions | Stream concurrents + episode completion need the analytics/Cloudflare data feeds |
 | FO-316 The squad | Done | 0.1.0; 3.10.0.0 | `class-prx3-players.php` — `prx3_player` CPT at `/squad/` (number, position, active flag, featured-image photo), staff-only editing, active-only poll options + Player pages render number, position, and POTM/month honours (block-theme safe) | |
 | FO-317 Player of the match live | Done | 0.1.0 | Opens on match live, closes 30 min after `_prx3_ended_at`, one changeable vote per member, live tallies, roster validation, auto winner + push + player honours on ballot tick; REST GET/POST `/matches/{id}/potm` | Web/app poll UI consumes the REST routes; native screen is scheduled app build-out |
@@ -165,9 +166,10 @@ before shipping.
 
 ## Honest summary
 
-Done 77 · Partial 7 · Operational 2 · Not built 0. Meeting video is fully
+Done 78 · Partial 6 · Operational 2 · Not built 0. The documentation
+suite is complete (FO-314, 3.15.0.0), meeting video is fully
 in-platform (FO-228: 8×8 JaaS with the meet.jit.si fallback, 3.14.0.0),
 and CI runs the full suite, lint, JS checks, and WPCS on every pull
-request. The most important follow-ups: (1) the developer docs and API
-reference that finish FO-314, (2) the Flutter app screen build-out
-(FO-302), consistent with the phasing decisions.
+request. What remains is the Flutter app screen build-out (FO-302) and
+the items waiting on external accounts (Firebase push, store delivery,
+analytics feeds), consistent with the phasing decisions.

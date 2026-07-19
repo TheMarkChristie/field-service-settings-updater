@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.14.0.0
+Stable tag: 3.15.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,17 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.0.0 =
+* Developers page under Setup: the full API reference inside every
+  install - every prx3/v1 endpoint with methods, auth, and purpose,
+  the extension hooks and filters, the capability model, and the
+  error-code envelope. Generated from the plugin's own endpoint
+  registry so the reference always matches the installed version.
+* Documentation suite complete: a developer guide (architecture,
+  module map, conventions, hooks, capabilities, tests and CI) and a
+  full API reference with auth models, error codes, rate limits, and
+  payload examples join the fourteen guides in docs/guides.
 
 = 3.14.0.0 =
 * Setup menu: a dedicated top-level home for everything technical -
