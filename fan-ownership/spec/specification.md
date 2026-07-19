@@ -81,6 +81,7 @@ Fans vote on effectively everything: budget allocation, club identity (name, bad
 | Failed quorum | Re-run once for 7 days with full comms push; if failed again, board decides and publishes reasoning | Same |
 
 - **No proxies** — every member votes personally. Weighting: one vote per share held at ballot open.
+- **Ballot presentation (P117–P118):** every ballot takes a sequential number on first save and its address is that number (`/owners/ballot/17/` — the question never leaks into a shared URL; old links redirect). The question itself is full rich content (HTML, images, embedded video), rendered on the ballot page and inside the voting card; each option is an answer plus an optional longer description shown beneath it, and the app receives both (`options` + `option_descriptions`).
 - **No elected fan directors** — direct democracy only (P14).
 
 ### 3.3 Ideas pipeline (P15–P16)
@@ -251,7 +252,7 @@ Testing: automated coverage on money and vote paths + the founding-owner beta gr
 ### 10.4 Technical refinements
 
 - **Repo & scope:** platform gets its **own dedicated repository**; this repo keeps the spec only (T51). One club domain (T52). Existing theme retained; **plugin UI inherits the theme** and ships only structural CSS (T53–T54).
-- **Engineering:** local dev + reviewed PRs with automated tests as the deploy gate (T55); Sentry (EU) error tracking across plugin + apps (T56); UptimeRobot-class monitoring + hosted member status page (T57); **admin kill-switch per major feature** — voting, chat, checkout, streams, forum (T74); **full documentation suite** — admin guide, matchday runbook, developer docs, API reference, volunteer handbooks (T75).
+- **Engineering:** local dev + reviewed PRs with automated tests as the deploy gate (T55); Sentry (EU) error tracking across plugin + apps (T56); UptimeRobot-class monitoring + hosted member status page (T57); **admin kill-switch per major feature** — voting, chat, checkout, streams, forum (T74); **four-part build numbers** from 4.0.0.0 — Major.Minor.Release.Fix, each release's number agreed with the club before shipping (P119); **full documentation suite** — admin guide, matchday runbook, developer docs, API reference, volunteer handbooks (T75).
 - **Commerce & compliance:** full sequential PDF invoicing (T58); the platform's member/share data **is the statutory register of members** with one-click export for filings (T59); certificates carry a **QR to a public verification page** — name shown only with the owner's consent (T60).
 - **Streaming:** **Cloudflare Stream Live** confirmed (T62); replays auto-publish within the hour (T70); player supports Chromecast/AirPlay, quality selection, live DVR rewind, speed + captions (T69).
 - **Matchday tooling:** chat moderation = word filter with auto-hold, slow mode/rate limits, member reporting, in-chat mod actions (T63); reporter console gets a **local retry queue** so a goal logged in a dead spot posts when signal returns (T64).
