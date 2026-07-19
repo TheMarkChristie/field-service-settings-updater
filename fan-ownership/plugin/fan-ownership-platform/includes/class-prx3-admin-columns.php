@@ -51,6 +51,7 @@ class PRX3_Admin_Columns {
 	private static function defs() {
 		return array(
 			'prx3_ballot'      => array(
+				'prx3_bno'     => array( __( 'No.', 'fan-ownership' ), 'ballot_no', '' ),
 				'prx3_state'   => array( __( 'State', 'fan-ownership' ), 'ballot_state', '' ),
 				'prx3_kind'    => array( __( 'Type', 'fan-ownership' ), 'ballot_kind', '' ),
 				'prx3_turnout' => array( __( 'Turnout', 'fan-ownership' ), 'ballot_turnout', '' ),
@@ -192,6 +193,17 @@ class PRX3_Admin_Columns {
 	private static function ballot_state( $post_id ) {
 		$state = (string) get_post_meta( $post_id, '_prx3_state', true );
 		return $state ? ucfirst( $state ) : __( 'Draft', 'fan-ownership' );
+	}
+
+	/**
+	 * The sequential ballot number (also the URL slug).
+	 *
+	 * @param int $post_id Ballot.
+	 * @return string
+	 */
+	private static function ballot_no( $post_id ) {
+		$number = (int) get_post_meta( $post_id, '_prx3_ballot_no', true );
+		return $number ? '#' . $number : '—';
 	}
 
 	/**

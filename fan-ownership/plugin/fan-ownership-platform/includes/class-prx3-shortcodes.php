@@ -335,7 +335,8 @@ class PRX3_Shortcodes {
 		$rec     = get_post_meta( $ballot_id, '_prx3_board_recommendation', true );
 		$html    = '<article class="prx3-card prx3-ballot" data-ballot="' . (int) $ballot_id . '">';
 		$html   .= '<h3><a href="' . esc_url( get_permalink( $ballot_id ) ) . '">' . esc_html( get_the_title( $ballot_id ) ) . '</a></h3>';
-		$html   .= '<p class="prx3-ballot__meta">' . ( 'constitutional' === $type
+		$number  = PRX3_Ballots::number( $ballot_id );
+		$html   .= '<p class="prx3-ballot__meta">' . ( $number ? '<span class="prx3-badge">' . esc_html( sprintf( /* translators: %d ballot number. */ __( 'Ballot #%d', 'fan-ownership' ), $number ) ) . '</span> ' : '' ) . ( 'constitutional' === $type
 			? '<span class="prx3-badge prx3-badge--constitutional">' . esc_html( sprintf( /* translators: %d pct. */ __( 'Constitutional — %d%% to pass', 'fan-ownership' ), (int) prx3_setting( 'constitutional_pct', 75 ) ) ) . '</span>'
 			: '<span class="prx3-badge">' . esc_html__( 'Standard ballot', 'fan-ownership' ) . '</span>' )
 			. ' <span>' . esc_html( sprintf( /* translators: %s date. */ __( 'closes %s', 'fan-ownership' ), prx3_format_datetime( get_post_meta( $ballot_id, '_prx3_closes', true ) ) ) ) . '</span></p>';

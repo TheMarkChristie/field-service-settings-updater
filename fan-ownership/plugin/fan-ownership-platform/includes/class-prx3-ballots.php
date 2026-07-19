@@ -32,6 +32,76 @@ class PRX3_Ballots {
 	public static function init() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_boxes' ) );
 		add_action( 'save_post_prx3_ballot', array( __CLASS__, 'save_meta' ), 10, 2 );
+		// Ballot URLs carry the sequential ballot number, never the title.
+		add_action( 'save_post_prx3_ballot', array( __CLASS__, 'assign_number' ), 5, 2 );
+		add_action( 'admin_init', array( __CLASS__, 'maybe_number_existing' ) );
+	}
+
+	/* ---------------- Sequential ballot numbers ---------------- */
+
+	/**
+	 * A ballot's sequential number (Ballot #N), assigned on first save.
+	 *
+	 * @param int $ballot_id Ballot.
+	 * @return int The number, 0 if not yet assigned.
+	 */
+	public static function number( $ballot_id ) {
+		return (int) get_post_meta( $ballot_id, '_prx3_ballot_no', true );
+	}
+
+	/**
+	 * Assign the next sequential number and make it the URL slug, so a
+	 * ballot's address never leaks its title (/owners/ballot/17/).
+	 * WordPress keeps an old-slug redirect if the title slug existed.
+	 *
+	 * @param int          $post_id Ballot ID.
+	 * @param WP_Post|null $post    Ballot post.
+	 */
+	public static function assign_number( $post_id, $post = null ) {
+		if ( function_exists( 'wp_is_post_revision' ) && ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) ) {
+			return;
+		}
+		$number = self::number( $post_id );
+		if ( ! $number ) {
+			$number = (int) get_option( 'prx3_ballot_seq', 0 ) + 1;
+			update_option( 'prx3_ballot_seq', $number, false );
+			update_post_meta( $post_id, '_prx3_ballot_no', $number );
+		}
+		$slug    = (string) $number;
+		$current = $post && isset( $post->post_name ) ? (string) $post->post_name : null;
+		if ( $slug !== $current ) {
+			remove_action( 'save_post_prx3_ballot', array( __CLASS__, 'assign_number' ), 5 );
+			wp_update_post(
+				array(
+					'ID'        => $post_id,
+					'post_name' => $slug,
+				)
+			);
+			add_action( 'save_post_prx3_ballot', array( __CLASS__, 'assign_number' ), 5, 2 );
+		}
+	}
+
+	/**
+	 * One-off upgrade: number every existing ballot (oldest first) and
+	 * move its slug to the number, re-run safe via a version stamp.
+	 */
+	public static function maybe_number_existing() {
+		if ( 'v1' === get_option( 'prx3_ballot_slugs' ) ) {
+			return;
+		}
+		$ballots = get_posts(
+			array(
+				'post_type'   => 'prx3_ballot',
+				'post_status' => array( 'publish', 'draft', 'pending', 'future', 'private' ),
+				'numberposts' => -1,
+				'orderby'     => 'date',
+				'order'       => 'ASC',
+			)
+		);
+		foreach ( $ballots as $ballot ) {
+			self::assign_number( $ballot->ID, $ballot );
+		}
+		update_option( 'prx3_ballot_slugs', 'v1', false );
 	}
 
 	/* ---------------- Casting ---------------- */

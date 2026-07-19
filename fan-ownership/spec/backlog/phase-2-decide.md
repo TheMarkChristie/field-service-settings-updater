@@ -22,6 +22,13 @@ Acceptance criteria:
 3. Publishing a ballot requires a second approver (FO-119); the annual voting calendar (budget, kit, objectives) is visible to owners all year.
 4. Once any vote has been cast, a ballot's options and close rules cannot be edited; corrections require withdrawing the ballot, which is recorded and announced.
 
+Numbered addresses (P117, added at V3.8): every ballot takes the next
+sequential number on first save (Ballot #N, shown on the card and the
+admin list), and its URL is /owners/ballot/N/ — the title never
+appears in the address, so a link can be shared without leaking the
+question. Existing ballots are renumbered oldest-first on upgrade,
+with old title URLs redirecting.
+
 ### FO-202 Cast my votes
 As an owner, I want to cast my ballot with the voting power of my shares and change it any time before close, so that my stake counts and I can respond to debate.
 Traceability: P5, P60, P12. Estimate: Design 1 / Build 0.5 / Develop 2.5 / Test 2

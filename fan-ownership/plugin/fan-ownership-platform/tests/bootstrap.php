@@ -269,6 +269,9 @@ function is_user_logged_in() {
 function add_action( $hook, $cb = null, $priority = 10, $args = 1 ) {
 	$GLOBALS['prx3_t']['hooks'][ $hook ][] = $cb;
 }
+function remove_action( $hook, $callback = null, $priority = 10 ) {
+	return true;
+}
 function add_filter( $hook, $cb = null, $priority = 10, $args = 1 ) {
 	$GLOBALS['prx3_t']['hooks'][ $hook ][] = $cb;
 }

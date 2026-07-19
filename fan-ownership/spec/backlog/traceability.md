@@ -44,7 +44,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 | Story | Status | Implementation | Gaps / notes |
 |---|---|---|---|
-| FO-201 Author & schedule | Done | `class-prx3-ballots.php` + lifecycle — options/type/window, default 7 days, max-2 live with queue, hard lock once voting starts, second approval | Annual voting calendar is the scheduled-ballot queue; no separate calendar entity |
+| FO-201 Author & schedule | Done | `class-prx3-ballots.php` + lifecycle — options/type/window, default 7 days, max-2 live with queue, hard lock once voting starts, second approval; sequential numbered URLs (/owners/ballot/N/, P117) | Annual voting calendar is the scheduled-ballot queue; no separate calendar entity |
 | FO-202 Cast my votes | Done | Snapshot-weighted casting, unlimited revision to close, unique-key concurrency safety, REST + accessible web form | |
 | FO-203 Secret until closed | Done | Tally access requires `prx3_view_tally`; members get secrecy notice; named records never surfaced | |
 | FO-204 Eligibility snapshot | Done | Electorate + weights frozen at open; clear explanation for mid-ballot joiners | |

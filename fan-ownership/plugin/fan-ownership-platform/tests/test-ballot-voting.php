@@ -58,3 +58,23 @@ update_post_meta( $ballot, '_prx3_state', 'closed' );
 t_error_code( PRX3_Ballots::cast( $ballot, 2, 0 ), 'prx3_closed', 'Closed ballot refuses votes' );
 $tallies = PRX3_Ballots::tallies( $ballot, true );
 t_eq( $tallies['votes'], array( 1, 3 ), 'Closing froze the tallies' );
+
+// Sequential ballot numbers own the URL (FO-132): title never in the slug.
+$b1 = wp_insert_post( array( 'post_type' => 'prx3_ballot', 'post_status' => 'publish', 'post_title' => 'A very descriptive confidential title', 'post_name' => 'a-very-descriptive-confidential-title', 'post_content' => '' ) );
+$b2 = wp_insert_post( array( 'post_type' => 'prx3_ballot', 'post_status' => 'draft', 'post_title' => 'Second ballot', 'post_name' => 'second-ballot', 'post_content' => '' ) );
+$prx3_seq_base = (int) get_option( 'prx3_ballot_seq', 0 );
+PRX3_Ballots::assign_number( $b1, get_post( $b1 ) );
+PRX3_Ballots::assign_number( $b2, get_post( $b2 ) );
+t_eq( PRX3_Ballots::number( $b1 ), $prx3_seq_base + 1, 'First ballot takes the next sequential number' );
+t_eq( PRX3_Ballots::number( $b2 ), $prx3_seq_base + 2, 'Second ballot increments the sequence' );
+t_eq( $GLOBALS['prx3_t_posts'][ $b1 ]['post_name'], (string) ( $prx3_seq_base + 1 ), 'Slug becomes the ballot number, not the title' );
+PRX3_Ballots::assign_number( $b1, get_post( $b1 ) );
+t_eq( PRX3_Ballots::number( $b1 ), $prx3_seq_base + 1, 'Re-saving never renumbers a ballot' );
+
+// The upgrade pass renumbers existing title-slug ballots oldest-first.
+$b3 = wp_insert_post( array( 'post_type' => 'prx3_ballot', 'post_status' => 'publish', 'post_title' => 'Legacy ballot', 'post_name' => 'legacy-ballot', 'post_content' => '' ) );
+delete_option( 'prx3_ballot_slugs' );
+PRX3_Ballots::maybe_number_existing();
+t_ok( PRX3_Ballots::number( $b3 ) > 0, 'Upgrade pass numbers legacy ballots' );
+t_eq( $GLOBALS['prx3_t_posts'][ $b3 ]['post_name'], (string) PRX3_Ballots::number( $b3 ), 'Legacy slug moves to the number' );
+t_eq( get_option( 'prx3_ballot_slugs' ), 'v1', 'Upgrade pass stamps itself done' );

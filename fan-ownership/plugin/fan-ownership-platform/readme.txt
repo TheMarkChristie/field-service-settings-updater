@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.7.0
+Stable tag: 3.8.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,14 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.8.0 =
+* Ballot URLs are now sequential numbers, not titles:
+  /owners/ballot/17/. Each ballot takes the next number on first save
+  (immutable; shown as "Ballot #N" on the voting card and in a new
+  admin list column). Existing ballots are renumbered oldest-first
+  automatically on upgrade, and previously shared title links keep
+  working via WordPress old-slug redirects.
 
 = 3.7.0 =
 * Fresh installs now render out of the box. Ballot pages carry their
