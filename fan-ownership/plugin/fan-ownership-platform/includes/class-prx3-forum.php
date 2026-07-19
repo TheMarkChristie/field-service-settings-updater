@@ -503,6 +503,7 @@ class PRX3_Forum {
 			return PRX3_Access::gate_content( '' );
 		}
 		wp_enqueue_style( 'prx3' );
+		wp_enqueue_script( 'prx3-mentions' );
 		$out    = '<div class="prx3-forum"><h2>' . esc_html__( 'FanPress Chat', 'fan-ownership' ) . '</h2>';
 		$boards = get_terms(
 			array(

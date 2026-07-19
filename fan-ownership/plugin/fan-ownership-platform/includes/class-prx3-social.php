@@ -45,6 +45,7 @@ class PRX3_Social {
 
 		add_action( 'admin_post_prx3_follow', array( __CLASS__, 'handle_follow' ) );
 		add_action( 'admin_post_prx3_send_dm', array( __CLASS__, 'handle_send_dm' ) );
+		add_action( 'admin_post_prx3_cheer', array( __CLASS__, 'handle_cheer' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 	}
 
@@ -301,6 +302,68 @@ class PRX3_Social {
 		exit;
 	}
 
+	/* ---------------- Cheers (activity likes) ---------------- */
+
+	/**
+	 * Toggle a member's cheer on a piece of club content.
+	 *
+	 * @param int $user_id The member.
+	 * @param int $post_id The topic/ballot/decision/video being cheered.
+	 * @return bool True when now cheered.
+	 */
+	public static function toggle_cheer( $user_id, $post_id ) {
+		$user_id = (int) $user_id;
+		$post_id = (int) $post_id;
+		if ( ! $user_id || ! $post_id ) {
+			return false;
+		}
+		$cheers = array_map( 'intval', array_filter( (array) get_post_meta( $post_id, '_prx3_cheers', true ) ) );
+		if ( in_array( $user_id, $cheers, true ) ) {
+			$cheers = array_values( array_diff( $cheers, array( $user_id ) ) );
+			$now    = false;
+		} else {
+			$cheers[] = $user_id;
+			$now      = true;
+		}
+		update_post_meta( $post_id, '_prx3_cheers', $cheers );
+		return $now;
+	}
+
+	/**
+	 * How many members have cheered a piece of content.
+	 *
+	 * @param int $post_id The content.
+	 * @return int Cheer count.
+	 */
+	public static function cheer_count( $post_id ) {
+		return count( array_filter( (array) get_post_meta( (int) $post_id, '_prx3_cheers', true ) ) );
+	}
+
+	/**
+	 * Whether a member has cheered a piece of content.
+	 *
+	 * @param int $user_id The member.
+	 * @param int $post_id The content.
+	 * @return bool
+	 */
+	public static function has_cheered( $user_id, $post_id ) {
+		$cheers = array_map( 'intval', array_filter( (array) get_post_meta( (int) $post_id, '_prx3_cheers', true ) ) );
+		return in_array( (int) $user_id, $cheers, true );
+	}
+
+	/**
+	 * Cheer/uncheer from the activity feed.
+	 */
+	public static function handle_cheer() {
+		if ( ! is_user_logged_in() || ! prx3_is_owner() ) {
+			wp_die( esc_html__( 'Owners only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_cheer' );
+		self::toggle_cheer( get_current_user_id(), isset( $_POST['post'] ) ? absint( $_POST['post'] ) : 0 );
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url() );
+		exit;
+	}
+
 	/* ---------------- The activity stream ---------------- */
 
 	/**
@@ -322,6 +385,7 @@ class PRX3_Social {
 			)
 		) as $topic ) {
 			$entries[] = array(
+				'id'    => (int) $topic->ID,
 				'at'    => $topic->post_date ?? prx3_now(),
 				'actor' => (int) ( $topic->post_author ?? 0 ),
 				'text'  => sprintf( /* translators: %s title. */ __( 'New topic: %s', 'fan-ownership' ), $topic->post_title ),
@@ -339,6 +403,7 @@ class PRX3_Social {
 			)
 		) as $ballot ) {
 			$entries[] = array(
+				'id'    => (int) $ballot->ID,
 				'at'    => $ballot->post_date ?? prx3_now(),
 				'actor' => 0,
 				'text'  => sprintf( /* translators: %s title. */ __( 'Voting open: %s', 'fan-ownership' ), $ballot->post_title ),
@@ -355,6 +420,7 @@ class PRX3_Social {
 				)
 			) as $post ) {
 				$entries[] = array(
+					'id'    => (int) $post->ID,
 					'at'    => $post->post_date ?? prx3_now(),
 					'actor' => 0,
 					'text'  => ( 'prx3_decision' === $type ? __( 'Decision recorded: ', 'fan-ownership' ) : __( 'New video: ', 'fan-ownership' ) ) . $post->post_title,
@@ -387,14 +453,90 @@ class PRX3_Social {
 		$out  = '<div class="prx3-activity"><h2>' . esc_html__( 'Club activity', 'fan-ownership' ) . '</h2>';
 		$out .= '<p><a href="' . esc_url( remove_query_arg( 'prx3_following' ) ) . '">' . esc_html__( 'Everyone', 'fan-ownership' ) . '</a> · <a href="' . esc_url( add_query_arg( 'prx3_following', 1 ) ) . '">' . esc_html__( 'People I follow', 'fan-ownership' ) . '</a></p><ul>';
 		foreach ( $feed as $entry ) {
-			$actor = $entry['actor'] ? get_userdata( $entry['actor'] ) : null;
-			$out  .= '<li>' . esc_html( prx3_format_datetime( $entry['at'] ) ) . ' — ' . ( $actor ? esc_html( $actor->display_name ) . ': ' : '' ) . '<a href="' . esc_url( $entry['link'] ) . '">' . esc_html( $entry['text'] ) . '</a></li>';
+			$actor  = $entry['actor'] ? get_userdata( $entry['actor'] ) : null;
+			$cheers = self::cheer_count( $entry['id'] );
+			$out   .= '<li>' . esc_html( prx3_format_datetime( $entry['at'] ) ) . ' — ' . ( $actor ? esc_html( $actor->display_name ) . ': ' : '' ) . '<a href="' . esc_url( $entry['link'] ) . '">' . esc_html( $entry['text'] ) . '</a> ';
+			$out   .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="prx3-cheer">';
+			$out   .= wp_nonce_field( 'prx3_cheer', '_wpnonce', true, false );
+			$out   .= '<input type="hidden" name="action" value="prx3_cheer"><input type="hidden" name="post" value="' . esc_attr( (string) $entry['id'] ) . '">';
+			$out   .= '<button type="submit" class="prx3-button prx3-cheer-button' . ( self::has_cheered( get_current_user_id(), $entry['id'] ) ? ' is-cheered' : '' ) . '">&#127881; ' . (int) $cheers . '</button></form></li>';
 		}
 		return $out . '</ul></div>';
 	}
 
 	/**
-	 * [prx3_members] — the owner directory with follow buttons.
+	 * The owner directory, searchable and paginated.
+	 *
+	 * @param string $search   Free text matched against name, login, slug, and owner number.
+	 * @param int    $page     1-based page.
+	 * @param int    $per_page Members per page.
+	 * @return array{members:array,total:int,pages:int,page:int}
+	 */
+	public static function directory( $search = '', $page = 1, $per_page = 24 ) {
+		$search  = strtolower( trim( (string) $search ) );
+		$members = array();
+		foreach ( get_users(
+			array(
+				'role'   => 'fan_owner',
+				'number' => -1,
+			)
+		) as $member ) {
+			if ( '' !== $search ) {
+				$owner_no = (string) PRX3_Shares::owner_number( $member->ID );
+				$haystack = strtolower( implode( ' ', array( (string) $member->display_name, (string) ( $member->user_login ?? '' ), (string) ( $member->user_nicename ?? '' ), $owner_no, '#' . $owner_no ) ) );
+				if ( false === strpos( $haystack, $search ) ) {
+					continue;
+				}
+			}
+			$members[] = $member;
+		}
+		$total = count( $members );
+		$pages = max( 1, (int) ceil( $total / max( 1, (int) $per_page ) ) );
+		$page  = min( max( 1, (int) $page ), $pages );
+		return array(
+			'members' => array_slice( $members, ( $page - 1 ) * $per_page, $per_page ),
+			'total'   => $total,
+			'pages'   => $pages,
+			'page'    => $page,
+		);
+	}
+
+	/**
+	 * Owners matching a typed @handle prefix, for the mention picker.
+	 *
+	 * @param string $prefix What the member has typed after the @.
+	 * @param int    $limit  Maximum suggestions.
+	 * @return array[] Entries: id, handle, name.
+	 */
+	public static function members_suggest( $prefix, $limit = 8 ) {
+		$prefix = strtolower( trim( (string) $prefix ) );
+		$out    = array();
+		foreach ( get_users(
+			array(
+				'role'   => 'fan_owner',
+				'number' => -1,
+			)
+		) as $member ) {
+			$login = strtolower( (string) ( $member->user_login ?? '' ) );
+			$slug  = strtolower( (string) ( $member->user_nicename ?? '' ) );
+			$name  = strtolower( (string) $member->display_name );
+			if ( '' !== $prefix && 0 !== strpos( $login, $prefix ) && 0 !== strpos( $slug, $prefix ) && 0 !== strpos( $name, $prefix ) ) {
+				continue;
+			}
+			$out[] = array(
+				'id'     => (int) $member->ID,
+				'handle' => $slug ? $slug : $login,
+				'name'   => (string) $member->display_name,
+			);
+			if ( count( $out ) >= $limit ) {
+				break;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * [prx3_members] — the searchable, paginated owner directory.
 	 *
 	 * @return string Directory HTML.
 	 */
@@ -404,13 +546,17 @@ class PRX3_Social {
 		}
 		wp_enqueue_style( 'prx3' );
 		$following = self::following( get_current_user_id() );
-		$out       = '<div class="prx3-members"><h2>' . esc_html__( 'The owners', 'fan-ownership' ) . '</h2><div class="prx3-tiles">';
-		foreach ( get_users(
-			array(
-				'role'   => 'fan_owner',
-				'number' => 100,
-			)
-		) as $member ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only search and paging.
+		$search = isset( $_GET['prx3_q'] ) ? sanitize_text_field( wp_unslash( $_GET['prx3_q'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only search and paging.
+		$page = isset( $_GET['prx3_pg'] ) ? absint( $_GET['prx3_pg'] ) : 1;
+		$dir  = self::directory( $search, $page );
+		$out  = '<div class="prx3-members"><h2>' . esc_html__( 'The owners', 'fan-ownership' ) . '</h2>';
+		$out .= '<form method="get" class="prx3-members-search"><label class="screen-reader-text" for="prx3_q">' . esc_html__( 'Search owners', 'fan-ownership' ) . '</label>';
+		$out .= '<input type="search" id="prx3_q" name="prx3_q" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search by name or owner number…', 'fan-ownership' ) . '"> ';
+		$out .= '<button type="submit" class="prx3-button">' . esc_html__( 'Search', 'fan-ownership' ) . '</button></form>';
+		$out .= '<p>' . esc_html( sprintf( /* translators: %d owners found. */ _n( '%d owner', '%d owners', $dir['total'], 'fan-ownership' ), $dir['total'] ) ) . '</p><div class="prx3-tiles">';
+		foreach ( $dir['members'] as $member ) {
 			$badges = class_exists( 'PRX3_Badges' ) ? (array) PRX3_Badges::member_badges( $member->ID ) : array();
 			$out   .= '<div class="prx3-tile">';
 			$out   .= '<span class="prx3-tile-label">' . esc_html( sprintf( /* translators: %d owner number. */ __( 'Owner #%d', 'fan-ownership' ), PRX3_Shares::owner_number( $member->ID ) ) ) . '</span>';
@@ -424,7 +570,24 @@ class PRX3_Social {
 			}
 			$out .= '</div>';
 		}
-		return $out . '</div></div>';
+		$out .= '</div>';
+		if ( $dir['pages'] > 1 ) {
+			$out .= '<p class="prx3-members-pages">';
+			for ( $i = 1; $i <= $dir['pages']; $i++ ) {
+				$out .= $i === $dir['page']
+					? '<strong>' . (int) $i . '</strong> '
+					: '<a href="' . esc_url(
+						add_query_arg(
+							array(
+								'prx3_q'  => $search,
+								'prx3_pg' => $i,
+							)
+						)
+					) . '">' . (int) $i . '</a> ';
+			}
+			$out .= '</p>';
+		}
+		return $out . '</div>';
 	}
 
 	/**
@@ -437,6 +600,7 @@ class PRX3_Social {
 			return PRX3_Access::gate_content( '' );
 		}
 		wp_enqueue_style( 'prx3' );
+		wp_enqueue_script( 'prx3-mentions' );
 		$user_id = get_current_user_id();
 		$threads = (array) get_user_meta( $user_id, 'prx3_dm_threads', true );
 		$out     = '<div class="prx3-messages"><h2>' . esc_html__( 'Private messages', 'fan-ownership' ) . '</h2>';
@@ -510,6 +674,15 @@ class PRX3_Social {
 				'methods'             => 'GET',
 				'permission_callback' => $member,
 				'callback'            => fn() => rest_ensure_response( array( 'notifications' => self::notifications( get_current_user_id(), true ) ) ),
+			)
+		);
+		register_rest_route(
+			'prx3/v1',
+			'/members/suggest',
+			array(
+				'methods'             => 'GET',
+				'permission_callback' => $member,
+				'callback'            => fn( $request ) => rest_ensure_response( array( 'members' => self::members_suggest( (string) $request->get_param( 'q' ) ) ) ),
 			)
 		);
 		register_rest_route(

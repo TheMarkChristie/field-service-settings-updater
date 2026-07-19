@@ -151,6 +151,24 @@ class PRX3_Roles {
 				$role->add_cap( 'prx3_second_approve' );
 			}
 		}
+
+		// FanPress Chat ties into WordPress roles (FO-233): Moderators run
+		// topics and the held-replies queue, Content Editors and Owner-Admins
+		// additionally manage the boards taxonomy. add_cap (not add_role) so
+		// existing installs pick these up through the versioned self-heal.
+		$fanpress = array(
+			'prx3_moderator'      => array( 'edit_posts', 'edit_others_posts', 'edit_published_posts', 'moderate_comments' ),
+			'prx3_content_editor' => array( 'moderate_comments', 'manage_categories' ),
+			'prx3_owner_admin'    => array( 'edit_posts', 'edit_others_posts', 'edit_published_posts', 'moderate_comments', 'manage_categories' ),
+		);
+		foreach ( $fanpress as $role_name => $caps ) {
+			$role = get_role( $role_name );
+			if ( $role ) {
+				foreach ( $caps as $cap ) {
+					$role->add_cap( $cap );
+				}
+			}
+		}
 	}
 
 	/**

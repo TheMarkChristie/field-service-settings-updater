@@ -49,3 +49,36 @@ t_ok( ! PRX3_Social::toggle_follow( 21, 22 ), 'Second toggle unfollows' );
 t_eq( PRX3_Social::following( 21 ), array(), 'Unfollow clears the list' );
 t_ok( ! PRX3_Social::toggle_follow( 21, 21 ), 'Members cannot follow themselves' );
 t_eq( PRX3_Social::following( 21 ), array(), 'Self-follow leaves the list untouched' );
+
+// Directory search and pagination (FO-233).
+prx3_test_reset();
+for ( $i = 1; $i <= 30; $i++ ) {
+	prx3_test_user( 100 + $i, array( 'display_name' => 'Owner Number' . $i, 'user_login' => 'owner' . $i, 'user_nicename' => 'owner' . $i ) );
+}
+prx3_test_user( 200, array( 'display_name' => 'Aileen Munro', 'user_login' => 'aileen', 'user_nicename' => 'aileen' ) );
+$page1 = PRX3_Social::directory( '', 1, 24 );
+t_eq( $page1['total'], 31, 'Directory counts every owner' );
+t_eq( count( $page1['members'] ), 24, 'First page holds a full page of owners' );
+t_eq( $page1['pages'], 2, 'Pagination computes total pages' );
+$page2 = PRX3_Social::directory( '', 2, 24 );
+t_eq( count( $page2['members'] ), 7, 'Last page holds the remainder' );
+$found = PRX3_Social::directory( 'aileen' );
+t_eq( $found['total'], 1, 'Search narrows to matching owners' );
+t_eq( $found['members'][0]->display_name, 'Aileen Munro', 'Search matches by name or handle' );
+t_eq( PRX3_Social::directory( 'zzz-nobody' )['total'], 0, 'No-match search returns empty' );
+
+// Mention autosuggest matches on login, slug, or display name prefixes.
+$suggest = PRX3_Social::members_suggest( 'ail' );
+t_eq( count( $suggest ), 1, 'Suggest matches the typed prefix' );
+t_eq( $suggest[0]['handle'], 'aileen', 'Suggest returns the @handle to insert' );
+t_eq( count( PRX3_Social::members_suggest( 'owner' ) ), 8, 'Suggest caps the list at eight' );
+
+// Cheers toggle per member and count across members.
+$topic = wp_insert_post( array( 'post_type' => 'prx3_forum_topic', 'post_status' => 'publish', 'post_title' => 'Cheer me', 'post_content' => '' ) );
+t_ok( PRX3_Social::toggle_cheer( 101, $topic ), 'First toggle cheers' );
+t_ok( PRX3_Social::toggle_cheer( 102, $topic ), 'A second member cheers too' );
+t_eq( PRX3_Social::cheer_count( $topic ), 2, 'Cheer count spans members' );
+t_ok( PRX3_Social::has_cheered( 101, $topic ), 'Cheer state is per member' );
+t_ok( ! PRX3_Social::toggle_cheer( 101, $topic ), 'Second toggle withdraws the cheer' );
+t_eq( PRX3_Social::cheer_count( $topic ), 1, 'Withdrawn cheer leaves the rest' );
+t_ok( ! PRX3_Social::has_cheered( 101, $topic ), 'Withdrawn member no longer shows cheered' );

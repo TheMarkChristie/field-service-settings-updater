@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.1.0
+Stable tag: 3.2.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,17 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.2.0 =
+* FanPress Chat community round-out: the owner directory gains search
+  (name, login, slug, or owner number) and pagination; typing @ in a
+  topic or message box suggests matching owners (degrades to plain
+  typed handles without JavaScript); activity-feed items can be
+  cheered, one cheer per member with live counts. FanPress staff
+  duties now tie into WordPress roles - Moderators manage topics and
+  the held-replies queue, Content Editors and Owner-Admins also
+  manage boards - granted automatically to existing installs through
+  the versioned role self-heal.
 
 = 3.1.0 =
 * The community layer is now branded FanPress Chat with its own

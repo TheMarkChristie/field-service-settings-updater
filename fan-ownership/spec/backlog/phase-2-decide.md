@@ -362,3 +362,21 @@ Test script:
 2. Create topics (one by hand, one automated, one converted to a ballot) and replies — expect the overview tiles to count each correctly and the latest-topics list to link to them.
 3. View the member forum page — expect the FanPress Chat heading.
 4. Sign in as a user without moderate_comments — expect Held Replies hidden while Overview and Topics remain.
+
+### FO-233 FanPress Chat rounds out the community
+As an owner, I want the community to feel finished — a searchable member directory, @mention suggestions while I type, and the ability to cheer things in the activity feed — and as the club I want FanPress staff duties tied to WordPress roles, so that members engage easily and staff permissions stay manageable in one place.
+Traceability: P112, P110, P111. Estimate: Design 0.5 / Build 1 / Develop 2 / Test 1
+
+Acceptance criteria:
+1. The member directory has a search box (matching name, login, profile slug, and owner number) and pagination (24 per page with page links); the follow buttons work on every page.
+2. Typing @ in a forum or private-message box suggests up to eight matching owners (by login, slug, or display-name prefix) from an owner-gated endpoint; picking one inserts the @handle. Plain typed handles keep working without JavaScript.
+3. Members can cheer any activity-feed item; cheers toggle per member, the count shows on the feed, and cheering requires the owner gate and a nonce.
+4. FanPress staff duties are WordPress capabilities tied to platform roles: Moderators can manage topics and the held-replies queue, Content Editors and Owner-Admins additionally manage boards; existing installs gain the capabilities through the versioned role self-heal.
+5. Everything sits behind the owner gate: directory, suggest endpoint, cheers, feed, forum, and messages all refuse non-owners.
+
+Test script:
+1. Search the directory for a name and an owner number — expect matches; browse past page one — expect the remainder and working follow buttons; search gibberish — expect a clean empty state.
+2. Type @ plus three letters in a topic reply and a private message — expect suggestions; pick one — expect the handle inserted; disable JavaScript and type a handle by hand — expect the mention still notifies.
+3. Cheer a feed item as two different members — expect the count to read 2; cheer again as one — expect it withdrawn and the count to read 1; attempt to cheer logged out — expect refusal.
+4. Sign in as a Moderator — expect Topics and Held Replies in the FanPress menu but not Boards; as a Content Editor — expect Boards too; upgrade an existing install — expect the same without touching roles by hand.
+5. Call the suggest endpoint as a non-owner — expect a 403.

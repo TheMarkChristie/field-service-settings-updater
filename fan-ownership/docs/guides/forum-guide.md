@@ -100,3 +100,30 @@ Capabilities are respected per item: content staff see Overview and
 Topics, taxonomy managers see Boards, comment moderators see Held
 Replies. The forum kill switch, word filter, and mutes stay in
 Settings, where the rest of the platform switches live.
+
+## Community round-out (V3.2)
+
+- **Directory search** — the owner directory now has a search box
+  (name, login, profile slug, or owner number) and pages of 24.
+- **@mention suggestions** — typing `@` in a topic or message box
+  suggests matching owners; picking one inserts the handle. Typed
+  handles keep working with JavaScript off.
+- **Cheers** — every activity-feed item has a cheer button (🎉 with a
+  count). One cheer per member, click again to withdraw.
+
+### Who can run FanPress (WordPress roles)
+
+FanPress staff duties are WordPress capabilities carried by the
+platform roles, so permissions are managed in one place (Users →
+change role):
+
+| Role | FanPress access |
+|---|---|
+| Fan Owner | Member-facing screens only (forum, feed, directory, messages, notifications) — everything behind the owner gate |
+| Moderator | FanPress menu: Overview, Topics (including others' topics), Held Replies |
+| Content Editor | The above plus Boards (taxonomy management) |
+| Owner-Admin | Full FanPress admin |
+| Administrator | Everything |
+
+Existing installs pick the capabilities up automatically on upgrade —
+the plugin re-verifies roles whenever the version changes.
