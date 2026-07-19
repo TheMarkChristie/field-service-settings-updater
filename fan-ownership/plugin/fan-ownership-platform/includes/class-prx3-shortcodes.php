@@ -199,17 +199,13 @@ class PRX3_Shortcodes {
 				<li><?php esc_html_e( 'My referral link:', 'fan-ownership' ); ?> <code><?php echo esc_html( add_query_arg( 'ref', $user_id, home_url( '/' ) ) ); ?></code></li>
 			</ul>
 			<?php
-			$pending = 'shopify' === prx3_commerce_provider() ? PRX3_Shopify::pending_for( wp_get_current_user()->user_email ) : 0;
+			$pending = PRX3_Shopify::pending_for( wp_get_current_user()->user_email );
 			if ( $pending > 0 ) :
 				?>
 				<div class="prx3-notice" role="status"><p><?php echo esc_html( sprintf( /* translators: %d shares. */ _n( 'You have %d share waiting: sign the Shareholders\' Agreement below and it is yours.', 'You have %d shares waiting: sign the Shareholders\' Agreement below and they are yours.', $pending, 'fan-ownership' ), $pending ) ); ?></p></div>
 			<?php endif; ?>
 			<?php
-			if ( 'shopify' === prx3_commerce_provider() ) {
-				$buy_url = PRX3_Shopify::checkout_url( $user_id );
-			} else {
-				$buy_url = prx3_setting( 'checkout_page_id' ) ? get_permalink( (int) prx3_setting( 'checkout_page_id' ) ) : '';
-			}
+			$buy_url = PRX3_Shopify::checkout_url( $user_id );
 			?>
 			<?php if ( $shares < prx3_max_shares() && prx3_feature_on( 'checkout' ) && $buy_url ) : ?>
 				<p><a class="prx3-button" href="<?php echo esc_url( $buy_url ); ?>">

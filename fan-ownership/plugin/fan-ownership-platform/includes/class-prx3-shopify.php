@@ -33,9 +33,6 @@ class PRX3_Shopify {
 	 * Hook the webhook route and the claim triggers.
 	 */
 	public static function init() {
-		if ( 'shopify' !== prx3_commerce_provider() ) {
-			return;
-		}
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 		add_action( 'prx3_sha_accepted', array( __CLASS__, 'on_agreement_signed' ) );
 		add_action( 'wp_login', array( __CLASS__, 'on_login' ), 10, 2 );

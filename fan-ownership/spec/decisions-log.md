@@ -224,6 +224,12 @@ so the recommended options were applied — revisit any of these on request.
 |---|---|---|
 | P105 | Commerce provider | **Shopify replaces WooCommerce** for share sales (provider switchable via `commerce_provider`; the Woo path remains in the code but dormant). Each ladder tier is a Shopify **variant**; the platform builds cart permalinks for the member's exact next tiers and **re-verifies the paid amount against the ladder** when the `orders/paid` webhook (HMAC-verified) arrives — mismatches are held for review, never granted. Because Shopify checkout cannot capture the drawn signature, **grants are immediate only for members who have already signed the current Shareholders' Agreement; everyone else's purchase waits as a pending claim** and is granted the moment they sign on the platform (email invitation sent) — P97/P98 hold. Gifts via a `gift` line property issue codes as before; `refunds/create` surrenders granted shares and voids the order's gift codes (chargeback rules P28). All grants still travel the money path: cap, age gate, owner numbers, register |
 
+## Decisions — round 11: single commerce path (P106)
+
+| # | Topic | Decision |
+|---|---|---|
+| P106 | WooCommerce removed | The dormant WooCommerce path is **deleted entirely** — one cart, one code path. Removed: the Woo checkout module, the Woo-hook agreement checkbox/signature (the sign-to-claim flow covers all buyers), the Woo dispute handler (Shopify refund clawback covers it), the commerce-provider switch, and the Woo settings fields. Receipts/invoices come from Shopify (FO-109 now operational); the platform register remains the statutory ownership record |
+
 ## Technical decisions — round 2 (T51–T75)
 
 | # | Question | Decision |

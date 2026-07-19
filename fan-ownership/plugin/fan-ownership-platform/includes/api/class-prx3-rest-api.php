@@ -215,7 +215,7 @@ class PRX3_REST_API {
 							'provider' => PRX3_Ticketing::provider(),
 							'code'     => PRX3_Ticketing::member_code( $user->ID ),
 						),
-						'checkout_url'     => prx3_setting( 'checkout_page_id' ) ? get_permalink( (int) prx3_setting( 'checkout_page_id' ) ) : home_url(), // Apps link out (T33).
+						'checkout_url'     => PRX3_Shopify::checkout_url( $user->ID ) ? PRX3_Shopify::checkout_url( $user->ID ) : home_url(), // Apps link out to the Shopify cart (T33/P105).
 						'calendar_url'     => PRX3_Meetings::member_ics_url( $user->ID ),
 					);
 				},

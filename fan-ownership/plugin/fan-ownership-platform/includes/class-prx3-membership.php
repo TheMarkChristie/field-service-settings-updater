@@ -148,8 +148,8 @@ class PRX3_Membership {
 		wp_set_auth_cookie( $user_id );
 		prx3_touch_activity( $user_id );
 
-		$checkout = prx3_setting( 'checkout_page_id', 0 );
-		wp_safe_redirect( $checkout ? get_permalink( (int) $checkout ) : home_url( '/?prx3_verified=1' ) );
+		$checkout = PRX3_Shopify::checkout_url( $user_id );
+		wp_safe_redirect( $checkout ? $checkout : home_url( '/?prx3_verified=1' ) );
 		exit;
 	}
 
@@ -190,7 +190,7 @@ class PRX3_Membership {
 				$suspects[] = (int) $u->ID;
 			}
 		}
-		// Payment-identity matching joins at checkout (PRX3_WooCommerce adds
+		// Payment-identity matching joins at checkout (the commerce webhook adds
 		// card fingerprint comparison via the prx3_payment_identity hook).
 		if ( $suspects ) {
 			update_user_meta( $user_id, 'prx3_duplicate_suspects', $suspects );

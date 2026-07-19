@@ -5,7 +5,7 @@
  * FO-106 (cap enforcement), FO-107 (top-ups), FO-112 (owner numbers),
  * P28/P30/P31 (surrender and transfer rules).
  *
- * Money flows arrive via PRX3_WooCommerce (order completion) or
+ * Money flows arrive via PRX3_Shopify (paid-order webhooks) or
  * PRX3_Gifts (redemption); both land here in grant_shares(), the single
  * write path to a member's holding. The register (PRX3_Register) records
  * every event immutably.

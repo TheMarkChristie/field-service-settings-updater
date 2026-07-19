@@ -1,7 +1,7 @@
 # Shopify Share Sales — Club Guide
 
-How share sales run through Shopify while the platform stays the
-system of record (decision P105).
+How share sales run through Shopify — the platform's only checkout —
+while it stays the system of record (decisions P105/P106).
 
 ## The design in one paragraph
 
@@ -27,7 +27,6 @@ agreement rules require).
    `Order payment` (orders/paid) and `Refund create`. Copy the signing
    secret Shopify shows.
 3. **On the platform** Settings → Shares & Checkout:
-   - *Commerce provider* — `shopify`
    - *Shopify store domain* — e.g. `club.myshopify.com`
    - *Shopify webhook signing secret* — from step 2
    - *Shopify variant IDs per tier* — comma-separated, tier 1 first
@@ -75,6 +74,3 @@ cancelled. Idempotent — Shopify's retries do no harm.
 - **Buyer says "where are my shares?"** — they haven't signed yet:
   point them to sign in with their purchase email and sign the
   agreement; the claim is automatic.
-- **Switching back to WooCommerce** — set *Commerce provider* to
-  `woocommerce`; the whole Woo path (checkout signature, order
-  verification, disputes) reactivates.

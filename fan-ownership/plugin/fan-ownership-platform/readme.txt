@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -15,7 +15,7 @@ shareholders' agreements, match streaming, and the companion app API.
 Turns a WordPress site into a fan-owned sports club platform, generic
 for any club and any sport:
 
-* Tiered share ladder with WooCommerce checkout, gifting, and a
+* Tiered share ladder sold through Shopify, with gifting and a
   statutory share register with certificates and owner numbers
 * Signed Shareholders' Agreement at purchase: drawn signature, club
   stamp, board countersignature, executed copies, and a board-only
@@ -31,8 +31,8 @@ for any club and any sport:
 * Feature kill switches, audit log, GDPR export/erasure, commitments
   calendar
 
-Commerce: shares sell through Shopify by default (WooCommerce path
-available via the commerce provider setting); a PDF invoice plugin, a 2FA plugin, and the
+Commerce: shares sell through Shopify (webhooks, ladder verification,
+sign-to-claim); a 2FA plugin and the
 club badge plugin integrate through documented contracts.
 
 == Installation ==
@@ -41,10 +41,17 @@ club badge plugin integrate through documented contracts.
 2. Visit Settings > Permalinks and click Save (registers the
    /brand-pack/ and /my-agreement/ endpoints).
 3. Work through Fan Ownership > Settings: club identity and sport,
-   brand pack, legal pages and signatory, share product, governance
-   numbers, and integrations.
+   brand pack, legal pages and signatory, the Shopify store connection,
+   governance numbers, and integrations.
 
 == Changelog ==
+
+= 0.2.1 =
+* WooCommerce removed entirely: one cart, one code path. The Woo
+  checkout module, dispute handler, provider switch, and Woo settings
+  fields are gone; Shopify handles all commerce and refund clawback;
+  receipts come from Shopify; email-verification and app checkout
+  links now point at the Shopify cart.
 
 = 0.2.0 =
 * Shopify replaces WooCommerce as the default commerce provider

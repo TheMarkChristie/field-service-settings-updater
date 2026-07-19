@@ -78,7 +78,6 @@ class PRX3_Config {
 			'sha_page_id'                        => 0,
 			'sha_version'                        => '1.0',
 			'terms_page_id'                      => 0,
-			'commerce_provider'                  => 'shopify',
 			'shopify_domain'                     => '',
 			'shopify_webhook_secret'             => '',
 			'shopify_share_variants'             => '',

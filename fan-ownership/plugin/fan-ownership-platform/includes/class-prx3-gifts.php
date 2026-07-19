@@ -23,17 +23,6 @@ class PRX3_Gifts {
 	}
 
 	/**
-	 * Issue a gift code after a paid gift order (called by PRX3_WooCommerce).
-	 *
-	 * @param WC_Order $order           The paid order.
-	 * @param int      $shares          Shares gifted.
-	 * @param string   $recipient_email Optional recipient email for delivery.
-	 */
-	public static function issue( $order, $shares, $recipient_email = '' ) {
-		self::issue_code( $order->get_user_id(), $order->get_billing_email() ? $order->get_billing_email() : '', $shares, (string) $order->get_id(), (float) $order->get_total(), $recipient_email );
-	}
-
-	/**
 	 * Provider-agnostic gift issue: mint the code, store it against the
 	 * order reference, and email buyer (and recipient when known).
 	 *

@@ -33,11 +33,6 @@ class PRX3_Agreements {
 	 * endpoint, and the board signatures register.
 	 */
 	public static function init() {
-		if ( class_exists( 'WooCommerce' ) && 'woocommerce' === prx3_commerce_provider() ) {
-			add_action( 'woocommerce_review_order_before_submit', array( __CLASS__, 'checkout_checkbox' ) );
-			add_action( 'woocommerce_checkout_process', array( __CLASS__, 'checkout_validate' ) );
-			add_action( 'woocommerce_checkout_order_processed', array( __CLASS__, 'record_from_order' ), 10, 1 );
-		}
 		add_action( 'admin_post_prx3_accept_agreement', array( __CLASS__, 'handle_reaccept' ) );
 		add_action( 'admin_post_nopriv_prx3_accept_agreement', '__return_false' );
 		add_action( 'init', array( __CLASS__, 'register_endpoint' ) );
@@ -84,53 +79,6 @@ class PRX3_Agreements {
 	}
 
 	/**
-	 * Does the cart contain shares (own purchase or gift)?
-	 */
-	private static function cart_has_shares() {
-		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
-			return false;
-		}
-		foreach ( WC()->cart->get_cart() as $item ) {
-			if ( PRX3_WooCommerce::share_product_id() && PRX3_WooCommerce::share_product_id() === (int) $item['product_id'] ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Render the acceptance checkbox and signature pad at checkout when
-	 * the cart contains shares.
-	 */
-	public static function checkout_checkbox() {
-		if ( ! self::cart_has_shares() ) {
-			return;
-		}
-		$url = self::agreement_url();
-		woocommerce_form_field(
-			'prx3_sha_accept',
-			array(
-				'type'     => 'checkbox',
-				'class'    => array( 'form-row', 'prx3-sha' ),
-				'required' => true,
-				'label'    => $url
-					? sprintf(
-						/* translators: 1: URL, 2: version. */
-						__( 'I have read and agree to the <a href="%1$s" target="_blank" rel="noopener">Shareholders\' Agreement</a> (v%2$s), including its conduct and morality provisions.', 'fan-ownership' ),
-						esc_url( $url ),
-						esc_html( self::version() )
-					)
-					: sprintf(
-						/* translators: %s version. */
-						__( 'I agree to the Shareholders\' Agreement (v%s), including its conduct and morality provisions.', 'fan-ownership' ),
-						esc_html( self::version() )
-					),
-			)
-		);
-		self::signature_field();
-	}
-
-	/**
 	 * The signature capture field (canvas pad rendered by JS, PNG data
 	 * URL posted in the hidden input). Shared by checkout, gift
 	 * redemption, and the re-accept form.
@@ -148,7 +96,7 @@ class PRX3_Agreements {
 	/**
 	 * Validate and return the posted signature as a safe PNG data URL,
 	 * or '' when missing/invalid. Callers verify their own nonce
-	 * (WooCommerce checkout, gift-redeem, and re-accept forms all do).
+	 * (the gift-redeem and re-accept forms both do).
 	 */
 	public static function posted_signature() {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- every calling form verifies its own nonce before acting.
@@ -166,46 +114,6 @@ class PRX3_Agreements {
 			return '';
 		}
 		return $prefix . base64_encode( $decoded ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- re-encoding the validated signature PNG only.
-	}
-
-	/**
-	 * Block checkout unless the agreement is accepted and signed when
-	 * shares are in the cart.
-	 */
-	public static function checkout_validate() {
-		if ( ! self::cart_has_shares() ) {
-			return;
-		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce checkout carries its own nonce.
-		if ( empty( $_POST['prx3_sha_accept'] ) ) {
-			wc_add_notice( __( 'Please read and accept the Shareholders\' Agreement to buy shares.', 'fan-ownership' ), 'error' );
-		}
-		if ( ! self::posted_signature() ) {
-			wc_add_notice( __( 'Please sign in the signature box — your signature goes on your executed copy of the Shareholders\' Agreement.', 'fan-ownership' ), 'error' );
-		}
-	}
-
-	/**
-	 * Record the acceptance captured at checkout once the order is
-	 * processed, when the order contains shares.
-	 *
-	 * @param int $order_id WooCommerce order ID.
-	 */
-	public static function record_from_order( $order_id ) {
-		$order = wc_get_order( $order_id );
-		if ( ! $order || ! $order->get_user_id() ) {
-			return;
-		}
-		// Only record when shares are in the order.
-		$has_shares = false;
-		foreach ( $order->get_items() as $item ) {
-			if ( PRX3_WooCommerce::share_product_id() && (int) $item->get_product_id() === PRX3_WooCommerce::share_product_id() ) {
-				$has_shares = true;
-			}
-		}
-		if ( $has_shares ) {
-			self::record_acceptance( $order->get_user_id(), 'checkout', $order_id, self::posted_signature() );
-		}
 	}
 
 	/**
