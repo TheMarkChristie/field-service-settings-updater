@@ -40,6 +40,7 @@ before shipping.
 | 3.12.1.0 | WP user screens link to the live owner profile (Users-list row action + Owner Profile panel with owner number, shares, activity, and a view button) |
 | 3.12.1.1 | Fix: demo open ballot opened through the real lifecycle (electorate snapshot, quorum, audit, chat) so demo owners can vote; Load demo club heals dead ballots |
 | 3.12.1.2 | Fix: admin screens for four screen-less stores — Share Register (Owners), Audit Log (Fan App Settings), Reports queue (FanPress), Gift Codes (Owners) |
+| 3.12.1.3 | Fix: member pages self-install on version change (stamped, idempotent); profile-link fallback re-wires the Profile page by slug |
 
 ## Phase 1 — Own
 

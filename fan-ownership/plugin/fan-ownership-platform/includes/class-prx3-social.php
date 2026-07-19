@@ -656,6 +656,15 @@ class PRX3_Social {
 	public static function profile_url( $user_id ) {
 		$map  = (array) get_option( 'prx3_member_pages', array() );
 		$page = isset( $map['profile'] ) ? (int) $map['profile'] : 0;
+		if ( ( ! $page || 'publish' !== get_post_status( $page ) ) && function_exists( 'get_page_by_path' ) ) {
+			// Fallback: find (and re-wire) a page that carries the shortcode.
+			$found = get_page_by_path( 'profile' );
+			if ( $found && 'publish' === get_post_status( $found->ID ) ) {
+				$page           = (int) $found->ID;
+				$map['profile'] = $page;
+				update_option( 'prx3_member_pages', $map, false );
+			}
+		}
 		if ( ! $page || 'publish' !== get_post_status( $page ) ) {
 			return '';
 		}

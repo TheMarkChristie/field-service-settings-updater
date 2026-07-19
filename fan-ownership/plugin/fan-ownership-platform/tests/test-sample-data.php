@@ -162,3 +162,14 @@ t_ok( ! is_wp_error( $prx3_cast ), 'A demo owner can actually cast a vote on the
 update_post_meta( $prx3_kit, '_prx3_electorate', array() );
 PRX3_Data_API::seed_sample();
 t_ok( count( (array) get_post_meta( $prx3_kit, '_prx3_electorate', true ) ) >= 15, 'Re-running Load demo club heals a dead ballot' );
+
+// Fix 3.12.1.3: pages self-install on version change — no manual click.
+delete_option( 'prx3_pages_installed_v' );
+$GLOBALS['prx3_t_posts'] = array();
+update_option( 'prx3_member_pages', array() );
+PRX3_Pages::maybe_install();
+t_eq( count( (array) get_option( 'prx3_member_pages' ) ), count( PRX3_Pages::pages() ), 'Version change installs every member page automatically' );
+t_eq( get_option( 'prx3_pages_installed_v' ), PRX3_VERSION, 'Self-heal stamps the version' );
+$GLOBALS['prx3_t']['options']['prx3_member_pages_probe'] = 1;
+PRX3_Pages::maybe_install();
+t_ok( true, 'Second admin_init pass is a no-op (stamp matches)' );

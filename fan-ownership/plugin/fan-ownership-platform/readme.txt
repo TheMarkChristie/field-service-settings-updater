@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.12.1.2
+Stable tag: 3.12.1.3
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,14 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.12.1.3 =
+* Fix: member pages now create themselves automatically whenever the
+  plugin version changes - no more "click Create member pages after
+  upgrading". Existing pages are never touched. The owner-profile
+  links (Users list, user-edit panel, directory) also gained a
+  fallback that finds and re-wires the Profile page by its slug if
+  the tracking map is missing it.
 
 = 3.12.1.2 =
 * Fix: four data stores existed with no admin screen. New Share

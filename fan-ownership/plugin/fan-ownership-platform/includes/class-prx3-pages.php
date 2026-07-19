@@ -21,6 +21,20 @@ class PRX3_Pages {
 	public static function init() {
 		add_action( 'admin_post_prx3_create_pages', array( __CLASS__, 'handle_install' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'notice' ) );
+		add_action( 'admin_init', array( __CLASS__, 'maybe_install' ), 6 );
+	}
+
+	/**
+	 * Self-heal: whenever the plugin version changes, create any member
+	 * pages the new build added — no manual click needed. install() is
+	 * idempotent, so existing pages are never touched.
+	 */
+	public static function maybe_install() {
+		if ( PRX3_VERSION === get_option( 'prx3_pages_installed_v' ) ) {
+			return;
+		}
+		self::install();
+		update_option( 'prx3_pages_installed_v', PRX3_VERSION, false );
 	}
 
 	/**
