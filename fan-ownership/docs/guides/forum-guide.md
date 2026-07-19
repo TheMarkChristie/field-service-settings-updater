@@ -144,7 +144,8 @@ FanPress now presents as a messenger, not a classic forum:
 - **Match & ballot chats on their own pages** — publishing a match or
   opening a ballot activates its chat (as before), and the whole
   conversation now also renders on the match page and the ballot page
-  for owners — chat where the event is.
+  for owners — beside the video / ballot card on wide screens,
+  stacked underneath on phones.
 - **Colours** — Settings → FanPress Chat sets three hex colours: my
   bubbles, other owners' bubbles, and board members' bubbles.
   Defaults: WhatsApp green / white / soft gold. Invalid values fall

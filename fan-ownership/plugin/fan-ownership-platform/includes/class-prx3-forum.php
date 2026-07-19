@@ -882,7 +882,7 @@ class PRX3_Forum {
 		}
 		wp_enqueue_style( 'prx3' );
 		wp_enqueue_script( 'prx3-mentions' );
-		return $content . self::render_thread_view( $topic, false );
+		return '<div class="prx3-event-layout"><div class="prx3-event-main">' . $content . '</div><div class="prx3-event-chat">' . self::render_thread_view( $topic, false ) . '</div></div>';
 	}
 
 	/**

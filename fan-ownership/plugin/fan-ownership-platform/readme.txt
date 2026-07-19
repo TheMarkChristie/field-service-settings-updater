@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.3.0
+Stable tag: 3.3.1
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,11 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.3.1 =
+* On wide screens the embedded event chat now sits beside the match
+  video and beside the ballot card (sticky, with its own scroll)
+  instead of below them; it still stacks underneath on phones.
 
 = 3.3.0 =
 * FanPress Chat now looks and feels like WhatsApp: the forum page is a
