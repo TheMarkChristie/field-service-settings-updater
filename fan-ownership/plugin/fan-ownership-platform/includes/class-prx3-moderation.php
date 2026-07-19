@@ -20,6 +20,7 @@ class PRX3_Moderation {
 	 * Hook up the moderation action handler.
 	 */
 	public static function init() {
+		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 30 );
 		add_action( 'admin_post_prx3_moderate', array( __CLASS__, 'handle_action' ) );
 	}
 
@@ -187,5 +188,40 @@ class PRX3_Moderation {
 		}
 		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : admin_url() );
 		exit;
+	}
+	/**
+	 * The reports queue, in the FanPress menu where moderators live.
+	 */
+	public static function menu() {
+		add_submenu_page(
+			'prx3-fanpress',
+			__( 'Reports', 'fan-ownership' ),
+			__( 'Reports', 'fan-ownership' ),
+			'prx3_moderate',
+			'prx3-mod-queue',
+			array( __CLASS__, 'render_queue' )
+		);
+	}
+
+	/**
+	 * Render member reports, newest first.
+	 */
+	public static function render_queue() {
+		if ( ! current_user_can( 'prx3_moderate' ) ) {
+			wp_die( esc_html__( 'Moderators only.', 'fan-ownership' ) );
+		}
+		$queue = array_reverse( (array) get_option( 'prx3_mod_queue', array() ) );
+		echo '<div class="wrap"><h1>' . esc_html__( 'Member reports', 'fan-ownership' ) . '</h1>';
+		if ( ! $queue ) {
+			echo '<p>' . esc_html__( 'Nothing reported. The word-filter holds live under Held Replies.', 'fan-ownership' ) . '</p></div>';
+			return;
+		}
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'When', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Reporter', 'fan-ownership' ) . '</th><th>' . esc_html__( 'What', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Reason', 'fan-ownership' ) . '</th></tr></thead><tbody>';
+		foreach ( array_slice( $queue, 0, 100 ) as $report ) {
+			$report   = (array) $report;
+			$reporter = get_userdata( (int) ( $report['reporter'] ?? 0 ) );
+			echo '<tr><td>' . esc_html( (string) ( $report['at'] ?? '' ) ) . '</td><td>' . esc_html( $reporter ? $reporter->display_name : '—' ) . '</td><td>' . esc_html( (string) ( $report['what'] ?? ( $report['item'] ?? '' ) ) ) . '</td><td>' . esc_html( (string) ( $report['reason'] ?? '' ) ) . '</td></tr>';
+		}
+		echo '</tbody></table><p class="description">' . esc_html__( 'Sanctions (warnings, mutes) are applied from the member\'s user screen; every action is audited.', 'fan-ownership' ) . '</p></div>';
 	}
 }

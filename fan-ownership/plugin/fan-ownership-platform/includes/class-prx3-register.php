@@ -21,6 +21,7 @@ class PRX3_Register {
 	 * Hook the register export handler.
 	 */
 	public static function init() {
+		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 20 );
 		add_action( 'admin_post_prx3_export_register', array( __CLASS__, 'handle_export' ) );
 		add_action( 'prx3_commitments_tick', array( __CLASS__, 'maybe_monthly_backup' ) );
 	}
@@ -212,5 +213,62 @@ class PRX3_Register {
 			$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}prx3_share_register WHERE user_id = %d ORDER BY id ASC", $user_id ),
 			ARRAY_A
 		);
+	}
+	/**
+	 * The Share Register screen: the statutory list under Owners —
+	 * every owner with their current holding, owner number, and last
+	 * event, plus the full recent event log and the CSV export.
+	 */
+	public static function menu() {
+		add_submenu_page(
+			'prx3-owners',
+			__( 'Share Register', 'fan-ownership' ),
+			__( 'Share Register', 'fan-ownership' ),
+			'prx3_view_tally',
+			'prx3-share-register',
+			array( __CLASS__, 'render_screen' )
+		);
+	}
+
+	/**
+	 * Render the register: holdings summary then the recent event log.
+	 */
+	public static function render_screen() {
+		if ( ! current_user_can( 'prx3_view_tally' ) && ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Board and staff only.', 'fan-ownership' ) );
+		}
+		global $wpdb;
+		echo '<div class="wrap"><h1>' . esc_html__( 'Share Register', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html__( 'The statutory register of members: append-only, every movement recorded. The CSV export lives in Fan App Settings → Shares & Checkout.', 'fan-ownership' ) . '</p>';
+		if ( ! is_callable( array( $wpdb, 'get_results' ) ) ) {
+			echo '</div>';
+			return;
+		}
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery -- plugin-owned register table, read-only screen.
+		$latest = $wpdb->get_results( "SELECT r.user_id, r.holding_after, r.event, r.recorded_at FROM {$wpdb->prefix}prx3_share_register r INNER JOIN ( SELECT user_id, MAX(id) AS max_id FROM {$wpdb->prefix}prx3_share_register GROUP BY user_id ) x ON x.max_id = r.id ORDER BY r.holding_after DESC" );
+		echo '<h2>' . esc_html__( 'Current holdings', 'fan-ownership' ) . '</h2>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Owner', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Owner #', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Holding', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Last event', 'fan-ownership' ) . '</th><th>' . esc_html__( 'When', 'fan-ownership' ) . '</th><th></th></tr></thead><tbody>';
+		$total = 0;
+		foreach ( (array) $latest as $row ) {
+			$member = get_userdata( (int) $row->user_id );
+			$total += (int) $row->holding_after;
+			echo '<tr><td>' . esc_html( $member ? $member->display_name : '#' . (int) $row->user_id ) . '</td>';
+			echo '<td>' . (int) PRX3_Shares::owner_number( (int) $row->user_id ) . '</td>';
+			echo '<td><strong>' . (int) $row->holding_after . '</strong></td>';
+			echo '<td>' . esc_html( $row->event ) . '</td>';
+			echo '<td>' . esc_html( prx3_format_datetime( (string) $row->recorded_at ) ) . '</td>';
+			echo '<td>' . ( class_exists( 'PRX3_Social' ) && PRX3_Social::profile_url( (int) $row->user_id ) ? '<a href="' . esc_url( PRX3_Social::profile_url( (int) $row->user_id ) ) . '">' . esc_html__( 'profile', 'fan-ownership' ) . '</a>' : '' ) . '</td></tr>';
+		}
+		echo '</tbody></table>';
+		echo '<p><strong>' . esc_html( sprintf( /* translators: 1 owners, 2 shares. */ __( '%1$d holders · %2$d shares in issue', 'fan-ownership' ), count( (array) $latest ), $total ) ) . '</strong></p>';
+		$events = $wpdb->get_results( "SELECT recorded_at, user_id, event, shares, holding_after, source, consideration FROM {$wpdb->prefix}prx3_share_register ORDER BY id DESC LIMIT 50" );
+		// phpcs:enable
+		echo '<h2>' . esc_html__( 'Recent events (latest 50)', 'fan-ownership' ) . '</h2>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'When', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Owner', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Event', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Shares', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Holding after', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Source', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Consideration', 'fan-ownership' ) . '</th></tr></thead><tbody>';
+		foreach ( (array) $events as $row ) {
+			$member = get_userdata( (int) $row->user_id );
+			echo '<tr><td>' . esc_html( prx3_format_datetime( (string) $row->recorded_at ) ) . '</td><td>' . esc_html( $member ? $member->display_name : '#' . (int) $row->user_id ) . '</td><td>' . esc_html( $row->event ) . '</td><td>' . (int) $row->shares . '</td><td>' . (int) $row->holding_after . '</td><td>' . esc_html( $row->source ) . '</td><td>' . esc_html( null === $row->consideration ? '—' : number_format_i18n( (float) $row->consideration, 2 ) ) . '</td></tr>';
+		}
+		echo '</tbody></table></div>';
 	}
 }

@@ -39,6 +39,7 @@ before shipping.
 | 3.12.0.1 | Fix: demo ballots pre-approved (no four-eyes hold on demo sites), kit ballot live to 31 Aug; member import seeds bios/socials/identity incl. a PEP=yes example |
 | 3.12.1.0 | WP user screens link to the live owner profile (Users-list row action + Owner Profile panel with owner number, shares, activity, and a view button) |
 | 3.12.1.1 | Fix: demo open ballot opened through the real lifecycle (electorate snapshot, quorum, audit, chat) so demo owners can vote; Load demo club heals dead ballots |
+| 3.12.1.2 | Fix: admin screens for four screen-less stores — Share Register (Owners), Audit Log (Fan App Settings), Reports queue (FanPress), Gift Codes (Owners) |
 
 ## Phase 1 — Own
 

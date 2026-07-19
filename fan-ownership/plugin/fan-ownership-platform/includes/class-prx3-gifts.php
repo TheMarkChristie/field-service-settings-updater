@@ -19,6 +19,7 @@ class PRX3_Gifts {
 	 * Hook the redemption form handler.
 	 */
 	public static function init() {
+		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 30 );
 		add_action( 'init', array( __CLASS__, 'maybe_redeem' ) );
 	}
 
@@ -161,5 +162,42 @@ class PRX3_Gifts {
 		$url = wp_get_referer() ? wp_get_referer() : home_url();
 		wp_safe_redirect( add_query_arg( 'prx3_error', rawurlencode( $message ), remove_query_arg( 'prx3_error', $url ) ) );
 		exit;
+	}
+	/**
+	 * Gift codes screen under Owners: issued, redeemed, outstanding.
+	 */
+	public static function menu() {
+		add_submenu_page(
+			'prx3-owners',
+			__( 'Gift Codes', 'fan-ownership' ),
+			__( 'Gift Codes', 'fan-ownership' ),
+			'prx3_admin',
+			'prx3-gift-codes',
+			array( __CLASS__, 'render_screen' )
+		);
+	}
+
+	/**
+	 * Render every gift code with its state.
+	 */
+	public static function render_screen() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		$gifts = (array) get_option( 'prx3_gift_codes', array() );
+		echo '<div class="wrap"><h1>' . esc_html__( 'Gift Codes', 'fan-ownership' ) . '</h1>';
+		if ( ! $gifts ) {
+			echo '<p>' . esc_html__( 'No gift codes issued yet — gifts are bought through the share checkout.', 'fan-ownership' ) . '</p></div>';
+			return;
+		}
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Code', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Shares', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Buyer', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Status', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Redeemed by', 'fan-ownership' ) . '</th></tr></thead><tbody>';
+		foreach ( $gifts as $code => $gift ) {
+			$gift     = (array) $gift;
+			$buyer    = get_userdata( (int) ( $gift['buyer_id'] ?? 0 ) );
+			$redeemer = ! empty( $gift['redeemed_by'] ) ? get_userdata( (int) $gift['redeemed_by'] ) : false;
+			$status   = ! empty( $gift['voided'] ) ? __( 'voided', 'fan-ownership' ) : ( ! empty( $gift['redeemed_by'] ) ? __( 'redeemed', 'fan-ownership' ) : __( 'outstanding', 'fan-ownership' ) );
+			echo '<tr><td><code>' . esc_html( (string) $code ) . '</code></td><td>' . (int) ( $gift['shares'] ?? 0 ) . '</td><td>' . esc_html( $buyer ? $buyer->display_name : (string) ( $gift['buyer_email'] ?? '—' ) ) . '</td><td>' . esc_html( $status ) . '</td><td>' . esc_html( $redeemer ? $redeemer->display_name : '—' ) . '</td></tr>';
+		}
+		echo '</tbody></table></div>';
 	}
 }

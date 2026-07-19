@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.12.1.1
+Stable tag: 3.12.1.2
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,15 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.12.1.2 =
+* Fix: four data stores existed with no admin screen. New Share
+  Register screen under Owners (current holdings with owner numbers,
+  totals, profile links, and the latest 50 register events); new
+  Audit Log viewer under Fan App Settings (latest 100 entries with an
+  event filter); new Reports queue under FanPress Chat (member
+  reports for moderators); new Gift Codes screen under Owners
+  (issued / redeemed / outstanding / voided).
 
 = 3.12.1.1 =
 * Fix: the demo's open ballot is now genuinely live. The loader opens
