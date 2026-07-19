@@ -783,7 +783,7 @@ class PRX3_Social {
 			return new WP_Error( 'prx3_admin_only', __( 'Only Owner-Admins and board members can moderate profiles.', 'fan-ownership' ) );
 		}
 		$applied = array();
-		if ( isset( $changes['bio'] ) && null !== $changes['bio'] && (string) $changes['bio'] !== (string) get_user_meta( $user_id, 'prx3_bio', true ) ) {
+		if ( isset( $changes['bio'] ) && null !== $changes['bio'] && (string) get_user_meta( $user_id, 'prx3_bio', true ) !== (string) $changes['bio'] ) {
 			update_user_meta( $user_id, 'prx3_bio', sanitize_textarea_field( (string) $changes['bio'] ) );
 			$applied[] = 'bio';
 		}
@@ -858,13 +858,13 @@ class PRX3_Social {
 	 *
 	 * @param string $avatar      The default avatar HTML.
 	 * @param mixed  $id_or_email Avatar target.
-	 * @param int    $size        Pixel size.
-	 * @param string $default     Default avatar keyword (unused).
-	 * @param string $alt         Alt text.
-	 * @param array  $args        get_avatar args.
+	 * @param int    $size           Pixel size.
+	 * @param string $default_avatar Default avatar keyword (unused).
+	 * @param string $alt            Alt text.
+	 * @param array  $args           get_avatar args.
 	 * @return string Avatar HTML.
 	 */
-	public static function filter_avatar( $avatar, $id_or_email, $size, $default, $alt = '', $args = array() ) {
+	public static function filter_avatar( $avatar, $id_or_email, $size, $default_avatar, $alt = '', $args = array() ) {
 		$user_id = self::avatar_user_id( $id_or_email );
 		if ( ! $user_id || ! prx3_is_owner( $user_id ) ) {
 			return $avatar;

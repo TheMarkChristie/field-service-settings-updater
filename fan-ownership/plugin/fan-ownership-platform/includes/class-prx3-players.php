@@ -140,7 +140,7 @@ class PRX3_Players {
 	 */
 	public static function is_votable_player( $player_id ) {
 		$type = prx3_player_post_type();
-		if ( $type !== get_post_type( $player_id ) ) {
+		if ( get_post_type( $player_id ) !== $type ) {
 			return false;
 		}
 		return 'prx3_player' !== $type || (bool) get_post_meta( $player_id, '_prx3_active', true );

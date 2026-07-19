@@ -259,8 +259,7 @@ class PRX3_Register {
 		foreach ( (array) $latest as $row ) {
 			$member = get_userdata( (int) $row->user_id );
 			$total += (int) $row->holding_after;
-			$detail = esc_url( admin_url( 'admin.php?page=prx3-share-register&owner=' . (int) $row->user_id ) );
-			echo '<tr><td><a href="' . $detail . '"><strong>' . esc_html( $member ? $member->display_name : '#' . (int) $row->user_id ) . '</strong></a></td>';
+			echo '<tr><td><a href="' . esc_url( admin_url( 'admin.php?page=prx3-share-register&owner=' . (int) $row->user_id ) ) . '"><strong>' . esc_html( $member ? $member->display_name : '#' . (int) $row->user_id ) . '</strong></a></td>';
 			echo '<td>' . (int) PRX3_Shares::owner_number( (int) $row->user_id ) . '</td>';
 			echo '<td><strong>' . (int) $row->holding_after . '</strong></td>';
 			echo '<td>' . esc_html( $row->event ) . '</td>';
