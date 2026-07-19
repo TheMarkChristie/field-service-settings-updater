@@ -80,3 +80,10 @@ t_eq( $identity['pep'], 'no', 'The PEP declaration is never editable through mod
 // No-op calls apply nothing and are not audited as changes.
 $noop = PRX3_Social::moderate_profile( 81, 80, array( 'remove_photo' => true ) );
 t_eq( $noop, array(), 'Removing an already-removed photo applies nothing' );
+
+// Board members can moderate too (P128 — Owner Management is board + admin).
+prx3_test_user( 82, array( 'display_name' => 'Board Bruce' ) );
+$GLOBALS['prx3_t']['caps'][82]['prx3_board'] = true;
+update_user_meta( 80, 'prx3_bio', 'More inappropriate text' );
+$board_applied = PRX3_Social::moderate_profile( 82, 80, array( 'bio' => '' ) );
+t_eq( $board_applied, array( 'bio' ), 'Board members can moderate profile content' );

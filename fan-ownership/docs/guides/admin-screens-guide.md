@@ -4,14 +4,10 @@ Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
 **FanPress Chat**, **Board**, **Fan App Settings**, **Fan Club Technical Setup**.
 
 ## Owners
-- **Share Register** — the statutory list on screen: every holder with
-  owner number, current holding, last event, profile link, and the
-  holders/shares-in-issue totals, plus the latest 50 register events
-  (grants, redemptions, surrenders, merges, consideration). CSV export
-  stays under Fan App Settings → Shares & Checkout.
 - **Gift Codes** — every code: shares, buyer, status (outstanding /
   redeemed / voided), redeemer.
-- All member content types as data tables.
+- All member content types as data tables. (The Share Register moved
+  to the Board menu — board members and Owner-Admins only.)
 
 ## FanPress Chat
 - **Overview, Topics, Boards, Held Replies** — plus **Reports**: member
@@ -20,10 +16,21 @@ Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
 ## Board
 - Workspace, Dashboard, Decision Register, Commitments, Owner
   Signatures, Live Q&A presenter, Annual Report, Legal/Targets/
-  Governance (read-only for board), and **Identity Lookup** — the full
-  identity record (birth name, nationality, residence, DOB, PEP) with
-  the government ID always masked to its last four. Every view is
-  audited.
+  Governance (read-only for board).
+- **Owner Management** — board members and Owner-Admins only: search
+  for any owner, see their personal information on one page (identity
+  with the government ID always masked, email, shares — every view
+  audited), and fix inappropriate profile content right there —
+  edit/clear the bio, remove social links, the profile picture, or
+  individual gallery photos. Name, address, ID, PEP, and contact
+  details are read-only by design.
+- **Share Register** — the statutory list on screen (moved here from
+  Owners; board members and Owner-Admins only): every holder with
+  owner number, current holding, last event, profile link, and the
+  holders/shares-in-issue totals, plus the latest 50 register events.
+  CSV export stays under Fan App Settings → Shares & Checkout.
+- **Identity Lookup** — the quick ID-number lookup; the government ID
+  is always masked to its last four. Every view is audited.
 
 ## Fan App Settings
 - Feature switches, Member pages (self-install on upgrade; button for

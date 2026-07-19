@@ -215,16 +215,16 @@ class PRX3_Register {
 		);
 	}
 	/**
-	 * The Share Register screen: the statutory list under Owners —
-	 * every owner with their current holding, owner number, and last
-	 * event, plus the full recent event log and the CSV export.
+	 * The Share Register screen: the statutory list, in the Board menu
+	 * only (P128) — visible to board members and Owner-Admins, nobody
+	 * else.
 	 */
 	public static function menu() {
 		add_submenu_page(
-			'prx3-owners',
+			'prx3-board',
 			__( 'Share Register', 'fan-ownership' ),
 			__( 'Share Register', 'fan-ownership' ),
-			'prx3_view_tally',
+			current_user_can( 'prx3_board' ) ? 'prx3_board' : 'prx3_admin',
 			'prx3-share-register',
 			array( __CLASS__, 'render_screen' )
 		);
@@ -234,8 +234,8 @@ class PRX3_Register {
 	 * Render the register: holdings summary then the recent event log.
 	 */
 	public static function render_screen() {
-		if ( ! current_user_can( 'prx3_view_tally' ) && ! current_user_can( 'prx3_admin' ) ) {
-			wp_die( esc_html__( 'Board and staff only.', 'fan-ownership' ) );
+		if ( ! current_user_can( 'prx3_board' ) && ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Board members and Owner-Admins only.', 'fan-ownership' ) );
 		}
 		global $wpdb;
 		echo '<div class="wrap"><h1>' . esc_html__( 'Share Register', 'fan-ownership' ) . '</h1>';

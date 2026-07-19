@@ -772,8 +772,8 @@ class PRX3_Social {
 	 * @return array|WP_Error Applied change keys, or error for non-admins.
 	 */
 	public static function moderate_profile( $admin_id, $user_id, $changes ) {
-		if ( ! user_can( $admin_id, 'prx3_admin' ) ) {
-			return new WP_Error( 'prx3_admin_only', __( 'Only Owner-Admins can moderate profiles.', 'fan-ownership' ) );
+		if ( ! user_can( $admin_id, 'prx3_admin' ) && ! user_can( $admin_id, 'prx3_board' ) ) {
+			return new WP_Error( 'prx3_admin_only', __( 'Only Owner-Admins and board members can moderate profiles.', 'fan-ownership' ) );
 		}
 		$applied = array();
 		if ( isset( $changes['bio'] ) && null !== $changes['bio'] && (string) $changes['bio'] !== (string) get_user_meta( $user_id, 'prx3_bio', true ) ) {

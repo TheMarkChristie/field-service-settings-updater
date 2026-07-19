@@ -29,6 +29,7 @@ class PRX3_Board {
 		add_action( 'admin_post_prx3_board_vote', array( __CLASS__, 'handle_internal_vote' ) );
 		add_action( 'admin_post_prx3_board_release', array( __CLASS__, 'handle_release' ) );
 		add_action( 'admin_post_prx3_board_observer', array( __CLASS__, 'handle_observer_grant' ) );
+		add_action( 'admin_post_prx3_board_moderate', array( __CLASS__, 'handle_owner_moderate' ) );
 		add_action( 'show_user_profile', array( __CLASS__, 'conflicts_profile' ) );
 		add_action( 'edit_user_profile', array( __CLASS__, 'conflicts_profile' ) );
 		add_action( 'personal_options_update', array( __CLASS__, 'save_conflicts' ) );
@@ -67,9 +68,17 @@ class PRX3_Board {
 		);
 		add_submenu_page(
 			'prx3-board',
+			__( 'Owner Management', 'fan-ownership' ),
+			__( 'Owner Management', 'fan-ownership' ),
+			current_user_can( 'prx3_board' ) ? 'prx3_board' : 'prx3_admin',
+			'prx3-board-owners',
+			array( __CLASS__, 'render_owner_management' )
+		);
+		add_submenu_page(
+			'prx3-board',
 			__( 'Identity Lookup', 'fan-ownership' ),
 			__( 'Identity Lookup', 'fan-ownership' ),
-			'prx3_board',
+			current_user_can( 'prx3_board' ) ? 'prx3_board' : 'prx3_admin',
 			'prx3-board-identity',
 			array( __CLASS__, 'render_identity_lookup' )
 		);
@@ -529,5 +538,119 @@ class PRX3_Board {
 		echo '<div class="wrap"><h1>' . esc_html__( 'Identity Lookup', 'fan-ownership' ) . '</h1>';
 		PRX3_Admin::identity_lookup_panel( 'prx3-board-identity' );
 		echo '</div>';
+	}
+
+	/**
+	 * Board → Owner Management (P128): find an owner, see their
+	 * personal information (audited, ID masked), and moderate their
+	 * community-facing profile content — picture, bio, socials,
+	 * gallery — in one place. Identity and contact details are
+	 * read-only here by design (P127).
+	 */
+	public static function render_owner_management() {
+		if ( ! current_user_can( 'prx3_board' ) && ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Board members and Owner-Admins only.', 'fan-ownership' ) );
+		}
+		echo '<div class="wrap"><h1>' . esc_html__( 'Owner Management', 'fan-ownership' ) . '</h1>';
+		if ( isset( $_GET['moderated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- confirmation notice only.
+			echo '<div class="notice notice-success"><p>' . esc_html__( 'Profile updated. The change is in the audit log.', 'fan-ownership' ) . '</p></div>';
+		}
+		echo '<p>' . esc_html__( 'Find an owner to see their personal information and fix inappropriate profile content. Name, address, ID, PEP, and contact details are read-only here — they belong to the member.', 'fan-ownership' ) . '</p>';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only search + selection.
+		$search = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$who = isset( $_GET['user'] ) ? absint( $_GET['user'] ) : 0;
+		echo '<form method="get"><input type="hidden" name="page" value="prx3-board-owners">';
+		echo '<p><label for="prx3_om_q">' . esc_html__( 'Search owners (name, login, or email)', 'fan-ownership' ) . '</label> <input type="search" id="prx3_om_q" name="q" value="' . esc_attr( $search ) . '"> <button class="button">' . esc_html__( 'Search', 'fan-ownership' ) . '</button></p></form>';
+		if ( $search && ! $who ) {
+			$found = get_users(
+				array(
+					'search'         => '*' . $search . '*',
+					'search_columns' => array( 'user_login', 'user_email', 'display_name', 'user_nicename' ),
+					'number'         => 20,
+				)
+			);
+			echo $found ? '<ul>' : '<p>' . esc_html__( 'No matching members.', 'fan-ownership' ) . '</p>';
+			foreach ( $found as $member ) {
+				echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=prx3-board-owners&user=' . (int) $member->ID ) ) . '">' . esc_html( $member->display_name ) . '</a> — ' . esc_html( $member->user_email ) . ( prx3_is_owner( $member->ID ) ? ' <span class="prx3-badge">#' . (int) PRX3_Shares::owner_number( $member->ID ) . '</span>' : '' ) . '</li>';
+			}
+			echo $found ? '</ul>' : '';
+		}
+		if ( ! $who || ! get_userdata( $who ) ) {
+			echo '</div>';
+			return;
+		}
+		$member = get_userdata( $who );
+		echo '<h2>' . esc_html( $member->display_name ) . '</h2>';
+		echo '<p><a class="button" href="' . esc_url( get_edit_user_link( $who ) ) . '">' . esc_html__( 'Open WP user account', 'fan-ownership' ) . '</a> ';
+		$live = class_exists( 'PRX3_Social' ) ? PRX3_Social::profile_url( $who ) : '';
+		if ( $live ) {
+			echo '<a class="button" href="' . esc_url( $live ) . '">' . esc_html__( 'View live owner profile', 'fan-ownership' ) . '</a>';
+		}
+		echo '</p>';
+		// Personal information — read-only, audited, ID masked (P122/P127).
+		$identity = PRX3_Social::identity( $who );
+		PRX3_Audit::log( 'identity_viewed', sprintf( 'Identity record for member %1$d viewed by user %2$d on Owner Management', $who, get_current_user_id() ) );
+		echo '<h3>' . esc_html__( 'Personal information (read-only)', 'fan-ownership' ) . '</h3>';
+		echo '<table class="widefat striped" style="max-width:640px;"><tbody>';
+		$rows = array(
+			__( 'Full birth name', 'fan-ownership' )      => $identity['birth_name'],
+			__( 'Nationality', 'fan-ownership' )          => $identity['nationality'],
+			__( 'Country of residence', 'fan-ownership' ) => $identity['residence'],
+			__( 'Date of birth', 'fan-ownership' )        => $identity['dob'],
+			__( 'Government ID', 'fan-ownership' )        => PRX3_Social::mask_gov_id( $identity['gov_id'] ),
+			__( 'Politically exposed', 'fan-ownership' )  => $identity['pep'] ? $identity['pep'] : __( 'not declared', 'fan-ownership' ),
+			__( 'Email', 'fan-ownership' )                => $member->user_email,
+			__( 'Shares', 'fan-ownership' )               => (string) prx3_shares( $who ),
+		);
+		foreach ( $rows as $label => $value ) {
+			echo '<tr><th style="text-align:left;width:220px;">' . esc_html( $label ) . '</th><td>' . esc_html( $value ) . '</td></tr>';
+		}
+		echo '</tbody></table>';
+		// Profile content — the part the board can fix.
+		echo '<h3>' . esc_html__( 'Profile content (editable — for inappropriate pictures or text)', 'fan-ownership' ) . '</h3>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'prx3_board_moderate' );
+		echo '<input type="hidden" name="action" value="prx3_board_moderate"><input type="hidden" name="user" value="' . (int) $who . '">';
+		echo '<table class="form-table"><tbody>';
+		echo '<tr><th><label for="prx3_om_bio">' . esc_html__( 'Bio', 'fan-ownership' ) . '</label></th><td><textarea id="prx3_om_bio" name="bio" class="regular-text" rows="2" maxlength="300">' . esc_textarea( (string) get_user_meta( $who, 'prx3_bio', true ) ) . '</textarea></td></tr>';
+		$socials = array_filter( (array) get_user_meta( $who, 'prx3_socials', true ) );
+		echo '<tr><th>' . esc_html__( 'Social links', 'fan-ownership' ) . '</th><td>' . ( $socials ? esc_html( implode( '  ', array_map( 'strval', $socials ) ) ) . '<br><label><input type="checkbox" name="clear_socials" value="1"> ' . esc_html__( 'Remove all social links', 'fan-ownership' ) . '</label>' : esc_html__( 'None', 'fan-ownership' ) ) . '</td></tr>';
+		$photo = (int) get_user_meta( $who, 'prx3_photo', true );
+		echo '<tr><th>' . esc_html__( 'Profile picture', 'fan-ownership' ) . '</th><td>' . ( $photo ? wp_kses_post( wp_get_attachment_image( $photo, 'thumbnail' ) ) . '<br><label><input type="checkbox" name="remove_photo" value="1"> ' . esc_html__( 'Remove the profile picture', 'fan-ownership' ) . '</label>' : esc_html__( 'None', 'fan-ownership' ) ) . '</td></tr>';
+		$gallery = array_map( 'intval', array_filter( (array) get_user_meta( $who, 'prx3_gallery', true ) ) );
+		echo '<tr><th>' . esc_html__( 'Gallery photos', 'fan-ownership' ) . '</th><td>';
+		if ( $gallery ) {
+			foreach ( $gallery as $pic ) {
+				echo '<label style="display:inline-block;margin:0 12px 8px 0;text-align:center;">' . wp_kses_post( wp_get_attachment_image( $pic, 'thumbnail' ) ) . '<br><input type="checkbox" name="remove_gallery[]" value="' . (int) $pic . '"> ' . esc_html__( 'Remove', 'fan-ownership' ) . '</label>';
+			}
+		} else {
+			echo esc_html__( 'None', 'fan-ownership' );
+		}
+		echo '</td></tr></tbody></table>';
+		echo '<p><button class="button button-primary">' . esc_html__( 'Apply changes', 'fan-ownership' ) . '</button></p></form></div>';
+	}
+
+	/**
+	 * Apply Owner Management moderation and return to the member's page.
+	 */
+	public static function handle_owner_moderate() {
+		if ( ! current_user_can( 'prx3_board' ) && ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Board members and Owner-Admins only.', 'fan-ownership' ) );
+		}
+		check_admin_referer( 'prx3_board_moderate' );
+		$who = isset( $_POST['user'] ) ? absint( $_POST['user'] ) : 0;
+		PRX3_Social::moderate_profile(
+			get_current_user_id(),
+			$who,
+			array(
+				'bio'            => isset( $_POST['bio'] ) ? sanitize_textarea_field( wp_unslash( $_POST['bio'] ) ) : null,
+				'clear_socials'  => ! empty( $_POST['clear_socials'] ),
+				'remove_photo'   => ! empty( $_POST['remove_photo'] ),
+				'remove_gallery' => isset( $_POST['remove_gallery'] ) ? array_map( 'intval', (array) $_POST['remove_gallery'] ) : array(),
+			)
+		);
+		wp_safe_redirect( admin_url( 'admin.php?page=prx3-board-owners&user=' . $who . '&moderated=1' ) );
+		exit;
 	}
 }

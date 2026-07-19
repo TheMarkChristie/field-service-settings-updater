@@ -47,6 +47,7 @@ before shipping.
 | 3.15.0.0 | Documentation complete (P125, closes FO-314): developer guide + full API reference in docs/guides (auth models, error codes, rate limits, payload examples, webhooks, tokenised feeds) and a Setup → Developers page inside every install, generated from the plugin's own endpoint registry |
 | 3.15.0.1 | Fix: the technical admin menu is named "Fan Club Technical Setup" (was "Setup") — menu label, page headings, and guides updated |
 | 3.15.1.0 | Question categories (P126): Board / Manager — pre-match / Manager — weekly / Captain on submit, lists, API, and the Live Q&A presenter. Profile content moderation (P127): admins can fix inappropriate bio/socials/photos from the WP user screen; identity, name, and contact details stay untouchable; all audited |
+| 3.15.1.1 | Fix (P128): Board → Owner Management — search an owner, personal info (audited, ID masked) and profile-content moderation on one page; Share Register moved from Owners to the Board menu; these screens are board members + Owner-Admins only; board members can now moderate profile content |
 
 ## Phase 1 — Own
 

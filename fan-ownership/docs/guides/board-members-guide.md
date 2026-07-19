@@ -14,6 +14,13 @@ Everything you can do lives in the **Board** menu.
   filterable to the person on stage (Board, Manager, Captain);
   ranked by upvotes, refreshing automatically.
 - **Annual Report** — draft the year's report straight into the vault.
+- **Owner Management** — search any owner: their personal information
+  on one page (identity with the ID masked, email, shares — every view
+  audited) and the tools to fix inappropriate profile content (bio,
+  social links, profile picture, gallery photos). Name, address, ID,
+  PEP, and contact details are read-only by design.
+- **Share Register** — the statutory list: every holder, holding,
+  owner number, and the recent event log. Board + Owner-Admins only.
 - **Identity Lookup** — a member's full identity record (birth name,
   nationality, residence, DOB, PEP declaration). The government ID is
   always masked; every view you make is permanently audited.

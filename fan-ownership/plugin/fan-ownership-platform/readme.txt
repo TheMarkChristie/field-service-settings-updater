@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.0
+Stable tag: 3.15.1.1
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,19 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.1.1 =
+* Board > Owner Management: one findable place to search an owner,
+  see their personal information (identity with the ID masked,
+  email, shares - every view audited), and fix inappropriate
+  profile content (bio, social links, profile picture, gallery
+  photos) on the same page.
+* The Share Register moved from Owners into the Board menu. Owner
+  Management, Share Register, and Identity Lookup are visible to
+  board members and Owner-Admins only.
+* Board members can now moderate profile content (previously
+  Owner-Admins only). Identity, name, and contact details remain
+  read-only everywhere.
 
 = 3.15.1.0 =
 * Question categories: every question is put to someone - Board,
