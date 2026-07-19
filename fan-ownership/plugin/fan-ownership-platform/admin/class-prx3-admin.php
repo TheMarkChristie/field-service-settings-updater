@@ -453,9 +453,18 @@ class PRX3_Admin {
 		echo '<p><label for="prx3_merge_into">' . esc_html__( 'Kept account (user ID)', 'fan-ownership' ) . '</label> <input type="number" id="prx3_merge_into" name="into" required min="1"></p>';
 		echo '<p><button class="button button-primary">' . esc_html__( 'Merge accounts', 'fan-ownership' ) . '</button></p></form>';
 
+		self::identity_lookup_panel( 'prx3-member-tools' );
+		echo '</div>';
+	}
+	/**
+	 * The audited identity lookup, reusable on any admin page.
+	 *
+	 * @param string $page The admin page slug hosting the form.
+	 */
+	public static function identity_lookup_panel( $page ) {
 		echo '<h2>' . esc_html__( 'Identity lookup (compliance)', 'fan-ownership' ) . '</h2>';
 		echo '<p>' . esc_html__( 'View a member\'s identity record — every lookup is audited. Government ID shows last four characters only.', 'fan-ownership' ) . '</p>';
-		echo '<form method="get"><input type="hidden" name="page" value="prx3-member-tools">';
+		echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( $page ) . '">';
 		echo '<p><label for="prx3_id_lookup">' . esc_html__( 'User ID', 'fan-ownership' ) . '</label> <input type="number" id="prx3_id_lookup" name="identity_user" min="1"> <button class="button">' . esc_html__( 'Look up', 'fan-ownership' ) . '</button></p></form>';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only audited lookup behind prx3_admin.
 		$lookup = isset( $_GET['identity_user'] ) ? absint( $_GET['identity_user'] ) : 0;
@@ -476,8 +485,8 @@ class PRX3_Admin {
 			}
 			echo '</tbody></table>';
 		}
-		echo '</div>';
 	}
+
 
 	/**
 	 * Perform the merge: register-recorded share movement, cap enforced.

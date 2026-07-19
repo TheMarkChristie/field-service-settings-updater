@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.12.1.3
+Stable tag: 3.12.1.4
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,13 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.12.1.4 =
+* Board members can now view member identity records on screen: new
+  Identity Lookup in the Board menu (full birth name, nationality,
+  residence, date of birth, PEP declaration; government ID stays
+  masked to its last four). Every view is audited, exactly as in
+  Member Tools.
 
 = 3.12.1.3 =
 * Fix: member pages now create themselves automatically whenever the

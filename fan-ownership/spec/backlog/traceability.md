@@ -41,6 +41,7 @@ before shipping.
 | 3.12.1.1 | Fix: demo open ballot opened through the real lifecycle (electorate snapshot, quorum, audit, chat) so demo owners can vote; Load demo club heals dead ballots |
 | 3.12.1.2 | Fix: admin screens for four screen-less stores — Share Register (Owners), Audit Log (Fan App Settings), Reports queue (FanPress), Gift Codes (Owners) |
 | 3.12.1.3 | Fix: member pages self-install on version change (stamped, idempotent); profile-link fallback re-wires the Profile page by slug |
+| 3.12.1.4 | Board menu gains the audited Identity Lookup (masked government ID) — P122 amended: board members may view identity records |
 
 ## Phase 1 — Own
 

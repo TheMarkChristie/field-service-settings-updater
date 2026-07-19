@@ -67,6 +67,14 @@ class PRX3_Board {
 		);
 		add_submenu_page(
 			'prx3-board',
+			__( 'Identity Lookup', 'fan-ownership' ),
+			__( 'Identity Lookup', 'fan-ownership' ),
+			'prx3_board',
+			'prx3-board-identity',
+			array( __CLASS__, 'render_identity_lookup' )
+		);
+		add_submenu_page(
+			'prx3-board',
 			__( 'Annual Report', 'fan-ownership' ),
 			__( 'Annual Report', 'fan-ownership' ),
 			'prx3_governance',
@@ -497,5 +505,17 @@ class PRX3_Board {
 		}
 		wp_safe_redirect( admin_url( 'admin.php?page=prx3-annual-report' ) );
 		exit;
+	}
+	/**
+	 * Board access to the audited identity lookup (P122 amendment:
+	 * board members see the record; the government ID stays masked).
+	 */
+	public static function render_identity_lookup() {
+		if ( ! current_user_can( 'prx3_board' ) && ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Board members only.', 'fan-ownership' ) );
+		}
+		echo '<div class="wrap"><h1>' . esc_html__( 'Identity Lookup', 'fan-ownership' ) . '</h1>';
+		PRX3_Admin::identity_lookup_panel( 'prx3-board-identity' );
+		echo '</div>';
 	}
 }
