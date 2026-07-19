@@ -37,3 +37,34 @@ t_ok( ! PRX3_Players::is_votable_player( $own_active ), 'A player of the wrong (
 // ---------------- Blank falls back to the built-in ----------------
 update_option( 'prx3_settings', array( 'player_post_type' => '' ) );
 t_eq( prx3_player_post_type(), 'prx3_player', 'A blank setting falls back to the built-in players table' );
+
+// ---------------- Match source (P134) ----------------
+prx3_test_reset();
+t_eq( prx3_match_post_type(), 'prx3_match', 'The match source defaults to the built-in Match Centre' );
+
+// Built-in matches: POTM validation rejects the wrong type.
+$own_match = wp_insert_post( array( 'post_type' => 'prx3_match', 'post_status' => 'publish', 'post_title' => 'v Fife' ) );
+t_eq( get_post_type( $own_match ), 'prx3_match', 'Built-in match created' );
+
+// External fixtures table: POTM opens while the fixture is published,
+// with no dependence on our live-state meta.
+update_option( 'prx3_settings', array( 'match_post_type' => 'hockey_match', 'player_post_type' => 'hockey_player' ) );
+t_eq( prx3_match_post_type(), 'hockey_match', 'The match source follows the configured post type' );
+$ext_match = wp_insert_post( array( 'post_type' => 'hockey_match', 'post_status' => 'publish', 'post_title' => 'v Dundee Stars' ) );
+t_ok( PRX3_Players::potm_open( $ext_match ), 'POTM is open for a published external fixture' );
+$draft_match = wp_insert_post( array( 'post_type' => 'hockey_match', 'post_status' => 'draft', 'post_title' => 'v Glasgow (draft)' ) );
+t_ok( ! PRX3_Players::potm_open( $draft_match ), 'POTM is closed for an unpublished external fixture' );
+
+// A vote on the external fixture for an external player is accepted end to end.
+prx3_test_user( 55, array( 'display_name' => 'Voter' ) );
+$GLOBALS['prx3_t']['caps'][55]['prx3_member'] = true;
+$ext_player = wp_insert_post( array( 'post_type' => 'hockey_player', 'post_status' => 'publish', 'post_title' => 'Star Forward' ) );
+$res = PRX3_Players::potm_vote( $ext_match, 55, $ext_player );
+t_ok( ! is_wp_error( $res ), 'A POTM vote on an external fixture + external player is accepted' );
+
+// A match of the wrong type is rejected.
+$wrong = PRX3_Players::potm_vote( $own_match, 55, $ext_player );
+t_error_code( $wrong, 'prx3_match', 'A match of the wrong type is rejected when an external source is set' );
+
+update_option( 'prx3_settings', array( 'match_post_type' => '' ) );
+t_eq( prx3_match_post_type(), 'prx3_match', 'A blank match setting falls back to the built-in Match Centre' );

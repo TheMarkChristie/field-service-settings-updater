@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.7
+Stable tag: 3.15.1.8
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,14 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.1.8 =
+* Matches are now selectable too: a "Matches come from" option under
+  FanPress Settings > Club lets you point player-of-the-match voting
+  at your existing fixtures table (e.g. the same club plugin that
+  holds your players), the same way players are selectable. With an
+  external fixtures table, voting is open while the fixture is
+  published. Keep "FanPress matches" to use the built-in Match Centre.
 
 = 3.15.1.7 =
 * "Players come from" (FanPress Settings > Club) now lists any

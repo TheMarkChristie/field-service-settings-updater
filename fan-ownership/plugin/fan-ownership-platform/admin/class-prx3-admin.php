@@ -130,7 +130,8 @@ class PRX3_Admin {
 				'currency_symbol'   => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
 				'welcome_video_url' => array( __( 'Welcome video URL (embed URL, shown to new owners on the hub)', 'fan-ownership' ), 'text' ),
 				'weekly_show_day'   => array( __( 'Weekly show day (0 = Sunday … 6 = Saturday; blank = no standing slot)', 'fan-ownership' ), 'text' ),
-				'player_post_type'  => array( __( 'Players come from', 'fan-ownership' ), 'player_source', __( 'Which content type holds your squad. Choose an existing players table from another plugin to avoid a second Players list; the player-of-the-match and player-of-the-month votes will use it. Keep "Fan Ownership players" to use the built-in one.', 'fan-ownership' ) ),
+				'player_post_type'  => array( __( 'Players come from', 'fan-ownership' ), 'player_source', __( 'Which content type holds your squad. Choose an existing players table from another plugin to avoid a second Players list; the player-of-the-match and player-of-the-month votes will use it. Keep "FanPress players" to use the built-in one.', 'fan-ownership' ) ),
+				'match_post_type'   => array( __( 'Matches come from', 'fan-ownership' ), 'match_source', __( 'Which content type holds your fixtures/matches. Choose your existing matches table (e.g. from the same club plugin as your players) so player-of-the-match voting attaches to real fixtures. With an external table, voting is open while the fixture is published. Keep "FanPress matches" to use the built-in Match Centre.', 'fan-ownership' ) ),
 			),
 			'brand pack'  => array(
 				'club_mission'              => array( __( 'Mission statement (rich text — shown on the brand pack and available to the app)', 'fan-ownership' ), 'richtext' ),
@@ -331,9 +332,10 @@ class PRX3_Admin {
 					echo '<option value="' . esc_attr( $sport_key ) . '" ' . selected( $value, $sport_key, false ) . '>' . esc_html( $sport['label'] ) . '</option>';
 				}
 				echo '</select>';
-			} elseif ( 'player_source' === $def[1] ) {
+			} elseif ( 'player_source' === $def[1] || 'match_source' === $def[1] ) {
 				echo '<select id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">';
-				echo '<option value="prx3_player" ' . selected( $value, 'prx3_player', false ) . '>' . esc_html__( 'FanPress players (built-in)', 'fan-ownership' ) . '</option>';
+				$builtin = 'match_source' === $def[1] ? 'prx3_match' : 'prx3_player';
+				echo '<option value="' . esc_attr( $builtin ) . '" ' . selected( $value, $builtin, false ) . '>' . esc_html( 'match_source' === $def[1] ? __( 'FanPress matches (built-in)', 'fan-ownership' ) : __( 'FanPress players (built-in)', 'fan-ownership' ) ) . '</option>';
 				foreach ( get_post_types( array( 'show_ui' => true ), 'objects' ) as $pt ) {
 					if ( 0 === strpos( $pt->name, 'prx3_' ) || in_array( $pt->name, array( 'attachment', 'nav_menu_item', 'wp_block', 'wp_template', 'wp_template_part', 'wp_global_styles', 'wp_navigation', 'revision', 'post', 'page' ), true ) ) {
 						continue;
@@ -342,7 +344,7 @@ class PRX3_Admin {
 				}
 				// Keep a selected external type visible even if its plugin is
 				// inactive right now, so the choice is never silently lost.
-				if ( $value && 'prx3_player' !== $value && ! post_type_exists( (string) $value ) ) {
+				if ( $value && $builtin !== $value && ! post_type_exists( (string) $value ) ) {
 					echo '<option value="' . esc_attr( (string) $value ) . '" selected>' . esc_html( sprintf( /* translators: %s post type. */ __( '%s (not currently registered)', 'fan-ownership' ), (string) $value ) ) . '</option>';
 				}
 				echo '</select>';
@@ -487,9 +489,10 @@ class PRX3_Admin {
 					prx3_update_setting( $key, array_key_exists( $sport, PRX3_Config::sports() ) ? $sport : 'generic' );
 				} elseif ( 'textarea' === $def[1] ) {
 					prx3_update_setting( $key, sanitize_textarea_field( $raw ) );
-				} elseif ( 'player_source' === $def[1] ) {
-					$type = sanitize_key( $raw );
-					prx3_update_setting( $key, $type ? $type : 'prx3_player' );
+				} elseif ( 'player_source' === $def[1] || 'match_source' === $def[1] ) {
+					$type     = sanitize_key( $raw );
+					$fallback = 'match_source' === $def[1] ? 'prx3_match' : 'prx3_player';
+					prx3_update_setting( $key, $type ? $type : $fallback );
 				} else {
 					prx3_update_setting( $key, sanitize_text_field( $raw ) );
 				}

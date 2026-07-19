@@ -100,6 +100,7 @@ class PRX3_Config {
 			'welcome_video_url'                  => '',
 			'weekly_show_day'                    => '',
 			'player_post_type'                   => 'prx3_player',
+			'match_post_type'                    => 'prx3_match',
 			'jitsi_domain'                       => 'meet.jit.si',
 			'jaas_app_id'                        => '',
 			'jaas_api_key_id'                    => '',

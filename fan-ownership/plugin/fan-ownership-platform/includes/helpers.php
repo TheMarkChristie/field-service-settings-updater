@@ -210,6 +210,19 @@ function prx3_player_post_type() {
 }
 
 /**
+ * The post type that holds matches/fixtures. Defaults to the built-in
+ * `prx3_match`, but a club can point the match-linked features (player
+ * of the match) at an existing fixtures table from another plugin
+ * (FanPress Settings → Club).
+ *
+ * @return string Post type name.
+ */
+function prx3_match_post_type() {
+	$type = (string) prx3_setting( 'match_post_type', 'prx3_match' );
+	return '' !== $type ? $type : 'prx3_match';
+}
+
+/**
  * Record member activity (login, vote, view) for the active-owner
  * quorum denominator (P76) and retention automation.
  *

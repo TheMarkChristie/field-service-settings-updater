@@ -109,7 +109,7 @@ Members submit questions year-round; staff moderate; members upvote. The most-su
 
 ### 4.2 Match Centre features (T40–T42)
 
-Live stream player + **live match chat** + **minute-by-minute updates** (goal/card/sub/HT/FT) entered by **volunteer owner match reporters** through a big-button mobile console, which also fires push notifications. **Player of the match** (live during the game) and **player of the month** run as engagement polls (one vote per member, not share-weighted). The squad behind them is configurable (P131): a club can point these at its **built-in players table or an existing squad table from another plugin** (FanPress Settings → Club), so there is never a duplicate players list.
+Live stream player + **live match chat** + **minute-by-minute updates** (goal/card/sub/HT/FT) entered by **volunteer owner match reporters** through a big-button mobile console, which also fires push notifications. **Player of the match** (live during the game) and **player of the month** run as engagement polls (one vote per member, not share-weighted). Both the squad **and the fixtures** behind them are configurable (P131, P134): a club can point these at its **built-in tables or existing players/matches tables from another plugin** (FanPress Settings → Club), so there is never a duplicate list — player-of-the-match voting attaches to the club's real fixtures and squad.
 
 ### 4.3 Financial transparency (P21–P22, T23)
 

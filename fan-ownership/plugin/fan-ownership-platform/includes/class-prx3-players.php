@@ -176,6 +176,12 @@ class PRX3_Players {
 	 * @return bool
 	 */
 	public static function potm_open( $match_id ) {
+		// An external fixtures table carries no live-state signal, so
+		// voting is open while the match is published — the club opens and
+		// closes it by publishing/unpublishing the fixture.
+		if ( 'prx3_match' !== prx3_match_post_type() ) {
+			return 'publish' === get_post_status( $match_id );
+		}
 		$state = PRX3_Match_Centre::live_state( $match_id );
 		if ( 'live' === $state ) {
 			return true;
@@ -196,7 +202,7 @@ class PRX3_Players {
 	 * @return array|WP_Error
 	 */
 	public static function potm_vote( $match_id, $user_id, $player_id ) {
-		if ( 'prx3_match' !== get_post_type( $match_id ) ) {
+		if ( get_post_type( $match_id ) !== prx3_match_post_type() ) {
 			return new WP_Error( 'prx3_match', __( 'Match not found.', 'fan-ownership' ) );
 		}
 		if ( ! prx3_is_owner( $user_id ) ) {
@@ -251,7 +257,7 @@ class PRX3_Players {
 	public static function close_due_potm() {
 		$matches = get_posts(
 			array(
-				'post_type'      => 'prx3_match',
+				'post_type'      => prx3_match_post_type(),
 				'post_status'    => 'publish',
 				'posts_per_page' => 10,
 				'no_found_rows'  => true,
