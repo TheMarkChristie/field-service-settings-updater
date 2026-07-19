@@ -15,7 +15,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-103 Kill switches | Done | `class-prx3-config.php` — per-feature toggles, audit with reason, member notice; API routes honour switches | |
 | FO-104 Identity as config | Partial | `helpers.php` (`prx3_club_name`), used across emails/certificates/API; historical identity frozen on certificates | AC2's automated hard-coded-name check not built (add a CI grep) |
 | FO-105 Registration | Partial | `class-prx3-membership.php` — 18+ confirm, terms, email verification gate, duplicate email routing | Apple/Google sign-in needs a social-login companion plugin; app login is email/password until Firebase project exists |
-| FO-106 Tiered share checkout | Done | `class-prx3-woocommerce.php` + `prx3_ladder_total()` — ladder pricing, price re-verified at order, cap across all sources, idempotent fulfilment, failed payment leaves holding unchanged | Requires WooCommerce + a configured share product (settings screen) |
+| FO-106 Tiered share checkout | Done | **Shopify (P105)**: `class-prx3-shopify.php` — tier-per-variant cart permalinks, HMAC webhooks, ladder re-verification (mismatches held), sign-to-claim gate, refund clawback; WooCommerce path dormant behind `commerce_provider` | Requires the Shopify store, two webhooks, and tier variant IDs (Settings → Shares & Checkout) |
 | FO-107 Top-ups | Done | Ladder continues from held position; cap explained at max | |
 | FO-108 Gifting | Done | `class-prx3-gifts.php` — codes, indefinite validity, recipient cap/age at redemption, failure preserves code | Giver's unredeemed-gift list is API-only (`PRX3_Gifts::unredeemed_for`), not yet on the account page |
 | FO-109 Invoices | Partial | Gapless sequential numbering (atomic), permanent order records | PDF rendering delegated to a WooCommerce invoice plugin per T58 |
@@ -35,6 +35,8 @@ named gaps), **Operational** (satisfied by process/services, not code),
 | FO-123 Board signatures register | Done | Board Workspace → Owner Signatures — owner #, version (out-of-date flag), acceptance count/date/context, signature thumbnail, link to executed copy, `prx3_board` capability, personal-data warning; exporter includes acceptances, eraser removes signature image and retains the log | |
 | FO-124 Outbound CRM sync | Done | `class-prx3-sync.php` — change hooks queue signed webhooks (HMAC-SHA256, 8-try retry, capped outbox, 5-min tick), paged `/sync/members` delta, `/sync/register` append-only feed, signatures excluded from payloads, admin health page, off until configured | Dataverse solution (columns/table/flows/connector) built by the club from `spec/power-platform-sync-design.md` |
 | FO-125 Inbound matching rules | Done | `/sync/upsert` — ID → email → owner number exact matching, allow-listed enrichment fields (`prx3_sync_inbound_fields`), review queue for no-match/ambiguous/conflict with admin link-or-discard (audited), permanent linking, no outbound echo | |
+| FO-126 Guarded automation API | Done | `class-prx3-data-api.php` — key-gated data routes (schema/content-list/content/members/settings), one-click provision/revoke + connection card + JSON profile, platform-types/prx3-meta/allow-list guard rails, money-path member imports, full audit | |
+| FO-127 Data-rich work screens | Done | `class-prx3-admin-columns.php` (all 16 types audited, P103), interactive tile dashboard with configurable targets, three-menu structure with the Board menu gathering the board's tools | |
 
 ## Phase 2 — Decide
 
@@ -111,7 +113,7 @@ named gaps), **Operational** (satisfied by process/services, not code),
 
 ## Honest summary
 
-Done 41 · Partial 19 · Operational 1 · Not built 1 (remainder of the
+Done 43 · Partial 19 · Operational 1 · Not built 1 (remainder of the
 documentation suite — the first guides now exist in `docs/guides/`).
 The most important follow-ups: (1) run the money/vote test suite in CI
 on every pull request, (2) the remainder of the documentation suite. The board

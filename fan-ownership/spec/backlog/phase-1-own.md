@@ -7,7 +7,7 @@ switches from day one.
 
 Epics: A. Platform foundations · B. Join and buy · C. Recognition ·
 D. Onboarding, comms and account · E. Content foundations ·
-F. Legal agreements · G. CRM sync
+F. Legal agreements · G. CRM sync & automation
 
 ---
 
@@ -72,14 +72,14 @@ Acceptance criteria:
 
 ### FO-106 Buy shares on the published price ladder
 As a registered supporter, I want to buy between 1 and 10 shares at the published tiered prices in a single paid-in-full checkout, so that I become an owner with voting power immediately.
-Traceability: P2, P3, P5, P26, P46, T8. Estimate: Design 1.5 / Build 1 / Develop 3 / Test 2
+Traceability: P2, P3, P5, P26, P46, T8, P105. Estimate: Design 1.5 / Build 1 / Develop 3 / Test 2
 
 Acceptance criteria:
-1. The price ladder (share 1 at £50, each subsequent share 25% higher) is displayed before payment, and the charged amount always matches the published ladder for the buyer's current holding.
-2. Card, Apple Pay, and Google Pay are accepted (P25); payment is taken in full at purchase.
+1. The price ladder (share 1 at £50, each subsequent share 25% higher) is displayed before payment, and the buyer is always routed to a checkout containing exactly their next tiers so the charged amount matches the published ladder for their current holding.
+2. Card, Apple Pay, and Google Pay are accepted (P25); payment is taken in full at purchase. The checkout may be an external store (P105: Shopify); the platform remains the system of record for ownership.
 3. No route exists to exceed 10 shares per member, including by combining purchases, gifts, and top-ups.
-4. On successful payment the member's share count and voting power update immediately and a confirmation with receipt is sent.
-5. A failed or abandoned payment leaves the member's holding unchanged.
+4. On confirmed payment the platform independently re-verifies the amount paid against the published ladder; a mismatched payment is held for human review and never grants shares. A verified purchase updates the member's share count and voting power the moment they hold a signed current Shareholders' Agreement (immediately for signed members; on signing for others — FO-121), with a confirmation sent.
+5. A failed or abandoned payment leaves the member's holding unchanged, and a purchase awaiting signature is visible to the buyer with clear instructions.
 6. The terms presented at checkout state the no-refund policy (P27) and that shares are non-transferable except back to the club (P28).
 
 ### FO-107 Top up my holding
@@ -224,10 +224,11 @@ As the club, I want a dashboard of membership and revenue against the season-one
 Traceability: T28, P52, T27. Estimate: Design 1 / Build 0.5 / Develop 2 / Test 1
 
 Acceptance criteria:
-1. The dashboard shows current owners, shares sold by tier, revenue, gifts outstanding, and surrenders, against the 1,000-owner target.
-2. Figures reconcile exactly with the share register and payment records.
-3. Analytics collection is privacy-first, first-party, and disclosed in the privacy notice (T27).
-4. Dashboard access is restricted to staff and board roles.
+1. The dashboard shows current owners, shares sold by tier, revenue, gifts outstanding, and surrenders, against a configurable owner target; a configurable financial target adds a revenue progress meter when set.
+2. The dashboard is an interactive tile layout: each tile links to its working screen, open ballots show quorum meters with closing countdowns, figures refresh automatically without a page reload, and an accessible table view mirrors every tile.
+3. Figures reconcile exactly with the share register and payment records.
+4. Analytics collection is privacy-first, first-party, and disclosed in the privacy notice (T27).
+5. Dashboard access is restricted to staff and board roles, and it lives in the Board menu.
 
 ---
 
@@ -238,7 +239,7 @@ As the club, I want every person acquiring shares — by purchase or gift redemp
 Traceability: P97, P98, P26, P49. Estimate: Design 1 / Build 1 / Develop 2.5 / Test 1.5
 
 Acceptance criteria:
-1. Share purchase and gift redemption cannot complete without the person ticking acceptance of the current agreement version and drawing their signature; either missing blocks the transaction with a clear message.
+1. No shares are ever granted without the person ticking acceptance of the current agreement version and drawing their signature. Where the checkout runs on the platform, either missing blocks the transaction; where the checkout is an external store (P105), the purchase is held and granted automatically the moment the buyer signs on the platform, with an email inviting them to do so.
 2. The agreement is one click away from the acceptance point, opens without losing the transaction in progress, and states its version.
 3. Every acceptance is recorded permanently: version accepted, date and time, IP address, context (purchase, gift redemption, or re-acceptance), order reference where applicable, and the drawn signature.
 4. The signature is captured on any device — touch, stylus, or mouse — and a member can clear and redraw it before submitting.
@@ -336,3 +337,38 @@ Test script:
 5. Resolve one queued record by linking and one by discarding — expect the link applied with fields written, the discard removed, and both audited.
 6. Send an update attempting to set shares and owner number — expect those fields reported as rejected and unchanged on the member.
 7. Confirm an applied inbound update produced no outbound notification.
+
+### FO-126 Trusted automation writes through a guarded door
+As the club, I want a single authenticated write API that trusted automation (including our AI assistant) can use to insert content, import members, and update settings — with a one-click connection an admin can create and revoke, so that bulk work is done in minutes without ever bypassing the ownership rules.
+Traceability: P104. Estimate: Design 1 / Build 1 / Develop 2.5 / Test 1.5
+
+Acceptance criteria:
+1. The API is off by default and guarded by a key; an administrator creates the connection in one click (key generated, API enabled, a paste-ready connection card and downloadable profile produced) and revokes it in one click.
+2. A discovery endpoint describes exactly what is writable; a read endpoint lets automation inspect existing content before writing.
+3. Content writes are limited to platform content types and platform data fields; attempts to write anything else (including user privileges) are refused and reported.
+4. Member imports grant shares only through the same rules as a purchase: cap, age requirement, owner number sequence, and a register entry with a source label.
+5. Settings writes are limited to known settings, and the API's own credentials can never be changed through the API.
+6. Every write is recorded in the audit log.
+
+Test script:
+1. Call any route with the API off, then with a wrong key — expect refusal both times; create the connection and repeat — expect success.
+2. Ask the discovery endpoint what is writable, then insert a player with platform fields plus a user-privilege field — expect the player created and the privilege field reported as refused.
+3. Import a member with three shares, then attempt eight more — expect the first import granted with an owner number and register entry, and the second refused by the cap.
+4. Update a known setting and attempt to rotate the API key through the API — expect the setting applied and the key rotation refused.
+5. Revoke the connection — expect all further calls refused and the events audited.
+
+### FO-127 Work screens that show the data
+As club staff, I want every list screen to show the data its items hold — sortable where it matters — and the admin organised into three menus (Owners, Board, Settings), so that running the club never means opening items one by one to find a number.
+Traceability: P103. Estimate: Design 1 / Build 1 / Develop 2 / Test 1
+
+Acceptance criteria:
+1. Every content list shows its key data as columns: ballots (state, type, turnout against quorum, closing time), matches (kick-off, opponent, live status, player of the match), players (number, position, active, honours), meetings (start, RSVPs), chapters (city, lead, members, status), decisions (decided date, delivery), documents and videos (type), questions (answered), ideas (support against threshold), board votes (outcome, votes cast), board papers (transparency).
+2. Date and number columns sort by their stored values.
+3. The admin is organised into exactly three menus: Owners (member-facing content), Board (everything the board deals with, including the dashboard, decision register, commitments calendar, and owner signatures — content behind the board wall), and Settings (configuration split into sections, each saving independently).
+4. Standard editing, search, and filters continue to work on every screen.
+
+Test script:
+1. Open each list screen and confirm its columns show live values matching the item's edit screen.
+2. Sort ballots by closing time, matches by kick-off, and players by number — expect date/number order, not alphabetical.
+3. As an administrator confirm exactly three platform menus, with the dashboard under Board and each Settings section saving without touching the others.
+4. As a board member confirm the Board menu shows the workspace and registers; as a content editor confirm board content is not reachable.
