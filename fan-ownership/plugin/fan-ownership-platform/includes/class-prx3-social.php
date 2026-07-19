@@ -52,6 +52,7 @@ class PRX3_Social {
 		add_filter( 'user_row_actions', array( __CLASS__, 'user_row_actions' ), 10, 2 );
 		add_action( 'show_user_profile', array( __CLASS__, 'wp_profile_panel' ) );
 		add_action( 'edit_user_profile', array( __CLASS__, 'wp_profile_panel' ) );
+		add_filter( 'get_avatar', array( __CLASS__, 'filter_avatar' ), 10, 6 );
 		add_action( 'edit_user_profile_update', array( __CLASS__, 'wp_profile_moderate_save' ) );
 		add_action( 'personal_options_update', array( __CLASS__, 'wp_profile_moderate_save' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
@@ -699,6 +700,12 @@ class PRX3_Social {
 		}
 		$score = self::activity_score( $user->ID );
 		echo '<h2>' . esc_html__( 'Owner profile', 'fan-ownership' ) . '</h2><table class="form-table"><tbody>';
+		$panel_photo = (int) get_user_meta( $user->ID, 'prx3_photo', true );
+		echo '<tr><th>' . esc_html__( 'Profile picture', 'fan-ownership' ) . '</th><td>';
+		echo $panel_photo && function_exists( 'wp_get_attachment_image' )
+			? wp_kses_post( wp_get_attachment_image( $panel_photo, 'thumbnail' ) )
+			: '<em>' . esc_html__( 'None uploaded — the grey placeholder is shown. (The WordPress "Profile Picture" box above is the Gravatar, a separate service; the platform uses the picture the owner uploads on their profile.)', 'fan-ownership' ) . '</em>';
+		echo '</td></tr>';
 		echo '<tr><th>' . esc_html__( 'Owner number', 'fan-ownership' ) . '</th><td>#' . (int) PRX3_Shares::owner_number( $user->ID ) . '</td></tr>';
 		echo '<tr><th>' . esc_html__( 'Shares', 'fan-ownership' ) . '</th><td>' . (int) prx3_shares( $user->ID ) . '</td></tr>';
 		echo '<tr><th>' . esc_html__( 'Activity', 'fan-ownership' ) . '</th><td>' . (int) $score['percent'] . '% (' . esc_html( sprintf( /* translators: 1-3 percents. */ __( 'voting %1$d%%, community %2$d%%, watching %3$d%%', 'fan-ownership' ), $score['voting'], $score['community'], $score['watching'] ) ) . ')</td></tr>';
@@ -801,6 +808,86 @@ class PRX3_Social {
 			PRX3_Audit::log( 'profile_moderated', sprintf( 'Admin %1$d moderated the profile of member %2$d (%3$s)', $admin_id, $user_id, implode( ', ', $applied ) ) );
 		}
 		return $applied;
+	}
+
+	/**
+	 * Resolve an avatar target (ID, WP_User, WP_Comment, or email) to a
+	 * user ID, or 0 when it is not one of our members.
+	 *
+	 * @param mixed $id_or_email The get_avatar identifier.
+	 * @return int User ID or 0.
+	 */
+	protected static function avatar_user_id( $id_or_email ) {
+		if ( is_numeric( $id_or_email ) ) {
+			return (int) $id_or_email;
+		}
+		if ( $id_or_email instanceof WP_User ) {
+			return (int) $id_or_email->ID;
+		}
+		if ( $id_or_email instanceof WP_Comment ) {
+			if ( $id_or_email->user_id ) {
+				return (int) $id_or_email->user_id;
+			}
+			$id_or_email = $id_or_email->comment_author_email;
+		}
+		if ( is_string( $id_or_email ) && is_email( $id_or_email ) ) {
+			$user = get_user_by( 'email', $id_or_email );
+			return $user ? (int) $user->ID : 0;
+		}
+		return 0;
+	}
+
+	/**
+	 * A neutral, local grey placeholder avatar as an inline SVG data URI
+	 * — no third-party Gravatar request, so no email is leaked and every
+	 * owner without a photo reads as the same clean grey box.
+	 *
+	 * @param int $size Pixel size.
+	 * @return string data: URI.
+	 */
+	public static function placeholder_avatar( $size ) {
+		$svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" . (int) $size . "' height='" . (int) $size . "' viewBox='0 0 100 100'><rect width='100' height='100' fill='#c3c4c7'/><circle cx='50' cy='40' r='19' fill='#f0f0f1'/><path d='M18 92a32 32 0 0 1 64 0z' fill='#f0f0f1'/></svg>";
+		return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode( $svg );
+	}
+
+	/**
+	 * Owner avatars come from the platform, not Gravatar: an owner's
+	 * uploaded profile picture where they have one, and a clean local
+	 * grey placeholder where they don't. Non-owners keep the WordPress
+	 * default so unrelated accounts are untouched.
+	 *
+	 * @param string $avatar      The default avatar HTML.
+	 * @param mixed  $id_or_email Avatar target.
+	 * @param int    $size        Pixel size.
+	 * @param string $default     Default avatar keyword (unused).
+	 * @param string $alt         Alt text.
+	 * @param array  $args        get_avatar args.
+	 * @return string Avatar HTML.
+	 */
+	public static function filter_avatar( $avatar, $id_or_email, $size, $default, $alt = '', $args = array() ) {
+		$user_id = self::avatar_user_id( $id_or_email );
+		if ( ! $user_id || ! prx3_is_owner( $user_id ) ) {
+			return $avatar;
+		}
+		$photo = (int) get_user_meta( $user_id, 'prx3_photo', true );
+		$src   = '';
+		if ( $photo && function_exists( 'wp_get_attachment_image_url' ) ) {
+			$src = wp_get_attachment_image_url( $photo, array( (int) $size, (int) $size ) );
+		}
+		if ( ! $src ) {
+			$src = self::placeholder_avatar( (int) $size );
+		}
+		$class = array( 'avatar', 'avatar-' . (int) $size, 'photo', 'prx3-avatar' );
+		if ( ! empty( $args['class'] ) ) {
+			$class = array_merge( $class, (array) $args['class'] );
+		}
+		return sprintf(
+			'<img alt="%1$s" src="%2$s" class="%3$s" height="%4$d" width="%4$d" loading="lazy" decoding="async" />',
+			esc_attr( $alt ),
+			esc_url( $src ),
+			esc_attr( implode( ' ', array_unique( $class ) ) ),
+			(int) $size
+		);
 	}
 
 	/* ---------------- Cheers (activity likes) ---------------- */

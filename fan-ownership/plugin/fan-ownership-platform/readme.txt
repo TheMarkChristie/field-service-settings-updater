@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.2
+Stable tag: 3.15.1.3
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,19 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.1.3 =
+* Owner profile pictures now come from the platform, not Gravatar:
+  an owner's uploaded photo is used everywhere WordPress shows an
+  avatar, and a clean local grey placeholder (no third-party
+  request) is shown when they have not uploaded one. Non-owner
+  accounts keep the WordPress default. The owner panel on the WP
+  user screen now shows the real uploaded photo and explains that
+  the core "Profile Picture" box is the separate Gravatar service.
+* Share Register drill-down: click an owner's name for their full
+  share record - holding, owner number, total consideration, and
+  every movement. Each row also links straight to the owner's WP
+  account, their web profile, and Owner Management.
 
 = 3.15.1.2 =
 * Consistent FanPress branding across the admin: "Fan App Settings"

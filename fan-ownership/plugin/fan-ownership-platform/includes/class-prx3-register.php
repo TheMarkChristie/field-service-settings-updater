@@ -231,15 +231,22 @@ class PRX3_Register {
 	}
 
 	/**
-	 * Render the register: holdings summary then the recent event log.
+	 * Render the register: holdings summary then the recent event log,
+	 * or a single owner's full share record when one is selected.
 	 */
 	public static function render_screen() {
 		if ( ! current_user_can( 'prx3_board' ) && ! current_user_can( 'prx3_admin' ) ) {
 			wp_die( esc_html__( 'Board members and Owner-Admins only.', 'fan-ownership' ) );
 		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only drill-down by user ID.
+		$owner = isset( $_GET['owner'] ) ? absint( $_GET['owner'] ) : 0;
+		if ( $owner ) {
+			self::render_owner_detail( $owner );
+			return;
+		}
 		global $wpdb;
 		echo '<div class="wrap"><h1>' . esc_html__( 'Share Register', 'fan-ownership' ) . '</h1>';
-		echo '<p>' . esc_html__( 'The statutory register of members: append-only, every movement recorded. The CSV export lives in FanPress Settings → Shares & Checkout.', 'fan-ownership' ) . '</p>';
+		echo '<p>' . esc_html__( 'The statutory register of members: append-only, every movement recorded. Click an owner to see their full share record. The CSV export lives in FanPress Settings → Shares & Checkout.', 'fan-ownership' ) . '</p>';
 		if ( ! is_callable( array( $wpdb, 'get_results' ) ) ) {
 			echo '</div>';
 			return;
@@ -247,17 +254,18 @@ class PRX3_Register {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery -- plugin-owned register table, read-only screen.
 		$latest = $wpdb->get_results( "SELECT r.user_id, r.holding_after, r.event, r.recorded_at FROM {$wpdb->prefix}prx3_share_register r INNER JOIN ( SELECT user_id, MAX(id) AS max_id FROM {$wpdb->prefix}prx3_share_register GROUP BY user_id ) x ON x.max_id = r.id ORDER BY r.holding_after DESC" );
 		echo '<h2>' . esc_html__( 'Current holdings', 'fan-ownership' ) . '</h2>';
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Owner', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Owner #', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Holding', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Last event', 'fan-ownership' ) . '</th><th>' . esc_html__( 'When', 'fan-ownership' ) . '</th><th></th></tr></thead><tbody>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Owner', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Owner #', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Holding', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Last event', 'fan-ownership' ) . '</th><th>' . esc_html__( 'When', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Links', 'fan-ownership' ) . '</th></tr></thead><tbody>';
 		$total = 0;
 		foreach ( (array) $latest as $row ) {
 			$member = get_userdata( (int) $row->user_id );
 			$total += (int) $row->holding_after;
-			echo '<tr><td>' . esc_html( $member ? $member->display_name : '#' . (int) $row->user_id ) . '</td>';
+			$detail = esc_url( admin_url( 'admin.php?page=prx3-share-register&owner=' . (int) $row->user_id ) );
+			echo '<tr><td><a href="' . $detail . '"><strong>' . esc_html( $member ? $member->display_name : '#' . (int) $row->user_id ) . '</strong></a></td>';
 			echo '<td>' . (int) PRX3_Shares::owner_number( (int) $row->user_id ) . '</td>';
 			echo '<td><strong>' . (int) $row->holding_after . '</strong></td>';
 			echo '<td>' . esc_html( $row->event ) . '</td>';
 			echo '<td>' . esc_html( prx3_format_datetime( (string) $row->recorded_at ) ) . '</td>';
-			echo '<td>' . ( class_exists( 'PRX3_Social' ) && PRX3_Social::profile_url( (int) $row->user_id ) ? '<a href="' . esc_url( PRX3_Social::profile_url( (int) $row->user_id ) ) . '">' . esc_html__( 'profile', 'fan-ownership' ) . '</a>' : '' ) . '</td></tr>';
+			echo '<td>' . self::owner_links( (int) $row->user_id ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped anchors below.
 		}
 		echo '</tbody></table>';
 		echo '<p><strong>' . esc_html( sprintf( /* translators: 1 owners, 2 shares. */ __( '%1$d holders · %2$d shares in issue', 'fan-ownership' ), count( (array) $latest ), $total ) ) . '</strong></p>';
@@ -267,7 +275,70 @@ class PRX3_Register {
 		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'When', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Owner', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Event', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Shares', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Holding after', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Source', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Consideration', 'fan-ownership' ) . '</th></tr></thead><tbody>';
 		foreach ( (array) $events as $row ) {
 			$member = get_userdata( (int) $row->user_id );
-			echo '<tr><td>' . esc_html( prx3_format_datetime( (string) $row->recorded_at ) ) . '</td><td>' . esc_html( $member ? $member->display_name : '#' . (int) $row->user_id ) . '</td><td>' . esc_html( $row->event ) . '</td><td>' . (int) $row->shares . '</td><td>' . (int) $row->holding_after . '</td><td>' . esc_html( $row->source ) . '</td><td>' . esc_html( null === $row->consideration ? '—' : number_format_i18n( (float) $row->consideration, 2 ) ) . '</td></tr>';
+			$name   = $member ? '<a href="' . esc_url( admin_url( 'admin.php?page=prx3-share-register&owner=' . (int) $row->user_id ) ) . '">' . esc_html( $member->display_name ) . '</a>' : esc_html( '#' . (int) $row->user_id );
+			echo '<tr><td>' . esc_html( prx3_format_datetime( (string) $row->recorded_at ) ) . '</td><td>' . $name . '</td><td>' . esc_html( $row->event ) . '</td><td>' . (int) $row->shares . '</td><td>' . (int) $row->holding_after . '</td><td>' . esc_html( $row->source ) . '</td><td>' . esc_html( null === $row->consideration ? '—' : number_format_i18n( (float) $row->consideration, 2 ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $name is an escaped anchor or escaped text.
+		}
+		echo '</tbody></table></div>';
+	}
+
+	/**
+	 * The three destinations for one owner: their WordPress account,
+	 * their public web profile, and Board → Owner Management.
+	 *
+	 * @param int $user_id Owner user ID.
+	 * @return string Escaped anchor HTML (space-separated).
+	 */
+	protected static function owner_links( $user_id ) {
+		$links = array();
+		$wp    = get_edit_user_link( $user_id );
+		if ( $wp ) {
+			$links[] = '<a href="' . esc_url( $wp ) . '">' . esc_html__( 'WP account', 'fan-ownership' ) . '</a>';
+		}
+		$web = class_exists( 'PRX3_Social' ) ? PRX3_Social::profile_url( $user_id ) : '';
+		if ( $web ) {
+			$links[] = '<a href="' . esc_url( $web ) . '">' . esc_html__( 'web profile', 'fan-ownership' ) . '</a>';
+		}
+		$links[] = '<a href="' . esc_url( admin_url( 'admin.php?page=prx3-board-owners&user=' . (int) $user_id ) ) . '">' . esc_html__( 'manage', 'fan-ownership' ) . '</a>';
+		return implode( ' · ', $links );
+	}
+
+	/**
+	 * One owner's full share record: current holding, owner number,
+	 * total consideration, and every register movement — reached by
+	 * clicking their name in the register.
+	 *
+	 * @param int $user_id Owner user ID.
+	 */
+	protected static function render_owner_detail( $user_id ) {
+		global $wpdb;
+		$member = get_userdata( $user_id );
+		echo '<div class="wrap"><h1>' . esc_html( $member ? $member->display_name : '#' . $user_id ) . ' — ' . esc_html__( 'share record', 'fan-ownership' ) . '</h1>';
+		echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=prx3-share-register' ) ) . '">&larr; ' . esc_html__( 'Back to the register', 'fan-ownership' ) . '</a></p>';
+		echo '<p>' . self::owner_links( $user_id ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped anchors from owner_links().
+		if ( ! $member || ! is_callable( array( $wpdb, 'get_results' ) ) ) {
+			echo '</div>';
+			return;
+		}
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery -- plugin-owned register table, read-only screen.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT recorded_at, event, shares, holding_after, source, consideration FROM {$wpdb->prefix}prx3_share_register WHERE user_id = %d ORDER BY id DESC", $user_id ) );
+		// phpcs:enable
+		$paid = 0.0;
+		foreach ( (array) $rows as $row ) {
+			$paid += (float) $row->consideration;
+		}
+		echo '<table class="widefat striped" style="max-width:640px;"><tbody>';
+		echo '<tr><th style="text-align:left;width:220px;">' . esc_html__( 'Owner number', 'fan-ownership' ) . '</th><td>#' . (int) PRX3_Shares::owner_number( $user_id ) . '</td></tr>';
+		echo '<tr><th style="text-align:left;">' . esc_html__( 'Current holding', 'fan-ownership' ) . '</th><td><strong>' . (int) prx3_shares( $user_id ) . '</strong> ' . esc_html__( 'shares', 'fan-ownership' ) . '</td></tr>';
+		echo '<tr><th style="text-align:left;">' . esc_html__( 'Total consideration recorded', 'fan-ownership' ) . '</th><td>' . esc_html( prx3_money( $paid ) ) . '</td></tr>';
+		echo '<tr><th style="text-align:left;">' . esc_html__( 'Movements', 'fan-ownership' ) . '</th><td>' . (int) count( (array) $rows ) . '</td></tr>';
+		echo '</tbody></table>';
+		echo '<h2>' . esc_html__( 'Every movement', 'fan-ownership' ) . '</h2>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'When', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Event', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Shares', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Holding after', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Source', 'fan-ownership' ) . '</th><th>' . esc_html__( 'Consideration', 'fan-ownership' ) . '</th></tr></thead><tbody>';
+		if ( ! $rows ) {
+			echo '<tr><td colspan="6">' . esc_html__( 'No register movements recorded for this owner.', 'fan-ownership' ) . '</td></tr>';
+		}
+		foreach ( (array) $rows as $row ) {
+			echo '<tr><td>' . esc_html( prx3_format_datetime( (string) $row->recorded_at ) ) . '</td><td>' . esc_html( $row->event ) . '</td><td>' . (int) $row->shares . '</td><td>' . (int) $row->holding_after . '</td><td>' . esc_html( $row->source ) . '</td><td>' . esc_html( null === $row->consideration ? '—' : number_format_i18n( (float) $row->consideration, 2 ) ) . '</td></tr>';
 		}
 		echo '</tbody></table></div>';
 	}

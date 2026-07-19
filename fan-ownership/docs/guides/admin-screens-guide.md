@@ -26,9 +26,12 @@ Where everything lives in wp-admin (V3.15.0.1). Five menus: **Owners**,
   details are read-only by design.
 - **Share Register** — the statutory list on screen (moved here from
   Owners; board members and Owner-Admins only): every holder with
-  owner number, current holding, last event, profile link, and the
-  holders/shares-in-issue totals, plus the latest 50 register events.
-  CSV export stays under FanPress Settings → Shares & Checkout.
+  owner number, current holding, last event, the holders/shares-in-issue
+  totals, and the latest 50 register events. Each row links to the
+  owner's **WP account**, **web profile**, and **Owner Management**;
+  click an owner's name for their full share record — holding, owner
+  number, total consideration, and every movement. CSV export stays
+  under FanPress Settings → Shares & Checkout.
 - **Identity Lookup** — the quick ID-number lookup; the government ID
   is always masked to its last four. Every view is audited.
 

@@ -49,6 +49,7 @@ before shipping.
 | 3.15.1.0 | Question categories (P126): Board / Manager — pre-match / Manager — weekly / Captain on submit, lists, API, and the Live Q&A presenter. Profile content moderation (P127): admins can fix inappropriate bio/socials/photos from the WP user screen; identity, name, and contact details stay untouchable; all audited |
 | 3.15.1.1 | Fix (P128): Board → Owner Management — search an owner, personal info (audited, ID masked) and profile-content moderation on one page; Share Register moved from Owners to the Board menu; these screens are board members + Owner-Admins only; board members can now moderate profile content |
 | 3.15.1.2 | Fix (P129): FanPress branding across the admin — "Fan App Settings" → FanPress Settings, "Fan Club Technical Setup" → FanPress Technical Setup; labels/headings/notices/guides updated, slugs unchanged |
+| 3.15.1.3 | Fix (P130): owner avatars use the uploaded photo (local grey placeholder, no Gravatar) everywhere WordPress asks for one; Share Register drills into a per-owner share record and each row links to WP account, web profile, and Owner Management |
 
 ## Phase 1 — Own
 

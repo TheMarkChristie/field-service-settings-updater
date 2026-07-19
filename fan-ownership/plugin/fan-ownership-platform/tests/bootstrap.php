@@ -270,6 +270,18 @@ function wp_get_current_user() {
 	$user = get_userdata( $GLOBALS['prx3_t']['current'] );
 	return $user ? $user : new PRX3_Test_User( 0, array( 'display_name' => '' ) );
 }
+function is_email( $email ) {
+	return is_string( $email ) && false !== strpos( $email, '@' ) ? $email : false;
+}
+function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) {
+	return $id ? 'https://example.test/wp-content/uploads/photo-' . (int) $id . '.jpg' : false;
+}
+if ( ! class_exists( 'WP_Comment' ) ) {
+	class WP_Comment {
+		public $user_id             = 0;
+		public $comment_author_email = '';
+	}
+}
 function is_user_logged_in() {
 	return (bool) $GLOBALS['prx3_t']['current'];
 }
