@@ -99,6 +99,7 @@ class PRX3_Config {
 			'chat_color_board'                   => '',
 			'welcome_video_url'                  => '',
 			'weekly_show_day'                    => '',
+			'jitsi_domain'                       => 'meet.jit.si',
 			'gift_cap_per_buyer'                 => 10,
 			'gift_bulk_flag_at'                  => 5,
 			'share_base_price'                   => 50.0,

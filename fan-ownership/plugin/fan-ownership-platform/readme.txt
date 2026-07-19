@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.12.1.4
+Stable tag: 3.13.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,17 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.13.0.0 =
+* Meeting video: every meeting page now carries its own video room -
+  member meetings and AGMs for owners, board meetings inside the
+  board wall. Matches are deliberately excluded (they stream through
+  the Match Centre). Jitsi Meet embed with a self-hostable domain
+  setting (Fan App Settings > API & Integrations; default
+  meet.jit.si), unguessable per-meeting room names, the room opens an
+  hour before the start and closes six hours after, and every join is
+  audited. Formal board acts (votes, casting votes) remain platform
+  flows, never just words in a call.
 
 = 3.12.1.4 =
 * Board members can now view member identity records on screen: new

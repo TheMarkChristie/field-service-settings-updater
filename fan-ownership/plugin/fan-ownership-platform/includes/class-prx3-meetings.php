@@ -27,6 +27,7 @@ class PRX3_Meetings {
 		add_action( 'init', array( __CLASS__, 'ics_endpoint' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_serve_ics' ) );
 		add_action( 'prx3_meeting_reminders', array( __CLASS__, 'send_reminders' ) );
+		add_filter( 'the_content', array( __CLASS__, 'video_content' ), 8 );
 		if ( ! wp_next_scheduled( 'prx3_meeting_reminders' ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', 'prx3_meeting_reminders' );
 		}
@@ -250,5 +251,92 @@ class PRX3_Meetings {
 		if ( ! $had_recording && get_post_meta( $post_id, '_prx3_recording', true ) ) {
 			PRX3_Audit::log( 'meeting_recording', sprintf( 'Recording published for meeting %d', $post_id ) );
 		}
+	}
+	/* ---------------- In-platform meeting video (FO-228) ---------------- */
+
+	/**
+	 * The meeting video domain (Jitsi Meet; self-hostable via setting).
+	 *
+	 * @return string Domain, no scheme.
+	 */
+	public static function video_domain() {
+		$domain = (string) prx3_setting( 'jitsi_domain', 'meet.jit.si' );
+		return $domain ? preg_replace( '#^https?://|/.*$#', '', $domain ) : 'meet.jit.si';
+	}
+
+	/**
+	 * A meeting's private room name: unguessable, generated once.
+	 *
+	 * @param int $meeting_id The meeting (member or board).
+	 * @return string Room name.
+	 */
+	public static function room_name( $meeting_id ) {
+		$key = (string) get_post_meta( $meeting_id, '_prx3_room_key', true );
+		if ( '' === $key ) {
+			$key = strtolower( wp_generate_password( 12, false, false ) );
+			update_post_meta( $meeting_id, '_prx3_room_key', $key );
+		}
+		return 'prx3-' . (int) $meeting_id . '-' . $key;
+	}
+
+	/**
+	 * Whether the video room is open: from one hour before the start
+	 * until six hours after.
+	 *
+	 * @param string $starts Meeting start (Y-m-d H:i[:s]).
+	 * @param int    $now    Timestamp to compare against.
+	 * @return string before|open|after ('' when no start set).
+	 */
+	public static function video_window( $starts, $now ) {
+		$start = strtotime( (string) $starts );
+		if ( ! $start ) {
+			return '';
+		}
+		if ( $now < $start - HOUR_IN_SECONDS ) {
+			return 'before';
+		}
+		if ( $now > $start + 6 * HOUR_IN_SECONDS ) {
+			return 'after';
+		}
+		return 'open';
+	}
+
+	/**
+	 * Meeting pages carry their own video room: member meetings and
+	 * AGMs for owners, board meetings inside the board wall. Matches
+	 * never use this — they stream through the Match Centre.
+	 *
+	 * @param string $content Post content.
+	 * @return string Content plus the meeting video.
+	 */
+	public static function video_content( $content ) {
+		if ( is_admin() || ! function_exists( 'is_singular' ) || ! is_singular( array( 'prx3_meeting', 'prx3_board_meeting' ) ) ) {
+			return $content;
+		}
+		$post_id = get_queried_object_id();
+		if ( get_the_ID() && (int) get_the_ID() !== (int) $post_id ) {
+			return $content;
+		}
+		$board = 'prx3_board_meeting' === get_post_type( $post_id );
+		if ( $board && ! current_user_can( 'prx3_board' ) && ! current_user_can( 'prx3_admin' ) ) {
+			return $content; // The board wall already blocks the page itself.
+		}
+		if ( ! $board && ! prx3_is_owner() ) {
+			return $content;
+		}
+		$starts = (string) get_post_meta( $post_id, '_prx3_meeting_start', true );
+		$window = self::video_window( $starts, time() );
+		if ( 'before' === $window ) {
+			return $content . '<p class="prx3-notice">' . esc_html( sprintf( /* translators: %s start. */ __( 'The meeting room opens an hour before the start (%s).', 'fan-ownership' ), prx3_format_datetime( $starts ) ) ) . '</p>';
+		}
+		if ( 'after' === $window || '' === $window ) {
+			return $content . '<p class="prx3-notice">' . esc_html__( 'This meeting has ended. Minutes are published to the document vault.', 'fan-ownership' ) . '</p>';
+		}
+		$room = self::room_name( $post_id );
+		$src  = 'https://' . rawurlencode( self::video_domain() ) . '/' . rawurlencode( $room ) . '#config.prejoinConfig.enabled=true&userInfo.displayName=' . rawurlencode( wp_get_current_user()->display_name );
+		$out  = '<div class="prx3-meeting-video"><iframe src="' . esc_url( $src ) . '" style="width:100%;height:560px;border:0;border-radius:8px;" allow="camera; microphone; fullscreen; display-capture" title="' . esc_attr__( 'Meeting video', 'fan-ownership' ) . '"></iframe>';
+		$out .= '<p class="description">' . esc_html( $board ? __( 'Board meeting room — board members only. Formal acts (votes, casting votes) are recorded in the platform, not in the call.', 'fan-ownership' ) : __( 'You are joining as an owner under the code of conduct. The meeting is chaired from this room; questions rank live on the Questions page.', 'fan-ownership' ) ) . '</p></div>';
+		PRX3_Audit::log( 'meeting_joined', sprintf( 'User %1$d joined the video room for meeting %2$d', get_current_user_id(), $post_id ) );
+		return $content . $out;
 	}
 }

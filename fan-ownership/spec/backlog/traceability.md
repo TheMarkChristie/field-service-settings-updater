@@ -42,6 +42,7 @@ before shipping.
 | 3.12.1.2 | Fix: admin screens for four screen-less stores — Share Register (Owners), Audit Log (Fan App Settings), Reports queue (FanPress), Gift Codes (Owners) |
 | 3.12.1.3 | Fix: member pages self-install on version change (stamped, idempotent); profile-link fallback re-wires the Profile page by slug |
 | 3.12.1.4 | Board menu gains the audited Identity Lookup (masked government ID) — P122 amended: board members may view identity records |
+| 3.13.0.0 | Meeting video: in-platform Jitsi rooms on every meeting page (member + board, never matches), windowed one hour before to six after, audited joins, self-hostable domain setting |
 
 ## Phase 1 — Own
 
@@ -108,7 +109,7 @@ before shipping.
 | FO-225 Structured board actions | Done | 0.1.0 | Recommendations on ballots, casting votes, reserved/failed-quorum decisions with mandatory published reasoning → register | |
 | FO-226 Board workspace | Done | 0.1.0 | Board-only CPTs (papers/threads/votes/vault/meetings), capability-walled incl. admins-except-break-glass (audited), open internal voting, chair casting vote, auto-minutes | |
 | FO-227 Conflicts | Done | 0.1.0 | Public conflicts register on profile/directory, declare-or-confirm step, recusal lockout on papers/threads/votes, chair-applied recusal | |
-| FO-228 Board meetings & observers | Partial | 0.1.0 | Per-item expiring observer grants, recusal exclusion | In-platform WebRTC video (Jitsi embed) not built — meeting entity + agenda exist; video lands with Phase 3 real-time work as specced |
+| FO-228 Board meetings & observers | Done | 0.1.0; video 3.13.0.0 | In-platform video rooms on every meeting page (member meetings/AGMs for owners, board meetings inside the board wall): Jitsi embed (default meet.jit.si, self-hostable via Fan App Settings → API & Integrations), unguessable per-meeting rooms, open one hour before start to six hours after, joins audited. Matches excluded by design — they stream via the Match Centre | Owner observation of board meetings: chair streams the room into a member meeting when observers are invited |
 | FO-229 Vault & departures | Done | 0.1.0 | View-only rendering, per-view name+time watermark, chair-visible access log (audit), instant revoke + session destroy, records preserved | |
 
 | FO-230 Native forum | Done | 0.3.0 | `class-prx3-forum.php` — gated topic CPT + comment replies + boards taxonomy, auto threads on ballot open and match publish (idempotent source keys), chat transcript archived on match end (anonymised, held/removed excluded), one-action thread→ballot conversion with provenance, REST routes for the app, admin columns, word-filter holds + mutes + kill switch | bbPress/BuddyPress dependency removed (T16 superseded by P109) |

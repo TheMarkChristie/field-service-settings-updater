@@ -177,6 +177,7 @@ class PRX3_Admin {
 				'chat_color_board'  => array( __( "Board members' bubble colour (hex)", 'fan-ownership' ), 'text' ),
 			),
 			'integrations' => array(
+				'jitsi_domain'        => array( __( 'Meeting video domain (Jitsi Meet; default meet.jit.si, or your self-hosted server)', 'fan-ownership' ), 'text' ),
 				'cf_account_id'       => array( __( 'Cloudflare account ID', 'fan-ownership' ), 'text' ),
 				'cf_api_token'        => array( __( 'Cloudflare API token', 'fan-ownership' ), 'password' ),
 				'cf_stream_key_id'    => array( __( 'Stream signing key ID', 'fan-ownership' ), 'text' ),
