@@ -309,6 +309,28 @@ class PRX3_Data_API {
 			}
 		}
 
+		// Optional profile payload (FO-237): bio, socials, identity.
+		if ( isset( $item['bio'] ) ) {
+			update_user_meta( $user_id, 'prx3_bio', sanitize_textarea_field( (string) $item['bio'] ) );
+		}
+		if ( isset( $item['socials'] ) && is_array( $item['socials'] ) ) {
+			$socials = array();
+			foreach ( $item['socials'] as $network => $url ) {
+				$url = esc_url_raw( (string) $url );
+				if ( $url ) {
+					$socials[ sanitize_key( $network ) ] = $url;
+				}
+			}
+			update_user_meta( $user_id, 'prx3_socials', $socials );
+		}
+		if ( isset( $item['identity'] ) && is_array( $item['identity'] ) ) {
+			$identity = array();
+			foreach ( array( 'birth_name', 'nationality', 'residence', 'dob', 'gov_id' ) as $field ) {
+				$identity[ $field ] = sanitize_text_field( (string) ( $item['identity'][ $field ] ?? '' ) );
+			}
+			$identity['pep'] = in_array( $item['identity']['pep'] ?? '', array( 'yes', 'no' ), true ) ? $item['identity']['pep'] : '';
+			update_user_meta( $user_id, 'prx3_identity', $identity );
+		}
 		$granted = 0;
 		$shares  = isset( $item['shares'] ) ? (int) $item['shares'] : 0;
 		if ( $top_up ) {

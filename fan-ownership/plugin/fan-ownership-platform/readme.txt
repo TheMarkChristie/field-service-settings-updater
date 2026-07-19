@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.12.0.0
+Stable tag: 3.12.0.1
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,15 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.12.0.1 =
+* Fix: the demo pack's ballots now arrive with a recorded second
+  approval, so editing and re-publishing a seeded ballot no longer
+  sticks at Pending on a single-admin demo site; the open kit ballot
+  stays live until 31 August. The member import (Data API + demo
+  loader) now seeds the new profile fields - bios, socials, and the
+  private identity record including a PEP=yes compliance example
+  (Morag Sinclair) - all with obviously fake DEMO- IDs.
 
 = 3.12.0.0 =
 * Identity record: profiles gain a private Identity section - full

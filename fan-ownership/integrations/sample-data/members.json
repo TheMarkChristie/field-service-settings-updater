@@ -3,19 +3,52 @@
     "email": "aileen.munro@example.test",
     "name": "Aileen Munro",
     "shares": 4,
-    "source": "sample_import"
+    "source": "sample_import",
+    "bio": "Season ticket holder since the Dewars days. Zamboni Connery was my idea.",
+    "socials": {
+      "x": "https://x.com/aileenm"
+    },
+    "identity": {
+      "birth_name": "Aileen Margaret Munro",
+      "nationality": "British",
+      "residence": "United Kingdom",
+      "dob": "1988-03-14",
+      "gov_id": "DEMO-AB123456C",
+      "pep": "no"
+    }
   },
   {
     "email": "stuart.mcrae@example.test",
     "name": "Stuart McRae",
     "shares": 10,
-    "source": "sample_import"
+    "source": "sample_import",
+    "bio": "Ten shares, zero regrets. Heritage retro or nothing.",
+    "identity": {
+      "birth_name": "Stuart James McRae",
+      "nationality": "British",
+      "residence": "United Kingdom",
+      "dob": "1979-11-02",
+      "gov_id": "DEMO-CD789012E",
+      "pep": "no"
+    }
   },
   {
     "email": "eilidh.watson@example.test",
     "name": "Eilidh Watson",
     "shares": 2,
-    "source": "sample_import"
+    "source": "sample_import",
+    "bio": "Away days organiser. The bus leaves on time.",
+    "socials": {
+      "instagram": "https://instagram.com/eilidh.watson"
+    },
+    "identity": {
+      "birth_name": "Eilidh Watson",
+      "nationality": "British",
+      "residence": "United Kingdom",
+      "dob": "1995-01-30",
+      "gov_id": "DEMO-GH901234I",
+      "pep": "no"
+    }
   },
   {
     "email": "callum.boyd@example.test",
@@ -27,7 +60,16 @@
     "email": "morag.sinclair@example.test",
     "name": "Morag Sinclair",
     "shares": 6,
-    "source": "sample_import"
+    "source": "sample_import",
+    "bio": "Board member. Ask me about volunteering.",
+    "identity": {
+      "birth_name": "Morag Elspeth Sinclair",
+      "nationality": "British",
+      "residence": "United Kingdom",
+      "dob": "1971-06-25",
+      "gov_id": "DEMO-EF345678G",
+      "pep": "yes"
+    }
   },
   {
     "email": "hamish.frew@example.test",
@@ -93,7 +135,15 @@
     "email": "tavish.oban@example.test",
     "name": "Tavish MacIntyre",
     "shares": 1,
-    "source": "sample_import"
+    "source": "sample_import",
+    "identity": {
+      "birth_name": "Tavish MacIntyre",
+      "nationality": "Canadian",
+      "residence": "Canada",
+      "dob": "1983-09-12",
+      "gov_id": "DEMO-514376289",
+      "pep": "no"
+    }
   },
   {
     "email": "lorna.esslemont@example.test",

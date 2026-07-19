@@ -130,3 +130,19 @@ t_eq( (int) prx3_setting( 'account_page_id' ), (int) $pages_map['account'], 'Acc
 $second_run = PRX3_Pages::install();
 t_eq( $second_run['created'], 0, 'Re-running creates nothing new' );
 t_eq( $second_run['existing'], count( PRX3_Pages::pages() ), 'Re-running leaves every page untouched' );
+
+// Fix 3.12.0.1: ballots arrive pre-approved (editable without the
+// four-eyes hold on a demo site) and members carry profile fields.
+prx3_test_reset();
+$GLOBALS['prx3_t_posts']    = array();
+$GLOBALS['prx3_t_comments'] = array();
+update_option( 'prx3_settings', array( 'max_shares' => 10 ) );
+PRX3_Data_API::seed_sample();
+$prx3_open2 = get_posts( array( 'post_type' => 'prx3_ballot', 'post_status' => array( 'publish' ), 'meta_key' => '_prx3_state', 'meta_value' => 'open' ) );
+t_eq( (int) get_post_meta( $prx3_open2[0]->ID, '_prx3_approved_by', true ), 1, 'Seeded open ballot carries a recorded approval' );
+$prx3_aileen = get_user_by( 'email', 'aileen.munro@example.test' );
+t_eq( PRX3_Social::identity( $prx3_aileen->ID )['nationality'], 'British', 'Seeded members carry identity records' );
+t_eq( PRX3_Social::identity( $prx3_aileen->ID )['pep'], 'no', 'PEP declaration seeded' );
+t_ok( '' !== (string) get_user_meta( $prx3_aileen->ID, 'prx3_bio', true ), 'Seeded bios land' );
+$prx3_morag = get_user_by( 'email', 'morag.sinclair@example.test' );
+t_eq( PRX3_Social::identity( $prx3_morag->ID )['pep'], 'yes', 'A PEP=yes example exists for compliance demos' );

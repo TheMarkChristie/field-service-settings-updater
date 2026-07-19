@@ -180,6 +180,9 @@ function wp_insert_comment( $data ) {
 	$GLOBALS['prx3_t_comments'][ $id ] = $data;
 	return $id;
 }
+function sanitize_textarea_field( $text ) {
+	return trim( (string) $text );
+}
 function sanitize_hex_color( $color ) {
 	return preg_match( '/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', (string) $color ) ? $color : null;
 }
