@@ -130,6 +130,7 @@ class PRX3_Admin {
 				'currency_symbol'   => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
 				'welcome_video_url' => array( __( 'Welcome video URL (embed URL, shown to new owners on the hub)', 'fan-ownership' ), 'text' ),
 				'weekly_show_day'   => array( __( 'Weekly show day (0 = Sunday … 6 = Saturday; blank = no standing slot)', 'fan-ownership' ), 'text' ),
+				'player_post_type'  => array( __( 'Players come from', 'fan-ownership' ), 'player_source', __( 'Which content type holds your squad. Choose an existing players table from another plugin to avoid a second Players list; the player-of-the-match and player-of-the-month votes will use it. Keep "Fan Ownership players" to use the built-in one.', 'fan-ownership' ) ),
 			),
 			'brand pack'  => array(
 				'club_mission'              => array( __( 'Mission statement (rich text — shown on the brand pack and available to the app)', 'fan-ownership' ), 'richtext' ),
@@ -330,6 +331,21 @@ class PRX3_Admin {
 					echo '<option value="' . esc_attr( $sport_key ) . '" ' . selected( $value, $sport_key, false ) . '>' . esc_html( $sport['label'] ) . '</option>';
 				}
 				echo '</select>';
+			} elseif ( 'player_source' === $def[1] ) {
+				echo '<select id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">';
+				echo '<option value="prx3_player" ' . selected( $value, 'prx3_player', false ) . '>' . esc_html__( 'Fan Ownership players (built-in)', 'fan-ownership' ) . '</option>';
+				foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $pt ) {
+					if ( in_array( $pt->name, array( 'prx3_player', 'attachment' ), true ) ) {
+						continue;
+					}
+					echo '<option value="' . esc_attr( $pt->name ) . '" ' . selected( $value, $pt->name, false ) . '>' . esc_html( $pt->labels->name . ' (' . $pt->name . ')' ) . '</option>';
+				}
+				// Keep a selected external type visible even if its plugin is
+				// inactive right now, so the choice is never silently lost.
+				if ( $value && 'prx3_player' !== $value && ! post_type_exists( (string) $value ) ) {
+					echo '<option value="' . esc_attr( (string) $value ) . '" selected>' . esc_html( sprintf( /* translators: %s post type. */ __( '%s (not currently registered)', 'fan-ownership' ), (string) $value ) ) . '</option>';
+				}
+				echo '</select>';
 			} elseif ( 'richtext' === $def[1] ) {
 				wp_editor(
 					(string) $value,
@@ -471,6 +487,9 @@ class PRX3_Admin {
 					prx3_update_setting( $key, array_key_exists( $sport, PRX3_Config::sports() ) ? $sport : 'generic' );
 				} elseif ( 'textarea' === $def[1] ) {
 					prx3_update_setting( $key, sanitize_textarea_field( $raw ) );
+				} elseif ( 'player_source' === $def[1] ) {
+					$type = sanitize_key( $raw );
+					prx3_update_setting( $key, $type ? $type : 'prx3_player' );
 				} else {
 					prx3_update_setting( $key, sanitize_text_field( $raw ) );
 				}

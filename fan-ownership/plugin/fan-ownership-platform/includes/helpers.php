@@ -197,6 +197,19 @@ function prx3_money( $amount ) {
 }
 
 /**
+ * The post type that holds the squad. Defaults to the built-in
+ * `prx3_player`, but a club can point the player features at an
+ * existing players table from another plugin so there is only one
+ * squad list (FanPress Settings → Club).
+ *
+ * @return string Post type name.
+ */
+function prx3_player_post_type() {
+	$type = (string) prx3_setting( 'player_post_type', 'prx3_player' );
+	return '' !== $type ? $type : 'prx3_player';
+}
+
+/**
  * Record member activity (login, vote, view) for the active-owner
  * quorum denominator (P76) and retention automation.
  *

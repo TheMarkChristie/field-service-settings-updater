@@ -45,16 +45,21 @@ class PRX3_Players {
 	 * are club-managed, not user accounts.
 	 */
 	public static function register_type() {
+		// When the club points the player features at an existing squad
+		// table from another plugin, our built-in type is registered but
+		// hidden — no second Players list, and any existing data stays
+		// reachable in the database.
+		$own = 'prx3_player' === prx3_player_post_type();
 		register_post_type(
 			'prx3_player',
 			array(
-				'public'          => true,
-				'show_ui'         => true,
-				'show_in_menu'    => 'prx3-owners',
+				'public'          => $own,
+				'show_ui'         => $own,
+				'show_in_menu'    => $own ? 'prx3-owners' : false,
 				'show_in_rest'    => false,
 				'menu_icon'       => 'dashicons-id-alt',
-				'has_archive'     => true,
-				'rewrite'         => array( 'slug' => 'squad' ),
+				'has_archive'     => $own,
+				'rewrite'         => $own ? array( 'slug' => 'squad' ) : false,
 				'capability_type' => 'post',
 				'map_meta_cap'    => true,
 				'supports'        => array( 'title', 'editor', 'thumbnail' ),
@@ -104,6 +109,44 @@ class PRX3_Players {
 	}
 
 	/**
+	 * The roster query for candidates. Our own type is filtered to the
+	 * active flag; an external squad table lists all its published
+	 * players (that plugin manages who is current).
+	 *
+	 * @return array get_posts() args.
+	 */
+	public static function candidate_query() {
+		$args = array(
+			'post_type'      => prx3_player_post_type(),
+			'post_status'    => 'publish',
+			'posts_per_page' => 50,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+			'no_found_rows'  => true,
+		);
+		if ( 'prx3_player' === prx3_player_post_type() ) {
+			$args['meta_key']   = '_prx3_active'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded active-roster lookup, capped at 50.
+			$args['meta_value'] = '1'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+		}
+		return $args;
+	}
+
+	/**
+	 * Whether a post ID is a valid, votable player of the current squad
+	 * source: right post type, and (for our own type) flagged active.
+	 *
+	 * @param int $player_id Candidate post ID.
+	 * @return bool
+	 */
+	public static function is_votable_player( $player_id ) {
+		$type = prx3_player_post_type();
+		if ( $type !== get_post_type( $player_id ) ) {
+			return false;
+		}
+		return 'prx3_player' !== $type || (bool) get_post_meta( $player_id, '_prx3_active', true );
+	}
+
+	/**
 	 * The active roster as vote candidates.
 	 *
 	 * @return array[]
@@ -119,18 +162,7 @@ class PRX3_Players {
 					'photo'    => get_the_post_thumbnail_url( $player, 'medium' ),
 				);
 			},
-			get_posts(
-				array(
-					'post_type'      => 'prx3_player',
-					'post_status'    => 'publish',
-					'posts_per_page' => 50,
-					'meta_key'       => '_prx3_active', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- bounded active-roster lookup, capped at 50.
-					'meta_value'     => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-					'orderby'        => 'title',
-					'order'          => 'ASC',
-					'no_found_rows'  => true,
-				)
-			)
+			get_posts( self::candidate_query() )
 		);
 	}
 
@@ -173,7 +205,7 @@ class PRX3_Players {
 		if ( ! self::potm_open( $match_id ) ) {
 			return new WP_Error( 'prx3_closed', __( 'Player of the match voting is not open.', 'fan-ownership' ) );
 		}
-		if ( 'prx3_player' !== get_post_type( $player_id ) || ! get_post_meta( $player_id, '_prx3_active', true ) ) {
+		if ( ! self::is_votable_player( $player_id ) ) {
 			return new WP_Error( 'prx3_player', __( 'That player is not on the ballot.', 'fan-ownership' ) );
 		}
 		$votes             = (array) get_post_meta( $match_id, '_prx3_potm_votes', true );
@@ -303,7 +335,7 @@ class PRX3_Players {
 		if ( ! self::month_poll_open() ) {
 			return new WP_Error( 'prx3_closed', __( 'Player of the month voting opens in the last week of the month.', 'fan-ownership' ) );
 		}
-		if ( 'prx3_player' !== get_post_type( $player_id ) || ! get_post_meta( $player_id, '_prx3_active', true ) ) {
+		if ( ! self::is_votable_player( $player_id ) ) {
 			return new WP_Error( 'prx3_player', __( 'That player is not on the ballot.', 'fan-ownership' ) );
 		}
 		$key               = 'prx3_potm_month_' . self::month_key();
@@ -433,7 +465,7 @@ class PRX3_Players {
 	 * @return string Content plus the player card.
 	 */
 	public static function single_content( $content ) {
-		if ( is_admin() || ! function_exists( 'is_singular' ) || ! is_singular( 'prx3_player' ) ) {
+		if ( is_admin() || ! function_exists( 'is_singular' ) || ! is_singular( prx3_player_post_type() ) ) {
 			return $content;
 		}
 		$post_id = get_queried_object_id();

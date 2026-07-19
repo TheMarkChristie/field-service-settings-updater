@@ -99,6 +99,7 @@ class PRX3_Config {
 			'chat_color_board'                   => '',
 			'welcome_video_url'                  => '',
 			'weekly_show_day'                    => '',
+			'player_post_type'                   => 'prx3_player',
 			'jitsi_domain'                       => 'meet.jit.si',
 			'jaas_app_id'                        => '',
 			'jaas_api_key_id'                    => '',

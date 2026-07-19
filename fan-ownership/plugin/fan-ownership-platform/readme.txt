@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.15.1.3
+Stable tag: 3.15.1.4
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,14 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.15.1.4 =
+* Selectable squad source: if your players already live in another
+  plugin's table, point the player-of-the-match and
+  player-of-the-month features at it under FanPress Settings > Club
+  ("Players come from"). The built-in Players list is hidden when an
+  external table is chosen, so you never run two squad lists. The
+  built-in players table remains the default.
 
 = 3.15.1.3 =
 * Owner profile pictures now come from the platform, not Gravatar:

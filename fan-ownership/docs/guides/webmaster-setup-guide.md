@@ -11,7 +11,9 @@ Zero to running club, in order.
 
 ## 2. Configure (FanPress Settings)
 Work down the sections: **Club** (name, sport, currency, welcome video
-URL, weekly show day) · **Brand Pack** (colours, badge, fonts — drives
+URL, weekly show day, and "Players come from" — point the player votes
+at an existing squad table from another plugin, or keep the built-in
+one) · **Brand Pack** (colours, badge, fonts — drives
 the whole front end) · **Ticketing** · **FanPress Chat** (bubble
 colours, chat word filter).
 Board-level sections (Legal, Targets, Governance) live in the Board menu.

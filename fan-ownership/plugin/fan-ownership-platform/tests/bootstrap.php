@@ -760,6 +760,7 @@ require $prx3_base . '/includes/class-prx3-gifts.php';
 require $prx3_base . '/includes/class-prx3-shopify.php';
 require $prx3_base . '/includes/class-prx3-meetings.php';
 require $prx3_base . '/includes/class-prx3-questions.php';
+require $prx3_base . '/includes/class-prx3-players.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
 require $prx3_base . '/includes/class-prx3-social.php';
