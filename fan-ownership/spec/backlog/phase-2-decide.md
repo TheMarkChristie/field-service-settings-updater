@@ -306,6 +306,7 @@ Acceptance criteria:
 4. Recusal can be applied by the chair as well as self-declared.
 
 ### FO-228 Board meetings and observers
+*(Built 3.13.0.0 (P123): every meeting page — member, AGM, board; never matches — carries its own in-platform video room, open one hour before the start to six hours after, joins audited. Upgraded 3.14.0.0 (P124): rooms run on 8×8 JaaS with platform-signed tokens — board/governance/admin join as moderators, owners as guests, no 8×8 accounts needed for joiners; configured under Setup → Meeting Video, with an open meet.jit.si fallback when unconfigured.)*
 As a Board Member, I want board meetings held by video inside the workspace with per-item observer access for advisors, so that even the meeting itself is in the governed environment.
 Traceability: P86, P87. Estimate: Design 1.5 / Build 1 / Develop 3.5 / Test 2
 

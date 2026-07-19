@@ -29,6 +29,23 @@ class PRX3_Admin {
 	 */
 	public static function menu() {
 		add_menu_page(
+			__( 'Setup & Integrations', 'fan-ownership' ),
+			__( 'Setup', 'fan-ownership' ),
+			'prx3_admin',
+			'prx3-setup',
+			array( __CLASS__, 'render_setup_overview' ),
+			'dashicons-admin-tools',
+			3.6
+		);
+		add_submenu_page(
+			'prx3-setup',
+			__( 'Setup overview', 'fan-ownership' ),
+			__( 'Overview', 'fan-ownership' ),
+			'prx3_admin',
+			'prx3-setup',
+			array( __CLASS__, 'render_setup_overview' )
+		);
+		add_menu_page(
 			__( 'Fan App Settings', 'fan-ownership' ),
 			__( 'Fan App Settings', 'fan-ownership' ),
 			'prx3_admin',
@@ -76,15 +93,19 @@ class PRX3_Admin {
 	 */
 	private static function sections() {
 		return array(
-			'club'         => array( __( 'Club', 'fan-ownership' ), 'prx3-settings-club', 'prx3-settings' ),
-			'brand pack'   => array( __( 'Brand Pack', 'fan-ownership' ), 'prx3-settings-brand', 'prx3-settings' ),
-			'legal'        => array( __( 'Legal', 'fan-ownership' ), 'prx3-settings-legal', 'prx3-board' ),
-			'ticketing'    => array( __( 'Ticketing', 'fan-ownership' ), 'prx3-settings-ticketing', 'prx3-settings' ),
-			'shares'       => array( __( 'Shares & Checkout', 'fan-ownership' ), 'prx3-settings-shares', 'prx3-settings' ),
-			'targets'      => array( __( 'Targets', 'fan-ownership' ), 'prx3-settings-targets', 'prx3-board' ),
-			'governance'   => array( __( 'Governance', 'fan-ownership' ), 'prx3-settings-governance', 'prx3-board' ),
-			'fanpress'     => array( __( 'FanPress Chat', 'fan-ownership' ), 'prx3-settings-fanpress', 'prx3-settings' ),
-			'integrations' => array( __( 'API & Integrations', 'fan-ownership' ), 'prx3-settings-api', 'prx3-settings' ),
+			'club'        => array( __( 'Club', 'fan-ownership' ), 'prx3-settings-club', 'prx3-settings' ),
+			'brand pack'  => array( __( 'Brand Pack', 'fan-ownership' ), 'prx3-settings-brand', 'prx3-settings' ),
+			'legal'       => array( __( 'Legal', 'fan-ownership' ), 'prx3-settings-legal', 'prx3-board' ),
+			'ticketing'   => array( __( 'Ticketing', 'fan-ownership' ), 'prx3-settings-ticketing', 'prx3-settings' ),
+			'shares'      => array( __( 'Commerce — Shopify', 'fan-ownership' ), 'prx3-setup-commerce', 'prx3-setup' ),
+			'targets'     => array( __( 'Targets', 'fan-ownership' ), 'prx3-settings-targets', 'prx3-board' ),
+			'governance'  => array( __( 'Governance', 'fan-ownership' ), 'prx3-settings-governance', 'prx3-board' ),
+			'fanpress'    => array( __( 'FanPress Chat', 'fan-ownership' ), 'prx3-settings-fanpress', 'prx3-settings' ),
+			'streaming'   => array( __( 'Streaming — Cloudflare', 'fan-ownership' ), 'prx3-setup-streaming', 'prx3-setup' ),
+			'meetings8x8' => array( __( 'Meetings — 8×8 JaaS', 'fan-ownership' ), 'prx3-setup-meetings', 'prx3-setup' ),
+			'push'        => array( __( 'Push & App', 'fan-ownership' ), 'prx3-setup-push', 'prx3-setup' ),
+			'dataapi'     => array( __( 'Data API & Claude', 'fan-ownership' ), 'prx3-setup-dataapi', 'prx3-setup' ),
+			'sync'        => array( __( 'Power Platform', 'fan-ownership' ), 'prx3-setup-sync', 'prx3-setup' ),
 		);
 	}
 
@@ -95,14 +116,14 @@ class PRX3_Admin {
 	 */
 	private static function fields() {
 		return array(
-			'club'         => array(
+			'club'        => array(
 				'club_name'         => array( __( 'Club name', 'fan-ownership' ), 'text' ),
 				'sport'             => array( __( 'Sport (drives Match Centre events and language)', 'fan-ownership' ), 'sport' ),
 				'currency_symbol'   => array( __( 'Currency symbol', 'fan-ownership' ), 'text' ),
 				'welcome_video_url' => array( __( 'Welcome video URL (embed URL, shown to new owners on the hub)', 'fan-ownership' ), 'text' ),
 				'weekly_show_day'   => array( __( 'Weekly show day (0 = Sunday … 6 = Saturday; blank = no standing slot)', 'fan-ownership' ), 'text' ),
 			),
-			'brand pack'   => array(
+			'brand pack'  => array(
 				'club_mission'              => array( __( 'Mission statement (rich text — shown on the brand pack and available to the app)', 'fan-ownership' ), 'richtext' ),
 				'club_primary'              => array( __( 'Primary colour (hex)', 'fan-ownership' ), 'text' ),
 				'club_secondary'            => array( __( 'Secondary colour (hex)', 'fan-ownership' ), 'text' ),
@@ -133,7 +154,7 @@ class PRX3_Admin {
 				'brand_usage_notes'         => array( __( 'Brand usage notes (clear space, minimum sizes, do/do-not)', 'fan-ownership' ), 'textarea' ),
 				'brand_club_stamp_id'       => array( __( 'Club stamp (placed on executed documents)', 'fan-ownership' ), 'media' ),
 			),
-			'legal'        => array(
+			'legal'       => array(
 				'sha_page_id'                => array( __( 'Shareholders\' Agreement page ID (the supplied document)', 'fan-ownership' ), 'number' ),
 				'sha_version'                => array( __( 'Shareholders\' Agreement version (bump to require re-acceptance)', 'fan-ownership' ), 'text' ),
 				'terms_page_id'              => array( __( 'Terms of Membership page ID', 'fan-ownership' ), 'number' ),
@@ -141,15 +162,15 @@ class PRX3_Admin {
 				'sha_signatory_role'         => array( __( 'Board signatory role (e.g. Director)', 'fan-ownership' ), 'text' ),
 				'sha_signatory_signature_id' => array( __( 'Board signatory signature image', 'fan-ownership' ), 'media' ),
 			),
-			'ticketing'    => array(
+			'ticketing'   => array(
 				'ticketing_provider'                 => array( __( 'Ticketing provider name', 'fan-ownership' ), 'text' ),
 				'matchday_ticket_discount_per_share' => array( __( 'Matchday discount % per share', 'fan-ownership' ), 'number' ),
 				'season_ticket_discount_per_share'   => array( __( 'Season ticket discount % per share', 'fan-ownership' ), 'number' ),
 			),
-			'shares'       => array(
-				'shopify_domain'         => array( __( 'Shopify store domain (e.g. club.myshopify.com)', 'fan-ownership' ), 'text' ),
-				'shopify_webhook_secret' => array( __( 'Shopify webhook signing secret', 'fan-ownership' ), 'password' ),
-				'shopify_share_variants' => array( __( 'Shopify variant IDs per tier, comma-separated, tier 1 first', 'fan-ownership' ), 'textarea' ),
+			'shares'      => array(
+				'shopify_domain'         => array( __( 'Shopify store domain (e.g. club.myshopify.com)', 'fan-ownership' ), 'text', __( 'The myshopify.com domain from your store admin — cart permalinks for share purchases are built from it.', 'fan-ownership' ), 'https://admin.shopify.com/' ),
+				'shopify_webhook_secret' => array( __( 'Shopify webhook signing secret', 'fan-ownership' ), 'password', __( 'Settings → Notifications → Webhooks in Shopify admin. Create two webhooks (orders/paid and refunds/create) pointing at /wp-json/prx3/v1/shopify/webhook and paste the signing secret here.', 'fan-ownership' ), 'https://admin.shopify.com/settings/notifications' ),
+				'shopify_share_variants' => array( __( 'Shopify variant IDs per tier, comma-separated, tier 1 first', 'fan-ownership' ), 'textarea', __( 'One product with a variant per ladder tier; prices must match the ladder — mismatched orders are held for review, never granted.', 'fan-ownership' ), '' ),
 				'share_base_price'       => array( __( 'Share 1 price', 'fan-ownership' ), 'number' ),
 				'share_tier_growth'      => array( __( 'Tier growth (0.25 = +25% per share)', 'fan-ownership' ), 'number' ),
 				'max_shares'             => array( __( 'Maximum shares per member', 'fan-ownership' ), 'number' ),
@@ -157,11 +178,11 @@ class PRX3_Admin {
 				'account_page_id'        => array( __( 'Account page ID (the [prx3_account] page)', 'fan-ownership' ), 'number' ),
 				'launch_moment'          => array( __( 'Public launch moment (Founders cutoff, e.g. 2026-09-01 12:00)', 'fan-ownership' ), 'text' ),
 			),
-			'targets'      => array(
+			'targets'     => array(
 				'target_owners'  => array( __( 'Owner target (drives the dashboard meter)', 'fan-ownership' ), 'number' ),
 				'target_revenue' => array( __( 'Financial target for the season (club currency; 0 hides the meter)', 'fan-ownership' ), 'number' ),
 			),
-			'governance'   => array(
+			'governance'  => array(
 				'quorum_percent'      => array( __( 'Quorum % of active owners', 'fan-ownership' ), 'number' ),
 				'constitutional_pct'  => array( __( 'Constitutional supermajority %', 'fan-ownership' ), 'number' ),
 				'idea_threshold_pct'  => array( __( 'Idea support threshold %', 'fan-ownership' ), 'number' ),
@@ -171,25 +192,36 @@ class PRX3_Admin {
 				'question_sla_days'   => array( __( 'Question answer target (days)', 'fan-ownership' ), 'number' ),
 				'decision_stale_days' => array( __( 'Decision stalled after (days)', 'fan-ownership' ), 'number' ),
 			),
-			'fanpress'     => array(
+			'fanpress'    => array(
+				'chat_blocklist'    => array( __( 'Chat word filter (one per line)', 'fan-ownership' ), 'textarea', __( 'Messages matching these are held for moderators everywhere: FanPress, match chat, private messages.', 'fan-ownership' ), '' ),
 				'chat_color_mine'   => array( __( 'My chat bubble colour (hex, e.g. #dcf8c6)', 'fan-ownership' ), 'text' ),
 				'chat_color_theirs' => array( __( "Other owners' bubble colour (hex)", 'fan-ownership' ), 'text' ),
 				'chat_color_board'  => array( __( "Board members' bubble colour (hex)", 'fan-ownership' ), 'text' ),
 			),
-			'integrations' => array(
-				'jitsi_domain'        => array( __( 'Meeting video domain (Jitsi Meet; default meet.jit.si, or your self-hosted server)', 'fan-ownership' ), 'text' ),
-				'cf_account_id'       => array( __( 'Cloudflare account ID', 'fan-ownership' ), 'text' ),
-				'cf_api_token'        => array( __( 'Cloudflare API token', 'fan-ownership' ), 'password' ),
-				'cf_stream_key_id'    => array( __( 'Stream signing key ID', 'fan-ownership' ), 'text' ),
-				'cf_stream_key_pem'   => array( __( 'Stream signing key (PEM)', 'fan-ownership' ), 'textarea' ),
-				'fcm_server_key'      => array( __( 'Firebase FCM server key', 'fan-ownership' ), 'password' ),
-				'chat_blocklist'      => array( __( 'Chat word filter (one per line)', 'fan-ownership' ), 'textarea' ),
-				'data_api_enabled'    => array( __( 'Data API enabled (1 = on; write access for trusted automation)', 'fan-ownership' ), 'number' ),
-				'data_api_key'        => array( __( 'Data API key (sent as X-Prx3-Data-Key)', 'fan-ownership' ), 'password' ),
-				'sync_enabled'        => array( __( 'Power Platform sync enabled (1 = on)', 'fan-ownership' ), 'number' ),
-				'sync_api_key'        => array( __( 'Sync API key (Power Automate sends this as X-Prx3-Api-Key)', 'fan-ownership' ), 'password' ),
-				'sync_webhook_url'    => array( __( 'Outbound webhook URL (Power Automate HTTP trigger)', 'fan-ownership' ), 'text' ),
-				'sync_webhook_secret' => array( __( 'Webhook signing secret (HMAC-SHA256, X-Prx3-Signature)', 'fan-ownership' ), 'password' ),
+			'streaming'   => array(
+				'cf_account_id'     => array( __( 'Cloudflare account ID', 'fan-ownership' ), 'text', __( 'From the Cloudflare dashboard sidebar — used to talk to Cloudflare Stream for match video and replays.', 'fan-ownership' ), 'https://dash.cloudflare.com/?to=/:account/stream' ),
+				'cf_api_token'      => array( __( 'Cloudflare API token', 'fan-ownership' ), 'password', __( 'Create a token scoped to Stream:Edit only — never use the Global API Key.', 'fan-ownership' ), 'https://dash.cloudflare.com/profile/api-tokens' ),
+				'cf_stream_key_id'  => array( __( 'Stream signing key ID', 'fan-ownership' ), 'text', __( 'Generated once under Stream → Manage signing keys; pairs with the PEM below to make owner-only playback URLs.', 'fan-ownership' ), 'https://developers.cloudflare.com/stream/viewing-videos/securing-your-stream/' ),
+				'cf_stream_key_pem' => array( __( 'Stream signing key (PEM)', 'fan-ownership' ), 'textarea', __( 'The private key returned when you created the signing key. Shown once by Cloudflare — store it here immediately.', 'fan-ownership' ), 'https://developers.cloudflare.com/stream/viewing-videos/securing-your-stream/' ),
+			),
+			'meetings8x8' => array(
+				'jaas_app_id'      => array( __( '8×8 JaaS App ID', 'fan-ownership' ), 'text', __( 'Your tenant ID, starting vpaas-magic-cookie-…, from the JaaS console home. With the two key fields below, meetings run on 8×8 with your chair automatically the moderator.', 'fan-ownership' ), 'https://jaas.8x8.vc/' ),
+				'jaas_api_key_id'  => array( __( 'JaaS API key ID (kid)', 'fan-ownership' ), 'text', __( 'From JaaS console → API Keys: the full key ID, e.g. vpaas-magic-cookie-…/abc123.', 'fan-ownership' ), 'https://jaas.8x8.vc/#/apikeys' ),
+				'jaas_private_key' => array( __( 'JaaS private key (PEM)', 'fan-ownership' ), 'textarea', __( 'Download when you generate the API key pair — 8×8 keeps only the public half. Board, governance, and admins join as moderators; owners join as participants.', 'fan-ownership' ), 'https://developers.8x8.com/jaas/docs/api-keys-jwt' ),
+				'jitsi_domain'     => array( __( 'Fallback video domain', 'fan-ownership' ), 'text', __( 'Used only while the three JaaS fields are empty. Default meet.jit.si (free; the first person in signs in with a Google/GitHub account to open the room), or your self-hosted Jitsi.', 'fan-ownership' ), 'https://jitsi.github.io/handbook/docs/devops-guide/' ),
+			),
+			'push'        => array(
+				'fcm_server_key' => array( __( 'Firebase FCM server key', 'fan-ownership' ), 'password', __( 'From the Firebase console → Project settings → Cloud Messaging. Unlocks app push notifications; the same project later provides app sign-in.', 'fan-ownership' ), 'https://console.firebase.google.com/' ),
+			),
+			'dataapi'     => array(
+				'data_api_enabled' => array( __( 'Data API enabled (1 = on)', 'fan-ownership' ), 'number', __( 'The key-gated write API for trusted automation (Claude, scripts). Off by default; the Create connection button below switches it on with a strong key.', 'fan-ownership' ), '' ),
+				'data_api_key'     => array( __( 'Data API key (X-Prx3-Data-Key)', 'fan-ownership' ), 'password', __( 'Treat like an admin password. Revoke below the moment a job is done — the dashboard flags keys older than 30 days.', 'fan-ownership' ), '' ),
+			),
+			'sync'        => array(
+				'sync_enabled'        => array( __( 'Power Platform sync enabled (1 = on)', 'fan-ownership' ), 'number', __( 'Bidirectional Dataverse sync with matching rules (ID → email → owner number).', 'fan-ownership' ), '' ),
+				'sync_api_key'        => array( __( 'Sync API key (X-Prx3-Api-Key)', 'fan-ownership' ), 'password', __( 'Paste into the custom connector security settings in Power Automate.', 'fan-ownership' ), 'https://make.powerautomate.com/' ),
+				'sync_webhook_url'    => array( __( 'Outbound webhook URL', 'fan-ownership' ), 'text', __( 'The HTTP-trigger URL from your Power Automate flow — the platform posts member/register deltas here.', 'fan-ownership' ), 'https://make.powerautomate.com/' ),
+				'sync_webhook_secret' => array( __( 'Webhook signing secret', 'fan-ownership' ), 'password', __( 'Any long random string; the platform signs each delivery as X-Prx3-Signature (HMAC-SHA256) so your flow can verify it.', 'fan-ownership' ), '' ),
 			),
 		);
 	}
@@ -331,6 +363,13 @@ class PRX3_Admin {
 				$type = 'password' === $def[1] ? 'password' : 'text';
 				echo '<input type="' . esc_attr( $type ) . '" class="regular-text" id="prx3_' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( (string) $value ) . '">';
 			}
+			if ( ! empty( $def[2] ) ) {
+				echo '<p class="description">' . esc_html( $def[2] );
+				if ( ! empty( $def[3] ) ) {
+					echo ' <a href="' . esc_url( $def[3] ) . '" target="_blank" rel="noopener">' . esc_html__( 'Where to get this →', 'fan-ownership' ) . '</a>';
+				}
+				echo '</p>';
+			}
 			echo '</td></tr>';
 		}
 		echo '</table>';
@@ -346,7 +385,7 @@ class PRX3_Admin {
 		if ( 'legal' === $section ) {
 			echo '<p class="description"><strong>' . esc_html__( 'Before bumping the agreement version:', 'fan-ownership' ) . '</strong> ' . esc_html__( 'a material adverse change to the Shareholders\' Agreement must pass a member ballot first (agreement clause 7). Bumping the version re-prompts every owner to re-sign.', 'fan-ownership' ) . '</p>';
 		}
-		if ( 'integrations' === $section ) {
+		if ( 'dataapi' === $section ) {
 			PRX3_Data_API::connection_panel();
 		}
 		if ( 'brand pack' === $section ) {
@@ -536,5 +575,32 @@ class PRX3_Admin {
 		}
 		wp_safe_redirect( admin_url( 'admin.php?page=prx3-member-tools&merged=1' ) );
 		exit;
+	}
+	/**
+	 * The Setup overview: every technical integration, its status, and
+	 * where to configure it — the club\'s pre-launch checklist.
+	 */
+	public static function render_setup_overview() {
+		if ( ! current_user_can( 'prx3_admin' ) ) {
+			wp_die( esc_html__( 'Owner-Admins only.', 'fan-ownership' ) );
+		}
+		$rows = array(
+			array( __( 'Commerce — Shopify', 'fan-ownership' ), (bool) prx3_setting( 'shopify_domain', '' ) && (bool) prx3_setting( 'shopify_webhook_secret', '' ), 'prx3-setup-commerce', __( 'Store domain, webhook secret, tier variants. Without it, shares cannot be sold.', 'fan-ownership' ) ),
+			array( __( 'Streaming — Cloudflare', 'fan-ownership' ), (bool) prx3_setting( 'cf_api_token', '' ), 'prx3-setup-streaming', __( 'Match video and replays with owner-only playback.', 'fan-ownership' ) ),
+			array( __( 'Meetings — 8×8 JaaS', 'fan-ownership' ), (bool) prx3_setting( 'jaas_app_id', '' ) && (bool) prx3_setting( 'jaas_private_key', '' ), 'prx3-setup-meetings', __( 'Meeting video rooms with platform-controlled moderators. Falls back to meet.jit.si until configured.', 'fan-ownership' ) ),
+			array( __( 'Push & App — Firebase', 'fan-ownership' ), (bool) prx3_setting( 'fcm_server_key', '' ), 'prx3-setup-push', __( 'App push notifications; the same project later powers app sign-in.', 'fan-ownership' ) ),
+			array( __( 'Data API & Claude', 'fan-ownership' ), (bool) prx3_setting( 'data_api_key', '' ) && (int) prx3_setting( 'data_api_enabled', 0 ), 'prx3-setup-dataapi', __( 'Key-gated write API for trusted automation; one-click Claude connection and the demo club loader.', 'fan-ownership' ) ),
+			array( __( 'Power Platform sync', 'fan-ownership' ), (bool) prx3_setting( 'sync_api_key', '' ) && (int) prx3_setting( 'sync_enabled', 0 ), 'prx3-setup-sync', __( 'Bidirectional Dataverse sync with matching rules.', 'fan-ownership' ) ),
+		);
+		echo '<div class="wrap"><h1>' . esc_html__( 'Setup & Integrations', 'fan-ownership' ) . '</h1>';
+		echo '<p>' . esc_html__( 'Everything technical in one place. Each page explains every field and links to where the value comes from. Green means configured; grey means not yet.', 'fan-ownership' ) . '</p>';
+		echo '<table class="widefat striped" style="max-width:900px;"><tbody>';
+		foreach ( $rows as $row ) {
+			echo '<tr><td style="width:24px;">' . ( $row[1] ? '<span style="color:#1e7b34;font-size:18px;">●</span>' : '<span style="color:#c3c4c7;font-size:18px;">●</span>' ) . '</td>';
+			echo '<td><a href="' . esc_url( admin_url( 'admin.php?page=' . $row[2] ) ) . '"><strong>' . esc_html( $row[0] ) . '</strong></a><br><span class="description">' . esc_html( $row[3] ) . '</span></td>';
+			echo '<td style="width:110px;">' . ( $row[1] ? esc_html__( 'Configured', 'fan-ownership' ) : esc_html__( 'Not set up', 'fan-ownership' ) ) . '</td></tr>';
+		}
+		echo '</tbody></table>';
+		echo '<p class="description">' . esc_html__( 'Companion plugins (2FA, club badges) install from the Plugins screen — the platform detects them automatically. The chat word filter lives under Fan App Settings → FanPress Chat.', 'fan-ownership' ) . '</p></div>';
 	}
 }

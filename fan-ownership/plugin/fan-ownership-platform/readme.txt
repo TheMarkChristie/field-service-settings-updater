@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.13.0.0
+Stable tag: 3.14.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,20 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.14.0.0 =
+* Setup menu: a dedicated top-level home for everything technical -
+  Overview status checklist (green when configured, grey when keys
+  are still needed) plus Commerce - Shopify, Streaming - Cloudflare,
+  Meetings - 8x8 JaaS, Push and App, Data API and Claude, and Power
+  Platform pages. Every field carries a plain-English note and a
+  "Where to get this" link to the exact console page.
+* Meeting video now runs on 8x8 JaaS when configured: the platform
+  signs an RS256 room token for each joiner, so board, governance,
+  and admins moderate while owners join as guests - nobody needs an
+  8x8 account to join. Configure with the App ID, API key ID, and
+  private key from jaas.8x8.vc under Setup > Meetings. Unconfigured
+  installs keep the open meet.jit.si fallback.
 
 = 3.13.0.0 =
 * Meeting video: every meeting page now carries its own video room -

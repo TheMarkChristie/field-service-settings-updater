@@ -1,7 +1,7 @@
 # Admin Screens — Club Guide
 
-Where everything lives in wp-admin (V3.12.1.4). Four menus: **Owners**,
-**FanPress Chat**, **Board**, **Fan App Settings**.
+Where everything lives in wp-admin (V3.14.0.0). Five menus: **Owners**,
+**FanPress Chat**, **Board**, **Fan App Settings**, **Setup**.
 
 ## Owners
 - **Share Register** — the statutory list on screen: every holder with
@@ -27,11 +27,28 @@ Where everything lives in wp-admin (V3.12.1.4). Four menus: **Owners**,
 
 ## Fan App Settings
 - Feature switches, Member pages (self-install on upgrade; button for
-  manual re-runs), settings sections, Commerce Ops, API & Integrations
-  (Claude connection + demo club load/remove), **Member Tools** (merge
+  manual re-runs), the club-facing settings sections (Club, Brand Pack,
+  Ticketing, FanPress Chat), Commerce Ops, **Member Tools** (merge
   duplicate accounts through the register; the same audited Identity
   Lookup), and the **Audit Log** — latest 100 entries, filterable by
   event key (`ballot_open`, `identity_viewed`, `data_api_member`, …).
+
+## Setup
+Everything technical, in one place, with a note and a "Where to get
+this" link on every field:
+- **Overview** — status checklist: green dot when an integration is
+  configured, grey when it still needs keys, linking to each page.
+- **Commerce — Shopify** — store domain, webhook secret, tier variant
+  IDs, ladder pricing, join/account page IDs.
+- **Streaming — Cloudflare** — Cloudflare Stream for match video.
+- **Meetings — 8×8 JaaS** — App ID, API key ID, and private key from
+  jaas.8x8.vc; the platform signs each joiner's room token (board/
+  governance/admin moderate, owners join as guests, no 8×8 accounts
+  needed). Blank = open meet.jit.si fallback.
+- **Push & App** — Firebase Cloud Messaging key for app push.
+- **Data API & Claude** — connection panel, provisioned keys, demo
+  club load/remove.
+- **Power Platform** — Dataverse sync key and toggles.
 
 ## Compliance notes
 - Identity records: only full birth name and nationality ever appear

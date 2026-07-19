@@ -266,6 +266,10 @@ function current_user_can( $cap ) {
 function get_current_user_id() {
 	return $GLOBALS['prx3_t']['current'];
 }
+function wp_get_current_user() {
+	$user = get_userdata( $GLOBALS['prx3_t']['current'] );
+	return $user ? $user : new PRX3_Test_User( 0, array( 'display_name' => '' ) );
+}
 function is_user_logged_in() {
 	return (bool) $GLOBALS['prx3_t']['current'];
 }
@@ -715,17 +719,6 @@ class PRX3_Ideas {
 		return 5;
 	}
 }
-class PRX3_Meetings {
-	public static function upcoming( $limit = 0 ) {
-		return array();
-	}
-	public static function member_ics_url( $user_id ) {
-		return 'https://example.test/calendar.ics';
-	}
-	public static function rsvp_count( $meeting_id ) {
-		return 0;
-	}
-}
 class PRX3_Onboarding {
 	public static function mark_complete( $user_id, $step ) {}
 }
@@ -752,6 +745,7 @@ require $prx3_base . '/includes/class-prx3-agreements.php';
 require $prx3_base . '/includes/class-prx3-sync.php';
 require $prx3_base . '/includes/class-prx3-gifts.php';
 require $prx3_base . '/includes/class-prx3-shopify.php';
+require $prx3_base . '/includes/class-prx3-meetings.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
 require $prx3_base . '/includes/class-prx3-social.php';

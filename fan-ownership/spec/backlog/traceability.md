@@ -43,6 +43,7 @@ before shipping.
 | 3.12.1.3 | Fix: member pages self-install on version change (stamped, idempotent); profile-link fallback re-wires the Profile page by slug |
 | 3.12.1.4 | Board menu gains the audited Identity Lookup (masked government ID) — P122 amended: board members may view identity records |
 | 3.13.0.0 | Meeting video: in-platform Jitsi rooms on every meeting page (member + board, never matches), windowed one hour before to six after, audited joins, self-hostable domain setting |
+| 3.14.0.0 | Setup menu + 8×8 JaaS (P124): dedicated top-level Setup menu (Overview status checklist, Commerce — Shopify, Streaming, Meeting Video, Push, Data API, Sync) with a note and "Where to get this" link on every field; meeting video signs RS256 8×8 JaaS room tokens (board/governance/admin moderate, owners join as guests, no 8×8 accounts needed for joiners) with the open meet.jit.si fallback kept |
 
 ## Phase 1 — Own
 
@@ -74,7 +75,7 @@ before shipping.
 | FO-124 Outbound CRM sync | Done | 0.1.6–0.1.9 | `class-prx3-sync.php` — change hooks queue signed webhooks (HMAC-SHA256, 8-try retry, capped outbox, 5-min tick), paged `/sync/members` delta, `/sync/register` append-only feed, signatures excluded from payloads, admin health page, off until configured | Dataverse solution (columns/table/flows/connector) built by the club from `spec/power-platform-sync-design.md` |
 | FO-125 Inbound matching rules | Done | 0.1.9 | `/sync/upsert` — ID → email → owner number exact matching, allow-listed enrichment fields (`prx3_sync_inbound_fields`), review queue for no-match/ambiguous/conflict with admin link-or-discard (audited), permanent linking, no outbound echo | |
 | FO-126 Guarded automation API | Done | 0.1.0 | `class-prx3-data-api.php` — key-gated data routes (schema/content-list/content/members/settings), one-click provision/revoke + connection card + JSON profile, platform-types/prx3-meta/allow-list guard rails, money-path member imports, full audit | |
-| FO-127 Data-rich work screens | Done | 0.1.3–0.1.5; menus 3.1.0.0 era, Fan App Settings 3.6.0 | `class-prx3-admin-columns.php` (all 16 types audited, P103), interactive tile dashboard with configurable targets, three-menu structure with the Board menu gathering the board's tools | |
+| FO-127 Data-rich work screens | Done | 0.1.3–0.1.5; menus 3.1.0.0 era, Fan App Settings 3.6.0, Setup menu 3.14.0.0 | `class-prx3-admin-columns.php` (all 16 types audited, P103), interactive tile dashboard with configurable targets, five-menu structure (Owners, FanPress Chat, Board, Fan App Settings, Setup) — the Setup menu gathers all technical configuration with an Overview status checklist and annotated fields (note + "Where to get this" link on each) | |
 | FO-128 Commerce seam ops | Done | 0.2.0–0.2.1 | `class-prx3-shopify.php` ops layer — Commerce Ops screen (held/unclaimed with release/reassign/remind/drop), 3/10-day chasing + 30-day refund-review flag, webhook-quiet alert, dashboard tile, seeded reconciliation commitment, monthly register safeguard email (`class-prx3-register.php`) | Refunds themselves are issued in Shopify by policy |
 | FO-129 Beneficiary nomination | Done | 0.1.0 | Account-page nomination (audited), privacy export/erasure wiring, `death-and-transmission.md` runbook | Solicitor to confirm articles transmission clause |
 
@@ -109,7 +110,7 @@ before shipping.
 | FO-225 Structured board actions | Done | 0.1.0 | Recommendations on ballots, casting votes, reserved/failed-quorum decisions with mandatory published reasoning → register | |
 | FO-226 Board workspace | Done | 0.1.0 | Board-only CPTs (papers/threads/votes/vault/meetings), capability-walled incl. admins-except-break-glass (audited), open internal voting, chair casting vote, auto-minutes | |
 | FO-227 Conflicts | Done | 0.1.0 | Public conflicts register on profile/directory, declare-or-confirm step, recusal lockout on papers/threads/votes, chair-applied recusal | |
-| FO-228 Board meetings & observers | Done | 0.1.0; video 3.13.0.0 | In-platform video rooms on every meeting page (member meetings/AGMs for owners, board meetings inside the board wall): Jitsi embed (default meet.jit.si, self-hostable via Fan App Settings → API & Integrations), unguessable per-meeting rooms, open one hour before start to six hours after, joins audited. Matches excluded by design — they stream via the Match Centre | Owner observation of board meetings: chair streams the room into a member meeting when observers are invited |
+| FO-228 Board meetings & observers | Done | 0.1.0; video 3.13.0.0; 8×8 JaaS 3.14.0.0 | In-platform video rooms on every meeting page (member meetings/AGMs for owners, board meetings inside the board wall): 8×8 JaaS with platform-signed RS256 room tokens when configured under Setup → Meeting Video (board/governance/admin moderate, owners join as guests, nobody needs an 8×8 account), open meet.jit.si fallback otherwise; unguessable per-meeting rooms, open one hour before start to six hours after, joins audited. Matches excluded by design — they stream via the Match Centre | Owner observation of board meetings: chair streams the room into a member meeting when observers are invited |
 | FO-229 Vault & departures | Done | 0.1.0 | View-only rendering, per-view name+time watermark, chair-visible access log (audit), instant revoke + session destroy, records preserved | |
 
 | FO-230 Native forum | Done | 0.3.0 | `class-prx3-forum.php` — gated topic CPT + comment replies + boards taxonomy, auto threads on ballot open and match publish (idempotent source keys), chat transcript archived on match end (anonymised, held/removed excluded), one-action thread→ballot conversion with provenance, REST routes for the app, admin columns, word-filter holds + mutes + kill switch | bbPress/BuddyPress dependency removed (T16 superseded by P109) |
@@ -164,9 +165,9 @@ before shipping.
 
 ## Honest summary
 
-Done 76 · Partial 7 · Operational 2 · Not built 1 (remainder of the
-documentation suite — the first guides now exist in `docs/guides/`).
-The most important follow-ups: (1) run the money/vote test suite in CI
-on every pull request, (2) the remainder of the documentation suite. The board
-video embed (FO-228) and remaining app screens are scheduled build-out,
-consistent with the phasing decisions.
+Done 77 · Partial 7 · Operational 2 · Not built 0. Meeting video is fully
+in-platform (FO-228: 8×8 JaaS with the meet.jit.si fallback, 3.14.0.0),
+and CI runs the full suite, lint, JS checks, and WPCS on every pull
+request. The most important follow-ups: (1) the developer docs and API
+reference that finish FO-314, (2) the Flutter app screen build-out
+(FO-302), consistent with the phasing decisions.

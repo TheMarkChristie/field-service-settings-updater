@@ -20,8 +20,8 @@ in the specification and the solution design produced at build time.
   member record. Everything else assumes it.
 - Phase 2 depends on Phase 1 accounts and roles. The board workspace
   (FO-226 to FO-229) is a Phase 2 extension and may trail the member-facing
-  Boardroom by a sprint. In-platform board video (FO-228) may slip to Phase 3
-  alongside the other real-time work.
+  Boardroom by a sprint. In-platform board video (FO-228) shipped in
+  3.13.0.0/3.14.0.0 — rooms on every meeting page, 8×8 JaaS with signed tokens.
 - Phase 3 depends on the Phase 1/2 capability APIs. The reporter console
   (FO-307) and live chat (FO-306) are also used by Phase 2 meetings, so their
   server-side elements should be designed once, in Phase 2, and reused.

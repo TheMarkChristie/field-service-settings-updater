@@ -265,6 +265,85 @@ class PRX3_Meetings {
 	}
 
 	/**
+	 * Whether 8x8 JaaS is fully configured (App ID, API key ID, and
+	 * private key all present under Setup > Meeting Video).
+	 *
+	 * @return bool True when meetings should run through 8x8 JaaS.
+	 */
+	public static function jaas_configured() {
+		return '' !== (string) prx3_setting( 'jaas_app_id', '' )
+			&& '' !== (string) prx3_setting( 'jaas_api_key_id', '' )
+			&& '' !== (string) prx3_setting( 'jaas_private_key', '' );
+	}
+
+	/**
+	 * Whether the current user joins meeting rooms as a moderator:
+	 * board members, governance staff, and platform admins.
+	 *
+	 * @return bool True for moderator roles.
+	 */
+	public static function is_moderator() {
+		return current_user_can( 'prx3_board' ) || current_user_can( 'prx3_admin' ) || current_user_can( 'prx3_governance' );
+	}
+
+	/**
+	 * Base64url encoding for JWT segments (RFC 7515).
+	 *
+	 * @param string $data Raw bytes.
+	 * @return string Base64url string, no padding.
+	 */
+	public static function b64url( $data ) {
+		return rtrim( strtr( base64_encode( $data ), '+/', '-_' ), '=' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- JWT segment encoding, not obfuscation.
+	}
+
+	/**
+	 * Mint a signed 8x8 JaaS room token (RS256) for one user and room.
+	 * The platform decides who moderates — no 8x8 accounts are needed
+	 * for members or the board.
+	 *
+	 * @param string       $room      Room name (from room_name()).
+	 * @param WP_User|null $user      Joining user.
+	 * @param bool         $moderator Whether they moderate the room.
+	 * @return string Signed JWT, or '' when signing fails.
+	 */
+	public static function jaas_jwt( $room, $user, $moderator ) {
+		$header  = array(
+			'alg' => 'RS256',
+			'typ' => 'JWT',
+			'kid' => (string) prx3_setting( 'jaas_api_key_id', '' ),
+		);
+		$now     = time();
+		$payload = array(
+			'aud'     => 'jitsi',
+			'iss'     => 'chat',
+			'sub'     => (string) prx3_setting( 'jaas_app_id', '' ),
+			'room'    => (string) $room,
+			'exp'     => $now + 2 * HOUR_IN_SECONDS,
+			'nbf'     => $now - 10,
+			'context' => array(
+				'user'     => array(
+					'name'      => $user ? (string) $user->display_name : '',
+					'email'     => $user ? (string) $user->user_email : '',
+					'moderator' => $moderator ? 'true' : 'false',
+				),
+				'features' => array(
+					'livestreaming' => 'false',
+					'recording'     => 'false',
+					'transcription' => 'false',
+					'outbound-call' => 'false',
+				),
+			),
+		);
+		$signing = self::b64url( (string) wp_json_encode( $header ) ) . '.' . self::b64url( (string) wp_json_encode( $payload ) );
+		$pkey    = openssl_pkey_get_private( (string) prx3_setting( 'jaas_private_key', '' ) );
+		$sig     = '';
+		if ( ! $pkey || ! openssl_sign( $signing, $sig, $pkey, OPENSSL_ALGO_SHA256 ) ) {
+			return '';
+		}
+		return $signing . '.' . self::b64url( $sig );
+	}
+
+	/**
 	 * A meeting's private room name: unguessable, generated once.
 	 *
 	 * @param int $meeting_id The meeting (member or board).
@@ -333,7 +412,12 @@ class PRX3_Meetings {
 			return $content . '<p class="prx3-notice">' . esc_html__( 'This meeting has ended. Minutes are published to the document vault.', 'fan-ownership' ) . '</p>';
 		}
 		$room = self::room_name( $post_id );
-		$src  = 'https://' . rawurlencode( self::video_domain() ) . '/' . rawurlencode( $room ) . '#config.prejoinConfig.enabled=true&userInfo.displayName=' . rawurlencode( wp_get_current_user()->display_name );
+		if ( self::jaas_configured() ) {
+			$jwt = self::jaas_jwt( $room, wp_get_current_user(), self::is_moderator() );
+			$src = 'https://8x8.vc/' . rawurlencode( (string) prx3_setting( 'jaas_app_id', '' ) ) . '/' . rawurlencode( $room ) . '?jwt=' . rawurlencode( $jwt ) . '#config.prejoinConfig.enabled=true';
+		} else {
+			$src = 'https://' . rawurlencode( self::video_domain() ) . '/' . rawurlencode( $room ) . '#config.prejoinConfig.enabled=true&userInfo.displayName=' . rawurlencode( wp_get_current_user()->display_name );
+		}
 		$out  = '<div class="prx3-meeting-video"><iframe src="' . esc_url( $src ) . '" style="width:100%;height:560px;border:0;border-radius:8px;" allow="camera; microphone; fullscreen; display-capture" title="' . esc_attr__( 'Meeting video', 'fan-ownership' ) . '"></iframe>';
 		$out .= '<p class="description">' . esc_html( $board ? __( 'Board meeting room — board members only. Formal acts (votes, casting votes) are recorded in the platform, not in the call.', 'fan-ownership' ) : __( 'You are joining as an owner under the code of conduct. The meeting is chaired from this room; questions rank live on the Questions page.', 'fan-ownership' ) ) . '</p></div>';
 		PRX3_Audit::log( 'meeting_joined', sprintf( 'User %1$d joined the video room for meeting %2$d', get_current_user_id(), $post_id ) );
