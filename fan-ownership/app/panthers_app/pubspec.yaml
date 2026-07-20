@@ -1,7 +1,7 @@
 name: panthers_app
 description: "The fan ownership app: Boardroom voting, Match Centre, Panthers TV. Consumes the WordPress plugin's prx3/v1 API."
 publish_to: "none"
-version: 0.2.0+3
+version: 0.2.0+4
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -25,6 +25,17 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
+
+# Per-club launcher icon generation. The build downloads the club's
+# app_icon from the brand pack to assets/branding/app_icon.png and runs
+# `dart run flutter_launcher_icons`; if no club icon is set, the default
+# Flutter launcher icon is kept.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/branding/app_icon.png"
+  min_sdk_android: 26
 
 flutter:
   uses-material-design: true
