@@ -6,9 +6,17 @@ name: Build App APK
 # "panthers-app-latest" GitHub Release for a direct one-click download.
 on:
   workflow_dispatch:
+    inputs:
+      api_base:
+        description: 'PRX3 API base URL the app talks to'
+        required: false
+        default: 'https://perthpanthersihc.com/wp-json/prx3/v1'
   push:
     branches: [claude/sports-fan-ownership-plugin-2r2rh8, main]
     paths: ['fan-ownership/app/**', '.github/workflows/app-apk.yml']
+env:
+  # Panthers-pointed build; override via the workflow_dispatch input.
+  PRX3_API: ${{ github.event.inputs.api_base || 'https://perthpanthersihc.com/wp-json/prx3/v1' }}
 permissions:
   contents: write
 jobs:
@@ -34,7 +42,7 @@ jobs:
         # (e.g. framework deprecations) do not block producing the APK.
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Build release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=PRX3_API="$PRX3_API"
       - name: Rename APK
         run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/panthers-app.apk
       - name: Upload APK artifact
@@ -48,9 +56,13 @@ jobs:
         with:
           tag_name: panthers-app-latest
           name: Panthers App (latest build)
-          body: >
-            Latest debug/release APK of the Panthers companion app, built
-            automatically from the app source. Download panthers-app.apk
-            below and sideload it on Android (allow "Install unknown apps").
+          body: |
+            Latest release APK of the Panthers companion app, built
+            automatically from the app source.
+
+            **API endpoint:** ${{ env.PRX3_API }}
+
+            Download `panthers-app.apk` below and sideload it on Android
+            (allow "Install unknown apps").
           prerelease: true
           files: fan-ownership/app/panthers_app/build/app/outputs/flutter-apk/panthers-app.apk
