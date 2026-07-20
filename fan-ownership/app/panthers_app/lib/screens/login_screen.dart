@@ -75,6 +75,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _busy ? null : _submit,
                   child: Text(_busy ? 'Signing in…' : 'Sign in'),
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  'If your club uses two-factor sign-in, create an '
+                  'Application Password in your account settings on the '
+                  'website and enter it above.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),

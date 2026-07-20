@@ -106,6 +106,30 @@ class PRX3_REST_API {
 	}
 
 	/**
+	 * Authenticate with a WordPress Application Password and, on success,
+	 * issue the JWT pair. Application passwords are the WordPress-blessed
+	 * credential for apps: each is per-application and revocable, and they
+	 * are validated by core independently of interactive two-factor, so an
+	 * app can sign in on a site that enforces 2FA for browser logins.
+	 *
+	 * @param string $username     WordPress username or account email.
+	 * @param string $app_password The application password (spaces optional).
+	 * @return array|WP_Error JWT pair, or an error.
+	 */
+	public static function app_password_login( $username, $app_password ) {
+		if ( ! function_exists( 'wp_authenticate_application_password' ) ) {
+			return new WP_Error( 'prx3_app_unavailable', __( 'Application passwords are not available on this site (they require HTTPS).', 'fan-ownership' ), array( 'status' => 501 ) );
+		}
+		// Core accepts the password with or without the display spaces.
+		$user = wp_authenticate_application_password( null, $username, $app_password );
+		if ( is_wp_error( $user ) || ! $user instanceof WP_User ) {
+			return new WP_Error( 'prx3_login', __( 'Sign-in failed. Check your username and application password.', 'fan-ownership' ), array( 'status' => 401 ) );
+		}
+		prx3_touch_activity( $user->ID );
+		return PRX3_JWT::issue_pair( $user->ID );
+	}
+
+	/**
 	 * The two throttle keys for a sign-in attempt: per IP and per target
 	 * username.
 	 *
@@ -180,6 +204,31 @@ class PRX3_REST_API {
 						return $claims;
 					}
 					return PRX3_JWT::issue_pair( (int) $claims['sub'] );
+				},
+			)
+		);
+
+		// Application-password sign-in for the app: works even where a
+		// security/2FA plugin blocks password-only REST logins (FO-301).
+		register_rest_route(
+			$ns,
+			'/auth/app-login',
+			array(
+				'methods'             => 'POST',
+				'permission_callback' => '__return_true',
+				'callback'            => function ( WP_REST_Request $request ) {
+					$username  = sanitize_text_field( (string) $request['username'] );
+					$throttled = self::login_throttled( $username );
+					if ( is_wp_error( $throttled ) ) {
+						return $throttled;
+					}
+					$result = self::app_password_login( $username, (string) $request['app_password'] );
+					if ( is_wp_error( $result ) ) {
+						self::login_failed( $username );
+						return $result;
+					}
+					self::login_succeeded( $username );
+					return $result;
 				},
 			)
 		);

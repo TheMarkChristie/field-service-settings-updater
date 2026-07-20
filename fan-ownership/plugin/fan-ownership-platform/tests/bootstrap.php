@@ -769,6 +769,23 @@ class PRX3_Badges {
 // Patch WP_User double methods used by grant/surrender.
 function prx3_test_add_user_role_methods() {}
 
+// Signing salt for the JWT layer (FO-301).
+if ( ! function_exists( 'wp_salt' ) ) {
+	function wp_salt( $scheme = 'auth' ) {
+		return 'prx3-test-salt-' . $scheme;
+	}
+}
+
+// Minimal WP_User double for the application-password auth path.
+if ( ! class_exists( 'WP_User' ) ) {
+	class WP_User {
+		public $ID = 0;
+		public function __construct( $id = 0 ) {
+			$this->ID = (int) $id;
+		}
+	}
+}
+
 /* ---------------- Load the code under test ---------------- */
 
 prx3_test_reset();
@@ -787,6 +804,8 @@ require $prx3_base . '/includes/class-prx3-meetings.php';
 require $prx3_base . '/includes/class-prx3-questions.php';
 require $prx3_base . '/includes/class-prx3-players.php';
 require $prx3_base . '/includes/class-prx3-helpbot.php';
+require $prx3_base . '/includes/api/class-prx3-jwt.php';
+require $prx3_base . '/includes/api/class-prx3-rest-api.php';
 require $prx3_base . '/includes/api/class-prx3-data-api.php';
 require $prx3_base . '/includes/class-prx3-forum.php';
 require $prx3_base . '/includes/class-prx3-social.php';

@@ -27,11 +27,26 @@ class Prx3Api {
   Future<bool> get signedIn async => await _accessToken != null;
 
   Future<void> login(String username, String password) async {
-    final data = await _post('auth/login', {
-      'username': username,
-      'password': password,
-    }, auth: false);
-    await _storeTokens(data);
+    try {
+      final data = await _post('auth/login', {
+        'username': username,
+        'password': password,
+      }, auth: false);
+      await _storeTokens(data);
+    } on Prx3ApiException catch (e) {
+      // Some clubs enforce two-factor / block password-only REST logins.
+      // In that case the same field may hold a WordPress Application
+      // Password — transparently try that path before giving up.
+      if (e.statusCode == 401 || e.statusCode == 403) {
+        final data = await _post('auth/app-login', {
+          'username': username,
+          'app_password': password,
+        }, auth: false);
+        await _storeTokens(data);
+      } else {
+        rethrow;
+      }
+    }
   }
 
   Future<void> logout() async {

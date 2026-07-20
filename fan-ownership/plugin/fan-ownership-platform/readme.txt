@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.16.0.1
+Stable tag: 3.16.1.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,17 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.16.1.0 =
+* New: Application Password sign-in for the companion app. If your club
+  enforces two-factor or blocks password-only REST logins, members can
+  now create a WordPress Application Password (Users > Profile >
+  Application Passwords) and sign in to the app with it — the app tries
+  it automatically, so the same password field works either way. A new
+  POST prx3/v1/auth/app-login endpoint validates the application password
+  and issues the app's token pair; the same sign-in throttle applies.
+  Application passwords are per-app and revocable, and are not affected
+  by interactive two-factor.
 
 = 3.16.0.1 =
 * Fix: the website help-bot launcher no longer shows a bare "?" — it now
