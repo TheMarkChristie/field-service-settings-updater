@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.17.0.0
+Stable tag: 3.17.1.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,14 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.17.1.0 =
+* New: owners can now set their profile photo and manage their consent
+  gallery from the app. Tap "Change photo" to pick from the library or
+  take a new one, and add up to five gallery photos (or remove any). New
+  REST endpoints POST/DELETE prx3/v1/me/photo and POST prx3/v1/me/gallery
+  with DELETE prx3/v1/me/gallery/{id}; images only, handled by WordPress
+  core media. The website already supported photo upload on the profile.
 
 = 3.17.0.0 =
 * New: Owner Account Hub — one place for an owner to see everything about

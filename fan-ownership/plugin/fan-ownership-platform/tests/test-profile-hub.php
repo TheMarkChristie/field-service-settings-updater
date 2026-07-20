@@ -51,6 +51,13 @@ PRX3_REST_API::apply_identity( $uid, array( 'pep' => 'yes' ) );
 t_eq( PRX3_REST_API::identity_payload( $uid )['pep'], 'yes', 'A valid PEP value is accepted' );
 t_eq( PRX3_REST_API::identity_payload( $uid )['birth_name'], 'Ola Original', 'A partial identity edit leaves other fields intact' );
 
+// ---------------- Gallery removal ----------------
+update_user_meta( $uid, 'prx3_gallery', array( 11, 22, 33 ) );
+PRX3_REST_API::remove_gallery_photo( $uid, 22 );
+$gallery = array_map( 'intval', (array) get_user_meta( $uid, 'prx3_gallery', true ) );
+t_eq( count( $gallery ), 2, 'Removing a gallery photo drops exactly one entry' );
+t_ok( ! in_array( 22, $gallery, true ) && in_array( 11, $gallery, true ) && in_array( 33, $gallery, true ), 'Only the requested photo is removed' );
+
 // ---------------- Documents ----------------
 update_user_meta(
 	$uid,

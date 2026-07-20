@@ -85,9 +85,11 @@ class Prx3Api {
     const timeout = Duration(seconds: 20);
     final http.Response response;
     try {
-      response = await (method == 'GET'
-              ? http.get(uri, headers: headers)
-              : http.post(uri, headers: headers, body: jsonEncode(body ?? {})))
+      response = await (switch (method) {
+        'GET' => http.get(uri, headers: headers),
+        'DELETE' => http.delete(uri, headers: headers),
+        _ => http.post(uri, headers: headers, body: jsonEncode(body ?? {})),
+      })
           .timeout(timeout);
     } on TimeoutException {
       throw Prx3ApiException(
@@ -155,6 +157,50 @@ class Prx3Api {
 
   Future<List<dynamic>> documents() async =>
       (await _get('me/documents')) as List<dynamic>;
+
+  /// Multipart image upload (profile photo or gallery), FO-320.
+  Future<Map<String, dynamic>> _uploadImage(String path, String filePath,
+      {bool retried = false}) async {
+    final token = await _accessToken;
+    final req = http.MultipartRequest('POST', Uri.parse('$baseUrl/$path'));
+    if (token != null) req.headers['Authorization'] = 'Bearer $token';
+    req.files.add(await http.MultipartFile.fromPath('file', filePath));
+    http.Response res;
+    try {
+      final streamed = await req.send().timeout(const Duration(seconds: 40));
+      res = await http.Response.fromStream(streamed);
+    } on TimeoutException {
+      throw Prx3ApiException('The upload timed out. Please try again.');
+    } on SocketException {
+      throw Prx3ApiException('Could not reach the club site to upload.');
+    }
+    if (res.statusCode == 401 && !retried && await _refresh()) {
+      return _uploadImage(path, filePath, retried: true);
+    }
+    final decoded = res.body.isEmpty ? {} : jsonDecode(res.body);
+    if (res.statusCode >= 400) {
+      throw Prx3ApiException(
+        decoded is Map && decoded['message'] != null
+            ? decoded['message'] as String
+            : 'Upload failed. Please try again.',
+        res.statusCode,
+      );
+    }
+    return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
+  }
+
+  Future<Map<String, dynamic>> uploadPhoto(String filePath) =>
+      _uploadImage('me/photo', filePath);
+
+  Future<Map<String, dynamic>> clearPhoto() async =>
+      (await _request('DELETE', 'me/photo')) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> uploadGalleryPhoto(String filePath) =>
+      _uploadImage('me/gallery', filePath);
+
+  Future<Map<String, dynamic>> removeGalleryPhoto(int attachmentId) async =>
+      (await _request('DELETE', 'me/gallery/$attachmentId'))
+          as Map<String, dynamic>;
 
   // ---- Forum (existing routes; GET responses wrap the list) ----
   Future<List<dynamic>> forumTopics({String? board}) async {

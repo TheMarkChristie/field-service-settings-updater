@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../api/prx3_api.dart';
 import 'documents_screen.dart';
@@ -93,9 +94,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _sharesPublic = false;
   bool _photoConsent = false;
   bool _notifyEmailOff = false;
+  String? _photo;
+  List<Map<String, dynamic>> _gallery = [];
   bool _loading = true;
   bool _saving = false;
+  bool _busyPhoto = false;
   String? _error;
+  final _picker = ImagePicker();
 
   @override
   void initState() {
@@ -103,22 +108,106 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _load();
   }
 
+  void _apply(Map<String, dynamic> p) {
+    final s = (p['socials'] as Map?) ?? {};
+    _bio.text = p['bio'] as String? ?? '';
+    _x.text = s['x'] as String? ?? '';
+    _instagram.text = s['instagram'] as String? ?? '';
+    _facebook.text = s['facebook'] as String? ?? '';
+    _bluesky.text = s['bluesky'] as String? ?? '';
+    _sharesPublic = p['shares_public'] == true;
+    _photoConsent = p['photo_consent'] == true;
+    _notifyEmailOff = p['notify_email_off'] == true;
+    _photo = (p['photo'] as String?)?.isNotEmpty == true ? p['photo'] as String : null;
+    _gallery = ((p['gallery'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+
   Future<void> _load() async {
     try {
-      final p = await widget.api.profile();
-      final s = (p['socials'] as Map?) ?? {};
-      _bio.text = p['bio'] as String? ?? '';
-      _x.text = s['x'] as String? ?? '';
-      _instagram.text = s['instagram'] as String? ?? '';
-      _facebook.text = s['facebook'] as String? ?? '';
-      _bluesky.text = s['bluesky'] as String? ?? '';
-      _sharesPublic = p['shares_public'] == true;
-      _photoConsent = p['photo_consent'] == true;
-      _notifyEmailOff = p['notify_email_off'] == true;
+      _apply(await widget.api.profile());
     } catch (e) {
       _error = e.toString();
     }
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<XFile?> _pick() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Choose from library'),
+            onTap: () => Navigator.pop(context, ImageSource.gallery),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_camera_outlined),
+            title: const Text('Take a photo'),
+            onTap: () => Navigator.pop(context, ImageSource.camera),
+          ),
+        ]),
+      ),
+    );
+    if (source == null) return null;
+    return _picker.pickImage(source: source, maxWidth: 1200, imageQuality: 85);
+  }
+
+  Future<void> _changePhoto() async {
+    final file = await _pick();
+    if (file == null) return;
+    setState(() {
+      _busyPhoto = true;
+      _error = null;
+    });
+    try {
+      _apply(await widget.api.uploadPhoto(file.path));
+    } on Prx3ApiException catch (e) {
+      _error = e.message;
+    } finally {
+      if (mounted) setState(() => _busyPhoto = false);
+    }
+  }
+
+  Future<void> _removePhoto() async {
+    setState(() => _busyPhoto = true);
+    try {
+      _apply(await widget.api.clearPhoto());
+    } on Prx3ApiException catch (e) {
+      _error = e.message;
+    } finally {
+      if (mounted) setState(() => _busyPhoto = false);
+    }
+  }
+
+  Future<void> _addGalleryPhoto() async {
+    final file = await _pick();
+    if (file == null) return;
+    setState(() {
+      _busyPhoto = true;
+      _error = null;
+    });
+    try {
+      _apply(await widget.api.uploadGalleryPhoto(file.path));
+    } on Prx3ApiException catch (e) {
+      _error = e.message;
+    } finally {
+      if (mounted) setState(() => _busyPhoto = false);
+    }
+  }
+
+  Future<void> _removeGalleryPhoto(int id) async {
+    setState(() => _busyPhoto = true);
+    try {
+      _apply(await widget.api.removeGalleryPhoto(id));
+    } on Prx3ApiException catch (e) {
+      _error = e.message;
+    } finally {
+      if (mounted) setState(() => _busyPhoto = false);
+    }
   }
 
   Future<void> _save() async {
@@ -167,6 +256,96 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.error)),
                   ),
+                Center(
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 48,
+                        backgroundImage:
+                            _photo != null ? NetworkImage(_photo!) : null,
+                        child: _photo == null
+                            ? const Icon(Icons.person, size: 48)
+                            : null,
+                      ),
+                      const SizedBox(height: 8),
+                      if (_busyPhoto)
+                        const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton.icon(
+                              onPressed: _changePhoto,
+                              icon: const Icon(Icons.photo_camera_outlined),
+                              label: const Text('Change photo'),
+                            ),
+                            if (_photo != null)
+                              TextButton(
+                                onPressed: _removePhoto,
+                                child: const Text('Remove'),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Photo gallery (${_gallery.length}/5)',
+                        style: Theme.of(context).textTheme.titleSmall),
+                    if (_gallery.length < 5 && !_busyPhoto)
+                      TextButton.icon(
+                        onPressed: _addGalleryPhoto,
+                        icon: const Icon(Icons.add_a_photo_outlined),
+                        label: const Text('Add'),
+                      ),
+                  ],
+                ),
+                if (_gallery.isNotEmpty)
+                  SizedBox(
+                    height: 96,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        for (final g in _gallery)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(g['url'] as String,
+                                      width: 96, height: 96, fit: BoxFit.cover),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        _removeGalleryPhoto(g['id'] as int),
+                                    child: const CircleAvatar(
+                                      radius: 12,
+                                      backgroundColor: Colors.black54,
+                                      child: Icon(Icons.close,
+                                          size: 14, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                const Divider(height: 24),
                 TextField(
                   controller: _bio,
                   maxLength: 300,

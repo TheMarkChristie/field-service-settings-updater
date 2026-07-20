@@ -176,7 +176,11 @@ class PRX3_REST_API {
 				array_filter(
 					array_map(
 						function ( $id ) {
-							return (string) wp_get_attachment_image_url( $id, 'medium' );
+							$url = wp_get_attachment_image_url( $id, 'medium' );
+							return $url ? array(
+								'id'  => (int) $id,
+								'url' => (string) $url,
+							) : null;
 						},
 						$gallery
 					)
@@ -217,6 +221,66 @@ class PRX3_REST_API {
 				update_user_meta( $uid, 'prx3_' . $flag, $in[ $flag ] ? '1' : '' );
 			}
 		}
+		return true;
+	}
+
+	/**
+	 * Handle a member's image upload from a multipart field and return the
+	 * new attachment ID (FO-320). Images only; uses WordPress core media
+	 * handling, loading the admin includes REST context lacks.
+	 *
+	 * @param string $field The $_FILES key.
+	 * @return int|WP_Error Attachment ID, or an error.
+	 */
+	private static function handle_photo_upload( $field ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Auth is by Bearer token/cookie on the REST route, not a form nonce.
+		if ( empty( $_FILES[ $field ] ) || ! isset( $_FILES[ $field ]['type'] ) ) {
+			return new WP_Error( 'prx3_no_file', __( 'No image was uploaded.', 'fan-ownership' ), array( 'status' => 400 ) );
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Type is validated below; the file itself is handled by core media functions.
+		$type = sanitize_text_field( wp_unslash( $_FILES[ $field ]['type'] ) );
+		if ( 0 !== strpos( $type, 'image/' ) ) {
+			return new WP_Error( 'prx3_bad_file', __( 'Please upload an image (JPEG, PNG, GIF or WebP).', 'fan-ownership' ), array( 'status' => 400 ) );
+		}
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		$attachment = media_handle_upload(
+			$field,
+			0,
+			array(),
+			array(
+				'test_form' => false,
+				'mimes'     => array(
+					'jpg|jpeg|jpe' => 'image/jpeg',
+					'png'          => 'image/png',
+					'gif'          => 'image/gif',
+					'webp'         => 'image/webp',
+				),
+			)
+		);
+		return $attachment;
+	}
+
+	/**
+	 * Remove one attachment ID from the owner's consent gallery (FO-320);
+	 * only touches their own gallery meta.
+	 *
+	 * @param int $uid    User ID.
+	 * @param int $att_id Attachment ID to drop.
+	 * @return true
+	 */
+	public static function remove_gallery_photo( $uid, $att_id ) {
+		$gallery = array_map( 'intval', (array) get_user_meta( $uid, 'prx3_gallery', true ) );
+		$gallery = array_values(
+			array_filter(
+				$gallery,
+				function ( $id ) use ( $att_id ) {
+					return (int) $id !== (int) $att_id;
+				}
+			)
+		);
+		update_user_meta( $uid, 'prx3_gallery', $gallery );
 		return true;
 	}
 
@@ -541,6 +605,66 @@ class PRX3_REST_API {
 				'permission_callback' => array( __CLASS__, 'owner_permission' ),
 				'callback'            => function () {
 					return self::documents_for( get_current_user_id() );
+				},
+			)
+		);
+		// Profile photo: upload (multipart 'file') or clear (FO-320).
+		register_rest_route(
+			$ns,
+			'/me/photo',
+			array(
+				array(
+					'methods'             => 'POST',
+					'permission_callback' => array( __CLASS__, 'owner_permission' ),
+					'callback'            => function () {
+						$att = self::handle_photo_upload( 'file' );
+						if ( is_wp_error( $att ) ) {
+							return $att;
+						}
+						update_user_meta( get_current_user_id(), 'prx3_photo', (int) $att );
+						return self::profile_payload( get_current_user_id() );
+					},
+				),
+				array(
+					'methods'             => 'DELETE',
+					'permission_callback' => array( __CLASS__, 'owner_permission' ),
+					'callback'            => function () {
+						delete_user_meta( get_current_user_id(), 'prx3_photo' );
+						return self::profile_payload( get_current_user_id() );
+					},
+				),
+			)
+		);
+		// Consent gallery: add a photo (multipart 'file', capped at 5).
+		register_rest_route(
+			$ns,
+			'/me/gallery',
+			array(
+				'methods'             => 'POST',
+				'permission_callback' => array( __CLASS__, 'owner_permission' ),
+				'callback'            => function () {
+					$att = self::handle_photo_upload( 'file' );
+					if ( is_wp_error( $att ) ) {
+						return $att;
+					}
+					if ( class_exists( 'PRX3_Social' ) && ! PRX3_Social::add_gallery_photo( get_current_user_id(), (int) $att ) ) {
+						wp_delete_attachment( (int) $att, true );
+						return new WP_Error( 'prx3_gallery_full', __( 'Your gallery already has the maximum of five photos.', 'fan-ownership' ), array( 'status' => 409 ) );
+					}
+					return self::profile_payload( get_current_user_id() );
+				},
+			)
+		);
+		// Consent gallery: remove one of the owner's own photos by ID.
+		register_rest_route(
+			$ns,
+			'/me/gallery/(?P<id>\d+)',
+			array(
+				'methods'             => 'DELETE',
+				'permission_callback' => array( __CLASS__, 'owner_permission' ),
+				'callback'            => function ( WP_REST_Request $request ) {
+					self::remove_gallery_photo( get_current_user_id(), (int) $request['id'] );
+					return self::profile_payload( get_current_user_id() );
 				},
 			)
 		);
