@@ -262,6 +262,28 @@ class PRX3_REST_API {
 			)
 		);
 
+		// Public club config so the app (and the sign-in screen, before a
+		// token exists) can theme itself from the brand pack (T46/P137).
+		register_rest_route(
+			$ns,
+			'/config',
+			array(
+				'methods'             => 'GET',
+				'permission_callback' => '__return_true',
+				'callback'            => function () {
+					return array(
+						'club' => array_merge(
+							array(
+								'name'  => prx3_club_name(),
+								'sport' => prx3_setting( 'sport', 'ice_hockey' ),
+							),
+							prx3_brand_pack()
+						),
+					);
+				},
+			)
+		);
+
 		// ---- Me (profile, shares, badges, certificates) ----
 		register_rest_route(
 			$ns,

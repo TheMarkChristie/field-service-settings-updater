@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../api/prx3_api.dart';
+import '../brand.dart';
 
 /// FO-301: email/password sign-in. Apple/Google sign-in buttons join here
 /// once the Firebase project + Sign in with Apple entitlements exist.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.api, required this.onSignedIn});
+  const LoginScreen(
+      {super.key, required this.api, required this.onSignedIn, this.brand});
   final Prx3Api api;
   final Future<void> Function() onSignedIn;
+  final ClubBrand? brand;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -36,6 +39,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Widget _badge() {
+    final badge = widget.brand?.badge;
+    if (badge == null) return const SizedBox.shrink();
+    return Image.network(badge,
+        height: 96, errorBuilder: (_, __, ___) => const SizedBox.shrink());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,8 +58,25 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (widget.brand?.wordmark != null)
+                  Image.network(widget.brand!.wordmark!,
+                      height: 72,
+                      errorBuilder: (_, __, ___) => _badge())
+                else
+                  _badge(),
+                if (widget.brand?.name != null) ...[
+                  const SizedBox(height: 16),
+                  Text(widget.brand!.name,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center),
+                ],
+                if (widget.brand?.tagline != null)
+                  Text(widget.brand!.tagline!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center),
+                const SizedBox(height: 20),
                 Text('Owners sign in',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context).textTheme.titleMedium,
                     textAlign: TextAlign.center),
                 const SizedBox(height: 24),
                 TextField(

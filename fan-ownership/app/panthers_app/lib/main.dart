@@ -8,6 +8,7 @@ library;
 import 'package:flutter/material.dart';
 
 import 'api/prx3_api.dart';
+import 'brand.dart';
 import 'screens/ballots_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/login_screen.dart';
@@ -33,6 +34,7 @@ class PanthersApp extends StatefulWidget {
 
 class _PanthersAppState extends State<PanthersApp> {
   Map<String, dynamic>? _me;
+  ClubBrand? _brand;
   bool _checking = true;
 
   @override
@@ -42,49 +44,58 @@ class _PanthersAppState extends State<PanthersApp> {
   }
 
   Future<void> _bootstrap() async {
+    Map<String, dynamic>? club;
     if (await widget.api.signedIn) {
       try {
         _me = await widget.api.me();
+        club = _me?['club'] as Map<String, dynamic>?;
       } catch (_) {
-        // Token present but the profile could not be loaded (site
-        // unreachable, plugin inactive, or the account is not an owner):
-        // drop the session so the user lands back on a usable sign-in
-        // screen instead of a spinner.
+        // Token present but the profile could not be loaded: drop the
+        // session so the user lands back on a usable sign-in screen.
         _me = null;
         await widget.api.logout();
       }
+    }
+    // Signed out (or profile load failed): brand the sign-in screen from
+    // the public club config so it still carries the club's identity.
+    if (club == null) {
+      try {
+        club = (await widget.api.config())['club'] as Map<String, dynamic>?;
+      } catch (_) {
+        club = null;
+      }
+    }
+    if (club != null) {
+      final family =
+          await loadClubFont(club['font_file'] as String?, club['font_name'] as String?);
+      _brand = ClubBrand(club, fontFamily: family);
     }
     if (mounted) setState(() => _checking = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final primary = _clubColor('primary') ?? const Color(0xFF1A1A2E);
+    final brand = _brand;
     return MaterialApp(
-      title: (_me?['club']?['name'] as String?) ?? 'Fan Owners',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: primary),
-        useMaterial3: true,
-      ),
+      title: brand?.name ?? 'Fan Owners',
+      theme: (brand ?? ClubBrand(const {})).theme(Brightness.light),
+      darkTheme: (brand ?? ClubBrand(const {})).theme(Brightness.dark),
+      themeMode: ThemeMode.system,
       home: _checking
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : _me == null
-              ? LoginScreen(api: widget.api, onSignedIn: _bootstrap)
-              : HomeShell(api: widget.api, me: _me!),
+              ? LoginScreen(api: widget.api, onSignedIn: _bootstrap, brand: brand)
+              : HomeShell(api: widget.api, me: _me!, brand: brand!),
     );
-  }
-
-  Color? _clubColor(String key) {
-    final hex = _me?['club']?[key] as String?;
-    if (hex == null || !hex.startsWith('#') || hex.length != 7) return null;
-    return Color(int.parse('FF${hex.substring(1)}', radix: 16));
   }
 }
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.api, required this.me});
+  const HomeShell(
+      {super.key, required this.api, required this.me, required this.brand});
   final Prx3Api api;
   final Map<String, dynamic> me;
+  final ClubBrand brand;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -101,7 +112,30 @@ class _HomeShellState extends State<HomeShell> {
       MatchScreen(api: widget.api),
       VideosScreen(api: widget.api),
     ];
+    final badge = widget.brand.badge;
     return Scaffold(
+      appBar: AppBar(
+        titleSpacing: badge != null ? 8 : null,
+        leading: badge != null
+            ? Padding(
+                padding: const EdgeInsets.all(8),
+                child: Image.network(badge,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+              )
+            : null,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.brand.name,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            if (widget.brand.tagline != null)
+              Text(widget.brand.tagline!,
+                  style: const TextStyle(fontSize: 11),
+                  overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
       body: SafeArea(child: screens[_index]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,

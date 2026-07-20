@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.16.1.2
+Stable tag: 3.16.2.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,17 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.16.2.0 =
+* New: the companion app themes itself fully from your brand pack. A new
+  public GET prx3/v1/config endpoint serves the club name and brand pack
+  (badge, wordmark, colours, font, tagline), so the app applies your
+  club's palette, badge, club font, and tagline — including on the
+  sign-in screen, before the member has logged in. Dark mode follows the
+  device. Nothing new to configure: it reads the brand pack you already
+  manage under FanPress Settings. (The launcher app name and home-screen
+  icon remain per-build values, set from the brand pack when each club's
+  app is built.)
 
 = 3.16.1.2 =
 * Fix: the companion app now stays signed in. Many hosts strip the

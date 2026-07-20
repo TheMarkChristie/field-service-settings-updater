@@ -127,7 +127,12 @@ class Prx3Api {
           {bool auth = true}) async =>
       (await _request('POST', path, body, auth)) as Map<String, dynamic>;
 
-  Future<dynamic> _get(String path) => _request('GET', path);
+  Future<dynamic> _get(String path, {bool auth = true}) =>
+      _request('GET', path, null, auth);
+
+  /// Public club config (name + brand pack) for pre-sign-in theming.
+  Future<Map<String, dynamic>> config() async =>
+      (await _get('config', auth: false)) as Map<String, dynamic>;
 
   // ---- Member capabilities (FO-302 parity) ----
   Future<Map<String, dynamic>> me() async => (await _get('me')) as Map<String, dynamic>;
