@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.16.1.0
+Stable tag: 3.16.1.2
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,16 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.16.1.2 =
+* Fix: the companion app now stays signed in. Many hosts strip the
+  Authorization header from the usual place, so the app's token was
+  silently ignored on every authenticated call — sign-in appeared to
+  work but the app could not load the member profile and bounced back to
+  the sign-in screen. The API now also reads the token from the Apache
+  rewrite fallback and from getallheaders(), so app tokens are honoured
+  on the common host configurations. (If a host strips it entirely, add
+  to .htaccess: `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1`.)
 
 = 3.16.1.0 =
 * New: Application Password sign-in for the companion app. If your club

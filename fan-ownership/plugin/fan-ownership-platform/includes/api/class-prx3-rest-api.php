@@ -35,12 +35,41 @@ class PRX3_REST_API {
 		if ( $user_id ) {
 			return $user_id;
 		}
-		$header = isset( $_SERVER['HTTP_AUTHORIZATION'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_AUTHORIZATION'] ) ) : '';
+		$header = self::authorization_header();
 		if ( ! preg_match( '/^Bearer\s+(.+)$/i', $header, $m ) ) {
 			return $user_id;
 		}
-		$claims = PRX3_JWT::decode( $m[1], 'access' );
+		$claims = PRX3_JWT::decode( trim( $m[1] ), 'access' );
 		return is_wp_error( $claims ) ? $user_id : (int) $claims['sub'];
+	}
+
+	/**
+	 * Read the Authorization header robustly. Many hosts (Apache + CGI/
+	 * FastCGI, and setups behind a proxy) drop it from HTTP_AUTHORIZATION,
+	 * moving it to REDIRECT_HTTP_AUTHORIZATION or exposing it only through
+	 * getallheaders(). Without this, app tokens are silently ignored on
+	 * production even though sign-in (which reads the POST body) works.
+	 *
+	 * @return string The raw Authorization header, or an empty string.
+	 */
+	private static function authorization_header() {
+		if ( ! empty( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
+			return trim( sanitize_text_field( wp_unslash( $_SERVER['HTTP_AUTHORIZATION'] ) ) );
+		}
+		if ( ! empty( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ) {
+			return trim( sanitize_text_field( wp_unslash( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ) );
+		}
+		if ( function_exists( 'getallheaders' ) ) {
+			$headers = getallheaders();
+			if ( is_array( $headers ) ) {
+				foreach ( $headers as $key => $value ) {
+					if ( 'authorization' === strtolower( (string) $key ) ) {
+						return trim( sanitize_text_field( wp_unslash( $value ) ) );
+					}
+				}
+			}
+		}
+		return '';
 	}
 
 	/**
