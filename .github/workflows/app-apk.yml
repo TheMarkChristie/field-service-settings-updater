@@ -2,12 +2,15 @@ name: Build App APK
 # Builds the companion Flutter app into an installable Android APK on
 # GitHub's runners (the container that develops the plugin has
 # dl.google.com blocked, so the Android SDK cannot be fetched there).
-# Download the APK from the run's Artifacts once the job is green.
+# The APK is uploaded as a run Artifact AND published as an asset on the
+# "panthers-app-latest" GitHub Release for a direct one-click download.
 on:
   workflow_dispatch:
   push:
     branches: [claude/sports-fan-ownership-plugin-2r2rh8, main]
     paths: ['fan-ownership/app/**', '.github/workflows/app-apk.yml']
+permissions:
+  contents: write
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -32,9 +35,22 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Build release APK
         run: flutter build apk --release
-      - name: Upload APK
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/panthers-app.apk
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: panthers-app-release-apk
-          path: fan-ownership/app/panthers_app/build/app/outputs/flutter-apk/app-release.apk
+          path: fan-ownership/app/panthers_app/build/app/outputs/flutter-apk/panthers-app.apk
           if-no-files-found: error
+      - name: Publish APK to a GitHub Release (direct download)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: panthers-app-latest
+          name: Panthers App (latest build)
+          body: >
+            Latest debug/release APK of the Panthers companion app, built
+            automatically from the app source. Download panthers-app.apk
+            below and sideload it on Android (allow "Install unknown apps").
+          prerelease: true
+          files: fan-ownership/app/panthers_app/build/app/outputs/flutter-apk/panthers-app.apk
