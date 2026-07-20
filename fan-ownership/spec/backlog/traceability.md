@@ -56,6 +56,7 @@ before shipping.
 | 3.15.1.7 | Squad-source selector (P133): "Players come from" now lists any players table with an admin screen (public or admin-only) so an external club plugin's Players type is connectable; excludes the platform's own content types and WP internals; built-in option rebranded "FanPress players" |
 | 3.15.1.8 | Fixtures-source selector (P134): "Matches come from" points player-of-the-match voting at an existing fixtures table (same pattern as players); external fixtures open voting while published; built-in FanPress matches remain the default |
 | 3.15.1.9 | Fix (P129 completed): the last two top-level menus rebranded — "Owners" → FanPress Owners, "Board" → FanPress Board; all five menus now carry the FanPress name, slugs unchanged |
+| 3.17.0.0 | Owner Account Hub (P138): app + web hub for an owner's details (edit), identity/KYC (owner view+edit, audited), documents (agreement, certificate + verify, published club docs), and forums (read/reply/new topic). New REST `GET/POST /me/profile`, `GET/POST /me/identity`, `GET /me/documents`; forums reuse `/forum/*`. App "Account" tab; web `[prx3_owner_hub]` shortcode + self-installing "My Account" page. 15 new plugin assertions (profile cap, social whitelist, PEP whitelist, identity audit, documents list) |
 | 3.16.2.0b | Build branding (P137): the APK workflow reads the club name + `app_icon` from the public `/config` at build time and applies them to the binary — sets the Android launcher label to the club name and generates launcher icons from the club icon via flutter_launcher_icons; all best-effort, so the defaults stand if the site/fields are absent. Each club's build is self-branded (name + home-screen icon) with no settings menu |
 | 3.16.2.0 | App branding (P137): new public `GET /config` (club name + brand pack); the app themes itself from the brand pack — full club palette, badge in the app bar, club font (best-effort runtime load), tagline, and the branded sign-in screen (badge/wordmark + name + tagline) before login — with dark mode following the device. No mobile-app settings menu required; launcher name/icon stay per-build values from the brand pack |
 | 3.16.1.2 | Fix (P136): the app's JWT is honoured on production. `bearer_auth` now reads the Authorization header from `HTTP_AUTHORIZATION`, the Apache rewrite fallback `REDIRECT_HTTP_AUTHORIZATION`, and `getallheaders()` — many hosts strip it from the first, which silently ignored the token so sign-in worked but every authenticated call (e.g. `/me`) 401'd and the app bounced back to sign-in. Six new bearer-auth assertions cover all three sources plus the negative cases |
@@ -167,6 +168,8 @@ before shipping.
 | FO-318 Player of the month | Done | 0.1.0 | Last-7-days window, one changeable vote per member, per-month archive option, auto winner + push on daily tick; REST GET/POST `/potm-month` | Same UI note as FO-317 |
 | FO-319 FanPress Bot | Done | 3.16.0.0 | `class-prx3-helpbot.php` — configurable help bot answering members from a searchable FAQ knowledge base (`prx3_faq`, token-overlap scoring with a confidence floor); when it cannot answer it opens a member-scoped support ticket (`prx3_ticket`) in one tap. Threaded replies with ownership enforcement, staff notification on new tickets, answered-on-staff-reply. WhatsApp-style widget matching FanPress Chat; name/avatar/colour/background/greeting/on-off under FanPress Technical Setup → FanPress Bot. Member-only floating launcher, `[prx3_helpbot]`/`[prx3_tickets]` shortcodes, REST `prx3/v1/help` (public config/ask) + `prx3/v1/tickets` (member list/create/reply) | Native app screen consumes the REST routes; scheduled in the app build-out |
 
+| FO-320 Owner Account Hub | Done | 3.17.0.0 | One owner-facing hub on app + web: details (bio/socials/prefs, edit), identity/KYC (owner view+edit of the six-field record + PEP, every change audited), documents (Shareholders' Agreement, ownership certificate + verify link, published `prx3_document` club papers), and forums (browse/read/reply/new topic). Plugin: `PRX3_REST_API::profile_payload/apply_profile/identity_payload/apply_identity/documents_for` + REST `GET/POST /me/profile`, `GET/POST /me/identity`, `GET /me/documents`; forums reuse `PRX3_Forum` routes. App: **Account** tab → profile_hub/identity/documents/forums screens. Web: `[prx3_owner_hub]` + self-installing "My Account" page | Native photo upload in-app is a later pass (text fields + toggles ship now) |
+
 ## Cross-cutting requirements
 
 - **Coding standards**: the committed gate (`phpcs.xml.dist`) is the **full
@@ -185,7 +188,7 @@ before shipping.
 
 ## Honest summary
 
-Done 79 · Partial 6 · Operational 2 · Not built 0. The documentation
+Done 80 · Partial 6 · Operational 2 · Not built 0. The documentation
 suite is complete (FO-314, 3.15.0.0), meeting video is fully
 in-platform (FO-228: 8×8 JaaS with the meet.jit.si fallback, 3.14.0.0),
 and CI runs the full suite, lint, JS checks, and WPCS on every pull

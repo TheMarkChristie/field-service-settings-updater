@@ -65,6 +65,7 @@ class PRX3_Pages {
 			'referrals'     => array( __( 'Bring a Fellow Fan', 'fan-ownership' ), '[prx3_referrals]' ),
 			'chapters'      => array( __( 'Owner Chapters', 'fan-ownership' ), '[prx3_chapters]' ),
 			'profile'       => array( __( 'My Profile', 'fan-ownership' ), '[prx3_profile]' ),
+			'account-hub'   => array( __( 'My Account', 'fan-ownership' ), '[prx3_owner_hub]' ),
 		);
 	}
 

@@ -4,7 +4,7 @@ Tags: fan ownership, membership, voting, sports club, streaming
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.16.2.0
+Stable tag: 3.17.0.0
 License: MIT
 
 The fan-owned club platform: shares, weighted secret ballots, signed
@@ -48,6 +48,27 @@ club badge plugin integrate through documented contracts.
    governance numbers, and integrations.
 
 == Changelog ==
+
+= 3.17.0.0 =
+* New: Owner Account Hub — one place for an owner to see everything about
+  their membership, on the app and the website.
+  - Details: view and edit bio, social links, and preferences.
+  - Identity & KYC: owners can now view and edit their own private
+    identity record (name, nationality, residence, date of birth,
+    government ID, PEP declaration) in the app and on the web. Every
+    change is audited, exactly like the website's profile save.
+  - Documents: their Shareholders' Agreement, ownership certificate
+    (with verify link), and any published club documents, all in one
+    list — each opens on the website.
+  - Forums: browse the owner discussion boards, read threads, reply, and
+    start new topics.
+* App: a new "Account" tab hosts the hub (details, KYC, documents,
+  forums), consuming new REST endpoints GET/POST prx3/v1/me/profile,
+  GET/POST prx3/v1/me/identity, GET prx3/v1/me/documents, and the
+  existing forum routes.
+* Web: a new [prx3_owner_hub] shortcode and a self-installing "My
+  Account" page bring the same hub to the website, assembling the
+  profile, documents, and forum in one page.
 
 = 3.16.2.0 =
 * New: the companion app themes itself fully from your brand pack. A new

@@ -159,6 +159,158 @@ class PRX3_REST_API {
 	}
 
 	/**
+	 * The owner's own editable profile plus read-only stats (FO-320).
+	 *
+	 * @param int $uid User ID.
+	 * @return array
+	 */
+	public static function profile_payload( $uid ) {
+		$photo_id = (int) get_user_meta( $uid, 'prx3_photo', true );
+		$gallery  = array_map( 'intval', (array) get_user_meta( $uid, 'prx3_gallery', true ) );
+		$socials  = (array) get_user_meta( $uid, 'prx3_socials', true );
+		return array(
+			'bio'              => (string) get_user_meta( $uid, 'prx3_bio', true ),
+			'socials'          => array_map( 'strval', $socials ),
+			'photo'            => $photo_id ? (string) wp_get_attachment_image_url( $photo_id, 'medium' ) : '',
+			'gallery'          => array_values(
+				array_filter(
+					array_map(
+						function ( $id ) {
+							return (string) wp_get_attachment_image_url( $id, 'medium' );
+						},
+						$gallery
+					)
+				)
+			),
+			'photo_consent'    => '1' === (string) get_user_meta( $uid, 'prx3_photo_consent', true ),
+			'shares_public'    => '1' === (string) get_user_meta( $uid, 'prx3_shares_public', true ),
+			'notify_email_off' => '1' === (string) get_user_meta( $uid, 'prx3_notify_email_off', true ),
+			'owner_number'     => class_exists( 'PRX3_Shares' ) ? PRX3_Shares::owner_number( $uid ) : '',
+			'activity'         => class_exists( 'PRX3_Social' ) ? PRX3_Social::activity_score( $uid ) : null,
+			'profile_url'      => class_exists( 'PRX3_Social' ) ? PRX3_Social::profile_url( $uid ) : '',
+		);
+	}
+
+	/**
+	 * Apply an owner's edits to their own content fields (FO-320). Identity
+	 * fields are handled separately (apply_identity) so they can be audited.
+	 *
+	 * @param int   $uid User ID.
+	 * @param array $in  Incoming fields.
+	 * @return true
+	 */
+	public static function apply_profile( $uid, array $in ) {
+		if ( array_key_exists( 'bio', $in ) ) {
+			update_user_meta( $uid, 'prx3_bio', mb_substr( sanitize_textarea_field( (string) $in['bio'] ), 0, 300 ) );
+		}
+		if ( isset( $in['socials'] ) && is_array( $in['socials'] ) ) {
+			$clean = array();
+			foreach ( array( 'x', 'instagram', 'facebook', 'bluesky' ) as $key ) {
+				if ( ! empty( $in['socials'][ $key ] ) ) {
+					$clean[ $key ] = esc_url_raw( (string) $in['socials'][ $key ] );
+				}
+			}
+			update_user_meta( $uid, 'prx3_socials', $clean );
+		}
+		foreach ( array( 'photo_consent', 'shares_public', 'notify_email_off' ) as $flag ) {
+			if ( array_key_exists( $flag, $in ) ) {
+				update_user_meta( $uid, 'prx3_' . $flag, $in[ $flag ] ? '1' : '' );
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * The owner's own KYC/identity record — full, since it is their own
+	 * (FO-320). Other owners only ever see the public slice.
+	 *
+	 * @param int $uid User ID.
+	 * @return array
+	 */
+	public static function identity_payload( $uid ) {
+		$identity = (array) get_user_meta( $uid, 'prx3_identity', true );
+		$fields   = array( 'birth_name', 'nationality', 'residence', 'dob', 'gov_id', 'pep' );
+		$out      = array();
+		foreach ( $fields as $field ) {
+			$out[ $field ] = isset( $identity[ $field ] ) ? (string) $identity[ $field ] : '';
+		}
+		return $out;
+	}
+
+	/**
+	 * Apply an owner's edits to their own KYC/identity record, audited
+	 * (FO-320 / P138). PEP is whitelisted; every change is logged.
+	 *
+	 * @param int   $uid User ID.
+	 * @param array $in  Incoming fields.
+	 * @return true
+	 */
+	public static function apply_identity( $uid, array $in ) {
+		$identity = (array) get_user_meta( $uid, 'prx3_identity', true );
+		foreach ( array( 'birth_name', 'nationality', 'residence', 'dob', 'gov_id' ) as $field ) {
+			if ( array_key_exists( $field, $in ) ) {
+				$identity[ $field ] = sanitize_text_field( (string) $in[ $field ] );
+			}
+		}
+		if ( array_key_exists( 'pep', $in ) ) {
+			$pep             = (string) $in['pep'];
+			$identity['pep'] = in_array( $pep, array( 'yes', 'no' ), true ) ? $pep : '';
+		}
+		update_user_meta( $uid, 'prx3_identity', $identity );
+		if ( class_exists( 'PRX3_Audit' ) ) {
+			PRX3_Audit::log( 'identity_updated', sprintf( 'Member %d updated their identity record via the app', $uid ) );
+		}
+		return true;
+	}
+
+	/**
+	 * Documents the owner can access (FO-320): their Shareholders'
+	 * Agreement, ownership certificate, and any published club documents.
+	 *
+	 * @param int $uid User ID.
+	 * @return array
+	 */
+	public static function documents_for( $uid ) {
+		$docs = array();
+		if ( class_exists( 'PRX3_Agreements' ) ) {
+			$docs[] = array(
+				'type'         => 'agreement',
+				'title'        => __( "Shareholders' Agreement", 'fan-ownership' ),
+				'url'          => PRX3_Agreements::agreement_url(),
+				'executed_url' => home_url( '/my-agreement/' ),
+				'current'      => PRX3_Agreements::is_current( $uid ),
+			);
+		}
+		$certs = array_values( (array) get_user_meta( $uid, 'prx3_certificates', true ) );
+		if ( $certs ) {
+			$latest = end( $certs );
+			$docs[] = array(
+				'type'       => 'certificate',
+				'title'      => __( 'Ownership certificate', 'fan-ownership' ),
+				'url'        => home_url( '/?prx3_certificate=latest' ),
+				'verify_url' => empty( $latest['verify_code'] ) ? '' : home_url( '/verify-owner/' . rawurlencode( (string) $latest['verify_code'] ) . '/' ),
+			);
+		}
+		$posts = get_posts(
+			array(
+				'post_type'      => 'prx3_document',
+				'post_status'    => 'publish',
+				'posts_per_page' => 100,
+				'no_found_rows'  => true,
+			)
+		);
+		foreach ( $posts as $doc ) {
+			$docs[] = array(
+				'type'     => 'document',
+				'title'    => $doc->post_title,
+				'url'      => get_permalink( $doc->ID ),
+				'doc_type' => (string) get_post_meta( $doc->ID, '_prx3_dtype', true ),
+			);
+		}
+		return $docs;
+	}
+
+	/**
 	 * The two throttle keys for a sign-in attempt: per IP and per target
 	 * username.
 	 *
@@ -332,6 +484,63 @@ class PRX3_REST_API {
 					$tokens[] = sanitize_text_field( (string) $request['token'] );
 					update_user_meta( get_current_user_id(), 'prx3_push_tokens', array_slice( array_unique( $tokens ), -5 ) );
 					return array( 'ok' => true );
+				},
+			)
+		);
+
+		// ---- Owner profile hub: editable profile, KYC, documents (FO-320) ----
+		register_rest_route(
+			$ns,
+			'/me/profile',
+			array(
+				array(
+					'methods'             => 'GET',
+					'permission_callback' => array( __CLASS__, 'owner_permission' ),
+					'callback'            => function () {
+						return self::profile_payload( get_current_user_id() );
+					},
+				),
+				array(
+					'methods'             => 'POST',
+					'permission_callback' => array( __CLASS__, 'owner_permission' ),
+					'callback'            => function ( WP_REST_Request $request ) {
+						$in = $request->get_json_params();
+						self::apply_profile( get_current_user_id(), is_array( $in ) ? $in : array() );
+						return self::profile_payload( get_current_user_id() );
+					},
+				),
+			)
+		);
+		register_rest_route(
+			$ns,
+			'/me/identity',
+			array(
+				array(
+					'methods'             => 'GET',
+					'permission_callback' => array( __CLASS__, 'owner_permission' ),
+					'callback'            => function () {
+						return self::identity_payload( get_current_user_id() );
+					},
+				),
+				array(
+					'methods'             => 'POST',
+					'permission_callback' => array( __CLASS__, 'owner_permission' ),
+					'callback'            => function ( WP_REST_Request $request ) {
+						$in = $request->get_json_params();
+						self::apply_identity( get_current_user_id(), is_array( $in ) ? $in : array() );
+						return self::identity_payload( get_current_user_id() );
+					},
+				),
+			)
+		);
+		register_rest_route(
+			$ns,
+			'/me/documents',
+			array(
+				'methods'             => 'GET',
+				'permission_callback' => array( __CLASS__, 'owner_permission' ),
+				'callback'            => function () {
+					return self::documents_for( get_current_user_id() );
 				},
 			)
 		);

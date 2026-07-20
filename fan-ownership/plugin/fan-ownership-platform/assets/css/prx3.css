@@ -468,3 +468,10 @@ a.prx3-tile:focus-visible {
 .prx3-bot-launch__panel { position: absolute; right: 0; bottom: 68px; width: min(92vw, 420px); box-shadow: 0 8px 30px rgba(0,0,0,.3); border-radius: 12px; }
 .prx3-bot__avatar--placeholder { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #d7dade; color: #6b7177; }
 .prx3-bot-glyph { display: block; }
+
+/* Owner account hub (FO-320) */
+.prx3-owner-hub .prx3-hub-section { margin: 0 0 2.5em; padding-bottom: 1.5em; border-bottom: 1px solid rgba(0,0,0,.08); }
+.prx3-owner-hub .prx3-hub-section:last-child { border-bottom: 0; }
+.prx3-owner-hub .prx3-hub-section > h2 { margin: 0 0 .75em; }
+.prx3-hub-docs { list-style: none; margin: .5em 0 0; padding: 0; }
+.prx3-hub-docs li { padding: .4em 0; border-bottom: 1px solid rgba(0,0,0,.06); }

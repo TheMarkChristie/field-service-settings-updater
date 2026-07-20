@@ -13,6 +13,7 @@ import 'screens/ballots_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/match_screen.dart';
+import 'screens/profile_hub_screen.dart';
 import 'screens/videos_screen.dart';
 
 const String apiBase =
@@ -111,6 +112,7 @@ class _HomeShellState extends State<HomeShell> {
       BallotsScreen(api: widget.api),
       MatchScreen(api: widget.api),
       VideosScreen(api: widget.api),
+      ProfileHubScreen(api: widget.api, me: widget.me),
     ];
     final badge = widget.brand.badge;
     return Scaffold(
@@ -145,6 +147,7 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(icon: Icon(Icons.how_to_vote_outlined), label: 'Boardroom'),
           NavigationDestination(icon: Icon(Icons.sports_soccer_outlined), label: 'Match'),
           NavigationDestination(icon: Icon(Icons.play_circle_outline), label: 'TV'),
+          NavigationDestination(icon: Icon(Icons.account_circle_outlined), label: 'Account'),
         ],
       ),
     );

@@ -140,6 +140,44 @@ class Prx3Api {
   Future<void> registerPushToken(String token) =>
       _post('me/push-token', {'token': token});
 
+  // ---- Owner profile hub (FO-320) ----
+  Future<Map<String, dynamic>> profile() async =>
+      (await _get('me/profile')) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> saveProfile(Map<String, dynamic> fields) =>
+      _post('me/profile', fields);
+
+  Future<Map<String, dynamic>> identity() async =>
+      (await _get('me/identity')) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> saveIdentity(Map<String, dynamic> fields) =>
+      _post('me/identity', fields);
+
+  Future<List<dynamic>> documents() async =>
+      (await _get('me/documents')) as List<dynamic>;
+
+  // ---- Forum (existing routes; GET responses wrap the list) ----
+  Future<List<dynamic>> forumTopics({String? board}) async {
+    final res = await _get(
+            'forum/topics${board != null ? '?board=$board' : ''}')
+        as Map<String, dynamic>;
+    return (res['topics'] as List<dynamic>?) ?? const [];
+  }
+
+  Future<Map<String, dynamic>> createTopic(String title, String body,
+          {String? board}) =>
+      _post('forum/topics',
+          {'title': title, 'body': body, if (board != null) 'board': board});
+
+  Future<List<dynamic>> forumReplies(int topicId) async {
+    final res =
+        await _get('forum/topics/$topicId/replies') as Map<String, dynamic>;
+    return (res['replies'] as List<dynamic>?) ?? const [];
+  }
+
+  Future<Map<String, dynamic>> replyToTopic(int topicId, String body) =>
+      _post('forum/topics/$topicId/replies', {'body': body});
+
   Future<List<dynamic>> ballots() async => (await _get('ballots')) as List<dynamic>;
 
   Future<Map<String, dynamic>> vote(int ballotId, int choice) =>

@@ -47,6 +47,7 @@ class PRX3_Social {
 		add_action( 'admin_post_prx3_send_dm', array( __CLASS__, 'handle_send_dm' ) );
 		add_action( 'admin_post_prx3_cheer', array( __CLASS__, 'handle_cheer' ) );
 		add_shortcode( 'prx3_profile', array( __CLASS__, 'shortcode_profile' ) );
+		add_shortcode( 'prx3_owner_hub', array( __CLASS__, 'shortcode_owner_hub' ) );
 		add_action( 'admin_post_prx3_save_profile', array( __CLASS__, 'handle_save_profile' ) );
 		add_action( 'admin_post_prx3_notify_email', array( __CLASS__, 'handle_notify_email' ) );
 		add_filter( 'user_row_actions', array( __CLASS__, 'user_row_actions' ), 10, 2 );
@@ -490,6 +491,74 @@ class PRX3_Social {
 		$gallery[] = (int) $attachment_id;
 		update_user_meta( $user_id, 'prx3_gallery', $gallery );
 		return true;
+	}
+
+	/**
+	 * [prx3_owner_hub] — the owner's account hub in one place (FO-320):
+	 * their details and identity (editable), the documents they can
+	 * access, and the forums. Assembles the existing profile and forum
+	 * surfaces with a documents list so web mirrors the app hub.
+	 *
+	 * @return string Hub HTML.
+	 */
+	public static function shortcode_owner_hub() {
+		if ( ! prx3_is_owner() ) {
+			return PRX3_Access::gate_content( '' );
+		}
+		wp_enqueue_style( 'prx3' );
+		$uid  = get_current_user_id();
+		$html = '<div class="prx3-owner-hub">';
+
+		$html .= '<section class="prx3-hub-section" id="prx3-hub-profile">';
+		$html .= '<h2>' . esc_html__( 'My details & identity', 'fan-ownership' ) . '</h2>';
+		$html .= do_shortcode( '[prx3_profile]' );
+		$html .= '</section>';
+
+		$html .= '<section class="prx3-hub-section" id="prx3-hub-documents">';
+		$html .= '<h2>' . esc_html__( 'My documents', 'fan-ownership' ) . '</h2>';
+		if ( class_exists( 'PRX3_Agreements' ) ) {
+			$html .= wp_kses_post( (string) PRX3_Agreements::account_block( $uid ) );
+		}
+		$html .= self::owner_documents_list( $uid );
+		$html .= '</section>';
+
+		$html .= '<section class="prx3-hub-section" id="prx3-hub-forums">';
+		$html .= '<h2>' . esc_html__( 'Forums', 'fan-ownership' ) . '</h2>';
+		$html .= do_shortcode( '[prx3_forum]' );
+		$html .= '</section>';
+
+		$html .= '</div>';
+		return $html;
+	}
+
+	/**
+	 * A simple list of the owner's non-agreement documents (certificate,
+	 * published club papers) for the hub; the agreement is already shown
+	 * in the account block above.
+	 *
+	 * @param int $uid User ID.
+	 * @return string List HTML.
+	 */
+	private static function owner_documents_list( $uid ) {
+		if ( ! class_exists( 'PRX3_REST_API' ) ) {
+			return '';
+		}
+		$docs = PRX3_REST_API::documents_for( $uid );
+		$out  = '<ul class="prx3-hub-docs">';
+		$rows = 0;
+		foreach ( $docs as $doc ) {
+			if ( 'agreement' === $doc['type'] || empty( $doc['url'] ) ) {
+				continue;
+			}
+			++$rows;
+			$out .= '<li><a href="' . esc_url( $doc['url'] ) . '">' . esc_html( $doc['title'] ) . '</a>';
+			if ( 'certificate' === $doc['type'] && ! empty( $doc['verify_url'] ) ) {
+				$out .= ' &mdash; <a href="' . esc_url( $doc['verify_url'] ) . '">' . esc_html__( 'verify', 'fan-ownership' ) . '</a>';
+			}
+			$out .= '</li>';
+		}
+		$out .= '</ul>';
+		return $rows ? $out : '';
 	}
 
 	/**
