@@ -45,8 +45,13 @@ class _PanthersAppState extends State<PanthersApp> {
     if (await widget.api.signedIn) {
       try {
         _me = await widget.api.me();
-      } on Prx3ApiException {
+      } catch (_) {
+        // Token present but the profile could not be loaded (site
+        // unreachable, plugin inactive, or the account is not an owner):
+        // drop the session so the user lands back on a usable sign-in
+        // screen instead of a spinner.
         _me = null;
+        await widget.api.logout();
       }
     }
     if (mounted) setState(() => _checking = false);

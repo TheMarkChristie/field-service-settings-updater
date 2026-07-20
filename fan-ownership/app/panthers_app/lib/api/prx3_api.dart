@@ -2,7 +2,9 @@
 /// member capability (FO-301, FO-302).
 library;
 
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -80,10 +82,33 @@ class Prx3Api {
       if (token != null) headers['Authorization'] = 'Bearer $token';
     }
     final uri = Uri.parse('$baseUrl/$path');
-    final response = method == 'GET'
-        ? await http.get(uri, headers: headers)
-        : await http.post(uri, headers: headers, body: jsonEncode(body ?? {}));
-    final decoded = response.body.isEmpty ? {} : jsonDecode(response.body);
+    const timeout = Duration(seconds: 20);
+    final http.Response response;
+    try {
+      response = await (method == 'GET'
+              ? http.get(uri, headers: headers)
+              : http.post(uri, headers: headers, body: jsonEncode(body ?? {})))
+          .timeout(timeout);
+    } on TimeoutException {
+      throw Prx3ApiException(
+          'The server took too long to respond. Check your connection and that the club site is reachable, then try again.');
+    } on SocketException {
+      throw Prx3ApiException(
+          'Could not reach the club site. Check your connection and the site address, then try again.');
+    } on http.ClientException {
+      throw Prx3ApiException(
+          'Could not reach the club site. Check your connection and the site address, then try again.');
+    }
+    final dynamic decoded;
+    try {
+      decoded = response.body.isEmpty ? {} : jsonDecode(response.body);
+    } on FormatException {
+      // A non-JSON body (e.g. an HTML error/login page from a security
+      // plugin or a WAF) means we did not reach the REST API cleanly.
+      throw Prx3ApiException(
+          'The club site did not return app data (status ${response.statusCode}). The plugin may not be active, permalinks may need saving, or a security plugin is blocking the API.',
+          response.statusCode);
+    }
     if (response.statusCode == 401 && auth && !retried && await _refresh()) {
       return _request(method, path, body, auth, true);
     }

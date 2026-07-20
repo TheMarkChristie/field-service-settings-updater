@@ -29,6 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await widget.onSignedIn();
     } on Prx3ApiException catch (e) {
       setState(() => _error = e.message);
+    } catch (e) {
+      setState(() => _error = 'Sign-in could not be completed. $e');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
