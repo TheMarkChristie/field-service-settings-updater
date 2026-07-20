@@ -44,7 +44,7 @@ jobs:
         run: |
           CFG=$(curl -sS --max-time 20 "$PRX3_API/config" || echo '{}')
           NAME=$(printf '%s' "$CFG" | python3 -c "import sys,json;print((json.load(sys.stdin).get('club',{}) or {}).get('name','') or '')" 2>/dev/null || echo '')
-          ICON=$(printf '%s' "$CFG" | python3 -c "import sys,json;print((json.load(sys.stdin).get('club',{}) or {}).get('app_icon','') or '')" 2>/dev/null || echo '')
+          ICON=$(printf '%s' "$CFG" | python3 -c "import sys,json;c=json.load(sys.stdin).get('club',{}) or {};print(c.get('app_icon') or c.get('badge_social') or c.get('badge') or '')" 2>/dev/null || echo '')
           echo "CLUB_NAME=$NAME" >> "$GITHUB_ENV"
           echo "CLUB_ICON=$ICON" >> "$GITHUB_ENV"
           echo "Resolved club name='$NAME' icon='$ICON'"
