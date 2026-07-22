@@ -435,6 +435,7 @@ const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const purpleLedMat = new THREE.MeshBasicMaterial({ color: 0xa763e8 });
 const blueLedMat = new THREE.MeshBasicMaterial({ color: 0x4f8fe8 });
 const stageMat = new THREE.MeshStandardMaterial({ color: 0x4a2f1b, roughness: 0.8 });
+const fixtureMat = new THREE.MeshStandardMaterial({ color: 0x1b1b20, roughness: 0.5, metalness: 0.6 });
 const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x120c14, roughness: 1 });
 const curtainMat = new THREE.MeshStandardMaterial({ color: 0x5e1220, roughness: 0.9 });
 // Seat upholstery: a navy/purple tartan with white pinstripes, drawn
@@ -650,6 +651,13 @@ function buildRoom(room, index) {
   scene.add(light);
   screenLights.push(light);
 
+  // Warm spotlight on the stage, hung from a ceiling fixture
+  const stageSpot = new THREE.SpotLight(0xfff1d6, 55, 16, Math.PI / 6, 0.6, 1.4);
+  stageSpot.position.set(0, CEIL_H - 0.3, -4.5);
+  stageSpot.target.position.set(0, 0.6, -7.2);
+  g.add(stageSpot, stageSpot.target);
+  boxMesh(g, 0.3, 0.2, 0.3, 0, CEIL_H - 0.12, -4.5, fixtureMat);
+
   // The YouTube surface: CSS3D element + transparent hole in the WebGL canvas.
   // The hole material writes premultiplied-valid (0,0,0,0) so the iframe
   // underneath shows through.
@@ -693,60 +701,83 @@ function buildRoom(room, index) {
 ROOMS.forEach(buildRoom);
 
 // ---------------------------------------------------------------------------
-// Audience — every seat filled with a little Sims-style local. Six instanced
-// meshes render all ~300 of them in six draw calls.
+// Audience — every seat filled. Each person is assembled from capsule-based
+// body parts (torso, neck, head, hair, hanging arms, seated legs) rendered
+// as instanced meshes, so the whole ~300-strong crowd is a handful of draw
+// calls. Roughly 40% get a longer hairstyle via an extra instanced layer.
 // ---------------------------------------------------------------------------
 {
-  const n = audienceSeats.length;
-  const SKIN = ['#f2c6a0', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
-  const SHIRT = ['#e05263', '#3b8ee0', '#43b06c', '#e0a53b', '#8e5be0', '#d94fa3', '#2ec4b6', '#ef7b45'];
-  const HAIR = ['#2b2118', '#4a3220', '#7a5230', '#b58143', '#d9b380', '#1a1a1a', '#a03b2c'];
-  const TROUSER = ['#2c3550', '#3a3a3a', '#5a4632', '#33415c'];
+  const SKIN = ['#f2c6a0', '#e8b98a', '#d69d68', '#b57a4a', '#8d5524', '#6b4423', '#ffdbac'];
+  const SHIRT = ['#e05263', '#3b8ee0', '#43b06c', '#e0a53b', '#8e5be0', '#d94fa3',
+                 '#2ec4b6', '#ef7b45', '#d8d3c8', '#5a6473', '#37415a', '#7d8a97', '#efe9dd'];
+  const HAIR = ['#2b2118', '#4a3220', '#7a5230', '#b58143', '#d9b380', '#1a1a1a', '#a03b2c', '#9c9c9c'];
+  const TROUSER = ['#2c3550', '#3a3a3a', '#5a4632', '#33415c', '#6b7280', '#242424'];
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
-  const hairGeo = new THREE.SphereGeometry(0.155, 12, 10);
-  hairGeo.scale(1, 0.72, 1);
-  const parts = {
-    torso: { geo: new THREE.BoxGeometry(0.44, 0.5, 0.3), off: [0, 0.86, 0] },
-    lap:   { geo: new THREE.BoxGeometry(0.4, 0.14, 0.38), off: [0, 0.62, -0.12] },
-    armL:  { geo: new THREE.BoxGeometry(0.09, 0.4, 0.11), off: [-0.28, 0.84, 0] },
-    armR:  { geo: new THREE.BoxGeometry(0.09, 0.4, 0.11), off: [0.28, 0.84, 0] },
-    head:  { geo: new THREE.SphereGeometry(0.145, 12, 10), off: [0, 1.32, 0] },
-    hair:  { geo: hairGeo, off: [0, 1.38, 0.03] },
-  };
-  const meshes = {};
-  for (const k in parts) {
-    meshes[k] = new THREE.InstancedMesh(parts[k].geo, new THREE.MeshStandardMaterial({ roughness: 1 }), n);
-    scene.add(meshes[k]);
-  }
+  const headGeo = new THREE.SphereGeometry(0.135, 14, 12);
+  headGeo.scale(0.95, 1.12, 1);
+  const hairGeo = new THREE.SphereGeometry(0.147, 14, 12);
+  hairGeo.scale(1, 0.8, 1);
+  const hairLongGeo = new THREE.SphereGeometry(0.15, 14, 12);
+  hairLongGeo.scale(0.95, 1.35, 0.8);
+  const armGeo = new THREE.CapsuleGeometry(0.055, 0.3, 4, 8);
+  const thighGeo = new THREE.CapsuleGeometry(0.065, 0.26, 4, 8);
+  const shinGeo = new THREE.CapsuleGeometry(0.05, 0.28, 4, 8);
 
+  const parts = {
+    torso:  { geo: new THREE.CapsuleGeometry(0.17, 0.3, 4, 12), off: [0, 0.92, 0], rot: [-0.06, 0, 0], colorKey: 'shirt' },
+    neck:   { geo: new THREE.CylinderGeometry(0.05, 0.055, 0.1, 8), off: [0, 1.17, 0], colorKey: 'skin' },
+    head:   { geo: headGeo, off: [0, 1.33, 0], colorKey: 'skin' },
+    hair:   { geo: hairGeo, off: [0, 1.39, 0.015], colorKey: 'hair' },
+    armL:   { geo: armGeo, off: [-0.24, 0.9, 0.02], rot: [0, 0, 0.14], colorKey: 'shirt' },
+    armR:   { geo: armGeo, off: [0.24, 0.9, 0.02], rot: [0, 0, -0.14], colorKey: 'shirt' },
+    thighL: { geo: thighGeo, off: [-0.1, 0.6, -0.18], rot: [Math.PI / 2, 0, 0], colorKey: 'trouser' },
+    thighR: { geo: thighGeo, off: [0.1, 0.6, -0.18], rot: [Math.PI / 2, 0, 0], colorKey: 'trouser' },
+    shinL:  { geo: shinGeo, off: [-0.1, 0.31, -0.33], colorKey: 'trouser' },
+    shinR:  { geo: shinGeo, off: [0.1, 0.31, -0.33], colorKey: 'trouser' },
+  };
+
+  // Pre-roll every person: seat transform plus their colour choices
   const dummy = new THREE.Object3D();
+  const people = audienceSeats.map((s) => {
+    dummy.position.set(s.x, 0, s.z);
+    dummy.rotation.set(0, s.yaw + (Math.random() - 0.5) * 0.4, 0);
+    dummy.scale.setScalar(0.92 + Math.random() * 0.16);
+    dummy.updateMatrix();
+    return {
+      m: dummy.matrix.clone(),
+      shirt: pick(SHIRT), skin: pick(SKIN), hair: pick(HAIR), trouser: pick(TROUSER),
+      longHair: Math.random() < 0.4
+    };
+  });
+
   const color = new THREE.Color();
   const offM = new THREE.Matrix4();
   const partM = new THREE.Matrix4();
-  const plumbobSeats = [];
-  audienceSeats.forEach((s, i) => {
-    dummy.position.set(s.x, 0, s.z);
-    dummy.rotation.set(0, s.yaw + (Math.random() - 0.5) * 0.4, 0);
-    const sc = 0.92 + Math.random() * 0.16;
-    dummy.scale.setScalar(sc);
-    dummy.updateMatrix();
-    const shirt = pick(SHIRT);
-    const partColors = {
-      torso: shirt, armL: shirt, armR: shirt,
-      lap: pick(TROUSER), head: pick(SKIN), hair: pick(HAIR)
-    };
-    for (const k in meshes) {
-      offM.makeTranslation(parts[k].off[0], parts[k].off[1], parts[k].off[2]);
-      partM.copy(dummy.matrix).multiply(offM);
-      meshes[k].setMatrixAt(i, partM);
-      meshes[k].setColorAt(i, color.set(partColors[k]));
-    }
-  });
-  for (const k in meshes) {
-    meshes[k].instanceMatrix.needsUpdate = true;
-    if (meshes[k].instanceColor) meshes[k].instanceColor.needsUpdate = true;
+  const euler = new THREE.Euler();
+  const quat = new THREE.Quaternion();
+  const one = new THREE.Vector3(1, 1, 1);
+  function fillPart(def, mesh, persons, colorOf) {
+    quat.setFromEuler(euler.set(...(def.rot || [0, 0, 0])));
+    persons.forEach((p, i) => {
+      offM.compose(new THREE.Vector3(...def.off), quat, one);
+      partM.copy(p.m).multiply(offM);
+      mesh.setMatrixAt(i, partM);
+      mesh.setColorAt(i, color.set(colorOf(p)));
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    scene.add(mesh);
   }
+  for (const k in parts) {
+    const def = parts[k];
+    fillPart(def, new THREE.InstancedMesh(def.geo, new THREE.MeshStandardMaterial({ roughness: 1 }), people.length),
+      people, (p) => p[def.colorKey]);
+  }
+  const longHaired = people.filter((p) => p.longHair);
+  fillPart({ geo: hairLongGeo, off: [0, 1.27, 0.06] },
+    new THREE.InstancedMesh(hairLongGeo, new THREE.MeshStandardMaterial({ roughness: 1 }), longHaired.length),
+    longHaired, (p) => p.hair);
 }
 
 // ---------------------------------------------------------------------------
@@ -799,11 +830,14 @@ scene.add(lobbySign);
   boxMesh(scene, 0.1, 2.4, 0.1, -3.32, 3.2, z, barMat);
   boxMesh(scene, 0.1, 2.4, 0.1, 3.32, 3.2, z, i % 2 ? purpleLedMat : blueLedMat);
 });
-// Alternating purple and blue wash lights down the concourse
+// Alternating purple and blue ceiling spotlights down the concourse, each
+// with a visible fixture, throwing pools of colour onto the floor
 [2, 16, 30, 44, 58].forEach((z, i) => {
-  const l = new THREE.PointLight(i % 2 ? 0x4f8fe8 : 0xa763e8, 40, 20, 1.5);
-  l.position.set(0, 6.5, z);
-  scene.add(l);
+  const spot = new THREE.SpotLight(i % 2 ? 0x4f8fe8 : 0xa763e8, 90, 24, Math.PI / 4.5, 0.55, 1.4);
+  spot.position.set(0, CEIL_H - 0.25, z);
+  spot.target.position.set(0, 0, z);
+  scene.add(spot, spot.target);
+  boxMesh(scene, 0.28, 0.22, 0.28, 0, CEIL_H - 0.14, z, fixtureMat);
 });
 scene.add(new THREE.AmbientLight(0x4a4258, 1.0));
 
