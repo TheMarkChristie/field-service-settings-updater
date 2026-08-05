@@ -17,7 +17,7 @@ namespace FieldServiceSettingsUpdater
     /// WebView2 host for the shared Field Service Settings Updater HTML. On every connection
     /// change we push the org URL + a fresh OAuth access token into the page as
     /// window.XTB_CONFIG, then (re)load it. The page detects XTB_CONFIG, switches to the
-    /// Windows 95 theme, and calls the Web API directly with the bearer token.
+    /// modern light/dark theme, and calls the Web API directly with the bearer token.
     /// </summary>
     public class SettingsControl : PluginControlBase, IGitHubPlugin, IHelpPlugin
     {
