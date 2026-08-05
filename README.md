@@ -7,12 +7,16 @@ By Mark Christie.
 One self-contained HTML app runs in three hosts:
 
 - **Power Platform ToolBox (PPTB)** — dark theme, via `window.dataverseAPI`.
-- **XrmToolBox** — Windows 95 theme, hosted in a WebView2 plugin.
+- **XrmToolBox** — modern light/dark theme, hosted in a WebView2 plugin.
 - **Dynamics 365 web resource** — light theme, same-origin `fetch`.
+
+The XrmToolBox host uses dark mode by default and includes a persistent Light/Dark toggle in the header. On wide windows, the workflow occupies the left two-thirds and a sticky Activity Log occupies the right third; the layout collapses to one column on narrower windows.
 
 ## What it does
 
 Pick a set of bookable resources (Users by default), tick the settings you want to change, preview, and apply across the whole selection.
+
+The resource list can be filtered by name, Resource Type, active/inactive status, one or more Organizational Units, one or more Owning Business Units, and the distinct scheduling Time Zones currently used by Bookable Resources. Active is the default. The two unit filters use compact checkbox dropdowns with Select all/Clear actions; choose the entries and click **Load resources**. For example, filter to Pacific Time, select all loaded resources, and apply one work-hours pattern; then repeat for Eastern Time with a different pattern. The grid shows each resource's status, Organizational Unit, and friendly Time Zone name so the filtered set can be reviewed before selection. Click any data-column heading to sort ascending or descending.
 
 ### Bookable Resource fields (bulk set)
 
@@ -21,6 +25,7 @@ Pick a set of bookable resources (Users by default), tick the settings you want 
 | Start Location | `msdyn_startlocation` | Choice (Resource Address / Org Unit Address / Location Agnostic) |
 | End Location | `msdyn_endlocation` | Choice (same options) |
 | Organizational Unit | `msdyn_organizationalunit` | Lookup → `msdyn_organizationalunit` |
+| Time Zone | `timezone` | Time-zone code from Dataverse `timezonedefinition` |
 | Display on Schedule Board | `msdyn_displayonscheduleboard` | Yes/No |
 | Enable for Availability Search | `msdyn_displayonscheduleassistant` | Yes/No |
 | Hourly Rate | `msdyn_hourlyrate` | Number |
@@ -41,7 +46,13 @@ A resource's work hours are a **calendar** (recurring rules), not a column, so t
 - **Weekly pattern** — choose working days + start/end times, an optional daily break, capacity and time zone. Applied as a weekly recurrence to every selected resource.
 - **Copy from a resource** — pick one resource as the source; the tool reads its calendar for a representative week and recreates that weekly pattern (working hours + breaks, in UTC) on every selected resource. Irregular per-date overrides on the source are not copied.
 
-Tick **Clear existing work hours first** to remove current rules before writing the new pattern (recommended for a predictable result).
+Tick **Clear existing working hours first (preserve exceptions)** to replace the prior working coverage before applying the new pattern. The tool first creates a temporary 24x7 V2 working recurrence, allowing Dataverse's overlap logic to displace old rank-0 working recurrences while preserving higher-priority time off and holiday exceptions. It then deletes only the newly returned temporary inner-calendar ID and saves the requested pattern. No pre-existing calendar ID is directly edited or deleted.
+
+### Calendar time-zone normalization
+
+For the selected resources, preview and bulk-normalize the time zone on **Working Hours**, **Non-Working Hours**, and/or **Time Off** calendar rules. The operation changes the calendar rule's time-zone code while preserving its displayed wall-clock values (for example, 8:00 AM–5:00 PM remains 8:00 AM–5:00 PM in the target zone). Working-hour breaks follow the working rule tree; standalone holiday/business-closure rules are excluded from the Time Off option.
+
+Time Off can optionally be converted to **All Day** while retaining the event date and reason. Preview reports the affected rule counts per resource before Apply is enabled. This is useful after filtering and selecting all resources assigned to a particular Bookable Resource time zone.
 
 ### Quick actions — skills & territories
 

@@ -47,7 +47,7 @@
   .danger { background: var(--red-btn); color: #fff; }
   .ghost { background: #eee; color: #333; }
   .small { padding: 7px 13px; font-size: 13px; }
-  #status, #qaStatus { font-size: 13px; color: #666; }
+  #loadStatus, #settingsStatus, #whStatus, #qaStatus { font-size: 13px; color: #666; }
   .banner { border-left: 4px solid var(--red); background: #fff5f6; padding: 12px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
   .warnbox { border-left: 4px solid var(--warn); background: #fff7ea; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
   .errbox { border-left: 4px solid var(--err); background: #fdecef; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
@@ -59,6 +59,10 @@
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
   th { background: #fafafa; position: sticky; top: 0; z-index: 1; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable::after { content: " ↕"; color: #777; font-weight: 400; }
+  th.sortable[aria-sort="ascending"]::after { content: " ▲"; color: inherit; }
+  th.sortable[aria-sort="descending"]::after { content: " ▼"; color: inherit; }
   td.wrap, th.wrap { white-space: normal; }
   .tablewrap { max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
   .toolbar { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 12px; }
@@ -97,7 +101,7 @@
   body.theme-dark input[type=text], body.theme-dark input[type=number], body.theme-dark input[type=time], body.theme-dark select {
     background: #1e1f24; color: var(--ink); border-color: var(--line); }
   body.theme-dark select option { background: #1e1f24; color: var(--ink); }
-  body.theme-dark .hint, body.theme-dark #status, body.theme-dark #qaStatus { color: #9aa0a6; }
+  body.theme-dark .hint, body.theme-dark #loadStatus, body.theme-dark #settingsStatus, body.theme-dark #whStatus, body.theme-dark #qaStatus { color: #b8bec7; }
   body.theme-dark th { background: #2c2d33; }
   body.theme-dark th, body.theme-dark td { border-color: var(--line); }
   body.theme-dark .tablewrap, body.theme-dark .fieldrow, body.theme-dark .daypick label { border-color: var(--line); }
@@ -115,7 +119,7 @@
   body[data-host="xtb"] .card h2 { background: linear-gradient(90deg, #000080, #1084d0); color: #fff; text-transform: none; letter-spacing: 0; margin: -3px -8px 10px; padding: 3px 6px; }
   body[data-host="xtb"] .card h3, body[data-host="xtb"] legend { color: #000; }
   body[data-host="xtb"] label { font-weight: 700; color: #000; }
-  body[data-host="xtb"] .hint, body[data-host="xtb"] #status, body[data-host="xtb"] #qaStatus { color: #303030; }
+  body[data-host="xtb"] .hint, body[data-host="xtb"] #loadStatus, body[data-host="xtb"] #settingsStatus, body[data-host="xtb"] #whStatus, body[data-host="xtb"] #qaStatus { color: #303030; }
   body[data-host="xtb"] input[type=text], body[data-host="xtb"] input[type=number], body[data-host="xtb"] input[type=time], body[data-host="xtb"] select {
     background: #fff; color: #000; border: 2px solid; border-color: #808080 #fff #fff #808080; border-radius: 0; }
   body[data-host="xtb"] button { background: #c0c0c0; color: #000; border: 2px solid; border-color: #fff #000 #000 #fff; border-radius: 0; box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080; font-weight: 400; }
@@ -132,20 +136,132 @@
   body[data-host="xtb"] .pill.ok { background: #d6f0db; color: #006400; }
   body[data-host="xtb"] .pill.warn { background: #fff0d0; color: #7a4a00; }
 
+  /* Modern XrmToolBox theme. Kept host-scoped so PPTB and web-resource themes are unchanged. */
+  body[data-host="xtb"] { background: #f3f6fa; color: #172033; font-family: "Segoe UI", Arial, sans-serif; font-size: 13px; }
+  body[data-host="xtb"] header { background: linear-gradient(110deg, #102a56, #1267b2); border: 0; box-shadow: 0 2px 10px #102a5630; }
+  body[data-host="xtb"] main { padding: 20px; }
+  body[data-host="xtb"] .card, body[data-host="xtb"] fieldset { background: #fff; border: 1px solid #dbe3ee; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px #17365d12; }
+  body[data-host="xtb"] .card h2 { background: transparent; color: #183b66; text-transform: none; letter-spacing: 0; margin: -2px 0 14px; padding: 0 0 10px; border-bottom: 1px solid #e5ebf3; font-size: 16px; }
+  body[data-host="xtb"] .card h3, body[data-host="xtb"] legend, body[data-host="xtb"] label { color: #26364d; }
+  body[data-host="xtb"] .hint, body[data-host="xtb"] #loadStatus, body[data-host="xtb"] #settingsStatus, body[data-host="xtb"] #whStatus, body[data-host="xtb"] #qaStatus { color: #66758b; }
+  body[data-host="xtb"] input[type=text], body[data-host="xtb"] input[type=number], body[data-host="xtb"] input[type=time], body[data-host="xtb"] select {
+    background: #fff; color: #172033; border: 1px solid #bdc9d8; border-radius: 6px; box-shadow: none; min-height: 36px; }
+  body[data-host="xtb"] input:focus, body[data-host="xtb"] select:focus { border-color: #1676c5; box-shadow: 0 0 0 3px #1676c520; outline: none; }
+  body[data-host="xtb"] button { background: #eef3f8; color: #17365d; border: 1px solid #c6d2df; border-radius: 6px; box-shadow: none; font-weight: 600; }
+  body[data-host="xtb"] button:hover:not(:disabled) { background: #e3ebf4; border-color: #9eb0c4; }
+  body[data-host="xtb"] button:active:not(:disabled) { border-color: #7991aa; box-shadow: none; }
+  body[data-host="xtb"] .primary { background: #1267b2; color: #fff; border-color: #1267b2; outline: 0; }
+  body[data-host="xtb"] .primary:hover:not(:disabled) { background: #0e5798; border-color: #0e5798; }
+  body[data-host="xtb"] .danger { color: #b4233c; }
+  body[data-host="xtb"] .banner { background: #f6f9fd; border: 1px solid #dbe5f0; border-left: 4px solid #e21d48; border-radius: 8px; color: #26364d; }
+  body[data-host="xtb"] .tablewrap { border: 1px solid #d8e1ec; border-radius: 8px; background: #fff; }
+  body[data-host="xtb"] th { background: #edf3f9; color: #24364d; border: 0; border-bottom: 1px solid #cad6e3; font-weight: 650; }
+  body[data-host="xtb"] td { border-color: #e7edf4; }
+  body[data-host="xtb"] tbody tr:hover { background: #f4f8fc; }
+  body[data-host="xtb"] .fieldrow, body[data-host="xtb"] .daypick label { border: 1px solid #dde5ee; border-radius: 7px; background: #fbfcfe; }
+  body[data-host="xtb"] details.box { background: #f8fafc; border: 1px solid #dce5ef; border-radius: 8px; }
+  body[data-host="xtb"] details.box > summary { color: #26364d; }
+  body[data-host="xtb"] #log { background: #111827; color: #d1fae5; border: 1px solid #263246; border-radius: 8px; font-family: "Cascadia Code", Consolas, monospace; }
+  body[data-host="xtb"] :focus-visible { outline: 2px solid #2684cf; outline-offset: 2px; }
+
+  .multi-source { display: none !important; }
+  .multi-picker { position: relative; min-width: 220px; }
+  .multi-trigger { width: 100%; min-height: 36px; padding: 7px 34px 7px 10px; text-align: left; position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .multi-trigger::after { content: "▾"; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); color: #617086; }
+  .multi-picker.open .multi-trigger::after { content: "▴"; }
+  .multi-panel { display: none; position: absolute; z-index: 30; left: 0; top: calc(100% + 5px); width: max(100%, 280px); max-height: 300px; overflow: auto; background: #fff; border: 1px solid #bdc9d8; border-radius: 8px; box-shadow: 0 10px 28px #17203330; padding: 6px; }
+  .multi-picker.open .multi-panel { display: block; }
+  .multi-actions { display: flex; gap: 6px; padding: 3px 3px 7px; border-bottom: 1px solid #e5ebf2; margin-bottom: 4px; }
+  .multi-actions button { padding: 4px 8px !important; font-size: 11px !important; }
+  .multi-option { display: flex !important; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 5px; font-weight: 400 !important; cursor: pointer; }
+  .multi-option:hover { background: #edf5fc; }
+  .multi-option input { margin: 0; }
+
+  .theme-toggle { margin-left: auto; padding: 6px 11px; font-size: 12px; white-space: nowrap; background: #ffffff18; color: #fff; border: 1px solid #ffffff40; }
+  header #envlabel { margin-left: 0; }
+  .workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 18px; align-items: start; }
+  .workflow { min-width: 0; }
+  .activity-sidebar { min-width: 0; }
+  .activity-card { position: sticky; top: 16px; margin-bottom: 18px; }
+  .activity-card #log { height: calc(100vh - 180px); min-height: 440px; }
+  .card-title-row { display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid #e5ebf3; margin-bottom: 14px; }
+  .card-title-row h2 { flex: 1; border-bottom: 0 !important; margin-bottom: 0 !important; }
+  .card-title-row button { flex: 0 0 auto; margin-top: -4px; }
+  body[data-host="xtb"].theme-dark .card-title-row { border-color: #2a3b50; }
+  .collapsible { padding-top: 0 !important; }
+  .collapsible > summary { cursor: pointer; list-style: none; padding-top: 16px; }
+  .collapsible > summary::-webkit-details-marker { display: none; }
+  .collapsible > summary h2 { position: relative; padding-right: 28px !important; margin-bottom: 0 !important; }
+  .collapsible > summary h2::after { content: "▾"; position: absolute; right: 4px; top: 0; font-size: 18px; }
+  .collapsible:not([open]) > summary h2::after { content: "▸"; }
+  .collapsible[open] > summary h2 { margin-bottom: 14px !important; }
+  .collapsible > .card-body { padding-top: 2px; }
+
+  /* Dark mode shared by all hosts, with extra specificity to override the modern XTB skin. */
+  body[data-host="xtb"].theme-dark { color-scheme: dark; background: #0d1420; color: #f4f8fc; }
+  body[data-host="xtb"].theme-dark header { background: linear-gradient(110deg, #09172f, #123d68); }
+  body[data-host="xtb"].theme-dark .card,
+  body[data-host="xtb"].theme-dark fieldset { background: #141e2b; border-color: #263548; box-shadow: 0 2px 10px #0005; }
+  body[data-host="xtb"].theme-dark .card h2 { color: #d3e5f7; border-color: #2a3b50; }
+  body[data-host="xtb"].theme-dark .card h3,
+  body[data-host="xtb"].theme-dark legend,
+  body[data-host="xtb"].theme-dark label { color: #f4f8fc; }
+  body[data-host="xtb"].theme-dark .hint,
+  body[data-host="xtb"].theme-dark #loadStatus,
+  body[data-host="xtb"].theme-dark #settingsStatus,
+  body[data-host="xtb"].theme-dark #whStatus,
+  body[data-host="xtb"].theme-dark #qaStatus { color: #c3d2e3; }
+  body[data-host="xtb"].theme-dark input[type=text],
+  body[data-host="xtb"].theme-dark input[type=number],
+  body[data-host="xtb"].theme-dark input[type=time],
+  body[data-host="xtb"].theme-dark select { background: #0f1824; color: #f7faff; border-color: #425a73; }
+  body[data-host="xtb"].theme-dark input:focus,
+  body[data-host="xtb"].theme-dark select:focus { border-color: #4da3e6; box-shadow: 0 0 0 3px #4da3e625; }
+  body[data-host="xtb"].theme-dark button { background: #223147; color: #e5edf7; border-color: #3b4e66; }
+  body[data-host="xtb"].theme-dark button:hover:not(:disabled) { background: #2b3d55; border-color: #526983; }
+  body[data-host="xtb"].theme-dark .primary { background: #1678c8; border-color: #2389da; color: #fff; }
+  body[data-host="xtb"].theme-dark .primary:hover:not(:disabled) { background: #1269b0; }
+  body[data-host="xtb"].theme-dark .danger { color: #ff8ca0; }
+  body[data-host="xtb"].theme-dark .banner { background: #121d2b; border-color: #293a4e; border-left-color: #ef4261; color: #cfdae7; }
+  body[data-host="xtb"].theme-dark .tablewrap { background: #0f1824; border-color: #2d3d51; }
+  body[data-host="xtb"].theme-dark th { background: #1a293a; color: #d9e6f2; border-bottom-color: #35485e; }
+  body[data-host="xtb"].theme-dark td { border-color: #233246; color: #edf4fb; }
+  body[data-host="xtb"].theme-dark .changeitem,
+  body[data-host="xtb"].theme-dark p { color: #edf4fb; }
+  body[data-host="xtb"].theme-dark .selcount { color: #ffffff; }
+  body[data-host="xtb"].theme-dark tbody tr:hover { background: #172538; }
+  body[data-host="xtb"].theme-dark .fieldrow,
+  body[data-host="xtb"].theme-dark .daypick label { background: #101a27; border-color: #2a3b50; }
+  body[data-host="xtb"].theme-dark details.box { background: #101a27; border-color: #2a3b50; }
+  body[data-host="xtb"].theme-dark details.box > summary { color: #dbe7f3; }
+  body[data-host="xtb"].theme-dark .multi-panel { background: #131e2c; border-color: #3a4d64; box-shadow: 0 12px 32px #0009; }
+  body[data-host="xtb"].theme-dark .multi-actions { border-color: #2d3e53; }
+  body[data-host="xtb"].theme-dark .multi-option:hover { background: #203249; }
+  body[data-host="xtb"].theme-dark .pill.ok { background: #153526; color: #79d59a; }
+  body[data-host="xtb"].theme-dark .pill.warn { background: #3a2b14; color: #f0bd67; }
+
+  @media (max-width: 1200px) {
+    .workspace { grid-template-columns: 1fr; }
+    .activity-card { position: static; }
+    .activity-card #log { height: 280px; min-height: 0; }
+  }
+
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <script>
   /* Host detection + default theme (runs before content paints to avoid a flash).
-     PPTB → dark by default; XrmToolBox (WebView2) → Windows 95; web/standalone → light (OS dark honoured). */
+     PPTB → dark by default; XrmToolBox (WebView2) → modern light; web/standalone → light (OS dark honoured). */
   (function () {
-    var P = !!window.dataverseAPI, X = !!window.XTB_CONFIG;
+    var P = !!window.dataverseAPI, X = !!window.XTB_CONFIG || new URLSearchParams(location.search).has("xtbPreview");
     var host = P ? "pptb" : X ? "xtb" : "web";
     document.body.dataset.host = host;
-    if (host === "pptb") document.body.classList.add("theme-dark");
-    else if (host === "web" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-      document.body.classList.add("theme-dark");
+    var saved = null;
+    try { saved = localStorage.getItem("fsru-theme"); } catch (e) {}
+    var dark = saved ? saved === "dark" : (host === "pptb" || host === "xtb" ||
+      (host === "web" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches));
+    if (dark) document.body.classList.add("theme-dark");
   })();
 </script>
 <header>
@@ -168,6 +284,7 @@
   <h1>Field Service Resource Updater</h1>
   <span class="author">by Mark Christie</span>
   <span id="spin" class="spinner" role="status" aria-label="Working" title="Working…" hidden></span>
+  <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch color theme">☀ Light</button>
   <span id="envlabel">resolving environment…</span>
   <span class="ver" id="verlabel" title="Tool build / Dataverse org version">v…</span>
 </header>
@@ -179,9 +296,12 @@
     Only the fields you tick are written — everything else is left untouched.
   </div>
 
+  <div class="workspace">
+  <section class="workflow">
+
   <!-- ============================== 1. SELECT RESOURCES ============================== -->
   <div class="card">
-    <h2>1 · Select resources</h2>
+    <h2>1 · Select Resources</h2>
     <div class="toolbar">
       <div>
         <label for="typeFilter">Resource type</label>
@@ -201,47 +321,84 @@
         <label for="nameFilter">Name contains</label>
         <input type="text" id="nameFilter" placeholder="(optional)" autocomplete="off" />
       </div>
+      <div>
+        <label for="orgUnitFilter">Organizational Unit</label>
+        <select id="orgUnitFilter" class="multi-source" multiple title="Select multiple Organizational Units">
+          <option value="" selected>All Organizational Units</option>
+        </select>
+      </div>
+      <div>
+        <label for="businessUnitFilter">Owning Business Unit</label>
+        <select id="businessUnitFilter" class="multi-source" multiple title="Select multiple Owning Business Units">
+          <option value="" selected>All Owning Business Units</option>
+        </select>
+      </div>
+      <div>
+        <label for="timeZoneFilter">Time Zone</label>
+        <select id="timeZoneFilter" title="Filter resources by scheduling time zone">
+          <option value="">All Time Zones</option>
+        </select>
+      </div>
+      <div>
+        <label for="stateFilter">Resource status</label>
+        <select id="stateFilter" title="Filter active or inactive Bookable Resources">
+          <option value="0" selected>Active</option>
+          <option value="1">Inactive</option>
+          <option value="">All statuses</option>
+        </select>
+      </div>
       <div style="flex:0 0 auto">
         <button type="button" class="primary small" id="loadBtn">Load resources</button>
       </div>
       <div style="flex:0 0 auto">
         <span class="selcount" id="selcount">0 selected</span>
       </div>
+      <div style="flex:0 0 auto"><span id="loadStatus" role="status" aria-live="polite"></span></div>
     </div>
     <div class="tablewrap">
       <table id="resTable">
         <thead><tr>
           <th><input type="checkbox" id="selAll" title="Select all loaded" aria-label="Select all loaded resources" /></th>
-          <th class="wrap">Name</th>
-          <th>Type</th>
-          <th title="Address / geocode on the related User, Contact or Account record">Address</th>
-          <th class="wrap">Org Unit</th>
-          <th>Start loc</th>
-          <th>End loc</th>
-          <th>Board</th>
-          <th>Avail.</th>
-          <th>Hourly</th>
-          <th>Time-off appr.</th>
+          <th class="wrap sortable" data-sort="name">Name</th>
+          <th class="sortable" data-sort="type">Type</th>
+          <th class="sortable" data-sort="status">Status</th>
+          <th class="sortable" data-sort="address" title="Address / geocode on the related User, Contact or Account record">Address</th>
+          <th class="wrap sortable" data-sort="orgUnit">Org Unit</th>
+          <th class="wrap sortable" data-sort="timeZone">Time Zone</th>
+          <th class="sortable" data-sort="startloc">Start loc</th>
+          <th class="sortable" data-sort="endloc">End loc</th>
+          <th class="sortable" data-sort="board">Board</th>
+          <th class="sortable" data-sort="avail">Avail.</th>
+          <th class="sortable" data-sort="hourly">Hourly</th>
+          <th class="sortable" data-sort="timeoff">Time-off appr.</th>
         </tr></thead>
-        <tbody><tr><td colspan="11" style="white-space:normal;color:#888;padding:18px">Load resources to begin.</td></tr></tbody>
+        <tbody><tr><td colspan="13" style="white-space:normal;color:#888;padding:18px">Load resources to begin.</td></tr></tbody>
       </table>
     </div>
   </div>
 
   <!-- ============================== 2. FIELD SETTINGS ============================== -->
-  <div class="card">
-    <h2>2 · Settings to apply</h2>
+  <details class="card collapsible">
+    <summary><h2>2 · Settings to Apply</h2></summary>
+    <div class="card-body">
     <p class="hint" style="margin-top:0">Tick a setting to include it in the bulk update (changing a control ticks it for you). Unticked settings are not changed.</p>
     <p class="hint" style="margin-top:0">⚠ <b>Start &amp; End Location are linked:</b> if either is set to <i>Location Agnostic</i>, Field Service requires the other to be <i>Location Agnostic</i> too. <i>Resource Address</i> needs a geocoded address on the related record; <i>Organizational Unit Address</i> needs the org unit to have an address. The preview checks all of this per resource (see the Address column).</p>
     <div class="fieldgrid" id="fieldGrid"><!-- field rows injected --></div>
-  </div>
+    <div class="btnbar">
+      <button type="button" class="primary" id="settingsPreviewBtn">Preview Settings</button>
+      <button type="button" class="danger" id="settingsApplyBtn" disabled>Apply Settings</button>
+      <span id="settingsStatus" role="status" aria-live="polite"></span>
+    </div>
+    <div id="settingsPreviewBox" style="margin-top:14px"></div>
+    </div>
+  </details>
 
   <!-- ============================== 3. WORK HOURS ============================== -->
-  <div class="card">
-    <h2>3 · Work hours <span class="pill warn">advanced</span></h2>
-    <label class="inline"><input type="checkbox" id="whInclude" /> Include work hours in this update</label>
+  <details class="card collapsible">
+    <summary><h2>3 · Work Hours <span class="pill warn">advanced</span></h2></summary>
+    <div class="card-body">
     <div class="hint">Work hours are stored as a calendar (recurring rules), set via the Field Service <code>msdyn_SaveCalendar</code> API.</div>
-    <div class="modewrap" id="whBody" hidden>
+    <div class="modewrap" id="whBody">
       <div class="row" style="margin-top:10px">
         <div style="flex:0 0 auto">
           <label class="inline"><input type="radio" name="whMode" value="weekly" checked /> Weekly pattern</label>
@@ -250,7 +407,7 @@
           <label class="inline"><input type="radio" name="whMode" value="copy" /> Copy from a resource</label>
         </div>
         <div style="flex:0 0 auto">
-          <label class="inline"><input type="checkbox" id="whClear" checked /> Clear existing work hours first</label>
+          <label class="inline"><input type="checkbox" id="whClear" checked /> Clear existing working hours first (preserve exceptions)</label>
         </div>
       </div>
 
@@ -291,22 +448,19 @@
         </div>
       </fieldset>
     </div>
-  </div>
-
-  <!-- ============================== 4. RUN ============================== -->
-  <div class="card">
-    <h2>4 · Apply settings &amp; work hours</h2>
     <div class="btnbar">
-      <button type="button" class="primary" id="previewBtn">Preview changes</button>
-      <button type="button" class="danger" id="applyBtn" disabled>Apply to selected</button>
-      <span id="status" role="status" aria-live="polite"></span>
+      <button type="button" class="primary" id="whPreviewBtn">Preview Work Hours</button>
+      <button type="button" class="danger" id="whApplyBtn" disabled>Apply Work Hours</button>
+      <span id="whStatus" role="status" aria-live="polite"></span>
     </div>
-    <div id="previewBox" style="margin-top:14px"></div>
-  </div>
+    <div id="whPreviewBox" style="margin-top:14px"></div>
+    </div>
+  </details>
 
   <!-- ============================== 5. SKILLS & TERRITORIES ============================== -->
-  <div class="card">
-    <h2>5 · Quick actions — skills &amp; territories</h2>
+  <details class="card collapsible">
+    <summary><h2>4 · Quick Actions - Skills &amp; Territories</h2></summary>
+    <div class="card-body">
     <p class="hint" style="margin-top:0">These act immediately on the resources selected above. Remove asks you to click twice to confirm.</p>
 
     <fieldset>
@@ -353,11 +507,49 @@
       </div>
     </fieldset>
     <div class="btnbar"><span id="qaStatus" role="status" aria-live="polite"></span></div>
-  </div>
+    </div>
+  </details>
 
-  <div class="card">
-    <h2>Activity log</h2>
+  <!-- ============================== 6. CALENDAR TIME ZONES ============================== -->
+  <details class="card collapsible">
+    <summary><h2>5 · Normalize Calendar Time Zones</h2></summary>
+    <div class="card-body">
+    <p class="hint" style="margin-top:0">Updates calendar-rule time zones while preserving the displayed wall-clock times. Preview first to see the rule counts for every selected resource.</p>
+    <div class="row">
+      <div>
+        <label for="calTzTarget">Target time zone</label>
+        <select id="calTzTarget"></select>
+      </div>
+      <div>
+        <label>Calendar entries to update</label>
+        <div class="daypick">
+          <label><input type="checkbox" id="calTzWorking" checked /> Working hours</label>
+          <label><input type="checkbox" id="calTzNonWorking" /> Non-working hours</label>
+          <label><input type="checkbox" id="calTzTimeOff" checked /> Time off</label>
+        </div>
+      </div>
+    </div>
+    <label class="inline" style="margin-top:12px"><input type="checkbox" id="calTzAllDay" /> Make selected Time Off entries all day</label>
+    <p class="hint">Holidays/business closures are not selected by the Time Off option. Working-hour breaks inherit the working recurrence update.</p>
+    <div class="btnbar">
+      <button type="button" class="primary" id="calTzPreviewBtn">Preview calendar time zones</button>
+      <button type="button" class="danger" id="calTzApplyBtn" disabled>Apply calendar time zones</button>
+      <span id="calTzStatus" role="status" aria-live="polite"></span>
+    </div>
+    <div id="calTzPreview" style="margin-top:14px"></div>
+    </div>
+  </details>
+
+  </section>
+  <aside class="activity-sidebar">
+  <div class="card activity-card">
+    <div class="card-title-row">
+      <h2>Activity Log</h2>
+      <button type="button" class="ghost small" id="clearLogBtn">Clear Logs</button>
+    </div>
     <div id="log" aria-live="polite"></div>
+  </div>
+  </aside>
   </div>
 </main>
 
@@ -368,7 +560,8 @@
    Hosts: PPTB (window.dataverseAPI) · XrmToolBox WebView2 (window.XTB_CONFIG) ·
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
-const APP_VERSION = "1.0.1";
+// Display version. Advance future feature builds through 2.1, 2.2, and so on.
+const APP_VERSION = "2.0 Beta";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;
@@ -416,7 +609,7 @@ function log(msg) {
   el.textContent += `[${t}] ${msg}\n`;
   el.scrollTop = el.scrollHeight;
 }
-function setStatus(s) { $("status").textContent = s; }
+function setStatus(s) { $("loadStatus").textContent = s; }
 function setQaStatus(s) { $("qaStatus").textContent = s; }
 function notify(title, body, type) {
   try {
@@ -425,6 +618,17 @@ function notify(title, body, type) {
   } catch (e) {}
 }
 function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function refreshThemeToggle() {
+  const dark = document.body.classList.contains("theme-dark");
+  $("themeToggle").textContent = dark ? "☀ Light" : "☾ Dark";
+  $("themeToggle").title = dark ? "Switch to light mode" : "Switch to dark mode";
+  $("themeToggle").setAttribute("aria-pressed", dark ? "true" : "false");
+}
+function toggleTheme() {
+  document.body.classList.toggle("theme-dark");
+  try { localStorage.setItem("fsru-theme", document.body.classList.contains("theme-dark") ? "dark" : "light"); } catch (e) {}
+  refreshThemeToggle();
+}
 
 // Find a dynamics URL on the PPTB connection object (field name varies across versions).
 function pickOrgUrl(c) {
@@ -535,7 +739,7 @@ async function errText(r) {
 }
 
 // ============================================================================
-//  Field definitions — the 7 scalar Bookable Resource settings.
+//  Field definitions — bulk-editable Bookable Resource settings.
 // ============================================================================
 const START_LOC_OPTS = [
   { v: 690970000, t: "Resource Address" },
@@ -548,6 +752,7 @@ const FIELDS = [
   { key: "msdyn_startlocation",            label: "Start Location",                kind: "picklist", opts: START_LOC_OPTS },
   { key: "msdyn_endlocation",              label: "End Location",                  kind: "picklist", opts: START_LOC_OPTS },
   { key: "msdyn_organizationalunit",       label: "Organizational Unit",           kind: "orgunit" },
+  { key: "timezone",                       label: "Time Zone",                     kind: "timezone" },
   { key: "msdyn_displayonscheduleboard",   label: "Display on Schedule Board",     kind: "bool" },
   { key: "msdyn_displayonscheduleassistant", label: "Enable for Availability Search", kind: "bool" },
   { key: "msdyn_hourlyrate",               label: "Hourly Rate",                   kind: "number" },
@@ -566,20 +771,36 @@ const RES_TYPE = { 1: "Generic", 2: "Contact", 3: "User", 4: "Equipment", 5: "Ac
 let resources = [];                  // loaded bookable resources
 const selected = new Set();          // selected bookableresourceids
 let orgUnits = [];                   // { id, name }
+let businessUnits = [];              // { id, name }
+let resourceTimeZones = [];          // { code, name } distinct values used by resources
+let allTimeZones = [];               // { code, name } complete Dataverse time-zone definitions
 let chars = [];                      // characteristics
 let ratings = [];                    // rating values
 let territories = [];                // territories
 let mobileRoles = [];                // "Field Service – New Mobile Experience" role, per business unit
 let metaLoaded = false;
+let resourceSort = { key: "name", direction: 1 };
 
 // Time-zone list (subset of the Field Service work-hour API codes; UK default).
 const TZ = [
   [85, "(GMT) Dublin, Edinburgh, Lisbon, London"], [92, "(GMT) Coordinated Universal Time"],
   [105, "(GMT+1) Brussels, Copenhagen, Madrid, Paris"], [110, "(GMT+1) Amsterdam, Berlin, Rome, Vienna"],
-  [35, "(GMT-5) Eastern Time (US & Canada)"], [20, "(GMT-6) Central Time (US & Canada)"],
-  [10, "(GMT-7) Mountain Time (US & Canada)"], [4, "(GMT-8) Pacific Time (US & Canada)"],
+  [35, "(GMT-05:00) Eastern Time (US & Canada)"], [20, "(GMT-06:00) Central Time (US & Canada)"],
+  [10, "(GMT-07:00) Mountain Time (US & Canada)"], [4, "(GMT-08:00) Pacific Time (US & Canada)"],
   [190, "(GMT+5:30) Chennai, Kolkata, Mumbai, New Delhi"], [255, "(GMT+10) Canberra, Melbourne, Sydney"],
 ];
+const timeZoneLabel = code => {
+  const defined = allTimeZones.find(t => t.code === Number(code));
+  if (defined) return defined.name;
+  const item = TZ.find(t => t[0] === Number(code));
+  return item ? item[1] : (code == null ? "—" : `Time zone ${code}`);
+};
+function friendlyTimeZone(code, formatted) {
+  const text = String(formatted == null ? "" : formatted).trim();
+  // Some hosts expose the raw integer as the formatted value. Only trust a label
+  // that contains more information than the code itself.
+  return text && text !== String(code) ? text : timeZoneLabel(code);
+}
 const DAYS = [["MO", "Mon", 1], ["TU", "Tue", 2], ["WE", "Wed", 3], ["TH", "Thu", 4], ["FR", "Fri", 5], ["SA", "Sat", 6], ["SU", "Sun", 0]];
 const ANCHOR = "2024-01-01";   // a Monday — anchor date for weekly recurrences
 
@@ -596,6 +817,7 @@ function buildFieldRows() {
     let ctl = "";
     const cid = "f_" + f.key;
     if (f.kind === "picklist") ctl = `<select id="${cid}">${f.opts.map(o => `<option value="${o.v}">${o.t}</option>`).join("")}</select>`;
+    else if (f.kind === "timezone") ctl = `<select id="${cid}"><option value="">— load time zones —</option></select>`;
     else if (f.kind === "bool") ctl = `<select id="${cid}">${YESNO.map(o => `<option value="${o.v}">${o.t}</option>`).join("")}</select>`;
     else if (f.kind === "number") ctl = `<input type="number" id="${cid}" step="0.01" min="0" placeholder="0.00" />`;
     else if (f.kind === "orgunit") ctl = `<div class="ouwrap"><select id="${cid}"><option value="">— clear —</option></select>` +
@@ -634,7 +856,52 @@ function buildDayPick() {
   ).join("");
 }
 function buildTz() {
-  $("whTz").innerHTML = TZ.map(t => `<option value="${t[0]}" ${t[0] === 85 ? "selected" : ""}>${escapeHtml(t[1])}</option>`).join("");
+  const zones = allTimeZones.length ? allTimeZones.map(t => [t.code, t.name]) : TZ;
+  $("whTz").innerHTML = zones.map(t => `<option value="${t[0]}" ${t[0] === 85 ? "selected" : ""}>${escapeHtml(t[1])}</option>`).join("");
+  $("calTzTarget").innerHTML = zones.map(t => `<option value="${t[0]}">${escapeHtml(t[1])}</option>`).join("");
+  const resourceTz = $("f_timezone");
+  if (resourceTz) resourceTz.innerHTML = zones.map(t => `<option value="${t[0]}">${escapeHtml(t[1])}</option>`).join("");
+}
+const selectedValues = select => [...select.selectedOptions].map(o => o.value).filter(Boolean);
+function buildMultiPicker(selectId, allLabel) {
+  const select = $(selectId);
+  const old = select.nextElementSibling;
+  if (old && old.classList.contains("multi-picker")) old.remove();
+  const picker = document.createElement("div"); picker.className = "multi-picker";
+  const trigger = document.createElement("button");
+  trigger.type = "button"; trigger.className = "multi-trigger"; trigger.setAttribute("aria-haspopup", "listbox");
+  const panel = document.createElement("div"); panel.className = "multi-panel"; panel.setAttribute("role", "listbox");
+  const actions = document.createElement("div"); actions.className = "multi-actions";
+  const allBtn = document.createElement("button"); allBtn.type = "button"; allBtn.textContent = "Select all";
+  const clearBtn = document.createElement("button"); clearBtn.type = "button"; clearBtn.textContent = "Clear";
+  actions.append(allBtn, clearBtn); panel.appendChild(actions);
+  const options = [...select.options].filter(o => o.value);
+  const checks = [];
+  const refresh = () => {
+    const chosen = options.filter(o => o.selected);
+    select.options[0].selected = chosen.length === 0;
+    checks.forEach(({ option, checkbox }) => checkbox.checked = option.selected);
+    trigger.textContent = chosen.length === 0 ? allLabel
+      : chosen.length === 1 ? chosen[0].textContent
+      : `${chosen.length} selected`;
+    trigger.title = chosen.length ? chosen.map(o => o.textContent).join(", ") : allLabel;
+  };
+  for (const option of options) {
+    const label = document.createElement("label"); label.className = "multi-option";
+    const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = option.value;
+    const textNode = document.createElement("span"); textNode.textContent = option.textContent;
+    checkbox.addEventListener("change", () => { option.selected = checkbox.checked; refresh(); });
+    label.append(checkbox, textNode); panel.appendChild(label); checks.push({ option, checkbox });
+  }
+  allBtn.addEventListener("click", () => { options.forEach(o => o.selected = true); refresh(); });
+  clearBtn.addEventListener("click", () => { options.forEach(o => o.selected = false); refresh(); });
+  trigger.addEventListener("click", e => {
+    e.stopPropagation();
+    document.querySelectorAll(".multi-picker.open").forEach(p => { if (p !== picker) p.classList.remove("open"); });
+    picker.classList.toggle("open"); trigger.setAttribute("aria-expanded", picker.classList.contains("open"));
+  });
+  panel.addEventListener("click", e => e.stopPropagation());
+  picker.append(trigger, panel); select.insertAdjacentElement("afterend", picker); refresh();
 }
 
 // ============================================================================
@@ -647,12 +914,20 @@ async function loadResources() {
     setStatus(""); log("Loading resources…");
     const type = $("typeFilter").value;
     const name = $("nameFilter").value.trim().replace(/'/g, "''");
+    const orgUnitIds = selectedValues($("orgUnitFilter"));
+    const businessUnitIds = selectedValues($("businessUnitFilter"));
+    const timeZone = $("timeZoneFilter").value;
+    const state = $("stateFilter").value;
     const filters = [];
     if (type) filters.push(`resourcetype eq ${type}`);
     if (name) filters.push(`contains(name,'${name}')`);
+    if (orgUnitIds.length) filters.push(`(${orgUnitIds.map(id => `_msdyn_organizationalunit_value eq ${id}`).join(" or ")})`);
+    if (businessUnitIds.length) filters.push(`(${businessUnitIds.map(id => `_owningbusinessunit_value eq ${id}`).join(" or ")})`);
+    if (timeZone !== "") filters.push(`timezone eq ${Number(timeZone)}`);
+    if (state !== "") filters.push(`statecode eq ${Number(state)}`);
     const flt = filters.length ? `&$filter=${encodeURIComponent(filters.join(" and "))}` : "";
-    const select = "$select=name,resourcetype,msdyn_startlocation,msdyn_endlocation,msdyn_displayonscheduleboard," +
-      "msdyn_displayonscheduleassistant,msdyn_hourlyrate,msdyn_timeoffapprovalrequired,_msdyn_organizationalunit_value,_calendarid_value," +
+    const select = "$select=name,resourcetype,statecode,msdyn_startlocation,msdyn_endlocation,msdyn_displayonscheduleboard," +
+      "msdyn_displayonscheduleassistant,msdyn_hourlyrate,msdyn_timeoffapprovalrequired,timezone,_msdyn_organizationalunit_value,_calendarid_value," +
       "_userid_value,_contactid_value,_accountid_value";
     const path = `bookableresources?${select}${flt}&$orderby=name&$top=5000`;
     const rows = await dvQueryAll(path, { "Prefer": 'odata.include-annotations="*",odata.maxpagesize=5000' });
@@ -660,9 +935,12 @@ async function loadResources() {
       id: r.bookableresourceid,
       name: r.name || "(no name)",
       type: r.resourcetype,
+      state: r.statecode,
       calendarId: r._calendarid_value || null,
       orgUnitId: r._msdyn_organizationalunit_value || null,
       orgUnitName: r["_msdyn_organizationalunit_value@OData.Community.Display.V1.FormattedValue"] || (r._msdyn_organizationalunit_value ? "(set)" : ""),
+      timeZone: r.timezone,
+      timeZoneName: friendlyTimeZone(r.timezone, r["timezone@OData.Community.Display.V1.FormattedValue"]),
       startloc: r.msdyn_startlocation, endloc: r.msdyn_endlocation,
       board: r.msdyn_displayonscheduleboard, avail: r.msdyn_displayonscheduleassistant,
       hourly: r.msdyn_hourlyrate, timeoff: r.msdyn_timeoffapprovalrequired,
@@ -734,21 +1012,56 @@ const ADDR_CELL = {
   loading: '<span class="hint">…</span>',
 };
 
+function resourceSortValue(r, key) {
+  switch (key) {
+    case "type": return RES_TYPE[r.type] || r.type || "";
+    case "status": return r.state === 0 ? "Active" : r.state === 1 ? "Inactive" : "";
+    case "address": return ({ geo: 3, text: 2, none: 1, na: 0, loading: -1 })[r.addrState] ?? -1;
+    case "orgUnit": return r.orgUnitName || "";
+    case "timeZone": return r.timeZoneName || "";
+    case "startloc": return startLocLabel(r.startloc);
+    case "endloc": return startLocLabel(r.endloc);
+    default: return r[key];
+  }
+}
+function sortedResources() {
+  const { key, direction } = resourceSort;
+  return [...resources].sort((a, b) => {
+    const av = resourceSortValue(a, key), bv = resourceSortValue(b, key);
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    const result = typeof av === "number" && typeof bv === "number"
+      ? av - bv
+      : String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
+    return result * direction;
+  });
+}
+function updateSortHeaders() {
+  document.querySelectorAll("#resTable th.sortable").forEach(th => {
+    th.setAttribute("aria-sort", th.dataset.sort === resourceSort.key
+      ? (resourceSort.direction === 1 ? "ascending" : "descending")
+      : "none");
+  });
+}
+
 function renderResources() {
   const tb = $("resTable").querySelector("tbody");
   tb.innerHTML = "";
   if (!resources.length) {
-    tb.innerHTML = `<tr><td colspan="11" style="white-space:normal;color:#888;padding:18px">No resources match.</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="13" style="white-space:normal;color:#888;padding:18px">No resources match.</td></tr>`;
     updateSelCount(); return;
   }
-  for (const r of resources) {
+  for (const r of sortedResources()) {
     const tr = document.createElement("tr");
     tr.innerHTML =
       `<td><input type="checkbox" class="rowck" data-id="${r.id}" ${selected.has(r.id) ? "checked" : ""} aria-label="Select ${escapeHtml(r.name)}" /></td>` +
       `<td class="wrap">${escapeHtml(r.name)}</td>` +
       `<td>${escapeHtml(RES_TYPE[r.type] || r.type || "")}</td>` +
+      `<td>${r.state === 0 ? "Active" : r.state === 1 ? "Inactive" : "—"}</td>` +
       `<td>${ADDR_CELL[r.addrState] || ADDR_CELL.na}</td>` +
       `<td class="wrap">${escapeHtml(r.orgUnitName || "—")}</td>` +
+      `<td class="wrap">${escapeHtml(r.timeZoneName || "—")}</td>` +
       `<td>${escapeHtml(startLocLabel(r.startloc))}</td>` +
       `<td>${escapeHtml(startLocLabel(r.endloc))}</td>` +
       `<td>${boolLabel(r.board)}</td>` +
@@ -762,6 +1075,7 @@ function renderResources() {
     if (cb.checked) selected.add(id); else selected.delete(id);
     updateSelCount();
   }));
+  updateSortHeaders();
   updateSelCount();
 }
 function updateSelCount() {
@@ -785,9 +1099,12 @@ async function loadReferenceData() {
   metaLoaded = true;
   setBusy(true);
   try {
-    log("Loading org units, characteristics, ratings, territories…");
-    const [ou, ch, rv, tr, roles] = await Promise.all([
+    log("Loading org units, business units, resource time zones, characteristics, ratings, territories…");
+    const [ou, bu, tzRows, tzDefs, ch, rv, tr, roles] = await Promise.all([
       dvQueryAll("msdyn_organizationalunits?$select=msdyn_name,msdyn_organizationalunitid,msdyn_address1,msdyn_city,msdyn_postalcode,msdyn_latitude,msdyn_longitude&$orderby=msdyn_name").catch(() => []),
+      dvQueryAll("businessunits?$select=name,businessunitid&$orderby=name").catch(() => []),
+      dvQueryAll("bookableresources?$select=timezone&$filter=timezone ne null", { "Prefer": 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"' }).catch(() => []),
+      dvQueryAll("timezonedefinitions?$select=timezonecode,userinterfacename,standardname&$orderby=userinterfacename").catch(() => []),
       dvQueryAll("characteristics?$select=name,characteristicid,characteristictype&$orderby=name").catch(() => []),
       dvQueryAll("ratingvalues?$select=name,value,ratingvalueid&$orderby=value").catch(() => []),
       dvQueryAll("territories?$select=name,territoryid&$orderby=name").catch(() => []),
@@ -798,6 +1115,22 @@ async function loadReferenceData() {
       geo: x.msdyn_latitude != null && x.msdyn_longitude != null,
       hasAddr: (x.msdyn_latitude != null && x.msdyn_longitude != null) || !!(x.msdyn_address1 || x.msdyn_city || x.msdyn_postalcode),
     }));
+    businessUnits = bu.map(x => ({ id: x.businessunitid, name: x.name || "(no name)" }));
+    allTimeZones = tzDefs.filter(x => x.timezonecode != null).map(x => ({
+      code: Number(x.timezonecode), name: x.userinterfacename || x.standardname || `Time zone ${x.timezonecode}`
+    })).filter((x, i, a) => a.findIndex(y => y.code === x.code) === i)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    buildTz();
+    const tzByCode = new Map();
+    for (const x of tzRows) {
+      if (x.timezone == null) continue;
+      tzByCode.set(Number(x.timezone), friendlyTimeZone(x.timezone, x["timezone@OData.Community.Display.V1.FormattedValue"]));
+    }
+    resourceTimeZones = [...tzByCode].map(([code, name]) => ({ code, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const targetZoneMap = new Map((allTimeZones.length ? allTimeZones.map(t => [t.code, t.name]) : TZ));
+    resourceTimeZones.forEach(z => targetZoneMap.set(z.code, z.name));
+    $("calTzTarget").innerHTML = [...targetZoneMap].map(([code, name]) => `<option value="${code}">${escapeHtml(name)}</option>`).join("");
     chars = ch.map(x => ({ id: x.characteristicid, name: x.name || "(no name)", type: x.characteristictype }));
     ratings = rv.map(x => ({ id: x.ratingvalueid, name: x.name || x.value, value: x.value }));
     territories = tr.map(x => ({ id: x.territoryid, name: x.name || "(no name)" }));
@@ -808,10 +1141,18 @@ async function loadReferenceData() {
     const ouNoAddr = orgUnits.filter(o => !o.hasAddr).length;
     if (ouNoAddr) log(`⚠ ${ouNoAddr} of ${orgUnits.length} org unit(s) have no address — flagged in the Organizational Unit list.`);
     updateOrgOpenBtn();
+    $("orgUnitFilter").innerHTML = `<option value="" selected>All Organizational Units</option>` +
+      orgUnits.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join("");
+    $("businessUnitFilter").innerHTML = `<option value="" selected>All Owning Business Units</option>` +
+      businessUnits.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+    buildMultiPicker("orgUnitFilter", "All Organizational Units");
+    buildMultiPicker("businessUnitFilter", "All Owning Business Units");
+    $("timeZoneFilter").innerHTML = `<option value="">All Time Zones</option>` +
+      resourceTimeZones.map(z => `<option value="${z.code}">${escapeHtml(z.name)}</option>`).join("");
     $("charSel").innerHTML = `<option value="">— select —</option>` + chars.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.type === 2 ? " (cert)" : c.type === 1 ? " (skill)" : ""}</option>`).join("");
     $("ratingSel").innerHTML = `<option value="">(none)</option>` + ratings.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join("");
     $("terrSel").innerHTML = `<option value="">— select —</option>` + territories.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join("");
-    log(`Reference data: ${orgUnits.length} org units, ${chars.length} characteristics, ${ratings.length} ratings, ${territories.length} territories, ${mobileRoles.length} “New Mobile Experience” role(s).`);
+    log(`Reference data: ${orgUnits.length} org units, ${businessUnits.length} business units, ${resourceTimeZones.length} resource time zones, ${chars.length} characteristics, ${ratings.length} ratings, ${territories.length} territories, ${mobileRoles.length} “New Mobile Experience” role(s).`);
     if (!mobileRoles.length) log(`ℹ No “Field Service – New Mobile Experience” security role found — the mobile quick action will be unavailable until the feature is enabled in this environment.`);
   } catch (e) {
     metaLoaded = false;   // allow a retry on the next load
@@ -832,6 +1173,7 @@ function collectFieldChanges() {
     const f = FIELDS.find(x => x.key === cb.dataset.key);
     const ctl = $("f_" + f.key);
     if (f.kind === "picklist") { patch[f.key] = Number(ctl.value); summary.push({ label: f.label, value: startLocLabel(ctl.value) }); }
+    else if (f.kind === "timezone") { patch[f.key] = Number(ctl.value); summary.push({ label: f.label, value: timeZoneLabel(ctl.value) }); }
     else if (f.kind === "bool") { patch[f.key] = ctl.value === "true"; summary.push({ label: f.label, value: ctl.value === "true" ? "Yes" : "No" }); }
     else if (f.kind === "number") {
       const n = ctl.value === "" ? null : Number(ctl.value);
@@ -928,27 +1270,229 @@ function weeklyRules(startHHMM, endHHMM, capacity, brk) {
   }
   return rules;
 }
-function calEventInfo(calId, resId, tzCode, byday, rules) {
-  return JSON.stringify({
-    CalendarId: calId, EntityLogicalName: "bookableresource", TimeZoneCode: tzCode, UseV2: true,
+function calEventInfo(calId, resId, tzCode, byday, rules, editInnerCalendarId, useV2 = true) {
+  const info = {
+    CalendarId: calId, EntityLogicalName: "bookableresource", TimeZoneCode: tzCode, UseV2: useV2,
     ResourceId: resId,
     RulesAndRecurrences: [{ Rules: rules, RecurrencePattern: `FREQ=WEEKLY;INTERVAL=1;BYDAY=${byday}` }],
-  });
+  };
+  if (editInnerCalendarId) {
+    info.IsEdit = true;
+    info.RulesAndRecurrences[0].InnerCalendarId = editInnerCalendarId;
+  }
+  return JSON.stringify(info);
 }
 
-// Read existing inner-calendar rule ids for a resource's calendar, and delete them.
-async function clearWorkHours(calId) {
-  let rules = [];
+function guidValue(value) {
+  if (!value) return null;
+  if (typeof value === "object") value = value.id || value.Id || value.guid || value.Guid || value.value;
+  const match = String(value || "").match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  return match ? match[0] : null;
+}
+
+function returnedInnerCalendarIds(response) {
+  let value = response && (response.InnerCalendarIds || response.innerCalendarIds || response.innercalendarids);
+  if (typeof value === "string") {
+    try { value = JSON.parse(value); } catch (e) { value = [value]; }
+  }
+  return (Array.isArray(value) ? value : []).map(guidValue).filter(Boolean);
+}
+
+// V2 removes/splices only rank-0 working recurrences that overlap a newly saved working
+// recurrence, while rank-1 exceptions (time off/holidays) take precedence and remain. Create
+// a temporary 24x7 working overlay to overlap every old working rule, then delete ONLY the
+// returned ID of that brand-new overlay. No pre-existing inner calendar is deleted or edited.
+async function clearWorkingHoursPreservingExceptions(calId, resId, tzCode, resourceName) {
+  const overlayRules = [{
+    StartTime: `${ANCHOR}T00:00:00.000Z`,
+    EndTime: "2024-01-02T00:00:00.000Z",
+    Effort: 1,
+    WorkHourType: 0,
+  }];
+  const saved = await dvAction("msdyn_SaveCalendar", {
+    CalendarEventInfo: calEventInfo(calId, resId, tzCode, "SU,MO,TU,WE,TH,FR,SA", overlayRules)
+  });
+  const temporaryIds = returnedInnerCalendarIds(saved);
+  if (!temporaryIds.length)
+    throw new Error(`${resourceName}: Dataverse did not return the temporary overlay calendar ID; stopped before saving replacement hours.`);
+  for (const id of temporaryIds) {
+    await dvAction("msdyn_DeleteCalendar", { CalendarEventInfo: JSON.stringify({
+      CalendarId: calId, EntityLogicalName: "bookableresource", InnerCalendarId: id, UseV2: true
+    }) });
+  }
+  log(`  ✓ ${resourceName}: removed old working-hour coverage through a temporary overlay; existing exceptions were not targeted.`);
+}
+
+// ============================================================================
+//  Calendar time-zone normalization
+// ============================================================================
+let CAL_TZ_PLAN = null;
+const CAL_RULE_SELECT = "calendarruleid,_innercalendarid_value,timecode,subcode,timezonecode,starttime,endtime,duration,effort,name,description,isvaried,pattern";
+
+function calendarRuleKind(rule, leaves) {
+  // The resource calendar usually contains an outer recurrence rule. The
+  // working/time-off marker lives on a rule in its linked inner calendar.
+  const candidates = [...(leaves || []), rule];
+  if (candidates.some(r => Number(r.subcode) === 6)) return "timeoff"; // Vacation
+  if (candidates.some(r => Number(r.timecode) === 0 && Number(r.subcode) !== 6)) return "working";
+  if (candidates.some(r => Number(r.timecode) === 2 && ![4, 5, 6].includes(Number(r.subcode)))) return "nonworking";
+  return "excluded";                                // breaks and holidays aren't standalone targets
+}
+async function loadCalendarRules(calId) {
+  // CalendarRule does not support RetrieveMultiple in Dataverse. Retrieve the
+  // parent calendar and expand its one-to-many relationship instead.
+  const id = guidValue(calId);
+  if (!id) return [];
+  const d = await dvQuery(`calendars(${id})?$select=calendarid&$expand=calendar_calendar_rules($select=${CAL_RULE_SELECT})`);
+  return d.calendar_calendar_rules || [];
+}
+async function inspectOuterCalendarRule(rule, target) {
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+  const leaves = innerId ? await loadCalendarRules(innerId) : [];
+  const kind = calendarRuleKind(rule, leaves);
+  const nodes = [rule, ...leaves];
+  const representative = leaves.find(r => Number(r.subcode) === 6) || leaves[0] || rule;
+  return {
+    ...rule,
+    kind,
+    _leafRules: leaves,
+    _needsTimeZone: nodes.some(r => r.timezonecode != null && Number(r.timezonecode) !== target),
+    _eventStart: representative.starttime || rule.starttime,
+    _eventEnd: representative.endtime || rule.endtime,
+    _eventDescription: rule.description || rule.name || representative.description || representative.name || "Time off",
+  };
+}
+function calendarKindsSelected() {
+  return {
+    working: $("calTzWorking").checked,
+    nonworking: $("calTzNonWorking").checked,
+    timeoff: $("calTzTimeOff").checked,
+  };
+}
+async function previewCalendarTimeZones() {
   try {
-    const cal = await dvQuery(`calendars(${calId})?$expand=calendar_calendar_rules($select=innercalendarid)`);
-    rules = (cal && cal.calendar_calendar_rules) || [];
-  } catch (e) { return; }
-  const ids = new Set();
-  for (const r of rules) { const ic = r.innercalendarid || r._innercalendarid_value; if (ic) ids.add(ic); }
-  for (const ic of ids) {
-    try {
-      await dvAction("msdyn_DeleteCalendar", { CalendarEventInfo: JSON.stringify({ CalendarId: calId, EntityLogicalName: "bookableresource", InnerCalendarId: ic }) });
-    } catch (e) { /* a rule may already be gone — keep going */ }
+    CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true;
+    if (!selected.size) { $("calTzStatus").textContent = "Select resources first."; return; }
+    const kinds = calendarKindsSelected();
+    if (!Object.values(kinds).some(Boolean)) { $("calTzStatus").textContent = "Select at least one calendar entry type."; return; }
+    const target = Number($("calTzTarget").value), targetName = $("calTzTarget").options[$("calTzTarget").selectedIndex].text;
+    const makeAllDay = $("calTzAllDay").checked && kinds.timeoff;
+    setBusy(true); $("calTzPreviewBtn").disabled = true; $("calTzStatus").textContent = "Inspecting calendar rules…";
+    const items = [];
+    log(`Calendar TZ preview: inspecting ${selected.size} selected resource(s) for target ${targetName}.`);
+    for (const id of selected) {
+      const resource = resources.find(x => x.id === id);
+      if (!resource) { log(`  ⚠ Resource ${id}: not present in the loaded result.`); continue; }
+      if (!resource.calendarId) { log(`  ⚠ ${resource.name}: no calendar is assigned.`); items.push({ resource, rules: [] }); continue; }
+      const roots = await loadCalendarRules(resource.calendarId);
+      const inspected = [];
+      for (const root of roots) inspected.push(await inspectOuterCalendarRule(root, target));
+      const discovered = { working: 0, nonworking: 0, timeoff: 0, excluded: 0 };
+      inspected.forEach(r => discovered[r.kind]++);
+      const rules = inspected.filter(rule => kinds[rule.kind] && (rule._needsTimeZone || (makeAllDay && rule.kind === "timeoff")));
+      items.push({ resource, rules });
+      log(`  ${resource.name} [${resource.calendarId}]: ${roots.length} outer rule(s); found ${discovered.working} working, ${discovered.nonworking} non-working, ${discovered.timeoff} time off, ${discovered.excluded} excluded; ${rules.length} to update.`);
+    }
+    const total = items.reduce((n, x) => n + x.rules.length, 0);
+    CAL_TZ_PLAN = { target, targetName, makeAllDay, items };
+    let html = `<p><b>${total}</b> calendar rule(s) across <b>${items.filter(x => x.rules.length).length}</b> resource(s) will be updated to <b>${escapeHtml(targetName)}</b>.</p>`;
+    if (makeAllDay) html += `<div class="warnbox">Selected Time Off entries will also be changed to all-day events while preserving their event date and reason.</div>`;
+    html += items.filter(x => x.rules.length).map(x => {
+      const counts = { working: 0, nonworking: 0, timeoff: 0 };
+      x.rules.forEach(r => counts[r.kind]++);
+      return `<div class="changeitem"><b>${escapeHtml(x.resource.name)}</b> — ${counts.working} working, ${counts.nonworking} non-working, ${counts.timeoff} time off</div>`;
+    }).join("");
+    if (!total) html += `<p class="hint">No selected calendar rules need changing.</p>`;
+    $("calTzPreview").innerHTML = html;
+    $("calTzApplyBtn").disabled = total === 0;
+    $("calTzStatus").textContent = total ? "Preview ready." : "Nothing to update.";
+    log(`Calendar TZ preview: ${total} rule(s), target ${targetName}${makeAllDay ? ", Time Off → All Day" : ""}.`);
+  } catch (e) {
+    CAL_TZ_PLAN = null; $("calTzStatus").textContent = "Preview failed — see log."; log("✖ Calendar TZ preview failed: " + e.message);
+  } finally {
+    $("calTzPreviewBtn").disabled = false; setBusy(false);
+  }
+}
+async function updateCalendarRuleTree(rule, target) {
+  if (Number(rule.timezonecode) !== target)
+    await dvUpdate("calendarrule", "calendarrules", rule.calendarruleid, { timezonecode: target });
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+  if (!innerId) return;
+  const leaves = rule._leafRules || await loadCalendarRules(innerId);
+  for (const leaf of leaves) {
+    if (Number(leaf.timezonecode) !== target)
+      await dvUpdate("calendarrule", "calendarrules", leaf.calendarruleid, { timezonecode: target });
+  }
+}
+async function makeTimeOffAllDay(resource, rule, target) {
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+  const date = String(rule._eventStart || rule.starttime || "").slice(0, 10);
+  if (!innerId || !/^\d{4}-\d{2}-\d{2}$/.test(date))
+    throw new Error(`${resource.name}: Time Off rule is missing its inner calendar ID or event date.`);
+  const endDateValue = new Date(`${date}T00:00:00.000Z`);
+  endDateValue.setUTCDate(endDateValue.getUTCDate() + 1);
+  const endDate = endDateValue.toISOString().slice(0, 10);
+  const info = {
+    CalendarId: resource.calendarId, EntityLogicalName: "bookableresource", ResourceId: resource.id,
+    UseV2: true, TimeZoneCode: target,
+    InnerCalendarDescription: rule._eventDescription || rule.description || rule.name || "Time off",
+    RulesAndRecurrences: [{
+      // A one-day all-day occurrence is [midnight, following midnight).
+      Rules: [{ StartTime: `${date}T00:00:00.000Z`, EndTime: `${endDate}T00:00:00.000Z`, Effort: rule.effort == null ? 1 : rule.effort, WorkHourType: 3 }]
+    }]
+  };
+  // SaveCalendar retains the timed shape when an existing Time Off is edited.
+  // Create the replacement first, require its returned ID, then remove only the
+  // original timed entry. This avoids a delete-first data-loss window.
+  const created = await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: JSON.stringify(info) });
+  const newIds = returnedInnerCalendarIds(created);
+  if (!newIds.length)
+    throw new Error(`${resource.name}: Dataverse did not return the replacement all-day calendar ID; the original Time Off was left unchanged.`);
+  log(`    ${resource.name}: created all-day replacement ${newIds[0]} for ${date}; removing original timed entry ${innerId}.`);
+  const currentRoots = await loadCalendarRules(resource.calendarId);
+  const oldStillExists = currentRoots.some(r => String(guidValue(r._innercalendarid_value || r.innercalendarid) || "").toLowerCase() === innerId.toLowerCase());
+  if (oldStillExists) {
+    await dvAction("msdyn_DeleteCalendar", { CalendarEventInfo: JSON.stringify({
+      CalendarId: resource.calendarId, EntityLogicalName: "bookableresource",
+      InnerCalendarId: innerId, UseV2: true
+    }) });
+  } else {
+    log(`    ${resource.name}: the original timed entry was already displaced by Dataverse.`);
+  }
+}
+async function applyCalendarTimeZones() {
+  if (!CAL_TZ_PLAN) { $("calTzStatus").textContent = "Preview first."; return; }
+  const { target, makeAllDay, items } = CAL_TZ_PLAN;
+  let ok = 0, failed = 0;
+  try {
+    setBusy(true); $("calTzPreviewBtn").disabled = true; $("calTzApplyBtn").disabled = true;
+    const pending = items.reduce((n, x) => n + x.rules.length, 0);
+    let current = 0;
+    log(`Calendar TZ update starting: ${pending} rule(s) across ${items.filter(x => x.rules.length).length} resource(s).`);
+    for (const item of items) {
+      if (!item.rules.length) continue;
+      log(`▶ ${item.resource.name}: starting ${item.rules.length} calendar update(s).`);
+      for (const rule of item.rules) {
+        current++;
+        const date = String(rule._eventStart || rule.starttime || "").slice(0, 10) || "no date";
+        const action = makeAllDay && rule.kind === "timeoff"
+          ? `set Time Off on ${date} to ${CAL_TZ_PLAN.targetName} and All Day`
+          : `set ${rule.kind} rule on ${date} to ${CAL_TZ_PLAN.targetName}`;
+        $("calTzStatus").textContent = `Updating ${current} of ${pending}: ${item.resource.name}…`;
+        log(`  [${current}/${pending}] ${item.resource.name}: ${action}.`);
+        try {
+          if (makeAllDay && rule.kind === "timeoff") await makeTimeOffAllDay(item.resource, rule, target);
+          else await updateCalendarRuleTree(rule, target);
+          ok++; log(`  ✓ ${item.resource.name}: completed ${rule.kind} rule on ${date}.`);
+        } catch (e) { failed++; log(`  ✖ ${item.resource.name} (${rule.kind}): ${e.message}`); }
+      }
+      log(`■ ${item.resource.name}: finished.`);
+    }
+    log(`Calendar TZ update done: ${ok} succeeded, ${failed} failed.`);
+    notify("Calendar time zones updated", `${ok} rule(s) updated${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
+    $("calTzStatus").textContent = `${ok} updated${failed ? `, ${failed} failed` : ""}.`;
+  } finally {
+    setBusy(false); $("calTzPreviewBtn").disabled = false; CAL_TZ_PLAN = null;
   }
 }
 
@@ -990,71 +1534,80 @@ async function deriveCopyGroups(sourceCalId) {
 // ============================================================================
 let PLAN = null;
 
-async function preview() {
+function workflowUi(mode) {
+  return mode === "workhours"
+    ? { apply: $("whApplyBtn"), status: $("whStatus"), box: $("whPreviewBox") }
+    : { apply: $("settingsApplyBtn"), status: $("settingsStatus"), box: $("settingsPreviewBox") };
+}
+
+async function preview(mode) {
+  const ui = workflowUi(mode);
   try {
     setBusy(true);
-    PLAN = null; $("applyBtn").disabled = true;
-    if (!selected.size) { setStatus("Select at least one resource."); return; }
-    const fc = collectFieldChanges();
-    const whInclude = $("whInclude").checked;
+    PLAN = null; $("settingsApplyBtn").disabled = true; $("whApplyBtn").disabled = true;
+    if (!selected.size) { ui.status.textContent = "Select at least one resource."; return; }
+    const whInclude = mode === "workhours";
+    const fc = whInclude ? { patch: {}, clears: [], summary: [] } : collectFieldChanges();
     const whMode = document.querySelector('input[name="whMode"]:checked').value;
-    if (!fc.summary.length && !whInclude) { setStatus("Tick at least one setting or include work hours."); return; }
+    if (!fc.summary.length && !whInclude) { ui.status.textContent = "Tick at least one setting."; return; }
 
     // work hours summary
     let whSummary = null, copyGroups = null;
     if (whInclude) {
       if (whMode === "weekly") {
         const days = [...document.querySelectorAll(".dayck:checked")].map(c => c.value);
-        if (!days.length) { setStatus("Pick at least one working day."); return; }
+        if (!days.length) { ui.status.textContent = "Pick at least one working day."; return; }
         const brk = $("whBreak").checked ? { start: $("whBreakStart").value, end: $("whBreakEnd").value } : null;
         whSummary = `Weekly: ${days.join(", ")} ${$("whStart").value}–${$("whEnd").value}` +
           (brk ? ` (break ${brk.start}–${brk.end})` : "") + `, capacity ${$("whCapacity").value}, TZ ${$("whTz").options[$("whTz").selectedIndex].text}`;
       } else {
         const src = $("whSource").value;
-        if (!src) { setStatus("Choose a source resource to copy from."); return; }
+        if (!src) { ui.status.textContent = "Choose a source resource to copy from."; return; }
         const srcRes = resources.find(r => r.id === src);
-        setStatus("Reading source work hours…");
+        ui.status.textContent = "Reading source work hours…";
         copyGroups = await deriveCopyGroups(srcRes.calendarId);
         whSummary = copyGroups.length
           ? `Copy from “${srcRes.name}”: ${copyGroups.map(g => g.byday).join(" / ")} (${copyGroups.reduce((n, g) => n + g.rules.filter(r => r.WorkHourType === 0).length, 0)} working block(s))`
           : `Copy from “${srcRes.name}”: source has no work hours in the sample week — nothing to copy.`;
       }
-      if ($("whClear").checked) whSummary += " · existing work hours cleared first";
+      if ($("whClear").checked) whSummary += " · existing working hours cleared first (exceptions preserved)";
     }
 
-    PLAN = { patch: fc.patch, clears: fc.clears, whInclude, whMode, whSummary, copyGroups };
+    PLAN = { mode, patch: fc.patch, clears: fc.clears, whInclude, whMode, whSummary, copyGroups };
 
     // Pre-flight: Field Service requires Start & End Location to BOTH be Location Agnostic, or
     // neither. Check every selected resource against its effective (new-or-current) values.
-    const loc = checkLocationRule();
+    const loc = whInclude ? { block: false, warn: false } : checkLocationRule();
 
     // render
-    const box = $("previewBox");
+    const box = ui.box;
     let html = `<p><span class="selcount">${selected.size}</span> resource(s) will be updated.</p>`;
     if (loc.block) html += `<div class="errbox">⛔ ${escapeHtml(loc.message)}</div>`;
     else if (loc.warn) html += `<div class="warnbox">⚠ ${escapeHtml(loc.message)}</div>`;
-    addressWarnings().forEach(w => html += `<div class="warnbox">⚠ ${escapeHtml(w)}</div>`);
+    if (!whInclude) addressWarnings().forEach(w => html += `<div class="warnbox">⚠ ${escapeHtml(w)}</div>`);
     if (fc.summary.length) {
       html += `<h3>Field changes</h3>`;
       html += fc.summary.map(s => `<div class="changeitem"><b>${escapeHtml(s.label)}</b> → ${escapeHtml(s.value)}</div>`).join("");
     } else html += `<p class="hint">No scalar field changes.</p>`;
     if (whInclude) html += `<h3>Work hours</h3><div class="changeitem">${escapeHtml(whSummary)}</div>`;
     box.innerHTML = html;
-    $("applyBtn").disabled = loc.block;
-    setStatus(loc.block ? "Fix the Location conflict before applying." : "Preview ready — review, then Apply.");
+    ui.apply.disabled = loc.block;
+    ui.status.textContent = loc.block ? "Fix the Location conflict before applying." : "Preview ready — review, then Apply.";
     log(`Preview: ${selected.size} resource(s); ${fc.summary.length} field change(s)${whInclude ? "; work hours included" : ""}.` +
       (loc.block ? "  ⛔ Location rule conflict — apply blocked." : loc.warn ? `  ⚠ ${loc.bad} resource(s) would breach the Location rule.` : ""));
   } catch (e) {
     log("✖ Preview failed: " + e.message);
-    setStatus("Preview failed — see log.");
+    ui.status.textContent = "Preview failed — see log.";
   } finally {
     setBusy(false);
   }
 }
 
-async function applyAll() {
+async function applyAll(mode) {
   if (!PLAN) return;
-  if (!confirmTwice($("applyBtn"), "Apply to selected")) return;
+  const ui = workflowUi(mode);
+  if (PLAN.mode !== mode) { ui.status.textContent = "Preview this section again first."; return; }
+  if (!confirmTwice(ui.apply, mode === "workhours" ? "Apply Work Hours" : "Apply Settings")) return;
   try {
     lockRun(true);
     const ids = [...selected];
@@ -1073,7 +1626,7 @@ async function applyAll() {
         if (PLAN.whInclude) await applyWorkHours(r);
         ok++;
       } catch (e) { err++; log(`  ✖ ${r ? r.name : id}: ${e.message}`); }
-      if ((i + 1) % 5 === 0 || i === ids.length - 1) setStatus(`Applied ${ok}/${ids.length}${err ? ` (${err} error${err > 1 ? "s" : ""})` : ""}`);
+      if ((i + 1) % 5 === 0 || i === ids.length - 1) ui.status.textContent = `Applied ${ok}/${ids.length}${err ? ` (${err} error${err > 1 ? "s" : ""})` : ""}`;
     }
     log(`Done. ${ok} succeeded, ${err} failed.`);
     notify("Update complete", `${ok} resource(s) updated${err ? `, ${err} failed` : ""}.`, err ? "warning" : "success");
@@ -1083,15 +1636,16 @@ async function applyAll() {
     log("✖ Apply failed: " + e.message);
   } finally {
     lockRun(false);
-    $("applyBtn").disabled = true; PLAN = null;
+    ui.apply.disabled = true; PLAN = null;
   }
 }
 
 async function applyWorkHours(r) {
   if (!r.calendarId) { log(`  ⚠ ${r.name}: no calendar on resource — skipped work hours.`); return; }
-  if ($("whClear").checked) await clearWorkHours(r.calendarId);
   const tz = Number($("whTz").value);
   const resId = r.id;
+  if ($("whClear").checked)
+    await clearWorkingHoursPreservingExceptions(r.calendarId, resId, tz, r.name);
   if (PLAN.whMode === "weekly") {
     const days = [...document.querySelectorAll(".dayck:checked")].map(c => c.value).join(",");
     const brk = $("whBreak").checked ? { start: $("whBreakStart").value, end: $("whBreakEnd").value } : null;
@@ -1099,10 +1653,10 @@ async function applyWorkHours(r) {
     await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: calEventInfo(r.calendarId, resId, tz, days, rules) });
   } else {
     const groups = PLAN.copyGroups || [];
-    for (const g of groups) {
+    if (!groups.length) throw new Error(`${r.name}: the source produced no working-hour pattern; no existing recurrences were changed.`);
+    for (const g of groups)
       // copied slots are in UTC → write with TimeZoneCode 92 (UTC) to preserve absolute times
       await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: calEventInfo(r.calendarId, resId, 92, g.byday, g.rules) });
-    }
   }
 }
 
@@ -1231,7 +1785,11 @@ async function setMobileExperience(add) {
 // Busy spinner — reference-counted so overlapping operations keep it visible until all finish.
 let _busy = 0;
 function setBusy(on) { _busy = Math.max(0, _busy + (on ? 1 : -1)); $("spin").hidden = _busy === 0; }
-function lockRun(b) { setBusy(b); $("previewBtn").disabled = b; $("applyBtn").disabled = b; $("loadBtn").disabled = b; }
+function lockRun(b) {
+  setBusy(b);
+  ["settingsPreviewBtn", "whPreviewBtn", "loadBtn"].forEach(id => $(id).disabled = b);
+  if (b) { $("settingsApplyBtn").disabled = true; $("whApplyBtn").disabled = true; }
+}
 function lockQa(b) { setBusy(b); ["addSkillBtn", "removeSkillBtn", "addTerrBtn", "removeTerrBtn", "mobAddBtn", "mobRemoveBtn"].forEach(i => $(i).disabled = b); }
 // Click-twice-to-confirm for destructive buttons (host-safe; window.confirm is unreliable in sandboxes).
 const _armed = new WeakMap();
@@ -1246,11 +1804,28 @@ function confirmTwice(btn, label) {
 buildFieldRows();
 buildDayPick();
 buildTz();
+buildMultiPicker("orgUnitFilter", "All Organizational Units");
+buildMultiPicker("businessUnitFilter", "All Owning Business Units");
+refreshThemeToggle();
+$("themeToggle").addEventListener("click", toggleTheme);
+$("clearLogBtn").addEventListener("click", () => { $("log").textContent = ""; });
 $("loadBtn").addEventListener("click", loadResources);
-$("previewBtn").addEventListener("click", preview);
-$("applyBtn").addEventListener("click", applyAll);
+$("settingsPreviewBtn").addEventListener("click", () => preview("settings"));
+$("settingsApplyBtn").addEventListener("click", () => applyAll("settings"));
+$("whPreviewBtn").addEventListener("click", () => preview("workhours"));
+$("whApplyBtn").addEventListener("click", () => applyAll("workhours"));
 $("nameFilter").addEventListener("keydown", e => { if (e.key === "Enter") loadResources(); });
-$("whInclude").addEventListener("change", () => { $("whBody").hidden = !$("whInclude").checked; });
+$("timeZoneFilter").addEventListener("change", loadResources);
+$("stateFilter").addEventListener("change", loadResources);
+document.addEventListener("click", () => document.querySelectorAll(".multi-picker.open").forEach(p => p.classList.remove("open")));
+document.querySelectorAll("#resTable th.sortable").forEach(th => th.addEventListener("click", () => {
+  const key = th.dataset.sort;
+  resourceSort = resourceSort.key === key
+    ? { key, direction: resourceSort.direction * -1 }
+    : { key, direction: 1 };
+  renderResources();
+}));
+updateSortHeaders();
 $("whBreak").addEventListener("change", () => { $("whBreakBox").hidden = !$("whBreak").checked; });
 document.querySelectorAll('input[name="whMode"]').forEach(r => r.addEventListener("change", () => {
   const m = document.querySelector('input[name="whMode"]:checked').value;
@@ -1264,6 +1839,21 @@ $("addTerrBtn").addEventListener("click", addTerritory);
 $("removeTerrBtn").addEventListener("click", removeTerritory);
 $("mobAddBtn").addEventListener("click", () => setMobileExperience(true));
 $("mobRemoveBtn").addEventListener("click", () => setMobileExperience(false));
+$("calTzPreviewBtn").addEventListener("click", previewCalendarTimeZones);
+$("calTzApplyBtn").addEventListener("click", applyCalendarTimeZones);
+$("calTzWorking").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("calTzNonWorking").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("calTzTimeOff").addEventListener("change", () => {
+  $("calTzAllDay").disabled = !$("calTzTimeOff").checked;
+  if (!$("calTzTimeOff").checked) $("calTzAllDay").checked = false;
+  CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true;
+});
+$("calTzAllDay").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("calTzTarget").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("timeZoneFilter").addEventListener("change", () => {
+  if ($("timeZoneFilter").value && [...$("calTzTarget").options].some(o => o.value === $("timeZoneFilter").value))
+    $("calTzTarget").value = $("timeZoneFilter").value;
+});
 
 log("Ready. Load resources to begin.");
 // Populate the dropdowns (org units, characteristics, ratings, territories) up front,
