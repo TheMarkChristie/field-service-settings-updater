@@ -84,6 +84,10 @@ Read-only Work Hours and Calendar Time Zone previews use up to six parallel reso
 
 In the XrmToolBox host, a Dataverse `401` response triggers an in-place OAuth token refresh through the active `ServiceClient`. Concurrent failed requests share one refresh operation and retry once with the new token, allowing long-running exports and calendar updates to continue without reloading the tool or losing progress. A second `401` is reported normally because it may indicate a permissions or connection problem rather than token expiration.
 
+### Calendar Time Zone mismatch audit
+
+The **Calendar Time Zone Mismatch Audit** compares each selected Bookable Resource's Time Zone with its Working Hours, Non-Working Hours, and Time Off rule trees. It displays only mismatches in a selectable, sortable grid with the resource Time Zone, current calendar-rule Time Zone, entry type, date/time, and name/reason. Results can be exported to a timestamped CSV or repaired in bulk so every selected rule matches its own resource. Repairs preserve displayed wall-clock values and existing Time Off reasons, process separate resources in parallel, and keep updates within each resource calendar sequential.
+
 ## Using it
 
 ### Power Platform ToolBox

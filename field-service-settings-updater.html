@@ -637,6 +637,29 @@
     </div>
   </details>
 
+  <!-- ============================== 8. CALENDAR TIME-ZONE MISMATCH AUDIT ============================== -->
+  <details class="card collapsible">
+    <summary><h2>8 · Calendar Time Zone Mismatch Audit</h2></summary>
+    <div class="card-body">
+      <p class="hint" style="margin-top:0">Compares each selected Bookable Resource's Time Zone with its calendar rules. Preview mismatches, export the audit, or fix selected rules so they match their own resource while preserving displayed wall-clock times and Time Off reasons.</p>
+      <div>
+        <label>Calendar Entries To Audit</label>
+        <div class="daypick">
+          <label><input type="checkbox" id="mismatchWorking" checked /> Working Hours</label>
+          <label><input type="checkbox" id="mismatchNonWorking" checked /> Non-Working Hours</label>
+          <label><input type="checkbox" id="mismatchTimeOff" checked /> Time Off</label>
+        </div>
+      </div>
+      <div class="btnbar">
+        <button type="button" class="primary" id="mismatchPreviewBtn">Preview Time Zone Mismatches</button>
+        <button type="button" class="ghost" id="mismatchExportBtn" disabled>Export Mismatches</button>
+        <button type="button" class="danger" id="mismatchFixBtn" disabled>Fix Selected Mismatches</button>
+        <span id="mismatchStatus" role="status" aria-live="polite"></span>
+      </div>
+      <div id="mismatchPreview" style="margin-top:14px"></div>
+    </div>
+  </details>
+
   </section>
   <aside class="activity-sidebar">
   <div class="card activity-card">
@@ -661,7 +684,7 @@
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
 // Display version. Advance future feature builds through 2.1, 2.2, and so on.
-const APP_VERSION = "3.9 Beta";
+const APP_VERSION = "4.0 Beta";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;
@@ -1685,7 +1708,7 @@ async function inspectOuterCalendarRule(rule, target) {
     ...rule,
     kind,
     _leafRules: leaves,
-    _needsTimeZone: nodes.some(r => r.timezonecode != null && Number(r.timezonecode) !== target),
+    _needsTimeZone: nodes.some(r => r.timezonecode != null && Number(r.timezonecode) >= 0 && Number(r.timezonecode) !== target),
     _eventStart: interval.start,
     _eventEnd: interval.end,
     _eventDuration: interval.duration,
@@ -1815,18 +1838,37 @@ async function previewCalendarTimeZones() {
   }
 }
 async function updateCalendarRuleTree(rule, target, resource) {
-  if (Number(rule.timezonecode) !== target) {
-    log(`    updating outer calendar rule ${rule.calendarruleid}: TZ ${rule.timezonecode} → ${target}.`, resource);
-    await dvUpdate("calendarrule", "calendarrules", rule.calendarruleid, { timezonecode: target });
-  }
   const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
-  if (!innerId) return;
+  if (!innerId) throw new Error(`${calendarKindLabel(rule.kind)} is missing its inner calendar ID.`);
   const leaves = rule._leafRules || await loadCalendarRules(innerId);
-  for (const leaf of leaves) {
-    if (Number(leaf.timezonecode) !== target) {
-      log(`    updating leaf calendar rule ${leaf.calendarruleid}: TZ ${leaf.timezonecode} → ${target}.`, resource);
-      await dvUpdate("calendarrule", "calendarrules", leaf.calendarruleid, { timezonecode: target });
-    }
+  const sourceRules = leaves.length ? leaves : [rule];
+  const saveRules = sourceRules.map(sourceRule => {
+    const interval = deriveCalendarInterval(rule, sourceRule === rule ? null : sourceRule);
+    if (!interval.start || !interval.end)
+      throw new Error(`${calendarKindLabel(rule.kind)} is missing a start or end time.`);
+    return {
+      StartTime: interval.start,
+      EndTime: interval.end,
+      Effort: sourceRule.effort == null ? null : sourceRule.effort,
+      WorkHourType: rule.kind === "working" && Number(sourceRule.timecode) === 0 ? 0 : 1,
+    };
+  });
+  const recurrencePattern = rule.pattern || sourceRules.map(sourceRule => sourceRule.pattern).find(Boolean) || null;
+  const recurrence = { InnerCalendarId: innerId, Rules: saveRules };
+  if (recurrencePattern) recurrence.RecurrencePattern = recurrencePattern;
+  const info = {
+    CalendarId: resource.calendarId,
+    EntityLogicalName: "bookableresource",
+    ResourceId: resource.id,
+    IsEdit: true,
+    UseV2: true,
+    TimeZoneCode: target,
+    RulesAndRecurrences: [recurrence],
+  };
+  log(`    editing ${calendarKindLabel(rule.kind)} through msdyn_SaveCalendar: ${sourceRules.length} rule segment(s); inner calendar ${innerId}; target TZ ${target}; recurrence ${recurrencePattern || "single occurrence"}.`, resource);
+  await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: JSON.stringify(info) });
+  if (rule.kind === "working") {
+    log(`    preserved working segments, capacity, breaks, and recurrence while changing the Time Zone.`, resource);
   }
 }
 async function updateTimedTimeOffTimeZone(resource, rule, target) {
@@ -2336,6 +2378,242 @@ async function exportSelectedCalendarRules() {
   }
 }
 
+// ============================================================================
+//  Calendar time-zone mismatch audit
+// ============================================================================
+let MISMATCH_PLAN = null;
+let MISMATCH_SELECTED = new Set();
+
+function mismatchKindsSelected() {
+  return {
+    working: $("mismatchWorking").checked,
+    nonworking: $("mismatchNonWorking").checked,
+    timeoff: $("mismatchTimeOff").checked,
+  };
+}
+
+function calendarRuleZoneCodes(rule) {
+  return [...new Set([rule, ...(rule._leafRules || [])]
+    .map(node => node.timezonecode).filter(value => value != null && Number(value) >= 0).map(Number))];
+}
+
+function mismatchRuleKey(resource, rule) {
+  return `mismatch:${calendarRuleKey(resource, rule)}`;
+}
+
+function mismatchReason(rule) {
+  return rule.kind === "timeoff"
+    ? (rule._eventDescription || "Time off")
+    : (rule.name || rule.description || "—");
+}
+
+function updateMismatchSelectionUi() {
+  const count = MISMATCH_SELECTED.size;
+  const countElement = $("mismatchSelectedCount");
+  if (countElement) countElement.textContent = `${count} Selected`;
+  $("mismatchFixBtn").disabled = !MISMATCH_PLAN || count === 0;
+  $("mismatchExportBtn").disabled = !MISMATCH_PLAN || MISMATCH_PLAN.rows.length === 0;
+}
+
+function wireMismatchGrid() {
+  document.querySelectorAll(".mismatch-rule-select").forEach(checkbox => checkbox.addEventListener("change", () => {
+    if (checkbox.checked) MISMATCH_SELECTED.add(checkbox.dataset.key);
+    else MISMATCH_SELECTED.delete(checkbox.dataset.key);
+    updateMismatchSelectionUi();
+  }));
+  const setAll = checked => {
+    document.querySelectorAll(".mismatch-rule-select").forEach(checkbox => {
+      checkbox.checked = checked;
+      if (checked) MISMATCH_SELECTED.add(checkbox.dataset.key);
+      else MISMATCH_SELECTED.delete(checkbox.dataset.key);
+    });
+    updateMismatchSelectionUi();
+  };
+  $("mismatchSelectAllBtn")?.addEventListener("click", () => setAll(true));
+  $("mismatchClearBtn")?.addEventListener("click", () => setAll(false));
+  wireSortablePreviewTable($("mismatchTable"));
+}
+
+async function previewCalendarTimeZoneMismatches() {
+  MISMATCH_PLAN = null;
+  MISMATCH_SELECTED.clear();
+  $("mismatchPreview").innerHTML = "";
+  $("mismatchFixBtn").disabled = true;
+  $("mismatchExportBtn").disabled = true;
+  if (!selected.size) { $("mismatchStatus").textContent = "Select resources first."; return; }
+  const kinds = mismatchKindsSelected();
+  if (!Object.values(kinds).some(Boolean)) { $("mismatchStatus").textContent = "Select at least one calendar entry type."; return; }
+  const selectedIds = [...selected];
+  const rowsByResource = new Array(selectedIds.length);
+  let failed = 0, missingResourceZone = 0, missingCalendar = 0;
+  try {
+    beginCancellableAction("Calendar Time Zone mismatch audit");
+    setBusy(true);
+    $("mismatchPreviewBtn").disabled = true;
+    $("mismatchStatus").textContent = "Comparing resource and calendar time zones…";
+    log(`Time Zone mismatch audit: inspecting ${selectedIds.length} selected resource(s) with up to 6 parallel readers.`);
+    await runWithConcurrency(selectedIds, 6, async (id, index) => {
+      const resource = resources.find(item => item.id === id);
+      const resourceRows = [];
+      rowsByResource[index] = resourceRows;
+      if (!resource) return;
+      if (resource.timeZone == null || Number(resource.timeZone) < 0) {
+        missingResourceZone++;
+        log("Skipped mismatch audit because the Bookable Resource has no valid Time Zone.", resource);
+        return;
+      }
+      if (!resource.calendarId) {
+        missingCalendar++;
+        log("Skipped mismatch audit because no calendar is assigned.", resource);
+        return;
+      }
+      try {
+        const roots = await loadCalendarRules(resource.calendarId);
+        for (const root of roots) {
+          throwIfActionCancelled();
+          const rule = await inspectOuterCalendarRule(root, Number(resource.timeZone));
+          if (!kinds[rule.kind] || !rule._needsTimeZone) continue;
+          resourceRows.push({
+            key: mismatchRuleKey(resource, rule), resource, rule,
+            targetCode: Number(resource.timeZone), targetName: timeZoneLabel(resource.timeZone),
+            currentCodes: calendarRuleZoneCodes(rule),
+          });
+        }
+        log(`Mismatch audit found ${resourceRows.length} calendar rule(s) that differ from ${resource.timeZoneName || timeZoneLabel(resource.timeZone)}.`, resource);
+      } catch (error) {
+        if (isActionCancellation(error)) throw error;
+        failed++;
+        log(`Time Zone mismatch audit failed: ${error.message}`, resource);
+      }
+    }, completed => {
+      $("mismatchStatus").textContent = `Inspected ${completed} of ${selectedIds.length} resource calendar(s)${failed ? `; ${failed} failed` : ""}…`;
+    });
+    const rows = rowsByResource.flatMap(resourceRows => resourceRows || []);
+    MISMATCH_PLAN = { rows, kinds };
+    MISMATCH_SELECTED = new Set(rows.map(row => row.key));
+    let html = `<p><b>${rows.length}</b> mismatched calendar rule(s) found across <b>${new Set(rows.map(row => row.resource.id)).size}</b> resource(s).</p>`;
+    if (missingResourceZone) html += `<div class="warnbox">${missingResourceZone} resource(s) had no valid Bookable Resource Time Zone and could not be compared.</div>`;
+    if (missingCalendar) html += `<div class="warnbox">${missingCalendar} resource(s) had no assigned calendar.</div>`;
+    if (failed) html += `<div class="warnbox">${failed} resource calendar(s) could not be inspected. Review the Activity Log.</div>`;
+    if (rows.length) {
+      html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="mismatchSelectAllBtn">Select All</button><button type="button" class="ghost small" id="mismatchClearBtn">Clear</button><span class="selcount" id="mismatchSelectedCount">${rows.length} Selected</span></div>`;
+      html += `<div class="tablewrap"><table id="mismatchTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("type", "Type")}${sortableHeader("datetime", "Date / Time")}${sortableHeader("resourcezone", "Resource Time Zone")}${sortableHeader("rulezone", "Calendar Rule Time Zone")}${sortableHeader("reason", "Name / Reason")}</tr></thead><tbody>`;
+      for (const row of rows) {
+        const interval = [row.rule._eventStart, row.rule._eventEnd].filter(Boolean).join(" → ") || "Not available";
+        const type = calendarKindLabel(row.rule.kind);
+        const currentZones = row.currentCodes.length ? row.currentCodes.map(timeZoneLabel).join(" / ") : "Inherited / unspecified";
+        const reason = mismatchReason(row.rule);
+        html += `<tr><td><input type="checkbox" class="mismatch-rule-select" data-key="${escapeHtml(row.key)}" checked aria-label="Select mismatch" /></td>` +
+          `<td data-sort-key="resource" data-sort-value="${escapeHtml(row.resource.name)}" class="wrap">${escapeHtml(row.resource.name)}</td>` +
+          `<td data-sort-key="type" data-sort-value="${escapeHtml(type)}">${escapeHtml(type)}</td>` +
+          `<td data-sort-key="datetime" data-sort-value="${escapeHtml(interval)}" class="wrap">${escapeHtml(interval)}</td>` +
+          `<td data-sort-key="resourcezone" data-sort-value="${escapeHtml(row.targetName)}" class="wrap">${escapeHtml(row.targetName)}</td>` +
+          `<td data-sort-key="rulezone" data-sort-value="${escapeHtml(currentZones)}" class="wrap">${escapeHtml(currentZones)}</td>` +
+          `<td data-sort-key="reason" data-sort-value="${escapeHtml(reason)}" class="wrap">${escapeHtml(reason)}</td></tr>`;
+      }
+      html += `</tbody></table></div>`;
+    } else html += `<p class="hint">No selected calendar rules have a Time Zone that differs from their Bookable Resource.</p>`;
+    $("mismatchPreview").innerHTML = html;
+    wireMismatchGrid();
+    updateMismatchSelectionUi();
+    $("mismatchStatus").textContent = rows.length ? "Audit ready." : "No mismatches found.";
+    log(`Time Zone mismatch audit complete: ${rows.length} mismatch(es), ${failed} failed resource calendar(s).`);
+  } catch (error) {
+    MISMATCH_PLAN = null; MISMATCH_SELECTED.clear();
+    if (isActionCancellation(error)) { $("mismatchStatus").textContent = "Audit cancelled."; log("Time Zone mismatch audit cancelled."); }
+    else { $("mismatchStatus").textContent = "Audit failed — see log."; log(`Time Zone mismatch audit failed: ${error.message}`); }
+  } finally {
+    setBusy(false); $("mismatchPreviewBtn").disabled = false; endCancellableAction();
+  }
+}
+
+function exportCalendarTimeZoneMismatches() {
+  if (!MISMATCH_PLAN || !MISMATCH_PLAN.rows.length) { $("mismatchStatus").textContent = "Preview mismatches first."; return; }
+  const output = MISMATCH_PLAN.rows.map(row => {
+    const rule = row.rule;
+    const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid) || "";
+    return {
+      "Resource ID": row.resource.id,
+      "Resource Name": row.resource.name,
+      "Resource Type": RES_TYPE[row.resource.type] || row.resource.type || "",
+      "Resource Status": row.resource.state === 0 ? "Active" : "Inactive",
+      "Organizational Unit": row.resource.orgUnitName || "",
+      "Business Unit": row.resource.businessUnitName || "",
+      "Country": row.resource.country || "",
+      "Resource Time Zone Code": row.targetCode,
+      "Resource Time Zone": row.targetName,
+      "Calendar Entry Type": calendarKindLabel(rule.kind),
+      "Event Start": rule._eventStart || rule.starttime || "",
+      "Event End": rule._eventEnd || rule.endtime || "",
+      "Calendar Rule Time Zone Codes": row.currentCodes.join("; "),
+      "Calendar Rule Time Zones": row.currentCodes.map(timeZoneLabel).join("; "),
+      "Parent Calendar ID": row.resource.calendarId || "",
+      "Parent Rule ID": rule.calendarruleid || "",
+      "Inner Calendar ID": innerId,
+      "Leaf Rule IDs": (rule._leafRules || []).map(leaf => leaf.calendarruleid).filter(Boolean).join("; "),
+      "Name Reason": mismatchReason(rule),
+    };
+  });
+  const preferred = ["Resource ID", "Resource Name", "Resource Type", "Resource Status", "Organizational Unit", "Business Unit", "Country", "Resource Time Zone Code", "Resource Time Zone", "Calendar Entry Type", "Event Start", "Event End", "Calendar Rule Time Zone Codes", "Calendar Rule Time Zones", "Parent Calendar ID", "Parent Rule ID", "Inner Calendar ID", "Leaf Rule IDs", "Name Reason"];
+  const timestamp = new Date().toISOString().replace("T", " ").replace(/[:]/g, "-").replace(/\.\d{3}Z$/, " UTC");
+  downloadObjectCsv(`Calendar Time Zone Mismatches - ${timestamp}.csv`, preferred, output);
+  $("mismatchStatus").textContent = `${output.length} mismatch row(s) exported.`;
+  log(`Exported ${output.length} Calendar Time Zone mismatch row(s).`);
+}
+
+async function fixCalendarTimeZoneMismatches() {
+  if (!MISMATCH_PLAN) { $("mismatchStatus").textContent = "Preview mismatches first."; return; }
+  const rows = MISMATCH_PLAN.rows.filter(row => MISMATCH_SELECTED.has(row.key));
+  if (!rows.length) { $("mismatchStatus").textContent = "Select at least one mismatch."; return; }
+  if (!confirmTwice($("mismatchFixBtn"), "Fix Selected Mismatches")) return;
+  const grouped = new Map();
+  rows.forEach(row => {
+    if (!grouped.has(row.resource.id)) grouped.set(row.resource.id, { resource: row.resource, rows: [] });
+    grouped.get(row.resource.id).rows.push(row);
+  });
+  const groups = [...grouped.values()];
+  let succeeded = 0, failed = 0;
+  try {
+    beginCancellableAction("Calendar Time Zone mismatch repair");
+    setBusy(true); $("mismatchPreviewBtn").disabled = true; $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
+    log(`Mismatch repair starting: ${rows.length} rule(s) across ${groups.length} resource(s), using up to 4 parallel resource workers.`);
+    await runWithConcurrency(groups, 4, async group => {
+      for (const row of group.rows) {
+        throwIfActionCancelled();
+        const rule = row.rule;
+        try {
+          if (rule.kind === "timeoff") await updateTimedTimeOffTimeZone(group.resource, rule, row.targetCode);
+          else await updateCalendarRuleTree(rule, row.targetCode, group.resource);
+          succeeded++;
+          log(`Matched ${calendarKindLabel(rule.kind)} to ${row.targetName}; ${rule._eventStart || rule.starttime || "date unavailable"}.`, group.resource);
+        } catch (error) {
+          if (isActionCancellation(error)) throw error;
+          failed++;
+          log(`Mismatch repair failed for ${calendarKindLabel(rule.kind)}: ${error.message}; ${calendarRuleContext(rule)}`, group.resource);
+        }
+      }
+    }, completed => {
+      $("mismatchStatus").textContent = `Completed ${completed} of ${groups.length} resource calendar(s); ${succeeded} fixed${failed ? `, ${failed} failed` : ""}…`;
+    });
+    $("mismatchStatus").textContent = `${succeeded} mismatch(es) fixed${failed ? `, ${failed} failed` : ""}. Preview again to verify.`;
+    log(`Mismatch repair complete: ${succeeded} fixed, ${failed} failed.`);
+    notify("Calendar Time Zone mismatches repaired", `${succeeded} rule(s) fixed${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
+  } catch (error) {
+    if (isActionCancellation(error)) {
+      $("mismatchStatus").textContent = `Cancelled after ${succeeded} fix(es)${failed ? `; ${failed} failed` : ""}.`;
+      log(`Mismatch repair cancelled: ${succeeded} fixed before cancellation, ${failed} failed.`);
+    } else {
+      $("mismatchStatus").textContent = "Repair stopped — see log.";
+      log(`Mismatch repair stopped: ${error.message}`);
+    }
+  } finally {
+    setBusy(false); endCancellableAction();
+    $("mismatchPreviewBtn").disabled = false;
+    MISMATCH_PLAN = null; MISMATCH_SELECTED.clear();
+    $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
+  }
+}
+
 // Derive weekly groups from a source calendar's slots for one representative week.
 async function deriveCopyGroups(sourceCalId) {
   // Keep the read-only sample in 2024 so it can load schedules created with
@@ -2812,6 +3090,14 @@ $("calTzApplyBtn").addEventListener("click", applyCalendarTimeZones);
 $("deleteCalPreviewBtn").addEventListener("click", previewDeleteCalendarRules);
 $("deleteCalApplyBtn").addEventListener("click", deleteSelectedCalendarRules);
 $("exportCalendarRulesBtn").addEventListener("click", exportSelectedCalendarRules);
+$("mismatchPreviewBtn").addEventListener("click", previewCalendarTimeZoneMismatches);
+$("mismatchExportBtn").addEventListener("click", exportCalendarTimeZoneMismatches);
+$("mismatchFixBtn").addEventListener("click", fixCalendarTimeZoneMismatches);
+["mismatchWorking", "mismatchNonWorking", "mismatchTimeOff"].forEach(id => $(id).addEventListener("change", () => {
+  MISMATCH_PLAN = null; MISMATCH_SELECTED.clear();
+  $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
+  $("mismatchStatus").textContent = "Preview again after changing the audit scope.";
+}));
 $("calTzWorking").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
 $("calTzNonWorking").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
 $("calTzTimeOff").addEventListener("change", () => {
