@@ -55,9 +55,11 @@
   .banner { border-left: 4px solid var(--red); background: #fff5f6; padding: 12px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
   .warnbox { border-left: 4px solid var(--warn); background: #fff7ea; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
   .errbox { border-left: 4px solid var(--err); background: #fdecef; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
-  body.theme-dark .warnbox { background: #2a2316; } body.theme-dark .errbox { background: #2a1820; }
+  .okbox { border-left: 4px solid var(--ok); background: #eaf8ef; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
+  body.theme-dark .warnbox { background: #2a2316; } body.theme-dark .errbox { background: #2a1820; } body.theme-dark .okbox { background: #14291e; }
   body[data-host="xtb"] .warnbox { background: #fff0d0; border-left: 4px solid #7a4a00; border-radius: 0; color: #000; }
   body[data-host="xtb"] .errbox { background: #ffe0e0; border-left: 4px solid #a80000; border-radius: 0; color: #000; }
+  body[data-host="xtb"] .okbox { background: #e1f5e7; border-left: 4px solid #137333; border-radius: 0; color: #000; }
   #log { background: #1e1e1e; color: #d4d4d4; font-family: 'Cascadia Code', Consolas, monospace; font-size: 12px;
          border-radius: 8px; height: 220px; overflow: auto; margin-top: 14px; }
   #log table { table-layout: fixed; min-width: 620px; }
@@ -316,6 +318,7 @@
   <span class="author">by Mark Christie</span>
   <span id="spin" class="spinner" role="status" aria-label="Working" title="Working…" hidden></span>
   <button type="button" id="cancelActionBtn" class="cancel-action" hidden>Cancel Current Action</button>
+  <button type="button" id="resetToolBtn" class="theme-toggle" title="Clear filters, searches, loaded results, previews, selections, and logs">↻ Reset Tool</button>
   <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch color theme">☀ Light</button>
   <span id="envlabel">resolving environment…</span>
   <span class="ver" id="verlabel" title="Tool build / Dataverse org version">v…</span>
@@ -684,7 +687,7 @@
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
 // Display version. Advance future feature builds through 2.1, 2.2, and so on.
-const APP_VERSION = "4.0 Beta";
+const APP_VERSION = "4.1 Beta";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;
@@ -842,6 +845,14 @@ function cancelCurrentAction() {
   const button = $("cancelActionBtn");
   button.disabled = true; button.textContent = "Cancelling…";
   log(`Cancellation requested for ${ACTIVE_ACTION.label}. Current Dataverse request(s) may need to finish first.`);
+}
+function resetTool() {
+  if (ACTIVE_ACTION) {
+    log(`Reset Tool was not run because ${ACTIVE_ACTION.label} is active. Cancel or finish the action first.`);
+    notify("Action still running", "Cancel or finish the current action before resetting the tool.", "warning");
+    return;
+  }
+  window.location.reload();
 }
 function endCancellableAction() {
   ACTIVE_ACTION = null;
@@ -2434,6 +2445,31 @@ function wireMismatchGrid() {
   wireSortablePreviewTable($("mismatchTable"));
 }
 
+function renderMismatchResults(rows, noticesHtml = "") {
+  let html = `<p><b>${rows.length}</b> mismatched calendar rule(s) remain across <b>${new Set(rows.map(row => row.resource.id)).size}</b> resource(s).</p>${noticesHtml}`;
+  if (rows.length) {
+    html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="mismatchSelectAllBtn">Select All</button><button type="button" class="ghost small" id="mismatchClearBtn">Clear</button><span class="selcount" id="mismatchSelectedCount">${MISMATCH_SELECTED.size} Selected</span></div>`;
+    html += `<div class="tablewrap"><table id="mismatchTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("type", "Type")}${sortableHeader("datetime", "Date / Time")}${sortableHeader("resourcezone", "Resource Time Zone")}${sortableHeader("rulezone", "Calendar Rule Time Zone")}${sortableHeader("reason", "Name / Reason")}</tr></thead><tbody>`;
+    for (const row of rows) {
+      const interval = [row.rule._eventStart, row.rule._eventEnd].filter(Boolean).join(" → ") || "Not available";
+      const type = calendarKindLabel(row.rule.kind);
+      const currentZones = row.currentCodes.length ? row.currentCodes.map(timeZoneLabel).join(" / ") : "Inherited / unspecified";
+      const reason = mismatchReason(row.rule);
+      html += `<tr><td><input type="checkbox" class="mismatch-rule-select" data-key="${escapeHtml(row.key)}" ${MISMATCH_SELECTED.has(row.key) ? "checked" : ""} aria-label="Select mismatch" /></td>` +
+        `<td data-sort-key="resource" data-sort-value="${escapeHtml(row.resource.name)}" class="wrap">${escapeHtml(row.resource.name)}</td>` +
+        `<td data-sort-key="type" data-sort-value="${escapeHtml(type)}">${escapeHtml(type)}</td>` +
+        `<td data-sort-key="datetime" data-sort-value="${escapeHtml(interval)}" class="wrap">${escapeHtml(interval)}</td>` +
+        `<td data-sort-key="resourcezone" data-sort-value="${escapeHtml(row.targetName)}" class="wrap">${escapeHtml(row.targetName)}</td>` +
+        `<td data-sort-key="rulezone" data-sort-value="${escapeHtml(currentZones)}" class="wrap">${escapeHtml(currentZones)}</td>` +
+        `<td data-sort-key="reason" data-sort-value="${escapeHtml(reason)}" class="wrap">${escapeHtml(reason)}</td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  } else html += `<p class="hint">No unresolved calendar Time Zone mismatches remain in this audit.</p>`;
+  $("mismatchPreview").innerHTML = html;
+  wireMismatchGrid();
+  updateMismatchSelectionUi();
+}
+
 async function previewCalendarTimeZoneMismatches() {
   MISMATCH_PLAN = null;
   MISMATCH_SELECTED.clear();
@@ -2491,31 +2527,11 @@ async function previewCalendarTimeZoneMismatches() {
     const rows = rowsByResource.flatMap(resourceRows => resourceRows || []);
     MISMATCH_PLAN = { rows, kinds };
     MISMATCH_SELECTED = new Set(rows.map(row => row.key));
-    let html = `<p><b>${rows.length}</b> mismatched calendar rule(s) found across <b>${new Set(rows.map(row => row.resource.id)).size}</b> resource(s).</p>`;
-    if (missingResourceZone) html += `<div class="warnbox">${missingResourceZone} resource(s) had no valid Bookable Resource Time Zone and could not be compared.</div>`;
-    if (missingCalendar) html += `<div class="warnbox">${missingCalendar} resource(s) had no assigned calendar.</div>`;
-    if (failed) html += `<div class="warnbox">${failed} resource calendar(s) could not be inspected. Review the Activity Log.</div>`;
-    if (rows.length) {
-      html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="mismatchSelectAllBtn">Select All</button><button type="button" class="ghost small" id="mismatchClearBtn">Clear</button><span class="selcount" id="mismatchSelectedCount">${rows.length} Selected</span></div>`;
-      html += `<div class="tablewrap"><table id="mismatchTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("type", "Type")}${sortableHeader("datetime", "Date / Time")}${sortableHeader("resourcezone", "Resource Time Zone")}${sortableHeader("rulezone", "Calendar Rule Time Zone")}${sortableHeader("reason", "Name / Reason")}</tr></thead><tbody>`;
-      for (const row of rows) {
-        const interval = [row.rule._eventStart, row.rule._eventEnd].filter(Boolean).join(" → ") || "Not available";
-        const type = calendarKindLabel(row.rule.kind);
-        const currentZones = row.currentCodes.length ? row.currentCodes.map(timeZoneLabel).join(" / ") : "Inherited / unspecified";
-        const reason = mismatchReason(row.rule);
-        html += `<tr><td><input type="checkbox" class="mismatch-rule-select" data-key="${escapeHtml(row.key)}" checked aria-label="Select mismatch" /></td>` +
-          `<td data-sort-key="resource" data-sort-value="${escapeHtml(row.resource.name)}" class="wrap">${escapeHtml(row.resource.name)}</td>` +
-          `<td data-sort-key="type" data-sort-value="${escapeHtml(type)}">${escapeHtml(type)}</td>` +
-          `<td data-sort-key="datetime" data-sort-value="${escapeHtml(interval)}" class="wrap">${escapeHtml(interval)}</td>` +
-          `<td data-sort-key="resourcezone" data-sort-value="${escapeHtml(row.targetName)}" class="wrap">${escapeHtml(row.targetName)}</td>` +
-          `<td data-sort-key="rulezone" data-sort-value="${escapeHtml(currentZones)}" class="wrap">${escapeHtml(currentZones)}</td>` +
-          `<td data-sort-key="reason" data-sort-value="${escapeHtml(reason)}" class="wrap">${escapeHtml(reason)}</td></tr>`;
-      }
-      html += `</tbody></table></div>`;
-    } else html += `<p class="hint">No selected calendar rules have a Time Zone that differs from their Bookable Resource.</p>`;
-    $("mismatchPreview").innerHTML = html;
-    wireMismatchGrid();
-    updateMismatchSelectionUi();
+    let notices = "";
+    if (missingResourceZone) notices += `<div class="warnbox">${missingResourceZone} resource(s) had no valid Bookable Resource Time Zone and could not be compared.</div>`;
+    if (missingCalendar) notices += `<div class="warnbox">${missingCalendar} resource(s) had no assigned calendar.</div>`;
+    if (failed) notices += `<div class="warnbox">${failed} resource calendar(s) could not be inspected. Review the Activity Log.</div>`;
+    renderMismatchResults(rows, notices);
     $("mismatchStatus").textContent = rows.length ? "Audit ready." : "No mismatches found.";
     log(`Time Zone mismatch audit complete: ${rows.length} mismatch(es), ${failed} failed resource calendar(s).`);
   } catch (error) {
@@ -2573,6 +2589,7 @@ async function fixCalendarTimeZoneMismatches() {
   });
   const groups = [...grouped.values()];
   let succeeded = 0, failed = 0;
+  const succeededKeys = new Set();
   try {
     beginCancellableAction("Calendar Time Zone mismatch repair");
     setBusy(true); $("mismatchPreviewBtn").disabled = true; $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
@@ -2584,7 +2601,7 @@ async function fixCalendarTimeZoneMismatches() {
         try {
           if (rule.kind === "timeoff") await updateTimedTimeOffTimeZone(group.resource, rule, row.targetCode);
           else await updateCalendarRuleTree(rule, row.targetCode, group.resource);
-          succeeded++;
+          succeeded++; succeededKeys.add(row.key);
           log(`Matched ${calendarKindLabel(rule.kind)} to ${row.targetName}; ${rule._eventStart || rule.starttime || "date unavailable"}.`, group.resource);
         } catch (error) {
           if (isActionCancellation(error)) throw error;
@@ -2595,7 +2612,7 @@ async function fixCalendarTimeZoneMismatches() {
     }, completed => {
       $("mismatchStatus").textContent = `Completed ${completed} of ${groups.length} resource calendar(s); ${succeeded} fixed${failed ? `, ${failed} failed` : ""}…`;
     });
-    $("mismatchStatus").textContent = `${succeeded} mismatch(es) fixed${failed ? `, ${failed} failed` : ""}. Preview again to verify.`;
+    $("mismatchStatus").textContent = `${succeeded} mismatch(es) fixed${failed ? `, ${failed} failed` : ""}. Select another remaining row when ready.`;
     log(`Mismatch repair complete: ${succeeded} fixed, ${failed} failed.`);
     notify("Calendar Time Zone mismatches repaired", `${succeeded} rule(s) fixed${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
   } catch (error) {
@@ -2609,8 +2626,14 @@ async function fixCalendarTimeZoneMismatches() {
   } finally {
     setBusy(false); endCancellableAction();
     $("mismatchPreviewBtn").disabled = false;
-    MISMATCH_PLAN = null; MISMATCH_SELECTED.clear();
-    $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
+    if (MISMATCH_PLAN) {
+      MISMATCH_PLAN.rows = MISMATCH_PLAN.rows.filter(row => !succeededKeys.has(row.key));
+      MISMATCH_SELECTED.clear();
+      const notice = succeededKeys.size
+        ? `<div class="okbox">${succeededKeys.size} repaired row(s) were removed from this audit. Select another remaining row to continue without running Preview again.</div>`
+        : `<div class="warnbox">No rows were removed. Failed or unprocessed rows remain available for another attempt.</div>`;
+      renderMismatchResults(MISMATCH_PLAN.rows, notice);
+    }
   }
 }
 
@@ -3051,6 +3074,7 @@ buildMultiPicker("businessUnitFilter", "All Business Units");
 refreshThemeToggle();
 $("themeToggle").addEventListener("click", toggleTheme);
 $("cancelActionBtn").addEventListener("click", cancelCurrentAction);
+$("resetToolBtn").addEventListener("click", resetTool);
 $("exportLogBtn").addEventListener("click", exportLogsCsv);
 $("clearLogBtn").addEventListener("click", clearLogs);
 $("loadBtn").addEventListener("click", loadResources);

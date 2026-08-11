@@ -86,7 +86,9 @@ In the XrmToolBox host, a Dataverse `401` response triggers an in-place OAuth to
 
 ### Calendar Time Zone mismatch audit
 
-The **Calendar Time Zone Mismatch Audit** compares each selected Bookable Resource's Time Zone with its Working Hours, Non-Working Hours, and Time Off rule trees. It displays only mismatches in a selectable, sortable grid with the resource Time Zone, current calendar-rule Time Zone, entry type, date/time, and name/reason. Results can be exported to a timestamped CSV or repaired in bulk so every selected rule matches its own resource. Repairs preserve displayed wall-clock values and existing Time Off reasons, process separate resources in parallel, and keep updates within each resource calendar sequential.
+The **Calendar Time Zone Mismatch Audit** compares each selected Bookable Resource's Time Zone with its Working Hours, Non-Working Hours, and Time Off rule trees. It displays only mismatches in a selectable, sortable grid with the resource Time Zone, current calendar-rule Time Zone, entry type, date/time, and name/reason. Results can be exported to a timestamped CSV or repaired in bulk so every selected rule matches its own resource. Repairs preserve displayed wall-clock values and existing Time Off reasons, process separate resources in parallel, and keep updates within each resource calendar sequential. After a partial repair, successfully fixed rows are removed while untouched and failed rows remain available for additional selections without rescanning every resource.
+
+The fixed application header includes **Reset Tool**, which restores the interface to its initial state and clears filters, searches, loaded results, selections, previews, and Activity Log entries. The saved Light/Dark theme preference is retained. Reset is blocked while a long-running operation is active so the user can cancel or finish it first.
 
 ## Using it
 
