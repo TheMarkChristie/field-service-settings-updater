@@ -1,0 +1,38 @@
+name: Build RetroArch APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out RetroArch source
+        uses: actions/checkout@v4
+        with:
+          repository: libretro/RetroArch
+          ref: master
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build debug APKs
+        run: |
+          cd pkg/android/phoenix
+          ./gradlew assembleDebug
+          find . -iname "*.apk" -exec ls -l "{}" \;
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: retroarch-android-apk
+          path: |
+            pkg/android/phoenix/build/outputs/apk/normal/debug/phoenix-normal-debug.apk
+            pkg/android/phoenix/build/outputs/apk/aarch64/debug/phoenix-aarch64-debug.apk
