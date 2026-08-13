@@ -663,6 +663,38 @@
     </div>
   </details>
 
+  <!-- ============================== 9. WORK-HOURS BASELINE AUDIT ============================== -->
+  <details class="card collapsible">
+    <summary><h2>9 · Work Hours Baseline Audit</h2></summary>
+    <div class="card-body">
+      <p class="hint" style="margin-top:0">Finds selected resources whose Working Hours differ from the baseline configured below. The audit also flags 24-hour schedules, unexpected days, and multiple Working Hours recurrences.</p>
+      <div class="formgrid">
+        <div class="span2">
+          <label>Baseline Working Days</label>
+          <div class="daypick" id="baselineDays">
+            <label><input type="checkbox" class="baseline-day" value="MO" checked /> Mon</label>
+            <label><input type="checkbox" class="baseline-day" value="TU" checked /> Tue</label>
+            <label><input type="checkbox" class="baseline-day" value="WE" checked /> Wed</label>
+            <label><input type="checkbox" class="baseline-day" value="TH" checked /> Thu</label>
+            <label><input type="checkbox" class="baseline-day" value="FR" checked /> Fri</label>
+            <label><input type="checkbox" class="baseline-day" value="SA" /> Sat</label>
+            <label><input type="checkbox" class="baseline-day" value="SU" /> Sun</label>
+          </div>
+        </div>
+        <div><label for="baselineStart">Baseline Start Time</label><input type="time" id="baselineStart" value="08:00" /></div>
+        <div><label for="baselineEnd">Baseline End Time</label><input type="time" id="baselineEnd" value="17:00" /></div>
+        <div><label for="baselineDate">Baseline Event Start Date</label><input type="date" id="baselineDate" value="2000-01-01" /></div>
+      </div>
+      <div class="btnbar">
+        <button type="button" class="primary" id="baselinePreviewBtn">Preview Baseline Exceptions</button>
+        <button type="button" class="ghost" id="baselineExportBtn" disabled>Export Exceptions</button>
+        <button type="button" class="danger" id="baselineFixBtn" disabled>Apply Baseline To Selected</button>
+        <span id="baselineStatus" role="status" aria-live="polite"></span>
+      </div>
+      <div id="baselinePreview" style="margin-top:14px"></div>
+    </div>
+  </details>
+
   </section>
   <aside class="activity-sidebar">
   <div class="card activity-card">
@@ -687,7 +719,7 @@
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
 // Display version. Advance future feature builds through 2.1, 2.2, and so on.
-const APP_VERSION = "4.1 Beta";
+const APP_VERSION = "4.3 Beta";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;
@@ -2673,6 +2705,257 @@ async function deriveCopyGroups(sourceCalId) {
 }
 
 // ============================================================================
+//  Work-hours baseline audit
+// ============================================================================
+let BASELINE_PLAN = null;
+let BASELINE_SELECTED = new Set();
+
+function baselineConfiguration() {
+  const days = [...document.querySelectorAll(".baseline-day:checked")].map(checkbox => checkbox.value);
+  const start = $("baselineStart").value, end = $("baselineEnd").value, date = $("baselineDate").value;
+  const toMinutes = value => {
+    const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : NaN;
+  };
+  return { days, start, end, date, startMinutes: toMinutes(start), endMinutes: toMinutes(end) };
+}
+
+function baselineDescription(config) {
+  return `${config.days.join(", ")} · ${minutesLabel(config.startMinutes)}–${minutesLabel(config.endMinutes)} · starts ${config.date}`;
+}
+
+function recurrenceDays(rule) {
+  const patterns = [rule.pattern, ...(rule._leafRules || []).map(leaf => leaf.pattern)].filter(Boolean);
+  const days = new Set();
+  for (const pattern of patterns) {
+    const match = String(pattern).match(/(?:^|;)BYDAY=([^;]+)/i);
+    if (match) match[1].split(",").map(day => day.trim().toUpperCase()).filter(Boolean).forEach(day => days.add(day));
+  }
+  return [...days];
+}
+
+function ruleMinuteRange(rule) {
+  const leaves = (rule._leafRules || []).filter(leaf => Number(leaf.timecode) === 0 && Number(leaf.subcode) !== 6);
+  const candidates = leaves.length ? leaves : [rule];
+  const ranges = candidates.map(node => {
+    const duration = Number(node.duration);
+    const offset = Number(node.offset);
+    if (Number.isFinite(offset) && Number.isFinite(duration)) return { start: offset, end: offset + duration, duration };
+    const start = node.starttime ? new Date(node.starttime) : null;
+    const end = node.endtime ? new Date(node.endtime) : null;
+    if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+    const startMinutes = start.getUTCHours() * 60 + start.getUTCMinutes();
+    let endMinutes = end.getUTCHours() * 60 + end.getUTCMinutes();
+    if (end.getUTCDate() !== start.getUTCDate() || endMinutes <= startMinutes) endMinutes += 1440;
+    return { start: startMinutes, end: endMinutes, duration: endMinutes - startMinutes };
+  }).filter(Boolean);
+  if (!ranges.length) return null;
+  return {
+    start: Math.min(...ranges.map(range => range.start)),
+    end: Math.max(...ranges.map(range => range.end)),
+    allDay: ranges.some(range => range.duration >= 1439) ||
+      (Math.min(...ranges.map(range => range.start)) === 0 && Math.max(...ranges.map(range => range.end)) >= 1439),
+  };
+}
+
+function minutesLabel(value) {
+  if (!Number.isFinite(value)) return "Unknown";
+  const normalized = ((value % 1440) + 1440) % 1440;
+  const hour = Math.floor(normalized / 60), minute = normalized % 60;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${suffix}${value >= 1440 ? " (+1 day)" : ""}`;
+}
+
+function baselineStartDate(rule) {
+  const raw = rule.starttime || (rule._leafRules || []).map(leaf => leaf.starttime).find(Boolean);
+  if (!raw) return "Unknown";
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? String(raw).slice(0, 10) : parsed.toISOString().slice(0, 10);
+}
+
+function evaluateWorkHoursBaseline(resource, rules, config) {
+  const issues = [];
+  if (rules.length === 0) issues.push("No Working Hours recurrence");
+  if (rules.length > 1) issues.push(`${rules.length} Working Hours recurrences`);
+  const daySets = rules.map(recurrenceDays);
+  const allDays = [...new Set(daySets.flat())];
+  const unexpectedDays = allDays.filter(day => !config.days.includes(day));
+  if (unexpectedDays.some(day => day === "SA" || day === "SU")) issues.push("Unexpected weekend coverage");
+  if (rules.length && (allDays.length !== config.days.length || config.days.some(day => !allDays.includes(day))))
+    issues.push("Working days differ from baseline");
+  const ranges = rules.map(ruleMinuteRange).filter(Boolean);
+  if (ranges.some(range => range.allDay)) issues.push("24-hour / all-day Working Hours");
+  if (rules.length && (ranges.length !== rules.length || ranges.some(range => range.start !== config.startMinutes || range.end !== config.endMinutes)))
+    issues.push("Hours differ from baseline");
+  const startDates = rules.map(baselineStartDate);
+  if (rules.length && startDates.some(date => date !== config.date)) issues.push("Event start date differs from baseline");
+  return {
+    key: `baseline:${resource.id}`, resource, rules, issues,
+    days: daySets.map(days => days.join(", ") || "Unknown").join(" / ") || "None",
+    hours: ranges.map(range => `${minutesLabel(range.start)}–${minutesLabel(range.end)}`).join(" / ") || "None",
+    startDates: [...new Set(startDates)].join(" / ") || "None",
+  };
+}
+
+function updateBaselineSelectionUi() {
+  const count = BASELINE_SELECTED.size;
+  const countElement = $("baselineSelectedCount");
+  if (countElement) countElement.textContent = `${count} Selected`;
+  $("baselineFixBtn").disabled = !BASELINE_PLAN || count === 0;
+  $("baselineExportBtn").disabled = !BASELINE_PLAN || BASELINE_PLAN.rows.length === 0;
+}
+
+function wireBaselineGrid() {
+  document.querySelectorAll(".baseline-select").forEach(checkbox => checkbox.addEventListener("change", () => {
+    if (checkbox.checked) BASELINE_SELECTED.add(checkbox.dataset.key); else BASELINE_SELECTED.delete(checkbox.dataset.key);
+    updateBaselineSelectionUi();
+  }));
+  const setAll = checked => {
+    document.querySelectorAll(".baseline-select").forEach(checkbox => {
+      checkbox.checked = checked;
+      if (checked) BASELINE_SELECTED.add(checkbox.dataset.key); else BASELINE_SELECTED.delete(checkbox.dataset.key);
+    });
+    updateBaselineSelectionUi();
+  };
+  $("baselineSelectAllBtn")?.addEventListener("click", () => setAll(true));
+  $("baselineClearBtn")?.addEventListener("click", () => setAll(false));
+  wireSortablePreviewTable($("baselineTable"));
+}
+
+function renderBaselineResults(rows, noticesHtml = "") {
+  const config = BASELINE_PLAN && BASELINE_PLAN.config;
+  let html = `<p><b>${rows.length}</b> resource(s) are outside the Work Hours baseline${config ? `: <b>${escapeHtml(baselineDescription(config))}</b>` : ""}.</p>${noticesHtml}`;
+  if (rows.length) {
+    html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="baselineSelectAllBtn">Select All</button><button type="button" class="ghost small" id="baselineClearBtn">Clear</button><span class="selcount" id="baselineSelectedCount">${BASELINE_SELECTED.size} Selected</span></div>`;
+    html += `<div class="tablewrap"><table id="baselineTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("count", "Working Rule Count")}${sortableHeader("days", "Working Days")}${sortableHeader("hours", "Hours")}${sortableHeader("startdate", "Event Start Date")}${sortableHeader("findings", "Findings")}</tr></thead><tbody>`;
+    for (const row of rows) {
+      const findings = row.issues.join("; ");
+      html += `<tr><td><input type="checkbox" class="baseline-select" data-key="${escapeHtml(row.key)}" ${BASELINE_SELECTED.has(row.key) ? "checked" : ""} aria-label="Select baseline exception" /></td>` +
+        `<td data-sort-key="resource" data-sort-value="${escapeHtml(row.resource.name)}" class="wrap">${escapeHtml(row.resource.name)}</td>` +
+        `<td data-sort-key="count" data-sort-value="${row.rules.length}">${row.rules.length}</td>` +
+        `<td data-sort-key="days" data-sort-value="${escapeHtml(row.days)}" class="wrap">${escapeHtml(row.days)}</td>` +
+        `<td data-sort-key="hours" data-sort-value="${escapeHtml(row.hours)}" class="wrap">${escapeHtml(row.hours)}</td>` +
+        `<td data-sort-key="startdate" data-sort-value="${escapeHtml(row.startDates)}" class="wrap">${escapeHtml(row.startDates)}</td>` +
+        `<td data-sort-key="findings" data-sort-value="${escapeHtml(findings)}" class="wrap">${escapeHtml(findings)}</td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  } else html += `<p class="hint">Every inspected resource matches the Work Hours baseline.</p>`;
+  $("baselinePreview").innerHTML = html;
+  wireBaselineGrid();
+  updateBaselineSelectionUi();
+}
+
+async function previewWorkHoursBaseline() {
+  BASELINE_PLAN = null; BASELINE_SELECTED.clear();
+  $("baselinePreview").innerHTML = ""; $("baselineExportBtn").disabled = true; $("baselineFixBtn").disabled = true;
+  if (!selected.size) { $("baselineStatus").textContent = "Select resources first."; return; }
+  const config = baselineConfiguration();
+  if (!config.days.length) { $("baselineStatus").textContent = "Select at least one baseline working day."; return; }
+  if (!Number.isFinite(config.startMinutes) || !Number.isFinite(config.endMinutes) || config.endMinutes <= config.startMinutes) {
+    $("baselineStatus").textContent = "Enter a baseline end time later than the start time."; return;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(config.date)) { $("baselineStatus").textContent = "Enter a valid baseline event start date."; return; }
+  const selectedIds = [...selected], rowsByResource = new Array(selectedIds.length);
+  let failed = 0, missingCalendar = 0;
+  try {
+    beginCancellableAction("Work Hours baseline audit"); setBusy(true); $("baselinePreviewBtn").disabled = true;
+    log(`Work Hours baseline audit: inspecting ${selectedIds.length} selected resource(s) against ${baselineDescription(config)} with up to 6 parallel readers.`);
+    await runWithConcurrency(selectedIds, 6, async (id, index) => {
+      const resource = resources.find(item => item.id === id);
+      if (!resource) return;
+      if (!resource.calendarId) {
+        missingCalendar++; rowsByResource[index] = evaluateWorkHoursBaseline(resource, [], config);
+        log("Baseline exception: no calendar is assigned.", resource); return;
+      }
+      try {
+        const roots = await loadCalendarRules(resource.calendarId), working = [];
+        for (const root of roots) {
+          throwIfActionCancelled();
+          const inspected = await inspectOuterCalendarRule(root, Number(resource.timeZone == null ? -999 : resource.timeZone));
+          if (inspected.kind === "working") working.push(inspected);
+        }
+        const result = evaluateWorkHoursBaseline(resource, working, config);
+        rowsByResource[index] = result.issues.length ? result : null;
+        if (result.issues.length) log(`Baseline exception: ${result.issues.join("; ")}.`, resource);
+      } catch (error) {
+        if (isActionCancellation(error)) throw error;
+        failed++; log(`Work Hours baseline audit failed: ${error.message}`, resource);
+      }
+    }, completed => { $("baselineStatus").textContent = `Inspected ${completed} of ${selectedIds.length} resource calendar(s)${failed ? `; ${failed} failed` : ""}…`; });
+    const rows = rowsByResource.filter(Boolean);
+    BASELINE_PLAN = { rows, config }; BASELINE_SELECTED = new Set(rows.map(row => row.key));
+    let notices = "";
+    if (missingCalendar) notices += `<div class="warnbox">${missingCalendar} resource(s) had no assigned calendar and were flagged.</div>`;
+    if (failed) notices += `<div class="warnbox">${failed} resource calendar(s) could not be inspected. Review the Activity Log.</div>`;
+    renderBaselineResults(rows, notices);
+    $("baselineStatus").textContent = rows.length ? "Audit ready." : "All inspected resources match the baseline.";
+    log(`Work Hours baseline audit complete: ${rows.length} exception(s), ${failed} failed resource calendar(s).`);
+  } catch (error) {
+    BASELINE_PLAN = null; BASELINE_SELECTED.clear();
+    if (isActionCancellation(error)) { $("baselineStatus").textContent = "Audit cancelled."; log("Work Hours baseline audit cancelled."); }
+    else { $("baselineStatus").textContent = "Audit failed — see log."; log(`Work Hours baseline audit failed: ${error.message}`); }
+  } finally { setBusy(false); $("baselinePreviewBtn").disabled = false; endCancellableAction(); }
+}
+
+function exportWorkHoursBaseline() {
+  if (!BASELINE_PLAN || !BASELINE_PLAN.rows.length) { $("baselineStatus").textContent = "Preview exceptions first."; return; }
+  const config = BASELINE_PLAN.config;
+  const output = BASELINE_PLAN.rows.map(row => ({
+    ResourceID: row.resource.id, ResourceName: row.resource.name, ResourceStatus: row.resource.state === 0 ? "Active" : "Inactive",
+    OrganizationalUnit: row.resource.orgUnitName || "", BusinessUnit: row.resource.businessUnitName || "", Country: row.resource.country || "",
+    ResourceTimeZone: row.resource.timeZoneName || timeZoneLabel(row.resource.timeZone), ParentCalendarID: row.resource.calendarId || "",
+    WorkingRuleCount: row.rules.length, WorkingDays: row.days, Hours: row.hours, EventStartDate: row.startDates,
+    BaselineWorkingDays: config.days.join(","), BaselineStartTime: config.start, BaselineEndTime: config.end, BaselineEventStartDate: config.date,
+    Findings: row.issues.join("; "), WorkingRuleIDs: row.rules.map(rule => rule.calendarruleid).filter(Boolean).join("; "),
+  }));
+  const preferred = ["ResourceID", "ResourceName", "ResourceStatus", "OrganizationalUnit", "BusinessUnit", "Country", "ResourceTimeZone", "ParentCalendarID", "WorkingRuleCount", "WorkingDays", "Hours", "EventStartDate", "BaselineWorkingDays", "BaselineStartTime", "BaselineEndTime", "BaselineEventStartDate", "Findings", "WorkingRuleIDs"];
+  const timestamp = new Date().toISOString().replace("T", " ").replace(/[:]/g, "-").replace(/\.\d{3}Z$/, " UTC");
+  downloadObjectCsv(`Work Hours Baseline Exceptions - ${timestamp}.csv`, preferred, output);
+  $("baselineStatus").textContent = `${output.length} exception row(s) exported.`;
+  log(`Exported ${output.length} Work Hours baseline exception row(s).`);
+}
+
+async function applyWorkHoursBaseline() {
+  if (!BASELINE_PLAN) { $("baselineStatus").textContent = "Preview exceptions first."; return; }
+  const rows = BASELINE_PLAN.rows.filter(row => BASELINE_SELECTED.has(row.key));
+  const config = BASELINE_PLAN.config;
+  if (!rows.length) { $("baselineStatus").textContent = "Select at least one baseline exception."; return; }
+  if (!confirmTwice($("baselineFixBtn"), "Apply Baseline To Selected")) return;
+  let succeeded = 0, failed = 0;
+  try {
+    beginCancellableAction("Work Hours baseline update"); setBusy(true);
+    $("baselinePreviewBtn").disabled = true; $("baselineExportBtn").disabled = true; $("baselineFixBtn").disabled = true;
+    log(`Work Hours baseline update: applying ${baselineDescription(config)} to ${rows.length} resource(s) with up to 4 parallel workers.`);
+    await runWithConcurrency(rows, 4, async row => {
+      const resource = row.resource;
+      try {
+        if (!resource.calendarId) throw new Error("No calendar is assigned.");
+        const zone = Number(resource.timeZone);
+        if (!Number.isFinite(zone) || zone < 0) throw new Error("The Bookable Resource has no valid Time Zone.");
+        await clearWorkingHoursPreservingExceptions(resource.calendarId, resource.id, zone, resource.name);
+        const rules = [{ StartTime: `${config.date}T${config.start}:00Z`, EndTime: `${config.date}T${config.end}:00Z`, Effort: 1, WorkHourType: 0 }];
+        await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: calEventInfo(resource.calendarId, resource.id, zone, config.days.join(","), rules) });
+        succeeded++;
+        BASELINE_PLAN.rows = BASELINE_PLAN.rows.filter(item => item.key !== row.key); BASELINE_SELECTED.delete(row.key);
+        log(`Applied baseline Working Hours: ${baselineDescription(config)}.`, resource);
+      } catch (error) {
+        if (isActionCancellation(error)) throw error;
+        failed++; log(`Work Hours baseline update failed: ${error.message}`, resource);
+      }
+    }, completed => { $("baselineStatus").textContent = `Completed ${completed} of ${rows.length}: ${succeeded} updated${failed ? `, ${failed} failed` : ""}…`; });
+    $("baselineStatus").textContent = `${succeeded} resource(s) updated${failed ? `, ${failed} failed` : ""}.`;
+    log(`Work Hours baseline update complete: ${succeeded} updated, ${failed} failed.`);
+    notify("Work Hours baseline applied", `${succeeded} resource(s) updated${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
+  } catch (error) {
+    if (isActionCancellation(error)) { $("baselineStatus").textContent = `Cancelled after ${succeeded} update(s).`; log("Work Hours baseline update cancelled."); }
+    else { $("baselineStatus").textContent = "Update stopped — see log."; log(`Work Hours baseline update stopped: ${error.message}`); }
+  } finally {
+    setBusy(false); $("baselinePreviewBtn").disabled = false; endCancellableAction();
+    if (BASELINE_PLAN) renderBaselineResults(BASELINE_PLAN.rows);
+  }
+}
+
+// ============================================================================
 //  Preview + apply (fields + work hours)
 // ============================================================================
 let PLAN = null;
@@ -3117,6 +3400,14 @@ $("exportCalendarRulesBtn").addEventListener("click", exportSelectedCalendarRule
 $("mismatchPreviewBtn").addEventListener("click", previewCalendarTimeZoneMismatches);
 $("mismatchExportBtn").addEventListener("click", exportCalendarTimeZoneMismatches);
 $("mismatchFixBtn").addEventListener("click", fixCalendarTimeZoneMismatches);
+$("baselinePreviewBtn").addEventListener("click", previewWorkHoursBaseline);
+$("baselineExportBtn").addEventListener("click", exportWorkHoursBaseline);
+$("baselineFixBtn").addEventListener("click", applyWorkHoursBaseline);
+document.querySelectorAll(".baseline-day, #baselineStart, #baselineEnd, #baselineDate").forEach(control => control.addEventListener("change", () => {
+  BASELINE_PLAN = null; BASELINE_SELECTED.clear();
+  $("baselineExportBtn").disabled = true; $("baselineFixBtn").disabled = true;
+  $("baselineStatus").textContent = "Preview again after changing the baseline.";
+}));
 ["mismatchWorking", "mismatchNonWorking", "mismatchTimeOff"].forEach(id => $(id).addEventListener("change", () => {
   MISMATCH_PLAN = null; MISMATCH_SELECTED.clear();
   $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
