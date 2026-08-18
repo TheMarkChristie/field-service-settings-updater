@@ -14,7 +14,7 @@
     <Product>Field Service Resource Updater</Product>
     <Company>Mark Christie</Company>
     <Authors>Mark Christie</Authors>
-    <Version>4.3.0-beta</Version>
+    <Version>4.4.0-beta</Version>
   </PropertyGroup>
 
   <ItemGroup>

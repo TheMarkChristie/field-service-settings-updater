@@ -719,7 +719,7 @@
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
 // Display version. Advance future feature builds through 2.1, 2.2, and so on.
-const APP_VERSION = "4.3 Beta";
+const APP_VERSION = "4.4 Beta";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;
@@ -1747,6 +1747,7 @@ async function inspectOuterCalendarRule(rule, target) {
   const representative = leaves.find(r => Number(r.subcode) === 6) || leaves[0] || rule;
   const interval = deriveCalendarInterval(rule, representative === rule ? null : representative);
   const resolvedReason = existingTimeOffReason(rule, leaves, innerCalendar);
+  const eventDateSource = representative.starttime || rule.starttime || interval.start || "";
   return {
     ...rule,
     kind,
@@ -1755,7 +1756,12 @@ async function inspectOuterCalendarRule(rule, target) {
     _eventStart: interval.start,
     _eventEnd: interval.end,
     _eventDuration: interval.duration,
-    _isAllDay: interval.duration === 1440 && Number(representative.offset || 0) === 0,
+    // All-day Time Off is stored as a 1,440-minute rule. Its offset is the
+    // source-zone representation of local midnight and is often non-zero
+    // (for example 1080 = 18:00 UTC for UTC-06), so offset === 0 is not a
+    // valid all-day test.
+    _isAllDay: kind === "timeoff" && interval.duration === 1440,
+    _eventDate: String(eventDateSource).slice(0, 10),
     _eventEffort: representative.effort == null ? (rule.effort == null ? 1 : rule.effort) : representative.effort,
     // SaveCalendar stores the user-entered Time Off reason as the inner
     // Calendar name. Keep it separate from generic rule names such as
@@ -1935,7 +1941,10 @@ async function updateTimedTimeOffTimeZone(resource, rule, target) {
 }
 async function makeTimeOffAllDay(resource, rule, target) {
   const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
-  const date = String(rule._eventStart || rule.starttime || "").slice(0, 10);
+  // Preserve the calendar date recorded by the original rule. _eventStart
+  // can include the source-zone offset (such as 18:00Z for local midnight),
+  // while _eventDate comes from the unshifted rule date.
+  const date = rule._eventDate || String(rule._eventStart || rule.starttime || "").slice(0, 10);
   if (!innerId || !/^\d{4}-\d{2}-\d{2}$/.test(date))
     throw new Error(`${resource.name}: Time Off rule is missing its inner calendar ID or event date.`);
   const start = `${date}T00:00:00.000Z`;
@@ -1952,8 +1961,13 @@ async function makeTimeOffAllDay(resource, rule, target) {
     }]
   };
   const reasonAction = rule._eventReasonDefaulted ? `blank reason defaulted to "${rule._eventDescription}"` : `reason "${rule._eventDescription}" explicitly retained`;
-  log(`    ${resource.name}: converting Time Off to All Day through msdyn_SaveCalendar; ${start} to ${end}; ${reasonAction}; inner calendar ${innerId}; target TZ ${target}.`);
+  log(`    ${resource.name}: ${rule._isAllDay ? "preserving" : "converting"} Time Off as All Day through msdyn_SaveCalendar; ${start} to ${end}; ${reasonAction}; inner calendar ${innerId}; target TZ ${target}.`);
   await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: JSON.stringify(info) });
+}
+
+async function updateTimeOffTimeZonePreservingShape(resource, rule, target) {
+  if (rule._isAllDay) return await makeTimeOffAllDay(resource, rule, target);
+  return await updateTimedTimeOffTimeZone(resource, rule, target);
 }
 async function applyCalendarTimeZones() {
   if (!CAL_TZ_PLAN) { $("calTzStatus").textContent = "Preview first."; return; }
@@ -1984,7 +1998,7 @@ async function applyCalendarTimeZones() {
         try {
           if (rule.kind === "timeoff") {
             if (makeAllDay) await makeTimeOffAllDay(item.resource, rule, target);
-            else await updateTimedTimeOffTimeZone(item.resource, rule, target);
+            else await updateTimeOffTimeZonePreservingShape(item.resource, rule, target);
           } else await updateCalendarRuleTree(rule, target, item.resource);
           ok++; log(`  ✓ ${item.resource.name}: completed ${rule.kind} rule on ${date}.`);
         } catch (e) {
@@ -2631,7 +2645,7 @@ async function fixCalendarTimeZoneMismatches() {
         throwIfActionCancelled();
         const rule = row.rule;
         try {
-          if (rule.kind === "timeoff") await updateTimedTimeOffTimeZone(group.resource, rule, row.targetCode);
+          if (rule.kind === "timeoff") await updateTimeOffTimeZonePreservingShape(group.resource, rule, row.targetCode);
           else await updateCalendarRuleTree(rule, row.targetCode, group.resource);
           succeeded++; succeededKeys.add(row.key);
           log(`Matched ${calendarKindLabel(rule.kind)} to ${row.targetName}; ${rule._eventStart || rule.starttime || "date unavailable"}.`, group.resource);
