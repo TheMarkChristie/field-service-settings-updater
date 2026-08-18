@@ -7,7 +7,9 @@ using System.Windows.Forms;
 using McTools.Xrm.Connection;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Tooling.Connector;
 using XrmToolBox.Extensibility;
 using XrmToolBox.Extensibility.Interfaces;
 
@@ -17,7 +19,7 @@ namespace FieldServiceSettingsUpdater
     /// WebView2 host for the shared Field Service Settings Updater HTML. On every connection
     /// change we push the org URL + a fresh OAuth access token into the page as
     /// window.XTB_CONFIG, then (re)load it. The page detects XTB_CONFIG, switches to the
-    /// Windows 95 theme, and calls the Web API directly with the bearer token.
+    /// modern light/dark theme, and calls the Web API directly with the bearer token.
     /// </summary>
     public class SettingsControl : PluginControlBase, IGitHubPlugin, IHelpPlugin
     {
@@ -29,6 +31,7 @@ namespace FieldServiceSettingsUpdater
         private bool _webReady;
         private string _orgUrl;
         private string _token;
+        private CrmServiceClient _serviceClient;
 
         public SettingsControl()
         {
@@ -58,8 +61,45 @@ namespace FieldServiceSettingsUpdater
                 try { Process.Start(new ProcessStartInfo(e.Uri) { UseShellExecute = true }); }
                 catch (Exception ex) { LogError("Failed to open external link: " + ex.Message); }
             };
+            _web.CoreWebView2.WebMessageReceived += async (s, e) =>
+            {
+                if (e.TryGetWebMessageAsString() == "refresh-token")
+                    await RefreshAccessTokenAsync();
+            };
 
             await PushConfigAndNavigateAsync();
+        }
+
+        /// <summary>
+        /// Force the Dataverse client to renew an expired OAuth token, then update the
+        /// already-running page without navigating or losing its current export state.
+        /// </summary>
+        private async Task RefreshAccessTokenAsync()
+        {
+            try
+            {
+                if (_serviceClient == null)
+                    throw new InvalidOperationException("The active connection does not expose a Dataverse ServiceClient.");
+
+                await Task.Run(() => _serviceClient.Execute(new WhoAmIRequest()));
+                var refreshedToken = _serviceClient.CurrentAccessToken;
+                if (string.IsNullOrEmpty(refreshedToken))
+                    throw new InvalidOperationException("Dataverse did not return a refreshed access token.");
+
+                _token = refreshedToken;
+                await _web.CoreWebView2.ExecuteScriptAsync(
+                    $"window.XTB_CONFIG = window.XTB_CONFIG || {{}};" +
+                    $"window.XTB_CONFIG.token = {JsString(_token)};" +
+                    "window.dispatchEvent(new CustomEvent('xtb-token-refresh-result', { detail: { ok: true } }));");
+            }
+            catch (Exception ex)
+            {
+                LogError("Failed to refresh connection token: " + ex.Message);
+                if (_webReady && _web.CoreWebView2 != null)
+                    await _web.CoreWebView2.ExecuteScriptAsync(
+                        "window.dispatchEvent(new CustomEvent('xtb-token-refresh-result', { detail: { ok: false, message: " +
+                        JsString(ex.Message) + " } }));");
+            }
         }
 
         /// <summary>Resolve org URL + token from the connection and (re)load the app.</summary>
@@ -102,8 +142,8 @@ namespace FieldServiceSettingsUpdater
                           ?? detail?.OrganizationServiceUrl?.Replace("/XRMServices/2011/Organization.svc", "").TrimEnd('/');
 
                 // ServiceClient exposes the OAuth bearer token used by the page's fetch calls.
-                var svc = detail?.ServiceClient;
-                _token = svc?.CurrentAccessToken;
+                _serviceClient = detail?.ServiceClient;
+                _token = _serviceClient?.CurrentAccessToken;
 
                 if (string.IsNullOrEmpty(_token))
                     LogWarning("No OAuth access token available on this connection — " +

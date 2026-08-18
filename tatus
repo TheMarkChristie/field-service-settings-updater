@@ -1,0 +1,30 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LICENSE', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/ARCHITECTURE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'field-service-settings-updater.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'icon.svg', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'npm-shrinkwrap.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'xrmtoolbox/FieldServiceSettingsUpdater/FieldServiceSettingsUpdater.csproj', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'xrmtoolbox/FieldServiceSettingsUpdater/FieldServiceSettingsUpdater.nuspec', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'xrmtoolbox/FieldServiceSettingsUpdater/FieldServiceSettingsUpdaterPlugin.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'xrmtoolbox/FieldServiceSettingsUpdater/IconData.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'xrmtoolbox/FieldServiceSettingsUpdater/SettingsControl.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'xrmtoolbox/install.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'xrmtoolbox/make-icons.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'youtube-cinema-world/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'youtube-cinema-world/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'youtube-cinema-world/vendor/three/LICENSE', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'youtube-cinema-world/vendor/three/addons/controls/PointerLockControls.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'youtube-cinema-world/vendor/three/addons/renderers/CSS3DRenderer.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'youtube-cinema-world/vendor/three/three.module.js', LF will be replaced by CRLF the next time Git touches it
+ README.md                                          |   33 [32m+[m[31m-[m
+ field-service-settings-updater.html                | 1657 [32m++++++++++++++++++[m[31m--[m
+ npm-shrinkwrap.json                                |    4 [32m+[m[31m-[m
+ package.json                                       |    2 [32m+[m[31m-[m
+ .../FieldServiceSettingsUpdater.csproj             |    2 [32m+[m[31m-[m
+ .../FieldServiceSettingsUpdater.nuspec             |    4 [32m+[m[31m-[m
+ .../FieldServiceSettingsUpdater/SettingsControl.cs |    2 [32m+[m[31m-[m
+ 7 files changed, 1531 insertions(+), 173 deletions(-)

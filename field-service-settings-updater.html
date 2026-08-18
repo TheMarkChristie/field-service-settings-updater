@@ -15,7 +15,7 @@
   button:not(:disabled):hover { filter: brightness(0.92); }
   input::placeholder { color: #8a8f98; opacity: 1; }
   body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
-  header { background: var(--charcoal); color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header { background: var(--charcoal); color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px #0003; }
   header .logo { width: 32px; height: 32px; flex: 0 0 auto; }
   header h1 { font-size: 18px; margin: 0; font-weight: 600; }
   header .author { color: #9a9a9a; font-size: 12px; font-style: italic; }
@@ -24,6 +24,10 @@
   .spinner { width: 18px; height: 18px; flex: 0 0 auto; margin-left: 14px; border-radius: 50%;
     border: 3px solid rgba(255,255,255,.25); border-top-color: var(--red); animation: spin .8s linear infinite; }
   .spinner[hidden] { display: none; }
+  .cancel-action { padding: 5px 10px; border: 1px solid #ff8c9f; border-radius: 6px; background: #8f1830; color: #fff; font-weight: 600; cursor: pointer; }
+  .cancel-action:hover { background: #b31d3b; }
+  .cancel-action[hidden] { display: none; }
+  .cancel-action:disabled { opacity: .65; cursor: default; }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-top-color: #fff; } }
   body[data-host="xtb"] .spinner { border-color: #808080; border-top-color: #000080; }
@@ -47,23 +51,39 @@
   .danger { background: var(--red-btn); color: #fff; }
   .ghost { background: #eee; color: #333; }
   .small { padding: 7px 13px; font-size: 13px; }
-  #status, #qaStatus { font-size: 13px; color: #666; }
+  #loadStatus, #settingsStatus, #whStatus, #qaStatus { font-size: 13px; color: #666; }
   .banner { border-left: 4px solid var(--red); background: #fff5f6; padding: 12px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
   .warnbox { border-left: 4px solid var(--warn); background: #fff7ea; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
   .errbox { border-left: 4px solid var(--err); background: #fdecef; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
-  body.theme-dark .warnbox { background: #2a2316; } body.theme-dark .errbox { background: #2a1820; }
+  .okbox { border-left: 4px solid var(--ok); background: #eaf8ef; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
+  body.theme-dark .warnbox { background: #2a2316; } body.theme-dark .errbox { background: #2a1820; } body.theme-dark .okbox { background: #14291e; }
   body[data-host="xtb"] .warnbox { background: #fff0d0; border-left: 4px solid #7a4a00; border-radius: 0; color: #000; }
   body[data-host="xtb"] .errbox { background: #ffe0e0; border-left: 4px solid #a80000; border-radius: 0; color: #000; }
+  body[data-host="xtb"] .okbox { background: #e1f5e7; border-left: 4px solid #137333; border-radius: 0; color: #000; }
   #log { background: #1e1e1e; color: #d4d4d4; font-family: 'Cascadia Code', Consolas, monospace; font-size: 12px;
-         border-radius: 8px; padding: 12px; height: 220px; overflow: auto; white-space: pre-wrap; margin-top: 14px; }
+         border-radius: 8px; height: 220px; overflow: auto; margin-top: 14px; }
+  #log table { table-layout: fixed; min-width: 620px; }
+  #log th { background: #263246; color: #f4f8fc; }
+  #log td { white-space: normal; overflow-wrap: anywhere; border-color: #344155; line-height: 1.4; }
+  #log .log-time { width: 82px; }
+  #log .log-resource { width: 180px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
   th { background: #fafafa; position: sticky; top: 0; z-index: 1; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable::after { content: " ↕"; color: #777; font-weight: 400; }
+  th.sortable[aria-sort="ascending"]::after { content: " ▲"; color: inherit; }
+  th.sortable[aria-sort="descending"]::after { content: " ▼"; color: inherit; }
   td.wrap, th.wrap { white-space: normal; }
   .tablewrap { max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
   .toolbar { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 12px; }
   .toolbar > div { min-width: 180px; }
   .selcount { font-weight: 700; color: var(--charcoal); }
+  .resource-title-row { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .resource-title-row h2 { margin: 0 !important; padding-bottom: 10px; border-bottom: 0 !important; }
+  .resource-counts { display: flex; align-items: center; gap: 22px; padding-bottom: 10px; }
+  .resource-counts .selcount, .resource-counts #loadStatus { font-size: 18px; line-height: 1.2; font-weight: 700; }
+  .resource-counts #loadStatus { color: #52657c; }
   .fieldgrid { display: grid; grid-template-columns: 1fr; gap: 6px; }
   .fieldrow { display: grid; grid-template-columns: 230px 1fr; gap: 14px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
   .fieldrow.off { opacity: .5; }
@@ -97,7 +117,7 @@
   body.theme-dark input[type=text], body.theme-dark input[type=number], body.theme-dark input[type=time], body.theme-dark select {
     background: #1e1f24; color: var(--ink); border-color: var(--line); }
   body.theme-dark select option { background: #1e1f24; color: var(--ink); }
-  body.theme-dark .hint, body.theme-dark #status, body.theme-dark #qaStatus { color: #9aa0a6; }
+  body.theme-dark .hint, body.theme-dark #loadStatus, body.theme-dark #settingsStatus, body.theme-dark #whStatus, body.theme-dark #qaStatus { color: #b8bec7; }
   body.theme-dark th { background: #2c2d33; }
   body.theme-dark th, body.theme-dark td { border-color: var(--line); }
   body.theme-dark .tablewrap, body.theme-dark .fieldrow, body.theme-dark .daypick label { border-color: var(--line); }
@@ -115,7 +135,7 @@
   body[data-host="xtb"] .card h2 { background: linear-gradient(90deg, #000080, #1084d0); color: #fff; text-transform: none; letter-spacing: 0; margin: -3px -8px 10px; padding: 3px 6px; }
   body[data-host="xtb"] .card h3, body[data-host="xtb"] legend { color: #000; }
   body[data-host="xtb"] label { font-weight: 700; color: #000; }
-  body[data-host="xtb"] .hint, body[data-host="xtb"] #status, body[data-host="xtb"] #qaStatus { color: #303030; }
+  body[data-host="xtb"] .hint, body[data-host="xtb"] #loadStatus, body[data-host="xtb"] #settingsStatus, body[data-host="xtb"] #whStatus, body[data-host="xtb"] #qaStatus { color: #303030; }
   body[data-host="xtb"] input[type=text], body[data-host="xtb"] input[type=number], body[data-host="xtb"] input[type=time], body[data-host="xtb"] select {
     background: #fff; color: #000; border: 2px solid; border-color: #808080 #fff #fff #808080; border-radius: 0; }
   body[data-host="xtb"] button { background: #c0c0c0; color: #000; border: 2px solid; border-color: #fff #000 #000 #fff; border-radius: 0; box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080; font-weight: 400; }
@@ -132,20 +152,149 @@
   body[data-host="xtb"] .pill.ok { background: #d6f0db; color: #006400; }
   body[data-host="xtb"] .pill.warn { background: #fff0d0; color: #7a4a00; }
 
+  /* Modern XrmToolBox theme. Kept host-scoped so PPTB and web-resource themes are unchanged. */
+  body[data-host="xtb"] { background: #f3f6fa; color: #172033; font-family: "Segoe UI", Arial, sans-serif; font-size: 13px; }
+  body[data-host="xtb"] header { background: linear-gradient(110deg, #102a56, #1267b2); border: 0; box-shadow: 0 2px 10px #102a5630; }
+  body[data-host="xtb"] main { padding: 20px; }
+  body[data-host="xtb"] .card, body[data-host="xtb"] fieldset { background: #fff; border: 1px solid #dbe3ee; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px #17365d12; }
+  body[data-host="xtb"] .card h2 { background: transparent; color: #183b66; text-transform: none; letter-spacing: 0; margin: -2px 0 14px; padding: 0 0 10px; border-bottom: 1px solid #e5ebf3; font-size: 16px; }
+  body[data-host="xtb"] .card h3, body[data-host="xtb"] legend, body[data-host="xtb"] label { color: #26364d; }
+  body[data-host="xtb"] .hint, body[data-host="xtb"] #loadStatus, body[data-host="xtb"] #settingsStatus, body[data-host="xtb"] #whStatus, body[data-host="xtb"] #qaStatus { color: #66758b; }
+  body[data-host="xtb"] input[type=text], body[data-host="xtb"] input[type=number], body[data-host="xtb"] input[type=time], body[data-host="xtb"] select {
+    background: #fff; color: #172033; border: 1px solid #bdc9d8; border-radius: 6px; box-shadow: none; min-height: 36px; }
+  body[data-host="xtb"] input:focus, body[data-host="xtb"] select:focus { border-color: #1676c5; box-shadow: 0 0 0 3px #1676c520; outline: none; }
+  body[data-host="xtb"] button { background: #eef3f8; color: #17365d; border: 1px solid #c6d2df; border-radius: 6px; box-shadow: none; font-weight: 600; }
+  body[data-host="xtb"] button:hover:not(:disabled) { background: #e3ebf4; border-color: #9eb0c4; }
+  body[data-host="xtb"] button:active:not(:disabled) { border-color: #7991aa; box-shadow: none; }
+  body[data-host="xtb"] .primary { background: #1267b2; color: #fff; border-color: #1267b2; outline: 0; }
+  body[data-host="xtb"] .primary:hover:not(:disabled) { background: #0e5798; border-color: #0e5798; }
+  body[data-host="xtb"] .danger { color: #b4233c; }
+  body[data-host="xtb"] .banner { background: #f6f9fd; border: 1px solid #dbe5f0; border-left: 4px solid #e21d48; border-radius: 8px; color: #26364d; }
+  body[data-host="xtb"] .tablewrap { border: 1px solid #d8e1ec; border-radius: 8px; background: #fff; }
+  body[data-host="xtb"] th { background: #edf3f9; color: #24364d; border: 0; border-bottom: 1px solid #cad6e3; font-weight: 650; }
+  body[data-host="xtb"] td { border-color: #e7edf4; }
+  body[data-host="xtb"] tbody tr:hover { background: #f4f8fc; }
+  body[data-host="xtb"] .fieldrow, body[data-host="xtb"] .daypick label { border: 1px solid #dde5ee; border-radius: 7px; background: #fbfcfe; }
+  body[data-host="xtb"] details.box { background: #f8fafc; border: 1px solid #dce5ef; border-radius: 8px; }
+  body[data-host="xtb"] details.box > summary { color: #26364d; }
+  body[data-host="xtb"] #log { background: #111827; color: #d1fae5; border: 1px solid #263246; border-radius: 8px; font-family: "Cascadia Code", Consolas, monospace; }
+  body[data-host="xtb"] :focus-visible { outline: 2px solid #2684cf; outline-offset: 2px; }
+
+  .multi-source { display: none !important; }
+  .multi-picker { position: relative; min-width: 220px; }
+  .multi-trigger { width: 100%; min-height: 36px; padding: 7px 34px 7px 10px; text-align: left; position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .multi-trigger::after { content: "▾"; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); color: #617086; }
+  .multi-picker.open .multi-trigger::after { content: "▴"; }
+  .multi-panel { display: none; position: absolute; z-index: 30; left: 0; top: calc(100% + 5px); width: max(100%, 280px); max-height: 300px; overflow: auto; background: #fff; border: 1px solid #bdc9d8; border-radius: 8px; box-shadow: 0 10px 28px #17203330; padding: 6px; }
+  .multi-picker.open .multi-panel { display: block; }
+  .multi-actions { display: flex; gap: 6px; padding: 3px 3px 7px; border-bottom: 1px solid #e5ebf2; margin-bottom: 4px; }
+  .multi-actions button { padding: 4px 8px !important; font-size: 11px !important; }
+  .multi-option { display: flex !important; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 5px; font-weight: 400 !important; cursor: pointer; }
+  .multi-option:hover { background: #edf5fc; }
+  .multi-option input { margin: 0; }
+
+  .theme-toggle { margin-left: auto; padding: 6px 11px; font-size: 12px; white-space: nowrap; background: #ffffff18; color: #fff; border: 1px solid #ffffff40; }
+  header #envlabel { margin-left: 0; }
+  .workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 18px; align-items: start; }
+  .workflow { min-width: 0; }
+  .activity-sidebar { min-width: 0; }
+  .activity-card { position: sticky; top: 16px; margin-bottom: 18px; }
+  .activity-card #log { height: calc(100vh - 180px); min-height: 440px; }
+  .card-title-row { display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid #e5ebf3; margin-bottom: 14px; }
+  .card-title-row h2 { flex: 1; border-bottom: 0 !important; margin-bottom: 0 !important; }
+  .card-title-row button { flex: 0 0 auto; margin-top: -4px; }
+  body[data-host="xtb"].theme-dark .card-title-row { border-color: #2a3b50; }
+  .collapsible { padding-top: 0 !important; }
+  .collapsible > summary { cursor: pointer; list-style: none; padding-top: 16px; }
+  .collapsible > summary::-webkit-details-marker { display: none; }
+  .collapsible > summary h2 { position: relative; padding-right: 28px !important; margin-bottom: 0 !important; }
+  .collapsible > summary h2::after { content: "▾"; position: absolute; right: 4px; top: 0; font-size: 18px; }
+  .collapsible:not([open]) > summary h2::after { content: "▸"; }
+  .collapsible[open] > summary h2 { margin-bottom: 14px !important; }
+  .collapsible > .card-body { padding-top: 2px; }
+
+  /* Dark mode shared by all hosts, with extra specificity to override the modern XTB skin. */
+  body[data-host="xtb"].theme-dark { color-scheme: dark; background: #0d1420; color: #f4f8fc; }
+  body[data-host="xtb"].theme-dark header { background: linear-gradient(110deg, #09172f, #123d68); }
+  body[data-host="xtb"].theme-dark .card,
+  body[data-host="xtb"].theme-dark fieldset { background: #141e2b; border-color: #263548; box-shadow: 0 2px 10px #0005; }
+  body[data-host="xtb"].theme-dark .card h2 { color: #d3e5f7; border-color: #2a3b50; }
+  body[data-host="xtb"].theme-dark .card h3,
+  body[data-host="xtb"].theme-dark legend,
+  body[data-host="xtb"].theme-dark label { color: #f4f8fc; }
+  body[data-host="xtb"].theme-dark .hint,
+  body[data-host="xtb"].theme-dark #loadStatus,
+  body[data-host="xtb"].theme-dark #settingsStatus,
+  body[data-host="xtb"].theme-dark #whStatus,
+  body[data-host="xtb"].theme-dark #qaStatus { color: #c3d2e3; }
+  body[data-host="xtb"].theme-dark input[type=text],
+  body[data-host="xtb"].theme-dark input[type=number],
+  body[data-host="xtb"].theme-dark input[type=time],
+  body[data-host="xtb"].theme-dark select { background: #0f1824; color: #f7faff; border-color: #425a73; }
+  body[data-host="xtb"].theme-dark input:focus,
+  body[data-host="xtb"].theme-dark select:focus { border-color: #4da3e6; box-shadow: 0 0 0 3px #4da3e625; }
+  body[data-host="xtb"].theme-dark button { background: #223147; color: #e5edf7; border-color: #3b4e66; }
+  body[data-host="xtb"].theme-dark button:hover:not(:disabled) { background: #2b3d55; border-color: #526983; }
+  body[data-host="xtb"].theme-dark .primary { background: #1678c8; border-color: #2389da; color: #fff; }
+  body[data-host="xtb"].theme-dark .primary:hover:not(:disabled) { background: #1269b0; }
+  body[data-host="xtb"].theme-dark .danger { color: #ff8ca0; }
+  body[data-host="xtb"].theme-dark .banner { background: #121d2b; border-color: #293a4e; border-left-color: #ef4261; color: #cfdae7; }
+  body[data-host="xtb"].theme-dark .tablewrap { background: #0f1824; border-color: #2d3d51; }
+  body[data-host="xtb"].theme-dark th { background: #1a293a; color: #d9e6f2; border-bottom-color: #35485e; }
+  body[data-host="xtb"].theme-dark td { border-color: #233246; color: #edf4fb; }
+  body[data-host="xtb"].theme-dark .changeitem,
+  body[data-host="xtb"].theme-dark p { color: #edf4fb; }
+  body[data-host="xtb"].theme-dark .selcount { color: #ffffff; }
+  body[data-host="xtb"].theme-dark .resource-counts #loadStatus { color: #d7e5f3; }
+  body[data-host="xtb"].theme-dark tbody tr:hover { background: #172538; }
+  body[data-host="xtb"].theme-dark .fieldrow,
+  body[data-host="xtb"].theme-dark .daypick label { background: #101a27; border-color: #2a3b50; }
+  body[data-host="xtb"].theme-dark details.box { background: #101a27; border-color: #2a3b50; }
+  body[data-host="xtb"].theme-dark details.box > summary { color: #dbe7f3; }
+  body[data-host="xtb"].theme-dark .multi-panel { background: #131e2c; border-color: #3a4d64; box-shadow: 0 12px 32px #0009; }
+  body[data-host="xtb"].theme-dark .multi-actions { border-color: #2d3e53; }
+  body[data-host="xtb"].theme-dark .multi-option:hover { background: #203249; }
+  body[data-host="xtb"].theme-dark .pill.ok { background: #153526; color: #79d59a; }
+  body[data-host="xtb"].theme-dark .pill.warn { background: #3a2b14; color: #f0bd67; }
+
+  @media (max-width: 1200px) {
+    .workspace { grid-template-columns: 1fr; }
+    .activity-card { position: static; }
+    .activity-card #log { height: 280px; min-height: 0; }
+  }
+
+  @media (max-width: 700px) {
+    header { flex-wrap: wrap; padding: 12px; }
+    header #envlabel { order: 5; width: 100%; overflow-wrap: anywhere; }
+    main, body[data-host="xtb"] main { padding: 10px; }
+    .card, body[data-host="xtb"] .card { padding: 12px; }
+    .toolbar > div, .row > div { flex: 1 1 100% !important; min-width: 0; width: 100%; }
+    .fieldrow { grid-template-columns: 1fr; gap: 6px; }
+    .multi-picker { min-width: 0; width: 100%; }
+    .multi-panel { width: 100%; min-width: 0; }
+    .btnbar > button { flex: 1 1 100%; }
+    .tablewrap { max-width: 100%; }
+    .activity-card #log { min-height: 220px; height: 45vh; }
+    .resource-title-row { gap: 10px; }
+    .resource-counts { width: 100%; justify-content: space-between; }
+  }
+
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <script>
   /* Host detection + default theme (runs before content paints to avoid a flash).
-     PPTB → dark by default; XrmToolBox (WebView2) → Windows 95; web/standalone → light (OS dark honoured). */
+     PPTB → dark by default; XrmToolBox (WebView2) → modern light; web/standalone → light (OS dark honoured). */
   (function () {
-    var P = !!window.dataverseAPI, X = !!window.XTB_CONFIG;
+    var P = !!window.dataverseAPI, X = !!window.XTB_CONFIG || new URLSearchParams(location.search).has("xtbPreview");
     var host = P ? "pptb" : X ? "xtb" : "web";
     document.body.dataset.host = host;
-    if (host === "pptb") document.body.classList.add("theme-dark");
-    else if (host === "web" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-      document.body.classList.add("theme-dark");
+    var saved = null;
+    try { saved = localStorage.getItem("fsru-theme"); } catch (e) {}
+    var dark = saved ? saved === "dark" : (host === "pptb" || host === "xtb" ||
+      (host === "web" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches));
+    if (dark) document.body.classList.add("theme-dark");
   })();
 </script>
 <header>
@@ -168,6 +317,9 @@
   <h1>Field Service Resource Updater</h1>
   <span class="author">by Mark Christie</span>
   <span id="spin" class="spinner" role="status" aria-label="Working" title="Working…" hidden></span>
+  <button type="button" id="cancelActionBtn" class="cancel-action" hidden>Cancel Current Action</button>
+  <button type="button" id="resetToolBtn" class="theme-toggle" title="Clear filters, searches, loaded results, previews, selections, and logs">↻ Reset Tool</button>
+  <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch color theme">☀ Light</button>
   <span id="envlabel">resolving environment…</span>
   <span class="ver" id="verlabel" title="Tool build / Dataverse org version">v…</span>
 </header>
@@ -181,10 +333,16 @@
 
   <!-- ============================== 1. SELECT RESOURCES ============================== -->
   <div class="card">
-    <h2>1 · Select resources</h2>
+    <div class="resource-title-row">
+      <h2>1 · Select Resources</h2>
+      <div class="resource-counts" aria-live="polite">
+        <span class="selcount" id="selcount">0 Selected</span>
+        <span id="loadStatus" role="status">0 Loaded</span>
+      </div>
+    </div>
     <div class="toolbar">
       <div>
-        <label for="typeFilter">Resource type</label>
+        <label for="typeFilter">Resource Type</label>
         <select id="typeFilter" title="Filter by bookable resource type">
           <option value="3" selected>User</option>
           <option value="2">Contact</option>
@@ -194,96 +352,149 @@
           <option value="7">Facility</option>
           <option value="8">Pool</option>
           <option value="1">Generic</option>
-          <option value="">All types</option>
+          <option value="">All Types</option>
         </select>
       </div>
       <div>
-        <label for="nameFilter">Name contains</label>
+        <label for="nameFilter">Name Contains</label>
         <input type="text" id="nameFilter" placeholder="(optional)" autocomplete="off" />
       </div>
-      <div style="flex:0 0 auto">
-        <button type="button" class="primary small" id="loadBtn">Load resources</button>
+      <div>
+        <label for="orgUnitFilter">Organizational Unit</label>
+        <select id="orgUnitFilter" class="multi-source" multiple title="Select multiple Organizational Units">
+          <option value="" selected>All Organizational Units</option>
+        </select>
+      </div>
+      <div>
+        <label for="businessUnitFilter">Business Unit</label>
+        <select id="businessUnitFilter" class="multi-source" multiple title="Select Multiple Business Units">
+          <option value="" selected>All Business Units</option>
+        </select>
+      </div>
+      <div>
+        <label for="timeZoneFilter">Time Zone</label>
+        <select id="timeZoneFilter" title="Filter resources by scheduling time zone">
+          <option value="">All Time Zones</option>
+        </select>
+      </div>
+      <div>
+        <label for="stateFilter">Resource Status</label>
+        <select id="stateFilter" title="Filter active or inactive Bookable Resources">
+          <option value="0" selected>Active</option>
+          <option value="1">Inactive</option>
+          <option value="">All Statuses</option>
+        </select>
+      </div>
+      <div>
+        <label for="regionFilter">Region</label>
+        <select id="regionFilter" title="Filter resources by Field Service territory">
+          <option value="">All Regions</option>
+        </select>
+      </div>
+      <div>
+        <label for="countryFilter">Country Contains</label>
+        <input type="text" id="countryFilter" placeholder="(optional)" autocomplete="off" />
       </div>
       <div style="flex:0 0 auto">
-        <span class="selcount" id="selcount">0 selected</span>
+        <button type="button" class="primary small" id="loadBtn">Load Resources</button>
       </div>
+    </div>
+    <div class="btnbar" style="margin:10px 0">
+      <button type="button" class="ghost small" id="resourceSelectAllBtn">Select All</button>
+      <button type="button" class="ghost small" id="resourceClearAllBtn">Clear All</button>
+      <button type="button" class="ghost small" id="resourceInvertBtn">Invert Selection</button>
+      <span class="hint">Tip: select or clear one row, then Shift-click another row to apply the same choice to the entire range.</span>
     </div>
     <div class="tablewrap">
       <table id="resTable">
         <thead><tr>
           <th><input type="checkbox" id="selAll" title="Select all loaded" aria-label="Select all loaded resources" /></th>
-          <th class="wrap">Name</th>
-          <th>Type</th>
-          <th title="Address / geocode on the related User, Contact or Account record">Address</th>
-          <th class="wrap">Org Unit</th>
-          <th>Start loc</th>
-          <th>End loc</th>
-          <th>Board</th>
-          <th>Avail.</th>
-          <th>Hourly</th>
-          <th>Time-off appr.</th>
+          <th class="wrap sortable" data-sort="name">Name</th>
+          <th class="sortable" data-sort="type">Type</th>
+          <th class="sortable" data-sort="status">Status</th>
+          <th class="sortable" data-sort="address" title="Address / geocode on the related User, Contact or Account record">Address</th>
+          <th class="wrap sortable" data-sort="orgUnit">Org Unit</th>
+          <th class="wrap sortable" data-sort="timeZone">Time Zone</th>
+          <th class="wrap sortable" data-sort="country">Country</th>
+          <th class="sortable" data-sort="startloc">Start Loc</th>
+          <th class="sortable" data-sort="endloc">End Loc</th>
+          <th class="sortable" data-sort="board">Board</th>
+          <th class="sortable" data-sort="avail">Avail.</th>
+          <th class="sortable" data-sort="hourly">Hourly</th>
+          <th class="sortable" data-sort="timeoff">Time-Off Appr.</th>
         </tr></thead>
-        <tbody><tr><td colspan="11" style="white-space:normal;color:#888;padding:18px">Load resources to begin.</td></tr></tbody>
+        <tbody><tr><td colspan="14" style="white-space:normal;color:#888;padding:18px">Load Resources to Begin.</td></tr></tbody>
       </table>
     </div>
   </div>
 
+  <div class="workspace">
+  <section class="workflow">
+
   <!-- ============================== 2. FIELD SETTINGS ============================== -->
-  <div class="card">
-    <h2>2 · Settings to apply</h2>
+  <details class="card collapsible">
+    <summary><h2>2 · Settings To Apply</h2></summary>
+    <div class="card-body">
     <p class="hint" style="margin-top:0">Tick a setting to include it in the bulk update (changing a control ticks it for you). Unticked settings are not changed.</p>
     <p class="hint" style="margin-top:0">⚠ <b>Start &amp; End Location are linked:</b> if either is set to <i>Location Agnostic</i>, Field Service requires the other to be <i>Location Agnostic</i> too. <i>Resource Address</i> needs a geocoded address on the related record; <i>Organizational Unit Address</i> needs the org unit to have an address. The preview checks all of this per resource (see the Address column).</p>
     <div class="fieldgrid" id="fieldGrid"><!-- field rows injected --></div>
-  </div>
+    <div class="btnbar">
+      <button type="button" class="primary" id="settingsPreviewBtn">Preview Settings</button>
+      <button type="button" class="danger" id="settingsApplyBtn" disabled>Apply Settings</button>
+      <span id="settingsStatus" role="status" aria-live="polite"></span>
+    </div>
+    <div id="settingsPreviewBox" style="margin-top:14px"></div>
+    </div>
+  </details>
 
   <!-- ============================== 3. WORK HOURS ============================== -->
-  <div class="card">
-    <h2>3 · Work hours <span class="pill warn">advanced</span></h2>
-    <label class="inline"><input type="checkbox" id="whInclude" /> Include work hours in this update</label>
+  <details class="card collapsible">
+    <summary><h2>3 · Work Hours <span class="pill warn">Advanced</span></h2></summary>
+    <div class="card-body">
     <div class="hint">Work hours are stored as a calendar (recurring rules), set via the Field Service <code>msdyn_SaveCalendar</code> API.</div>
-    <div class="modewrap" id="whBody" hidden>
+    <div class="modewrap" id="whBody">
       <div class="row" style="margin-top:10px">
         <div style="flex:0 0 auto">
-          <label class="inline"><input type="radio" name="whMode" value="weekly" checked /> Weekly pattern</label>
+          <label class="inline"><input type="radio" name="whMode" value="weekly" checked /> Weekly Pattern</label>
         </div>
         <div style="flex:0 0 auto">
-          <label class="inline"><input type="radio" name="whMode" value="copy" /> Copy from a resource</label>
+          <label class="inline"><input type="radio" name="whMode" value="copy" /> Copy From A Resource</label>
         </div>
         <div style="flex:0 0 auto">
-          <label class="inline"><input type="checkbox" id="whClear" checked /> Clear existing work hours first</label>
+          <label class="inline"><input type="checkbox" id="whClear" checked /> Clear Existing Working Hours First (Preserve Exceptions)</label>
         </div>
       </div>
 
       <fieldset id="whWeekly">
-        <legend>Weekly pattern</legend>
-        <label>Working days</label>
+        <legend>Weekly Pattern</legend>
+        <label>Working Days</label>
         <div class="daypick" id="dayPick"></div>
         <div class="row">
-          <div><label for="whStart">Start time</label><input type="time" id="whStart" value="09:00" /></div>
-          <div><label for="whEnd">End time</label><input type="time" id="whEnd" value="17:00" /></div>
+          <div><label for="whStart">Start Time</label><input type="time" id="whStart" value="09:00" /></div>
+          <div><label for="whEnd">End Time</label><input type="time" id="whEnd" value="17:00" /></div>
           <div>
             <label for="whCapacity">Capacity</label>
             <input type="number" id="whCapacity" value="1" min="0" step="1" />
             <div class="hint">Times the resource can be booked per slot.</div>
           </div>
         </div>
-        <label class="inline" style="margin-top:12px"><input type="checkbox" id="whBreak" /> Add a daily break</label>
+        <label class="inline" style="margin-top:12px"><input type="checkbox" id="whBreak" /> Add A Daily Break</label>
         <div class="row" id="whBreakBox" hidden>
-          <div><label for="whBreakStart">Break start</label><input type="time" id="whBreakStart" value="12:00" /></div>
-          <div><label for="whBreakEnd">Break end</label><input type="time" id="whBreakEnd" value="12:30" /></div>
+          <div><label for="whBreakStart">Break Start</label><input type="time" id="whBreakStart" value="12:00" /></div>
+          <div><label for="whBreakEnd">Break End</label><input type="time" id="whBreakEnd" value="12:30" /></div>
         </div>
         <div class="row">
           <div>
-            <label for="whTz">Time zone</label>
+            <label for="whTz">Time Zone</label>
             <select id="whTz" title="Time zone for the work-hours calendar"></select>
           </div>
         </div>
       </fieldset>
 
       <fieldset id="whCopy" hidden>
-        <legend>Copy from a resource</legend>
-        <label for="whSource">Source resource</label>
-        <select id="whSource"><option value="">— load resources first —</option></select>
+        <legend>Copy From A Resource</legend>
+        <label for="whSource">Source Resource</label>
+        <select id="whSource"><option value="">— Load Resources First —</option></select>
         <div class="hint">
           Reads the source's work-hour calendar for a representative week and recreates that weekly
           pattern (working hours + breaks, in UTC) on every selected resource. Irregular per-date
@@ -291,38 +502,35 @@
         </div>
       </fieldset>
     </div>
-  </div>
-
-  <!-- ============================== 4. RUN ============================== -->
-  <div class="card">
-    <h2>4 · Apply settings &amp; work hours</h2>
     <div class="btnbar">
-      <button type="button" class="primary" id="previewBtn">Preview changes</button>
-      <button type="button" class="danger" id="applyBtn" disabled>Apply to selected</button>
-      <span id="status" role="status" aria-live="polite"></span>
+      <button type="button" class="primary" id="whPreviewBtn">Preview Work Hours</button>
+      <button type="button" class="danger" id="whApplyBtn" disabled>Apply Work Hours</button>
+      <span id="whStatus" role="status" aria-live="polite"></span>
     </div>
-    <div id="previewBox" style="margin-top:14px"></div>
-  </div>
+    <div id="whPreviewBox" style="margin-top:14px"></div>
+    </div>
+  </details>
 
   <!-- ============================== 5. SKILLS & TERRITORIES ============================== -->
-  <div class="card">
-    <h2>5 · Quick actions — skills &amp; territories</h2>
+  <details class="card collapsible">
+    <summary><h2>4 · Quick Actions - Skills &amp; Territories</h2></summary>
+    <div class="card-body">
     <p class="hint" style="margin-top:0">These act immediately on the resources selected above. Remove asks you to click twice to confirm.</p>
 
     <fieldset>
-      <legend>Skill (characteristic)</legend>
+      <legend>Skill (Characteristic)</legend>
       <div class="row">
         <div>
           <label for="charSel">Characteristic</label>
-          <select id="charSel"><option value="">— load —</option></select>
+          <select id="charSel"><option value="">— Load —</option></select>
         </div>
         <div>
-          <label for="ratingSel">Rating value <span style="font-weight:400;color:#8a8f98">(optional)</span></label>
-          <select id="ratingSel"><option value="">(none)</option></select>
+          <label for="ratingSel">Rating Value <span style="font-weight:400;color:#8a8f98">(Optional)</span></label>
+          <select id="ratingSel"><option value="">(None)</option></select>
         </div>
         <div style="flex:0 0 auto; display:flex; align-items:end; gap:8px">
-          <button type="button" class="primary small" id="addSkillBtn">Add to selected</button>
-          <button type="button" class="danger small" id="removeSkillBtn">Remove from selected</button>
+          <button type="button" class="primary small" id="addSkillBtn">Add To Selected</button>
+          <button type="button" class="danger small" id="removeSkillBtn">Remove From Selected</button>
         </div>
       </div>
     </fieldset>
@@ -332,11 +540,11 @@
       <div class="row">
         <div>
           <label for="terrSel">Territory</label>
-          <select id="terrSel"><option value="">— load —</option></select>
+          <select id="terrSel"><option value="">— Load —</option></select>
         </div>
         <div style="flex:0 0 auto; display:flex; align-items:end; gap:8px">
-          <button type="button" class="primary small" id="addTerrBtn">Add to selected</button>
-          <button type="button" class="danger small" id="removeTerrBtn">Remove from selected</button>
+          <button type="button" class="primary small" id="addTerrBtn">Add To Selected</button>
+          <button type="button" class="danger small" id="removeTerrBtn">Remove From Selected</button>
         </div>
       </div>
     </fieldset>
@@ -347,17 +555,159 @@
           <p class="hint" style="margin:0">Assigns/removes the <b>Field Service – New Mobile Experience</b> security role on the selected <b>User</b> resources' system users (non-User resources are skipped). The environment-level toggle is managed separately in the Field Service Mobile app settings.</p>
         </div>
         <div style="flex:0 0 auto; display:flex; align-items:end; gap:8px">
-          <button type="button" class="primary small" id="mobAddBtn">Enable for selected</button>
-          <button type="button" class="danger small" id="mobRemoveBtn">Remove from selected</button>
+          <button type="button" class="primary small" id="mobAddBtn">Enable For Selected</button>
+          <button type="button" class="danger small" id="mobRemoveBtn">Remove From Selected</button>
         </div>
       </div>
     </fieldset>
     <div class="btnbar"><span id="qaStatus" role="status" aria-live="polite"></span></div>
-  </div>
+    </div>
+  </details>
 
-  <div class="card">
-    <h2>Activity log</h2>
-    <div id="log" aria-live="polite"></div>
+  <!-- ============================== 6. CALENDAR TIME ZONES ============================== -->
+  <details class="card collapsible">
+    <summary><h2>5 · Normalize Calendar Time Zones</h2></summary>
+    <div class="card-body">
+    <p class="hint" style="margin-top:0">Updates calendar-rule time zones while preserving the displayed wall-clock times. Preview first to see the rule counts for every selected resource.</p>
+    <div class="row">
+      <div>
+        <label for="calTzTarget">Target Time Zone</label>
+        <select id="calTzTarget"></select>
+      </div>
+      <div>
+        <label>Calendar Entries To Update</label>
+        <div class="daypick">
+          <label><input type="checkbox" id="calTzWorking" checked /> Working Hours</label>
+          <label><input type="checkbox" id="calTzNonWorking" /> Non-Working Hours</label>
+          <label><input type="checkbox" id="calTzTimeOff" checked /> Time Off</label>
+        </div>
+      </div>
+    </div>
+    <label class="inline" style="margin-top:12px"><input type="checkbox" id="calTzAllDay" /> Make Selected Time Off Entries All Day</label>
+    <p class="hint">Holidays/business closures are not selected by the Time Off option. Working-hour breaks inherit the working recurrence update.</p>
+    <div class="btnbar">
+      <button type="button" class="primary" id="calTzPreviewBtn">Preview Calendar Time Zones</button>
+      <button type="button" class="danger" id="calTzApplyBtn" disabled>Apply Calendar Time Zones</button>
+      <span id="calTzStatus" role="status" aria-live="polite"></span>
+    </div>
+    <div id="calTzPreview" style="margin-top:14px"></div>
+    </div>
+  </details>
+
+  <!-- ============================== 6. DELETE CALENDAR RULES ============================== -->
+  <details class="card collapsible">
+    <summary><h2>6 · Delete Calendar Rules</h2></summary>
+    <div class="card-body">
+      <p class="hint" style="margin-top:0">Loads calendar rules for the selected resources. Preview, select only the rules that should be removed, then delete. This operation cannot be undone.</p>
+      <div class="btnbar">
+        <button type="button" class="primary" id="deleteCalPreviewBtn">Preview Calendar Rules</button>
+        <button type="button" class="danger" id="deleteCalApplyBtn" disabled>Delete Selected Rules</button>
+        <span id="deleteCalStatus" role="status" aria-live="polite"></span>
+      </div>
+      <div id="deleteCalPreview" style="margin-top:14px"></div>
+    </div>
+  </details>
+
+  <!-- ============================== 7. EXPORT CALENDAR RULES ============================== -->
+  <details class="card collapsible">
+    <summary><h2>7 · Export Calendar Rules</h2></summary>
+    <div class="card-body">
+      <p class="hint" style="margin-top:0">Exports flattened parent and inner calendar rules for the resources selected in Section 1. The CSV includes resource context, organizational and geographic fields, calendar IDs, common rule fields, and every additional scalar rule property returned by Dataverse.</p>
+      <div>
+        <label>Calendar Entries To Export</label>
+        <div class="daypick">
+          <label><input type="checkbox" id="exportCalWorking" checked /> Working Hours</label>
+          <label><input type="checkbox" id="exportCalNonWorking" checked /> Non-Working Hours</label>
+          <label><input type="checkbox" id="exportCalTimeOff" checked /> Time Off</label>
+          <label><input type="checkbox" id="exportCalOther" checked /> Holidays / Exceptions</label>
+        </div>
+      </div>
+      <div style="max-width:260px;margin-top:12px">
+        <label for="exportConcurrency">Parallel Resources</label>
+        <select id="exportConcurrency" title="Number of resource calendars read concurrently">
+          <option value="2">2 - Conservative</option>
+          <option value="4">4</option>
+          <option value="6" selected>6 - Recommended</option>
+          <option value="8">8 - Faster</option>
+          <option value="10">10 - Aggressive</option>
+        </select>
+        <div class="hint">Reduce this value if Dataverse reports throttling.</div>
+      </div>
+      <div class="btnbar">
+        <button type="button" class="primary" id="exportCalendarRulesBtn">Export Working Hours &amp; Time Off</button>
+        <span id="exportCalendarStatus" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============================== 8. CALENDAR TIME-ZONE MISMATCH AUDIT ============================== -->
+  <details class="card collapsible">
+    <summary><h2>8 · Calendar Time Zone Mismatch Audit</h2></summary>
+    <div class="card-body">
+      <p class="hint" style="margin-top:0">Compares each selected Bookable Resource's Time Zone with its calendar rules. Preview mismatches, export the audit, or fix selected rules so they match their own resource while preserving displayed wall-clock times and Time Off reasons.</p>
+      <div>
+        <label>Calendar Entries To Audit</label>
+        <div class="daypick">
+          <label><input type="checkbox" id="mismatchWorking" checked /> Working Hours</label>
+          <label><input type="checkbox" id="mismatchNonWorking" checked /> Non-Working Hours</label>
+          <label><input type="checkbox" id="mismatchTimeOff" checked /> Time Off</label>
+        </div>
+      </div>
+      <div class="btnbar">
+        <button type="button" class="primary" id="mismatchPreviewBtn">Preview Time Zone Mismatches</button>
+        <button type="button" class="ghost" id="mismatchExportBtn" disabled>Export Mismatches</button>
+        <button type="button" class="danger" id="mismatchFixBtn" disabled>Fix Selected Mismatches</button>
+        <span id="mismatchStatus" role="status" aria-live="polite"></span>
+      </div>
+      <div id="mismatchPreview" style="margin-top:14px"></div>
+    </div>
+  </details>
+
+  <!-- ============================== 9. WORK-HOURS BASELINE AUDIT ============================== -->
+  <details class="card collapsible">
+    <summary><h2>9 · Work Hours Baseline Audit</h2></summary>
+    <div class="card-body">
+      <p class="hint" style="margin-top:0">Finds selected resources whose Working Hours differ from the baseline configured below. The audit also flags 24-hour schedules, unexpected days, and multiple Working Hours recurrences.</p>
+      <div class="formgrid">
+        <div class="span2">
+          <label>Baseline Working Days</label>
+          <div class="daypick" id="baselineDays">
+            <label><input type="checkbox" class="baseline-day" value="MO" checked /> Mon</label>
+            <label><input type="checkbox" class="baseline-day" value="TU" checked /> Tue</label>
+            <label><input type="checkbox" class="baseline-day" value="WE" checked /> Wed</label>
+            <label><input type="checkbox" class="baseline-day" value="TH" checked /> Thu</label>
+            <label><input type="checkbox" class="baseline-day" value="FR" checked /> Fri</label>
+            <label><input type="checkbox" class="baseline-day" value="SA" /> Sat</label>
+            <label><input type="checkbox" class="baseline-day" value="SU" /> Sun</label>
+          </div>
+        </div>
+        <div><label for="baselineStart">Baseline Start Time</label><input type="time" id="baselineStart" value="08:00" /></div>
+        <div><label for="baselineEnd">Baseline End Time</label><input type="time" id="baselineEnd" value="17:00" /></div>
+        <div><label for="baselineDate">Baseline Event Start Date</label><input type="date" id="baselineDate" value="2000-01-01" /></div>
+      </div>
+      <div class="btnbar">
+        <button type="button" class="primary" id="baselinePreviewBtn">Preview Baseline Exceptions</button>
+        <button type="button" class="ghost" id="baselineExportBtn" disabled>Export Exceptions</button>
+        <button type="button" class="danger" id="baselineFixBtn" disabled>Apply Baseline To Selected</button>
+        <span id="baselineStatus" role="status" aria-live="polite"></span>
+      </div>
+      <div id="baselinePreview" style="margin-top:14px"></div>
+    </div>
+  </details>
+
+  </section>
+  <aside class="activity-sidebar">
+  <div class="card activity-card">
+    <div class="card-title-row">
+      <h2>Activity Log</h2>
+      <div class="btnbar">
+        <button type="button" class="ghost small" id="exportLogBtn">Export Logs</button>
+        <button type="button" class="ghost small" id="clearLogBtn">Clear Logs</button>
+      </div>
+    </div>
+    <div id="log" aria-live="polite"><table><thead><tr><th class="log-time">Timestamp</th><th class="log-resource">Resource</th><th>Message</th></tr></thead><tbody id="logBody"></tbody></table></div>
+  </div>
+  </aside>
   </div>
 </main>
 
@@ -368,7 +718,8 @@
    Hosts: PPTB (window.dataverseAPI) · XrmToolBox WebView2 (window.XTB_CONFIG) ·
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
-const APP_VERSION = "1.0.1";
+// Display version. Advance future feature builds through 2.1, 2.2, and so on.
+const APP_VERSION = "4.4 Beta";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;
@@ -410,13 +761,66 @@ let ORG_BASE = "";
   el.textContent = url ? url.replace("https://", "") : "same-origin";
 })();
 
-function log(msg) {
+const ACTIVITY_LOG = [];
+function log(msg, resourceHint) {
   const el = $("log");
-  const t = new Date().toISOString().substr(11, 8);
-  el.textContent += `[${t}] ${msg}\n`;
+  const timestamp = new Date().toISOString();
+  const t = timestamp.substr(11, 8);
+  const message = String(msg);
+  let resource = resourceHint && typeof resourceHint === "object" ? resourceHint : null;
+  if (!resource && Array.isArray(resources)) {
+    const idMatch = message.match(/\bresource=([0-9a-f-]{36})\b/i);
+    if (idMatch) resource = resources.find(item => String(item.id).toLowerCase() === idMatch[1].toLowerCase()) || null;
+    if (!resource) resource = resources.find(item => item.name && message.includes(item.name)) || null;
+  }
+  let friendlyMessage = message.trim();
+  if (resource && resource.name) {
+    const nameAt = friendlyMessage.indexOf(resource.name);
+    if (nameAt >= 0 && nameAt <= 16) {
+      const progress = friendlyMessage.slice(0, nameAt).match(/\[\d+\/\d+\]/)?.[0] || "";
+      const remainder = friendlyMessage.slice(nameAt + resource.name.length)
+        .replace(/^\s*(?:\([^)]*\))?\s*:?\s*/, "");
+      friendlyMessage = `${progress ? `${progress} ` : ""}${remainder}`.trim();
+    }
+  }
+  ACTIVITY_LOG.push({
+    timestamp,
+    resourceName: resource ? resource.name : "",
+    message: friendlyMessage
+  });
+  const row = $("logBody").insertRow();
+  const timeCell = row.insertCell();
+  const resourceCell = row.insertCell();
+  const messageCell = row.insertCell();
+  timeCell.className = "log-time";
+  resourceCell.className = "log-resource";
+  timeCell.textContent = t;
+  resourceCell.textContent = resource ? resource.name : "—";
+  messageCell.textContent = friendlyMessage;
   el.scrollTop = el.scrollHeight;
 }
-function setStatus(s) { $("status").textContent = s; }
+function clearLogs() {
+  ACTIVITY_LOG.length = 0;
+  $("logBody").textContent = "";
+}
+function csvCell(value) {
+  return `"${String(value == null ? "" : value).replace(/"/g, '""')}"`;
+}
+function exportLogsCsv() {
+  const rows = [["Timestamp (UTC)", "Resource", "Message"],
+    ...ACTIVITY_LOG.map(entry => [entry.timestamp, entry.resourceName, entry.message.trim()])];
+  const csv = "\uFEFF" + rows.map(row => row.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `field-service-updater-logs-${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function setStatus(s) { $("loadStatus").textContent = s; }
 function setQaStatus(s) { $("qaStatus").textContent = s; }
 function notify(title, body, type) {
   try {
@@ -425,6 +829,17 @@ function notify(title, body, type) {
   } catch (e) {}
 }
 function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function refreshThemeToggle() {
+  const dark = document.body.classList.contains("theme-dark");
+  $("themeToggle").textContent = dark ? "☀ Light" : "☾ Dark";
+  $("themeToggle").title = dark ? "Switch to light mode" : "Switch to dark mode";
+  $("themeToggle").setAttribute("aria-pressed", dark ? "true" : "false");
+}
+function toggleTheme() {
+  document.body.classList.toggle("theme-dark");
+  try { localStorage.setItem("fsru-theme", document.body.classList.contains("theme-dark") ? "dark" : "light"); } catch (e) {}
+  refreshThemeToggle();
+}
 
 // Find a dynamics URL on the PPTB connection object (field name varies across versions).
 function pickOrgUrl(c) {
@@ -449,6 +864,49 @@ async function openRecord(etn, id) {
 }
 
 // ---------- Web API plumbing (host-agnostic) ----------
+let ACTIVE_ACTION = null;
+function beginCancellableAction(label) {
+  ACTIVE_ACTION = { label, cancelled: false, controller: typeof AbortController !== "undefined" ? new AbortController() : null };
+  const button = $("cancelActionBtn");
+  button.hidden = false; button.disabled = false; button.textContent = "Cancel Current Action";
+}
+function cancelCurrentAction() {
+  if (!ACTIVE_ACTION || ACTIVE_ACTION.cancelled) return;
+  ACTIVE_ACTION.cancelled = true;
+  if (ACTIVE_ACTION.controller) ACTIVE_ACTION.controller.abort();
+  const button = $("cancelActionBtn");
+  button.disabled = true; button.textContent = "Cancelling…";
+  log(`Cancellation requested for ${ACTIVE_ACTION.label}. Current Dataverse request(s) may need to finish first.`);
+}
+function resetTool() {
+  if (ACTIVE_ACTION) {
+    log(`Reset Tool was not run because ${ACTIVE_ACTION.label} is active. Cancel or finish the action first.`);
+    notify("Action still running", "Cancel or finish the current action before resetting the tool.", "warning");
+    return;
+  }
+  window.location.reload();
+}
+function endCancellableAction() {
+  ACTIVE_ACTION = null;
+  const button = $("cancelActionBtn");
+  button.hidden = true; button.disabled = false; button.textContent = "Cancel Current Action";
+}
+function actionWasCancelled() {
+  return !!(ACTIVE_ACTION && ACTIVE_ACTION.cancelled);
+}
+function throwIfActionCancelled() {
+  if (actionWasCancelled()) {
+    const error = new Error("Action cancelled by user.");
+    error.name = "ActionCancelledError";
+    throw error;
+  }
+}
+function isActionCancellation(error) {
+  return actionWasCancelled() || (error && (error.name === "AbortError" || error.name === "ActionCancelledError"));
+}
+function activeFetchSignal() {
+  return ACTIVE_ACTION && ACTIVE_ACTION.controller ? ACTIVE_ACTION.controller.signal : undefined;
+}
 function baseUrl() {
   if (XTB && window.XTB_CONFIG.baseUrl) return window.XTB_CONFIG.baseUrl.replace(/\/+$/, "") + `/api/data/${API_VER}`;
   return `/api/data/${API_VER}`;
@@ -461,12 +919,52 @@ function headers(extra) {
   if (XTB && window.XTB_CONFIG.token) h["Authorization"] = "Bearer " + window.XTB_CONFIG.token;
   return Object.assign(h, extra || {});
 }
+let XTB_TOKEN_REFRESH_PROMISE = null;
+function refreshXtbAccessToken() {
+  if (!XTB || !window.chrome || !window.chrome.webview) return Promise.resolve(false);
+  if (XTB_TOKEN_REFRESH_PROMISE) return XTB_TOKEN_REFRESH_PROMISE;
+  XTB_TOKEN_REFRESH_PROMISE = new Promise(resolve => {
+    let finished = false;
+    const finish = result => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      window.removeEventListener("xtb-token-refresh-result", handler);
+      XTB_TOKEN_REFRESH_PROMISE = null;
+      resolve(result);
+    };
+    const handler = event => {
+      const detail = event.detail || {};
+      if (detail.ok) log("XrmToolBox authentication token refreshed; retrying interrupted Dataverse request.");
+      else log(`XrmToolBox token refresh failed: ${detail.message || "unknown error"}`);
+      finish(!!detail.ok);
+    };
+    const timer = setTimeout(() => {
+      log("XrmToolBox token refresh timed out after 30 seconds.");
+      finish(false);
+    }, 30000);
+    window.addEventListener("xtb-token-refresh-result", handler);
+    log("Dataverse returned 401; requesting a refreshed XrmToolBox access token…");
+    window.chrome.webview.postMessage("refresh-token");
+  });
+  return XTB_TOKEN_REFRESH_PROMISE;
+}
+async function authenticatedFetch(url, options) {
+  let response = await fetch(url, options);
+  if (response.status !== 401 || !XTB) return response;
+  if (!await refreshXtbAccessToken()) return response;
+  throwIfActionCancelled();
+  const retryHeaders = Object.assign({}, options && options.headers ? options.headers : {});
+  retryHeaders.Authorization = "Bearer " + window.XTB_CONFIG.token;
+  response = await fetch(url, Object.assign({}, options || {}, { headers: retryHeaders }));
+  return response;
+}
 function relPath(p) { const m = p.match(/\/api\/data\/v9\.\d+\/(.*)$/); return (m ? m[1] : p).replace(/^\//, ""); }
 
 // GET a query path like "bookableresources?$select=..." → { value: [...] } (single page).
 async function dvQuery(pathWithQuery, extraHeaders) {
   if (PPTB) return await window.dataverseAPI.queryData(relPath(pathWithQuery));
-  const r = await fetch(`${baseUrl()}/${relPath(pathWithQuery)}`, { method: "GET", headers: headers(extraHeaders), credentials: "same-origin" });
+  const r = await authenticatedFetch(`${baseUrl()}/${relPath(pathWithQuery)}`, { method: "GET", headers: headers(extraHeaders), credentials: "same-origin", signal: activeFetchSignal() });
   if (!r.ok) throw new Error(`GET ${r.status}: ${(await r.text()).slice(0, 300)}`);
   return r.json();
 }
@@ -479,7 +977,7 @@ async function dvQueryAll(pathWithQuery, extraHeaders) {
   }
   let url = `${baseUrl()}/${relPath(pathWithQuery)}`;
   while (url) {
-    const r = await fetch(url, { method: "GET", headers: headers(extraHeaders), credentials: "same-origin" });
+    const r = await authenticatedFetch(url, { method: "GET", headers: headers(extraHeaders), credentials: "same-origin", signal: activeFetchSignal() });
     if (!r.ok) throw new Error(`GET ${r.status}: ${(await r.text()).slice(0, 300)}`);
     const d = await r.json();
     out.push(...(d.value || []));
@@ -489,53 +987,60 @@ async function dvQueryAll(pathWithQuery, extraHeaders) {
 }
 async function dvUpdate(logicalName, entitySet, id, patch) {
   if (PPTB) { await window.dataverseAPI.update(logicalName, id, patch); return; }
-  const r = await fetch(`${baseUrl()}/${entitySet}(${id})`, { method: "PATCH", credentials: "same-origin", headers: headers({ "If-Match": "*" }), body: JSON.stringify(patch) });
+  const r = await authenticatedFetch(`${baseUrl()}/${entitySet}(${id})`, { method: "PATCH", credentials: "same-origin", headers: headers({ "If-Match": "*" }), body: JSON.stringify(patch), signal: activeFetchSignal() });
   if (!r.ok) throw new Error(await errText(r));
 }
 async function dvCreate(logicalName, entitySet, record) {
   if (PPTB) { const res = await window.dataverseAPI.create(logicalName, record); return res && (res.id || res); }
-  const r = await fetch(`${baseUrl()}/${entitySet}`, { method: "POST", credentials: "same-origin", headers: headers(), body: JSON.stringify(record) });
+  const r = await authenticatedFetch(`${baseUrl()}/${entitySet}`, { method: "POST", credentials: "same-origin", headers: headers(), body: JSON.stringify(record), signal: activeFetchSignal() });
   if (!r.ok) throw new Error(await errText(r));
   const loc = r.headers.get("OData-EntityId") || "";
   const m = loc.match(/\(([0-9a-f-]{36})\)/i); return m ? m[1] : null;
 }
 async function dvDelete(logicalName, entitySet, id) {
   if (PPTB) { await window.dataverseAPI.delete(logicalName, id); return; }
-  const r = await fetch(`${baseUrl()}/${entitySet}(${id})`, { method: "DELETE", credentials: "same-origin", headers: headers() });
+  const r = await authenticatedFetch(`${baseUrl()}/${entitySet}(${id})`, { method: "DELETE", credentials: "same-origin", headers: headers(), signal: activeFetchSignal() });
   if (!r.ok) throw new Error(await errText(r));
 }
 // Clear a single-valued lookup (web/XTB use the $ref DELETE; PPTB falls back to a null bind).
 async function dvClearLookup(logicalName, entitySet, id, navProperty, bindField) {
   if (PPTB) { await window.dataverseAPI.update(logicalName, id, { [bindField + "@odata.bind"]: null }); return; }
-  const r = await fetch(`${baseUrl()}/${entitySet}(${id})/${navProperty}/$ref`, { method: "DELETE", credentials: "same-origin", headers: headers() });
+  const r = await authenticatedFetch(`${baseUrl()}/${entitySet}(${id})/${navProperty}/$ref`, { method: "DELETE", credentials: "same-origin", headers: headers(), signal: activeFetchSignal() });
   if (!r.ok && r.status !== 404) throw new Error(await errText(r));
 }
 // N:N associate / disassociate (e.g. systemuser ↔ role via systemuserroles_association).
 async function dvAssociate(pLogical, pSet, pId, rel, rLogical, rSet, rId) {
   if (PPTB) { await window.dataverseAPI.associate(pLogical, pId, rel, rLogical, rId); return; }
-  const r = await fetch(`${baseUrl()}/${pSet}(${pId})/${rel}/$ref`, { method: "POST", credentials: "same-origin", headers: headers(), body: JSON.stringify({ "@odata.id": `${baseUrl()}/${rSet}(${rId})` }) });
+  const r = await authenticatedFetch(`${baseUrl()}/${pSet}(${pId})/${rel}/$ref`, { method: "POST", credentials: "same-origin", headers: headers(), body: JSON.stringify({ "@odata.id": `${baseUrl()}/${rSet}(${rId})` }), signal: activeFetchSignal() });
   if (!r.ok) throw new Error(await errText(r));
 }
 async function dvDisassociate(pLogical, pSet, pId, rel, rSet, rId) {
   if (PPTB) { await window.dataverseAPI.disassociate(pLogical, pId, rel, rId); return; }
-  const r = await fetch(`${baseUrl()}/${pSet}(${pId})/${rel}(${rId})/$ref`, { method: "DELETE", credentials: "same-origin", headers: headers() });
+  const r = await authenticatedFetch(`${baseUrl()}/${pSet}(${pId})/${rel}(${rId})/$ref`, { method: "DELETE", credentials: "same-origin", headers: headers(), signal: activeFetchSignal() });
   if (!r.ok && r.status !== 404) throw new Error(await errText(r));
 }
 // Unbound action (e.g. msdyn_SaveCalendar / msdyn_DeleteCalendar / msdyn_LoadCalendars).
 async function dvAction(name, params) {
   if (PPTB) return await window.dataverseAPI.execute({ operationName: name, operationType: "action", parameters: params || {} });
-  const r = await fetch(`${baseUrl()}/${name}`, { method: "POST", credentials: "same-origin", headers: headers({ "Prefer": 'odata.include-annotations="*"' }), body: JSON.stringify(params || {}) });
+  const r = await authenticatedFetch(`${baseUrl()}/${name}`, { method: "POST", credentials: "same-origin", headers: headers({ "Prefer": 'odata.include-annotations="*"' }), body: JSON.stringify(params || {}), signal: activeFetchSignal() });
   if (!r.ok) throw new Error(await errText(r));
   const txt = await r.text(); return txt ? JSON.parse(txt) : {};
 }
 async function errText(r) {
-  let msg = `${r.status}`;
-  try { const j = JSON.parse(await r.text()); msg = (j.error && j.error.message) ? j.error.message : msg; } catch (e) {}
-  return msg;
+  const status = `${r.status}${r.statusText ? ` ${r.statusText}` : ""}`;
+  try {
+    const raw = await r.text();
+    const j = JSON.parse(raw), err = j.error || j;
+    const code = err.code ? `[${err.code}] ` : "";
+    const message = err.message || raw || status;
+    const detail = err.innererror && (err.innererror.message || err.innererror.type)
+      ? ` | ${err.innererror.message || err.innererror.type}` : "";
+    return `${status}: ${code}${message}${detail}`;
+  } catch (e) { return status; }
 }
 
 // ============================================================================
-//  Field definitions — the 7 scalar Bookable Resource settings.
+//  Field definitions — bulk-editable Bookable Resource settings.
 // ============================================================================
 const START_LOC_OPTS = [
   { v: 690970000, t: "Resource Address" },
@@ -548,8 +1053,9 @@ const FIELDS = [
   { key: "msdyn_startlocation",            label: "Start Location",                kind: "picklist", opts: START_LOC_OPTS },
   { key: "msdyn_endlocation",              label: "End Location",                  kind: "picklist", opts: START_LOC_OPTS },
   { key: "msdyn_organizationalunit",       label: "Organizational Unit",           kind: "orgunit" },
-  { key: "msdyn_displayonscheduleboard",   label: "Display on Schedule Board",     kind: "bool" },
-  { key: "msdyn_displayonscheduleassistant", label: "Enable for Availability Search", kind: "bool" },
+  { key: "timezone",                       label: "Time Zone",                     kind: "timezone" },
+  { key: "msdyn_displayonscheduleboard",   label: "Display On Schedule Board",     kind: "bool" },
+  { key: "msdyn_displayonscheduleassistant", label: "Enable For Availability Search", kind: "bool" },
   { key: "msdyn_hourlyrate",               label: "Hourly Rate",                   kind: "number" },
   { key: "msdyn_timeoffapprovalrequired",  label: "Time Off Approval Required",    kind: "bool" },
 ];
@@ -565,23 +1071,40 @@ const RES_TYPE = { 1: "Generic", 2: "Contact", 3: "User", 4: "Equipment", 5: "Ac
 // ============================================================================
 let resources = [];                  // loaded bookable resources
 const selected = new Set();          // selected bookableresourceids
+let lastResourceSelectionId = null;  // anchor for Shift-click range selection
 let orgUnits = [];                   // { id, name }
+let businessUnits = [];              // { id, name }
+let resourceTimeZones = [];          // { code, name } distinct values used by resources
+let allTimeZones = [];               // { code, name } complete Dataverse time-zone definitions
 let chars = [];                      // characteristics
 let ratings = [];                    // rating values
 let territories = [];                // territories
 let mobileRoles = [];                // "Field Service – New Mobile Experience" role, per business unit
 let metaLoaded = false;
+let resourceSort = { key: "name", direction: 1 };
 
 // Time-zone list (subset of the Field Service work-hour API codes; UK default).
 const TZ = [
   [85, "(GMT) Dublin, Edinburgh, Lisbon, London"], [92, "(GMT) Coordinated Universal Time"],
   [105, "(GMT+1) Brussels, Copenhagen, Madrid, Paris"], [110, "(GMT+1) Amsterdam, Berlin, Rome, Vienna"],
-  [35, "(GMT-5) Eastern Time (US & Canada)"], [20, "(GMT-6) Central Time (US & Canada)"],
-  [10, "(GMT-7) Mountain Time (US & Canada)"], [4, "(GMT-8) Pacific Time (US & Canada)"],
+  [35, "(GMT-05:00) Eastern Time (US & Canada)"], [20, "(GMT-06:00) Central Time (US & Canada)"],
+  [10, "(GMT-07:00) Mountain Time (US & Canada)"], [4, "(GMT-08:00) Pacific Time (US & Canada)"],
   [190, "(GMT+5:30) Chennai, Kolkata, Mumbai, New Delhi"], [255, "(GMT+10) Canberra, Melbourne, Sydney"],
 ];
+const timeZoneLabel = code => {
+  const defined = allTimeZones.find(t => t.code === Number(code));
+  if (defined) return defined.name;
+  const item = TZ.find(t => t[0] === Number(code));
+  return item ? item[1] : (code == null ? "—" : `Time zone ${code}`);
+};
+function friendlyTimeZone(code, formatted) {
+  const text = String(formatted == null ? "" : formatted).trim();
+  // Some hosts expose the raw integer as the formatted value. Only trust a label
+  // that contains more information than the code itself.
+  return text && text !== String(code) ? text : timeZoneLabel(code);
+}
 const DAYS = [["MO", "Mon", 1], ["TU", "Tue", 2], ["WE", "Wed", 3], ["TH", "Thu", 4], ["FR", "Fri", 5], ["SA", "Sat", 6], ["SU", "Sun", 0]];
-const ANCHOR = "2024-01-01";   // a Monday — anchor date for weekly recurrences
+const ANCHOR = "2000-01-01";   // fixed historical start date for weekly recurrences
 
 // ============================================================================
 //  Build the field rows + work-hours controls
@@ -596,10 +1119,11 @@ function buildFieldRows() {
     let ctl = "";
     const cid = "f_" + f.key;
     if (f.kind === "picklist") ctl = `<select id="${cid}">${f.opts.map(o => `<option value="${o.v}">${o.t}</option>`).join("")}</select>`;
+    else if (f.kind === "timezone") ctl = `<select id="${cid}"><option value="">— Load Time Zones —</option></select>`;
     else if (f.kind === "bool") ctl = `<select id="${cid}">${YESNO.map(o => `<option value="${o.v}">${o.t}</option>`).join("")}</select>`;
     else if (f.kind === "number") ctl = `<input type="number" id="${cid}" step="0.01" min="0" placeholder="0.00" />`;
-    else if (f.kind === "orgunit") ctl = `<div class="ouwrap"><select id="${cid}"><option value="">— clear —</option></select>` +
-      `<button type="button" class="ghost small" id="ouOpenBtn" hidden title="This org unit has no address — open it to add one">⚠ No address — open ↗</button></div>`;
+    else if (f.kind === "orgunit") ctl = `<div class="ouwrap"><select id="${cid}"><option value="">— Clear —</option></select>` +
+      `<button type="button" class="ghost small" id="ouOpenBtn" hidden title="This Organizational Unit Has No Address — Open It To Add One">⚠ No Address — Open ↗</button></div>`;
     row.innerHTML =
       `<label class="inline"><input type="checkbox" class="finc" data-key="${f.key}" /> ${escapeHtml(f.label)}</label>` +
       `<div class="ctl">${ctl}</div>`;
@@ -634,7 +1158,52 @@ function buildDayPick() {
   ).join("");
 }
 function buildTz() {
-  $("whTz").innerHTML = TZ.map(t => `<option value="${t[0]}" ${t[0] === 85 ? "selected" : ""}>${escapeHtml(t[1])}</option>`).join("");
+  const zones = allTimeZones.length ? allTimeZones.map(t => [t.code, t.name]) : TZ;
+  $("whTz").innerHTML = zones.map(t => `<option value="${t[0]}" ${t[0] === 85 ? "selected" : ""}>${escapeHtml(t[1])}</option>`).join("");
+  $("calTzTarget").innerHTML = zones.map(t => `<option value="${t[0]}">${escapeHtml(t[1])}</option>`).join("");
+  const resourceTz = $("f_timezone");
+  if (resourceTz) resourceTz.innerHTML = zones.map(t => `<option value="${t[0]}">${escapeHtml(t[1])}</option>`).join("");
+}
+const selectedValues = select => [...select.selectedOptions].map(o => o.value).filter(Boolean);
+function buildMultiPicker(selectId, allLabel) {
+  const select = $(selectId);
+  const old = select.nextElementSibling;
+  if (old && old.classList.contains("multi-picker")) old.remove();
+  const picker = document.createElement("div"); picker.className = "multi-picker";
+  const trigger = document.createElement("button");
+  trigger.type = "button"; trigger.className = "multi-trigger"; trigger.setAttribute("aria-haspopup", "listbox");
+  const panel = document.createElement("div"); panel.className = "multi-panel"; panel.setAttribute("role", "listbox");
+  const actions = document.createElement("div"); actions.className = "multi-actions";
+  const allBtn = document.createElement("button"); allBtn.type = "button"; allBtn.textContent = "Select All";
+  const clearBtn = document.createElement("button"); clearBtn.type = "button"; clearBtn.textContent = "Clear";
+  actions.append(allBtn, clearBtn); panel.appendChild(actions);
+  const options = [...select.options].filter(o => o.value);
+  const checks = [];
+  const refresh = () => {
+    const chosen = options.filter(o => o.selected);
+    select.options[0].selected = chosen.length === 0;
+    checks.forEach(({ option, checkbox }) => checkbox.checked = option.selected);
+    trigger.textContent = chosen.length === 0 ? allLabel
+      : chosen.length === 1 ? chosen[0].textContent
+      : `${chosen.length} selected`;
+    trigger.title = chosen.length ? chosen.map(o => o.textContent).join(", ") : allLabel;
+  };
+  for (const option of options) {
+    const label = document.createElement("label"); label.className = "multi-option";
+    const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = option.value;
+    const textNode = document.createElement("span"); textNode.textContent = option.textContent;
+    checkbox.addEventListener("change", () => { option.selected = checkbox.checked; refresh(); });
+    label.append(checkbox, textNode); panel.appendChild(label); checks.push({ option, checkbox });
+  }
+  allBtn.addEventListener("click", () => { options.forEach(o => o.selected = true); refresh(); });
+  clearBtn.addEventListener("click", () => { options.forEach(o => o.selected = false); refresh(); });
+  trigger.addEventListener("click", e => {
+    e.stopPropagation();
+    document.querySelectorAll(".multi-picker.open").forEach(p => { if (p !== picker) p.classList.remove("open"); });
+    picker.classList.toggle("open"); trigger.setAttribute("aria-expanded", picker.classList.contains("open"));
+  });
+  panel.addEventListener("click", e => e.stopPropagation());
+  picker.append(trigger, panel); select.insertAdjacentElement("afterend", picker); refresh();
 }
 
 // ============================================================================
@@ -647,35 +1216,60 @@ async function loadResources() {
     setStatus(""); log("Loading resources…");
     const type = $("typeFilter").value;
     const name = $("nameFilter").value.trim().replace(/'/g, "''");
+    const orgUnitIds = selectedValues($("orgUnitFilter"));
+    const businessUnitIds = selectedValues($("businessUnitFilter"));
+    const timeZone = $("timeZoneFilter").value;
+    const state = $("stateFilter").value;
+    const regionId = $("regionFilter").value;
+    const country = $("countryFilter").value.trim().toLocaleLowerCase();
     const filters = [];
     if (type) filters.push(`resourcetype eq ${type}`);
     if (name) filters.push(`contains(name,'${name}')`);
+    if (orgUnitIds.length) filters.push(`(${orgUnitIds.map(id => `_msdyn_organizationalunit_value eq ${id}`).join(" or ")})`);
+    if (businessUnitIds.length) filters.push(`(${businessUnitIds.map(id => `_owningbusinessunit_value eq ${id}`).join(" or ")})`);
+    if (timeZone !== "") filters.push(`timezone eq ${Number(timeZone)}`);
+    if (state !== "") filters.push(`statecode eq ${Number(state)}`);
     const flt = filters.length ? `&$filter=${encodeURIComponent(filters.join(" and "))}` : "";
-    const select = "$select=name,resourcetype,msdyn_startlocation,msdyn_endlocation,msdyn_displayonscheduleboard," +
-      "msdyn_displayonscheduleassistant,msdyn_hourlyrate,msdyn_timeoffapprovalrequired,_msdyn_organizationalunit_value,_calendarid_value," +
-      "_userid_value,_contactid_value,_accountid_value";
+    const select = "$select=name,resourcetype,statecode,msdyn_startlocation,msdyn_endlocation,msdyn_displayonscheduleboard," +
+      "msdyn_displayonscheduleassistant,msdyn_hourlyrate,msdyn_timeoffapprovalrequired,timezone,_msdyn_organizationalunit_value,_calendarid_value," +
+      "_owningbusinessunit_value,_userid_value,_contactid_value,_accountid_value";
     const path = `bookableresources?${select}${flt}&$orderby=name&$top=5000`;
     const rows = await dvQueryAll(path, { "Prefer": 'odata.include-annotations="*",odata.maxpagesize=5000' });
     resources = rows.map(r => ({
       id: r.bookableresourceid,
       name: r.name || "(no name)",
       type: r.resourcetype,
+      state: r.statecode,
       calendarId: r._calendarid_value || null,
       orgUnitId: r._msdyn_organizationalunit_value || null,
       orgUnitName: r["_msdyn_organizationalunit_value@OData.Community.Display.V1.FormattedValue"] || (r._msdyn_organizationalunit_value ? "(set)" : ""),
+      businessUnitId: r._owningbusinessunit_value || null,
+      businessUnitName: r["_owningbusinessunit_value@OData.Community.Display.V1.FormattedValue"] || (r._owningbusinessunit_value ? "(set)" : ""),
+      timeZone: r.timezone,
+      timeZoneName: friendlyTimeZone(r.timezone, r["timezone@OData.Community.Display.V1.FormattedValue"]),
       startloc: r.msdyn_startlocation, endloc: r.msdyn_endlocation,
       board: r.msdyn_displayonscheduleboard, avail: r.msdyn_displayonscheduleassistant,
       hourly: r.msdyn_hourlyrate, timeoff: r.msdyn_timeoffapprovalrequired,
       userId: r._userid_value || null, contactId: r._contactid_value || null, accountId: r._accountid_value || null,
       addrState: "loading",
     }));
+    if (regionId && resources.length) {
+      const regionResourceIds = new Set();
+      for (let i = 0; i < resources.length; i += 20) {
+        const resourceFilter = resources.slice(i, i + 20).map(item => `_msdyn_resource_value eq ${item.id}`).join(" or ");
+        const links = await dvQueryAll(`msdyn_resourceterritories?$select=_msdyn_resource_value&$filter=${encodeURIComponent(`_msdyn_territory_value eq ${regionId} and (${resourceFilter})`)}`);
+        links.forEach(link => { if (link._msdyn_resource_value) regionResourceIds.add(link._msdyn_resource_value); });
+      }
+      resources = resources.filter(item => regionResourceIds.has(item.id));
+    }
+    await enrichResourceAddresses(resources);   // resolve related-record address/geocode/country
+    if (country) resources = resources.filter(item => String(item.country || "").toLocaleLowerCase().includes(country));
     selected.clear();
+    lastResourceSelectionId = null;
     renderResources();
     fillSourceSelect();
-    await enrichResourceAddresses(resources);   // resolve related-record address/geocode
-    renderResources();
     log(`Loaded ${resources.length} resource(s).`);
-    setStatus(`${resources.length} loaded`);
+    setStatus(`${resources.length} Loaded`);
     if (!metaLoaded) loadReferenceData();
   } catch (e) {
     log("✖ Load failed: " + e.message);
@@ -708,11 +1302,12 @@ async function enrichResourceAddresses(list) {
     const extra = set === "systemusers" ? ",_businessunitid_value" : "";
     for (let i = 0; i < arr.length; i += 20) {
       const flt = arr.slice(i, i + 20).map(id => `${idf} eq ${id}`).join(" or ");
-      const rows = await dvQueryAll(`${set}?$select=${idf},address1_latitude,address1_longitude,address1_line1,address1_composite${extra}&$filter=${encodeURIComponent(flt)}`).catch(() => []);
+      const rows = await dvQueryAll(`${set}?$select=${idf},address1_latitude,address1_longitude,address1_line1,address1_composite,address1_country${extra}&$filter=${encodeURIComponent(flt)}`).catch(() => []);
       for (const x of rows) {
         addr[x[idf]] = {
           geo: x.address1_latitude != null && x.address1_longitude != null,
           text: !!(x.address1_line1 || x.address1_composite),
+          country: x.address1_country || "",
         };
         if (set === "systemusers") userBu[x[idf]] = x._businessunitid_value || null;
       }
@@ -721,9 +1316,10 @@ async function enrichResourceAddresses(list) {
   for (const r of list) {
     const rid = r.userId || r.contactId || r.accountId;
     r.userBu = r.userId ? (userBu[r.userId] || null) : null;
-    if (!rid) { r.addrState = "na"; continue; }
+    if (!rid) { r.addrState = "na"; r.country = ""; continue; }
     const a = addr[rid];
     r.addrState = !a ? "none" : a.geo ? "geo" : a.text ? "text" : "none";
+    r.country = a ? a.country : "";
   }
 }
 const ADDR_CELL = {
@@ -734,21 +1330,58 @@ const ADDR_CELL = {
   loading: '<span class="hint">…</span>',
 };
 
+function resourceSortValue(r, key) {
+  switch (key) {
+    case "type": return RES_TYPE[r.type] || r.type || "";
+    case "status": return r.state === 0 ? "Active" : r.state === 1 ? "Inactive" : "";
+    case "address": return ({ geo: 3, text: 2, none: 1, na: 0, loading: -1 })[r.addrState] ?? -1;
+    case "orgUnit": return r.orgUnitName || "";
+    case "timeZone": return r.timeZoneName || "";
+    case "country": return r.country || "";
+    case "startloc": return startLocLabel(r.startloc);
+    case "endloc": return startLocLabel(r.endloc);
+    default: return r[key];
+  }
+}
+function sortedResources() {
+  const { key, direction } = resourceSort;
+  return [...resources].sort((a, b) => {
+    const av = resourceSortValue(a, key), bv = resourceSortValue(b, key);
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    const result = typeof av === "number" && typeof bv === "number"
+      ? av - bv
+      : String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
+    return result * direction;
+  });
+}
+function updateSortHeaders() {
+  document.querySelectorAll("#resTable th.sortable").forEach(th => {
+    th.setAttribute("aria-sort", th.dataset.sort === resourceSort.key
+      ? (resourceSort.direction === 1 ? "ascending" : "descending")
+      : "none");
+  });
+}
+
 function renderResources() {
   const tb = $("resTable").querySelector("tbody");
   tb.innerHTML = "";
   if (!resources.length) {
-    tb.innerHTML = `<tr><td colspan="11" style="white-space:normal;color:#888;padding:18px">No resources match.</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="14" style="white-space:normal;color:#888;padding:18px">No Resources Match.</td></tr>`;
     updateSelCount(); return;
   }
-  for (const r of resources) {
+  for (const r of sortedResources()) {
     const tr = document.createElement("tr");
     tr.innerHTML =
       `<td><input type="checkbox" class="rowck" data-id="${r.id}" ${selected.has(r.id) ? "checked" : ""} aria-label="Select ${escapeHtml(r.name)}" /></td>` +
       `<td class="wrap">${escapeHtml(r.name)}</td>` +
       `<td>${escapeHtml(RES_TYPE[r.type] || r.type || "")}</td>` +
+      `<td>${r.state === 0 ? "Active" : r.state === 1 ? "Inactive" : "—"}</td>` +
       `<td>${ADDR_CELL[r.addrState] || ADDR_CELL.na}</td>` +
       `<td class="wrap">${escapeHtml(r.orgUnitName || "—")}</td>` +
+      `<td class="wrap">${escapeHtml(r.timeZoneName || "—")}</td>` +
+      `<td class="wrap">${escapeHtml(r.country || "—")}</td>` +
       `<td>${escapeHtml(startLocLabel(r.startloc))}</td>` +
       `<td>${escapeHtml(startLocLabel(r.endloc))}</td>` +
       `<td>${boolLabel(r.board)}</td>` +
@@ -757,27 +1390,56 @@ function renderResources() {
       `<td>${boolLabel(r.timeoff)}</td>`;
     tb.appendChild(tr);
   }
-  tb.querySelectorAll(".rowck").forEach(cb => cb.addEventListener("change", () => {
+  tb.querySelectorAll(".rowck").forEach(cb => cb.addEventListener("click", event => {
     const id = cb.dataset.id;
-    if (cb.checked) selected.add(id); else selected.delete(id);
+    const ordered = sortedResources();
+    if (event.shiftKey && lastResourceSelectionId) {
+      const start = ordered.findIndex(r => r.id === lastResourceSelectionId);
+      const end = ordered.findIndex(r => r.id === id);
+      if (start !== -1 && end !== -1) {
+        const [from, to] = start < end ? [start, end] : [end, start];
+        for (let i = from; i <= to; i++) {
+          if (cb.checked) selected.add(ordered[i].id); else selected.delete(ordered[i].id);
+        }
+        tb.querySelectorAll(".rowck").forEach(box => { box.checked = selected.has(box.dataset.id); });
+      }
+    } else if (cb.checked) selected.add(id); else selected.delete(id);
+    lastResourceSelectionId = id;
     updateSelCount();
   }));
+  updateSortHeaders();
   updateSelCount();
 }
 function updateSelCount() {
-  $("selcount").textContent = `${selected.size} selected`;
+  $("selcount").textContent = `${selected.size} Selected`;
   const all = resources.length && resources.every(r => selected.has(r.id));
   $("selAll").checked = all;
 }
 $("selAll").addEventListener("change", () => {
   if ($("selAll").checked) resources.forEach(r => selected.add(r.id));
   else selected.clear();
+  lastResourceSelectionId = null;
+  renderResources();
+});
+$("resourceSelectAllBtn").addEventListener("click", () => {
+  resources.forEach(r => selected.add(r.id));
+  lastResourceSelectionId = null;
+  renderResources();
+});
+$("resourceClearAllBtn").addEventListener("click", () => {
+  selected.clear();
+  lastResourceSelectionId = null;
+  renderResources();
+});
+$("resourceInvertBtn").addEventListener("click", () => {
+  resources.forEach(r => selected.has(r.id) ? selected.delete(r.id) : selected.add(r.id));
+  lastResourceSelectionId = null;
   renderResources();
 });
 
 function fillSourceSelect() {
   const withCal = resources.filter(r => r.calendarId);
-  $("whSource").innerHTML = `<option value="">— select source resource —</option>` +
+  $("whSource").innerHTML = `<option value="">— Select Source Resource —</option>` +
     withCal.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join("");
 }
 
@@ -785,9 +1447,12 @@ async function loadReferenceData() {
   metaLoaded = true;
   setBusy(true);
   try {
-    log("Loading org units, characteristics, ratings, territories…");
-    const [ou, ch, rv, tr, roles] = await Promise.all([
+    log("Loading org units, business units, resource time zones, characteristics, ratings, territories…");
+    const [ou, bu, tzRows, tzDefs, ch, rv, tr, roles] = await Promise.all([
       dvQueryAll("msdyn_organizationalunits?$select=msdyn_name,msdyn_organizationalunitid,msdyn_address1,msdyn_city,msdyn_postalcode,msdyn_latitude,msdyn_longitude&$orderby=msdyn_name").catch(() => []),
+      dvQueryAll("businessunits?$select=name,businessunitid&$orderby=name").catch(() => []),
+      dvQueryAll("bookableresources?$select=timezone&$filter=timezone ne null", { "Prefer": 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"' }).catch(() => []),
+      dvQueryAll("timezonedefinitions?$select=timezonecode,userinterfacename,standardname&$orderby=userinterfacename").catch(() => []),
       dvQueryAll("characteristics?$select=name,characteristicid,characteristictype&$orderby=name").catch(() => []),
       dvQueryAll("ratingvalues?$select=name,value,ratingvalueid&$orderby=value").catch(() => []),
       dvQueryAll("territories?$select=name,territoryid&$orderby=name").catch(() => []),
@@ -798,20 +1463,45 @@ async function loadReferenceData() {
       geo: x.msdyn_latitude != null && x.msdyn_longitude != null,
       hasAddr: (x.msdyn_latitude != null && x.msdyn_longitude != null) || !!(x.msdyn_address1 || x.msdyn_city || x.msdyn_postalcode),
     }));
+    businessUnits = bu.map(x => ({ id: x.businessunitid, name: x.name || "(no name)" }));
+    allTimeZones = tzDefs.filter(x => x.timezonecode != null).map(x => ({
+      code: Number(x.timezonecode), name: x.userinterfacename || x.standardname || `Time zone ${x.timezonecode}`
+    })).filter((x, i, a) => a.findIndex(y => y.code === x.code) === i)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    buildTz();
+    const tzByCode = new Map();
+    for (const x of tzRows) {
+      if (x.timezone == null) continue;
+      tzByCode.set(Number(x.timezone), friendlyTimeZone(x.timezone, x["timezone@OData.Community.Display.V1.FormattedValue"]));
+    }
+    resourceTimeZones = [...tzByCode].map(([code, name]) => ({ code, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const targetZoneMap = new Map((allTimeZones.length ? allTimeZones.map(t => [t.code, t.name]) : TZ));
+    resourceTimeZones.forEach(z => targetZoneMap.set(z.code, z.name));
+    $("calTzTarget").innerHTML = [...targetZoneMap].map(([code, name]) => `<option value="${code}">${escapeHtml(name)}</option>`).join("");
     chars = ch.map(x => ({ id: x.characteristicid, name: x.name || "(no name)", type: x.characteristictype }));
     ratings = rv.map(x => ({ id: x.ratingvalueid, name: x.name || x.value, value: x.value }));
     territories = tr.map(x => ({ id: x.territoryid, name: x.name || "(no name)" }));
+    $("regionFilter").innerHTML = `<option value="">All Regions</option>` + territories.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join("");
     mobileRoles = roles.map(x => ({ id: x.roleid, name: x.name, buid: x._businessunitid_value || null }));
 
     const ouSel = $("f_msdyn_organizationalunit");
-    ouSel.innerHTML = `<option value="">— clear —</option>` + orgUnits.map(o => `<option value="${o.id}">${escapeHtml(o.name)}${o.hasAddr ? "" : "  ⚠ no address"}</option>`).join("");
+    ouSel.innerHTML = `<option value="">— Clear —</option>` + orgUnits.map(o => `<option value="${o.id}">${escapeHtml(o.name)}${o.hasAddr ? "" : "  ⚠ No Address"}</option>`).join("");
     const ouNoAddr = orgUnits.filter(o => !o.hasAddr).length;
     if (ouNoAddr) log(`⚠ ${ouNoAddr} of ${orgUnits.length} org unit(s) have no address — flagged in the Organizational Unit list.`);
     updateOrgOpenBtn();
-    $("charSel").innerHTML = `<option value="">— select —</option>` + chars.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.type === 2 ? " (cert)" : c.type === 1 ? " (skill)" : ""}</option>`).join("");
-    $("ratingSel").innerHTML = `<option value="">(none)</option>` + ratings.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join("");
-    $("terrSel").innerHTML = `<option value="">— select —</option>` + territories.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join("");
-    log(`Reference data: ${orgUnits.length} org units, ${chars.length} characteristics, ${ratings.length} ratings, ${territories.length} territories, ${mobileRoles.length} “New Mobile Experience” role(s).`);
+    $("orgUnitFilter").innerHTML = `<option value="" selected>All Organizational Units</option>` +
+      orgUnits.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join("");
+    $("businessUnitFilter").innerHTML = `<option value="" selected>All Business Units</option>` +
+      businessUnits.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+    buildMultiPicker("orgUnitFilter", "All Organizational Units");
+    buildMultiPicker("businessUnitFilter", "All Business Units");
+    $("timeZoneFilter").innerHTML = `<option value="">All Time Zones</option>` +
+      resourceTimeZones.map(z => `<option value="${z.code}">${escapeHtml(z.name)}</option>`).join("");
+    $("charSel").innerHTML = `<option value="">— Select —</option>` + chars.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.type === 2 ? " (Cert)" : c.type === 1 ? " (Skill)" : ""}</option>`).join("");
+    $("ratingSel").innerHTML = `<option value="">(None)</option>` + ratings.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join("");
+    $("terrSel").innerHTML = `<option value="">— Select —</option>` + territories.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join("");
+    log(`Reference data: ${orgUnits.length} org units, ${businessUnits.length} business units, ${resourceTimeZones.length} resource time zones, ${chars.length} characteristics, ${ratings.length} ratings, ${territories.length} territories, ${mobileRoles.length} “New Mobile Experience” role(s).`);
     if (!mobileRoles.length) log(`ℹ No “Field Service – New Mobile Experience” security role found — the mobile quick action will be unavailable until the feature is enabled in this environment.`);
   } catch (e) {
     metaLoaded = false;   // allow a retry on the next load
@@ -832,6 +1522,7 @@ function collectFieldChanges() {
     const f = FIELDS.find(x => x.key === cb.dataset.key);
     const ctl = $("f_" + f.key);
     if (f.kind === "picklist") { patch[f.key] = Number(ctl.value); summary.push({ label: f.label, value: startLocLabel(ctl.value) }); }
+    else if (f.kind === "timezone") { patch[f.key] = Number(ctl.value); summary.push({ label: f.label, value: timeZoneLabel(ctl.value) }); }
     else if (f.kind === "bool") { patch[f.key] = ctl.value === "true"; summary.push({ label: f.label, value: ctl.value === "true" ? "Yes" : "No" }); }
     else if (f.kind === "number") {
       const n = ctl.value === "" ? null : Number(ctl.value);
@@ -915,7 +1606,7 @@ function addressWarnings() {
 // ============================================================================
 //  Work hours — build CalendarEventInfo + apply
 // ============================================================================
-function anchorIso(hhmm) { return `${ANCHOR}T${hhmm}:00.000Z`; }
+function anchorIso(hhmm) { return `${ANCHOR}T${hhmm}:00Z`; }
 
 function weeklyRules(startHHMM, endHHMM, capacity, brk) {
   const rules = [];
@@ -928,33 +1619,1075 @@ function weeklyRules(startHHMM, endHHMM, capacity, brk) {
   }
   return rules;
 }
-function calEventInfo(calId, resId, tzCode, byday, rules) {
-  return JSON.stringify({
-    CalendarId: calId, EntityLogicalName: "bookableresource", TimeZoneCode: tzCode, UseV2: true,
+function calEventInfo(calId, resId, tzCode, byday, rules, editInnerCalendarId, useV2 = true) {
+  const info = {
+    CalendarId: calId, EntityLogicalName: "bookableresource", TimeZoneCode: tzCode, UseV2: useV2,
     ResourceId: resId,
     RulesAndRecurrences: [{ Rules: rules, RecurrencePattern: `FREQ=WEEKLY;INTERVAL=1;BYDAY=${byday}` }],
-  });
+  };
+  if (editInnerCalendarId) {
+    info.IsEdit = true;
+    info.RulesAndRecurrences[0].InnerCalendarId = editInnerCalendarId;
+  }
+  return JSON.stringify(info);
 }
 
-// Read existing inner-calendar rule ids for a resource's calendar, and delete them.
-async function clearWorkHours(calId) {
-  let rules = [];
+function guidValue(value) {
+  if (!value) return null;
+  if (typeof value === "object") value = value.id || value.Id || value.guid || value.Guid || value.value;
+  const match = String(value || "").match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  return match ? match[0] : null;
+}
+
+function returnedInnerCalendarIds(response) {
+  let value = response && (response.InnerCalendarIds || response.innerCalendarIds || response.innercalendarids);
+  if (typeof value === "string") {
+    try { value = JSON.parse(value); } catch (e) { value = [value]; }
+  }
+  return (Array.isArray(value) ? value : []).map(guidValue).filter(Boolean);
+}
+
+// V2 removes/splices only rank-0 working recurrences that overlap a newly saved working
+// recurrence, while rank-1 exceptions (time off/holidays) take precedence and remain. Create
+// a temporary 24x7 working overlay to overlap every old working rule, then delete ONLY the
+// returned ID of that brand-new overlay. No pre-existing inner calendar is deleted or edited.
+async function clearWorkingHoursPreservingExceptions(calId, resId, tzCode, resourceName) {
+  const overlayRules = [{
+    StartTime: `${ANCHOR}T00:00:00Z`,
+    EndTime: "2000-01-02T00:00:00Z",
+    Effort: 1,
+    WorkHourType: 0,
+  }];
+  const saved = await dvAction("msdyn_SaveCalendar", {
+    CalendarEventInfo: calEventInfo(calId, resId, tzCode, "SU,MO,TU,WE,TH,FR,SA", overlayRules)
+  });
+  const temporaryIds = returnedInnerCalendarIds(saved);
+  if (!temporaryIds.length)
+    throw new Error(`${resourceName}: Dataverse did not return the temporary overlay calendar ID; stopped before saving replacement hours.`);
+  for (const id of temporaryIds) {
+    await dvAction("msdyn_DeleteCalendar", { CalendarEventInfo: JSON.stringify({
+      CalendarId: calId, EntityLogicalName: "bookableresource", InnerCalendarId: id, UseV2: true
+    }) });
+  }
+  log(`  ✓ ${resourceName}: removed old working-hour coverage through a temporary overlay; existing exceptions were not targeted.`);
+}
+
+// ============================================================================
+//  Calendar time-zone normalization
+// ============================================================================
+let CAL_TZ_PLAN = null;
+let CAL_TZ_SELECTED = new Set();
+const CAL_RULE_SELECT = "calendarruleid,_innercalendarid_value,timecode,subcode,timezonecode,starttime,endtime,duration,offset,effort,name,description,isvaried,pattern";
+
+function calendarRuleKind(rule, leaves) {
+  // The resource calendar usually contains an outer recurrence rule. The
+  // working/time-off marker lives on a rule in its linked inner calendar.
+  const candidates = [...(leaves || []), rule];
+  if (candidates.some(r => Number(r.subcode) === 6)) return "timeoff"; // Vacation
+  if (candidates.some(r => Number(r.timecode) === 0 && Number(r.subcode) !== 6)) return "working";
+  if (candidates.some(r => Number(r.timecode) === 2 && ![4, 5, 6].includes(Number(r.subcode)))) return "nonworking";
+  return "excluded";                                // breaks and holidays aren't standalone targets
+}
+function calendarKindLabel(kind) {
+  return kind === "working" ? "Working Hours"
+    : kind === "nonworking" ? "Non-Working Hours"
+    : kind === "timeoff" ? "Time Off" : "Holiday / Exception";
+}
+async function loadCalendarRules(calId) {
+  // CalendarRule does not support RetrieveMultiple in Dataverse. Retrieve the
+  // parent calendar and expand its one-to-many relationship instead.
+  const id = guidValue(calId);
+  if (!id) return [];
+  const d = await dvQuery(`calendars(${id})?$select=calendarid,name&$expand=calendar_calendar_rules($select=${CAL_RULE_SELECT})`);
+  return d.calendar_calendar_rules || [];
+}
+async function loadCalendarDetails(calId) {
+  const id = guidValue(calId);
+  if (!id) return null;
+  return await dvQuery(`calendars(${id})?$select=calendarid,name,description&$expand=calendar_calendar_rules($select=${CAL_RULE_SELECT})`);
+}
+function existingTimeOffReason(rule, leaves, innerCalendar) {
+  const candidates = [
+    // InnerCalendarDescription is normally stored on the inner calendar's
+    // description. Older records can expose it through a rule or its name.
+    innerCalendar && innerCalendar.description,
+    ...(leaves || []).map(x => x.description), rule.description,
+    innerCalendar && innerCalendar.name,
+    ...(leaves || []).map(x => x.name), rule.name,
+  ];
+  return candidates.map(x => String(x || "").trim())
+    .find(x => x && !/^(time off|time off rule)$/i.test(x)) || null;
+}
+function deriveCalendarInterval(outerRule, leafRule) {
+  const rawStart = (leafRule && leafRule.starttime) || outerRule.starttime;
+  if (!rawStart) return { start: null, end: null, duration: null };
+  const duration = Number(leafRule && leafRule.duration != null ? leafRule.duration : outerRule.duration);
+  const offset = Number(leafRule && leafRule.offset != null ? leafRule.offset : 0);
+  let startDate = new Date(rawStart);
+  // Compact leaf rules represent the time as minutes from midnight plus a
+  // duration and commonly omit endtime entirely.
+  if (leafRule && !leafRule.endtime && Number.isFinite(offset)) {
+    startDate = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate(), 0, offset, 0, 0));
+  }
+  const explicitEnd = (leafRule && leafRule.endtime) || outerRule.endtime;
+  const endDate = explicitEnd ? new Date(explicitEnd)
+    : Number.isFinite(duration) ? new Date(startDate.getTime() + duration * 60000) : null;
+  return {
+    start: Number.isNaN(startDate.getTime()) ? null : startDate.toISOString().replace(".000Z", "Z"),
+    end: !endDate || Number.isNaN(endDate.getTime()) ? null : endDate.toISOString().replace(".000Z", "Z"),
+    duration: Number.isFinite(duration) ? duration : null,
+  };
+}
+async function inspectOuterCalendarRule(rule, target) {
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+  const innerCalendar = innerId ? await loadCalendarDetails(innerId) : null;
+  const leaves = (innerCalendar && innerCalendar.calendar_calendar_rules) || [];
+  const kind = calendarRuleKind(rule, leaves);
+  const nodes = [rule, ...leaves];
+  const representative = leaves.find(r => Number(r.subcode) === 6) || leaves[0] || rule;
+  const interval = deriveCalendarInterval(rule, representative === rule ? null : representative);
+  const resolvedReason = existingTimeOffReason(rule, leaves, innerCalendar);
+  const eventDateSource = representative.starttime || rule.starttime || interval.start || "";
+  return {
+    ...rule,
+    kind,
+    _leafRules: leaves,
+    _needsTimeZone: nodes.some(r => r.timezonecode != null && Number(r.timezonecode) >= 0 && Number(r.timezonecode) !== target),
+    _eventStart: interval.start,
+    _eventEnd: interval.end,
+    _eventDuration: interval.duration,
+    // All-day Time Off is stored as a 1,440-minute rule. Its offset is the
+    // source-zone representation of local midnight and is often non-zero
+    // (for example 1080 = 18:00 UTC for UTC-06), so offset === 0 is not a
+    // valid all-day test.
+    _isAllDay: kind === "timeoff" && interval.duration === 1440,
+    _eventDate: String(eventDateSource).slice(0, 10),
+    _eventEffort: representative.effort == null ? (rule.effort == null ? 1 : rule.effort) : representative.effort,
+    // SaveCalendar stores the user-entered Time Off reason as the inner
+    // Calendar name. Keep it separate from generic rule names such as
+    // "Time Off Rule" so an update can never silently rename the entry.
+    _eventDescription: kind === "timeoff" ? (resolvedReason || "Time off") : resolvedReason,
+    _eventReasonDefaulted: kind === "timeoff" && !resolvedReason,
+    _innerCalendarName: innerCalendar && innerCalendar.name,
+    _innerCalendarDescription: innerCalendar && innerCalendar.description,
+  };
+}
+function calendarKindsSelected() {
+  return {
+    working: $("calTzWorking").checked,
+    nonworking: $("calTzNonWorking").checked,
+    timeoff: $("calTzTimeOff").checked,
+  };
+}
+function calendarRuleContext(rule) {
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid) || "missing";
+  const leafIds = (rule._leafRules || []).map(x => x.calendarruleid).filter(Boolean).join(",") || "none";
+  const sourceZones = [...new Set([rule, ...(rule._leafRules || [])]
+    .map(x => x.timezonecode).filter(x => x != null).map(Number))];
+  const leafShape = (rule._leafRules || []).map(x => `${x.calendarruleid || "?"}[offset=${x.offset == null ? "null" : x.offset},duration=${x.duration == null ? "null" : x.duration}]`).join(",") || "none";
+  return `outerRule=${rule.calendarruleid || "missing"}; innerCalendar=${innerId}; leafRules=${leafIds}; leafShape=${leafShape}; sourceTZ=${sourceZones.length ? sourceZones.map(z => `${z} (${timeZoneLabel(z)})`).join(" / ") : "missing"}; start=${rule._eventStart || rule.starttime || "missing"}; end=${rule._eventEnd || rule.endtime || "missing"}; reason=${rule._eventDescription || "stored on existing inner calendar / untouched"}`;
+}
+function calendarRuleKey(resource, rule) {
+  return `${resource.id}:${rule.calendarruleid}`;
+}
+function calendarRuleSourceZone(rule) {
+  const zones = [...new Set([rule, ...(rule._leafRules || [])]
+    .map(x => x.timezonecode).filter(x => x != null && Number(x) >= 0).map(Number))];
+  return zones.length ? zones.map(timeZoneLabel).join(" / ") : "Inherited / unspecified";
+}
+function updateCalendarRuleSelectionUi() {
+  const count = CAL_TZ_SELECTED.size;
+  const countEl = $("calRuleSelectedCount");
+  if (countEl) countEl.textContent = `${count} Selected`;
+  $("calTzApplyBtn").disabled = !CAL_TZ_PLAN || count === 0;
+}
+function wireCalendarRulePicker() {
+  document.querySelectorAll(".cal-rule-select").forEach(cb => cb.addEventListener("change", () => {
+    if (cb.checked) CAL_TZ_SELECTED.add(cb.dataset.key); else CAL_TZ_SELECTED.delete(cb.dataset.key);
+    updateCalendarRuleSelectionUi();
+  }));
+  const setAll = checked => {
+    document.querySelectorAll(".cal-rule-select").forEach(cb => {
+      cb.checked = checked;
+      if (checked) CAL_TZ_SELECTED.add(cb.dataset.key); else CAL_TZ_SELECTED.delete(cb.dataset.key);
+    });
+    updateCalendarRuleSelectionUi();
+  };
+  const allBtn = $("calRuleSelectAllBtn"), clearBtn = $("calRuleClearBtn");
+  if (allBtn) allBtn.addEventListener("click", () => setAll(true));
+  if (clearBtn) clearBtn.addEventListener("click", () => setAll(false));
+}
+async function previewCalendarTimeZones() {
   try {
-    const cal = await dvQuery(`calendars(${calId})?$expand=calendar_calendar_rules($select=innercalendarid)`);
-    rules = (cal && cal.calendar_calendar_rules) || [];
-  } catch (e) { return; }
-  const ids = new Set();
-  for (const r of rules) { const ic = r.innercalendarid || r._innercalendarid_value; if (ic) ids.add(ic); }
-  for (const ic of ids) {
+    CAL_TZ_PLAN = null; CAL_TZ_SELECTED.clear(); $("calTzApplyBtn").disabled = true;
+    if (!selected.size) { $("calTzStatus").textContent = "Select resources first."; return; }
+    const kinds = calendarKindsSelected();
+    if (!Object.values(kinds).some(Boolean)) { $("calTzStatus").textContent = "Select at least one calendar entry type."; return; }
+    const target = Number($("calTzTarget").value), targetName = $("calTzTarget").options[$("calTzTarget").selectedIndex].text;
+    const makeAllDay = $("calTzAllDay").checked && kinds.timeoff;
+    beginCancellableAction("Calendar Time Zone preview");
+    setBusy(true); $("calTzPreviewBtn").disabled = true; $("calTzStatus").textContent = "Inspecting calendar rules…";
+    const selectedIds = [...selected];
+    const items = new Array(selectedIds.length);
+    log(`Calendar TZ preview: inspecting ${selected.size} selected resource(s) for target ${targetName} with up to 6 parallel readers.`);
+    await runWithConcurrency(selectedIds, 6, async (id, index) => {
+      const resource = resources.find(x => x.id === id);
+      if (!resource) { log(`  ⚠ Resource ${id}: not present in the loaded result.`); return; }
+      if (!resource.calendarId) { log(`  ⚠ ${resource.name}: no calendar is assigned.`); items[index] = { resource, rules: [] }; return; }
+      const roots = await loadCalendarRules(resource.calendarId);
+      const inspected = [];
+      for (const root of roots) {
+        throwIfActionCancelled();
+        inspected.push(await inspectOuterCalendarRule(root, target));
+      }
+      const discovered = { working: 0, nonworking: 0, timeoff: 0, excluded: 0 };
+      inspected.forEach(r => discovered[r.kind]++);
+      const rules = inspected.filter(rule => kinds[rule.kind] && (rule._needsTimeZone || (makeAllDay && rule.kind === "timeoff" && !rule._isAllDay)));
+      items[index] = { resource, rules };
+      log(`  ${resource.name} [${resource.calendarId}]: ${roots.length} outer rule(s); found ${discovered.working} working, ${discovered.nonworking} non-working, ${discovered.timeoff} time off, ${discovered.excluded} excluded; ${rules.length} to update.`);
+      rules.forEach(rule => log(`    queued ${rule.kind}: ${calendarRuleContext(rule)}`, resource));
+    }, completed => { $("calTzStatus").textContent = `Inspected ${completed} of ${selectedIds.length} resource calendar(s)…`; });
+    const completedItems = items.filter(Boolean);
+    const total = completedItems.reduce((n, x) => n + x.rules.length, 0);
+    CAL_TZ_PLAN = { target, targetName, makeAllDay, items: completedItems };
+    completedItems.forEach(item => item.rules.forEach(rule => CAL_TZ_SELECTED.add(calendarRuleKey(item.resource, rule))));
+    let html = `<p><b>${total}</b> calendar rule(s) across <b>${completedItems.filter(x => x.rules.length).length}</b> resource(s) will be updated to <b>${escapeHtml(targetName)}</b>.</p>`;
+    if (makeAllDay) html += `<div class="warnbox">Selected Time Off entries will also be changed to all-day events while preserving their event date and reason.</div>`;
+    if (total) {
+      html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="calRuleSelectAllBtn">Select All</button><button type="button" class="ghost small" id="calRuleClearBtn">Clear</button><span class="selcount" id="calRuleSelectedCount">${total} Selected</span></div>`;
+      html += `<div class="tablewrap"><table id="calTzPreviewTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("type", "Type")}${sortableHeader("datetime", "Date / Time")}${sortableHeader("timezone", "Current Time Zone")}${sortableHeader("reason", "Name / Reason")}</tr></thead><tbody>`;
+      for (const item of completedItems) for (const rule of item.rules) {
+        const key = calendarRuleKey(item.resource, rule);
+        const interval = [rule._eventStart, rule._eventEnd].filter(Boolean).join(" → ") || "Not available";
+        const reason = rule.kind === "timeoff" ? rule._eventDescription : (rule.name || rule.description || "—");
+        const sourceZone = calendarRuleSourceZone(rule);
+        const typeLabel = calendarKindLabel(rule.kind);
+        html += `<tr><td><input type="checkbox" class="cal-rule-select" data-key="${escapeHtml(key)}" checked aria-label="Select calendar rule" /></td>` +
+          `<td data-sort-key="resource" data-sort-value="${escapeHtml(item.resource.name)}" class="wrap">${escapeHtml(item.resource.name)}</td>` +
+          `<td data-sort-key="type" data-sort-value="${escapeHtml(typeLabel)}">${escapeHtml(typeLabel)}</td>` +
+          `<td data-sort-key="datetime" data-sort-value="${escapeHtml(interval)}" class="wrap">${escapeHtml(interval)}</td>` +
+          `<td data-sort-key="timezone" data-sort-value="${escapeHtml(sourceZone)}" class="wrap">${escapeHtml(sourceZone)}</td>` +
+          `<td data-sort-key="reason" data-sort-value="${escapeHtml(reason)}" class="wrap">${escapeHtml(reason)}</td></tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+    if (!total) html += `<p class="hint">No selected calendar rules need changing.</p>`;
+    $("calTzPreview").innerHTML = html;
+    wireCalendarRulePicker();
+    wireSortablePreviewTable($("calTzPreviewTable"));
+    $("calTzApplyBtn").disabled = total === 0;
+    $("calTzStatus").textContent = total ? "Preview ready." : "Nothing to update.";
+    log(`Calendar TZ preview: ${total} rule(s), target ${targetName}${makeAllDay ? ", Time Off → All Day" : ""}.`);
+  } catch (e) {
+    CAL_TZ_PLAN = null; CAL_TZ_SELECTED.clear();
+    if (isActionCancellation(e)) { $("calTzStatus").textContent = "Preview cancelled."; log("Calendar TZ preview cancelled."); }
+    else { $("calTzStatus").textContent = "Preview failed — see log."; log("✖ Calendar TZ preview failed: " + e.message); }
+  } finally {
+    $("calTzPreviewBtn").disabled = false; setBusy(false); endCancellableAction();
+  }
+}
+async function updateCalendarRuleTree(rule, target, resource) {
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+  if (!innerId) throw new Error(`${calendarKindLabel(rule.kind)} is missing its inner calendar ID.`);
+  const leaves = rule._leafRules || await loadCalendarRules(innerId);
+  const sourceRules = leaves.length ? leaves : [rule];
+  const saveRules = sourceRules.map(sourceRule => {
+    const interval = deriveCalendarInterval(rule, sourceRule === rule ? null : sourceRule);
+    if (!interval.start || !interval.end)
+      throw new Error(`${calendarKindLabel(rule.kind)} is missing a start or end time.`);
+    return {
+      StartTime: interval.start,
+      EndTime: interval.end,
+      Effort: sourceRule.effort == null ? null : sourceRule.effort,
+      WorkHourType: rule.kind === "working" && Number(sourceRule.timecode) === 0 ? 0 : 1,
+    };
+  });
+  const recurrencePattern = rule.pattern || sourceRules.map(sourceRule => sourceRule.pattern).find(Boolean) || null;
+  const recurrence = { InnerCalendarId: innerId, Rules: saveRules };
+  if (recurrencePattern) recurrence.RecurrencePattern = recurrencePattern;
+  const info = {
+    CalendarId: resource.calendarId,
+    EntityLogicalName: "bookableresource",
+    ResourceId: resource.id,
+    IsEdit: true,
+    UseV2: true,
+    TimeZoneCode: target,
+    RulesAndRecurrences: [recurrence],
+  };
+  log(`    editing ${calendarKindLabel(rule.kind)} through msdyn_SaveCalendar: ${sourceRules.length} rule segment(s); inner calendar ${innerId}; target TZ ${target}; recurrence ${recurrencePattern || "single occurrence"}.`, resource);
+  await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: JSON.stringify(info) });
+  if (rule.kind === "working") {
+    log(`    preserved working segments, capacity, breaks, and recurrence while changing the Time Zone.`, resource);
+  }
+}
+async function updateTimedTimeOffTimeZone(resource, rule, target) {
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+  const start = rule._eventStart || rule.starttime;
+  const end = rule._eventEnd || rule.endtime;
+  if (!innerId) throw new Error("Time Off is missing its inner calendar ID.");
+  if (!start || !end) throw new Error("Time Off is missing its start or end time.");
+  const info = {
+    CalendarId: resource.calendarId, EntityLogicalName: "bookableresource", ResourceId: resource.id,
+    IsEdit: true, UseV2: true, TimeZoneCode: target,
+    InnerCalendarDescription: rule._eventDescription,
+    RulesAndRecurrences: [{
+      InnerCalendarId: innerId,
+      Rules: [{ StartTime: start, EndTime: end, Effort: rule._eventEffort, WorkHourType: 3 }]
+    }]
+  };
+  const reasonAction = rule._eventReasonDefaulted ? `blank reason defaulted to "${rule._eventDescription}"` : `reason "${rule._eventDescription}" explicitly retained`;
+  log(`    ${resource.name}: editing timed Time Off in place; ${reasonAction}; inner calendar ${innerId}; ${start} to ${end}; duration ${rule._eventDuration == null ? "unknown" : `${rule._eventDuration} min`}; target TZ ${target}.`);
+  await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: JSON.stringify(info) });
+}
+async function makeTimeOffAllDay(resource, rule, target) {
+  const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+  // Preserve the calendar date recorded by the original rule. _eventStart
+  // can include the source-zone offset (such as 18:00Z for local midnight),
+  // while _eventDate comes from the unshifted rule date.
+  const date = rule._eventDate || String(rule._eventStart || rule.starttime || "").slice(0, 10);
+  if (!innerId || !/^\d{4}-\d{2}-\d{2}$/.test(date))
+    throw new Error(`${resource.name}: Time Off rule is missing its inner calendar ID or event date.`);
+  const start = `${date}T00:00:00.000Z`;
+  const endDate = new Date(start);
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+  const end = endDate.toISOString();
+  const info = {
+    CalendarId: resource.calendarId, EntityLogicalName: "bookableresource", ResourceId: resource.id,
+    IsEdit: true, UseV2: true, TimeZoneCode: target,
+    InnerCalendarDescription: rule._eventDescription,
+    RulesAndRecurrences: [{
+      InnerCalendarId: innerId,
+      Rules: [{ StartTime: start, EndTime: end, Effort: rule._eventEffort, WorkHourType: 3 }]
+    }]
+  };
+  const reasonAction = rule._eventReasonDefaulted ? `blank reason defaulted to "${rule._eventDescription}"` : `reason "${rule._eventDescription}" explicitly retained`;
+  log(`    ${resource.name}: ${rule._isAllDay ? "preserving" : "converting"} Time Off as All Day through msdyn_SaveCalendar; ${start} to ${end}; ${reasonAction}; inner calendar ${innerId}; target TZ ${target}.`);
+  await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: JSON.stringify(info) });
+}
+
+async function updateTimeOffTimeZonePreservingShape(resource, rule, target) {
+  if (rule._isAllDay) return await makeTimeOffAllDay(resource, rule, target);
+  return await updateTimedTimeOffTimeZone(resource, rule, target);
+}
+async function applyCalendarTimeZones() {
+  if (!CAL_TZ_PLAN) { $("calTzStatus").textContent = "Preview first."; return; }
+  const { target, makeAllDay, items } = CAL_TZ_PLAN;
+  if (!CAL_TZ_SELECTED.size) { $("calTzStatus").textContent = "Select at least one calendar rule."; return; }
+  let ok = 0, failed = 0;
+  try {
+    beginCancellableAction("Calendar Time Zone update");
+    setBusy(true); $("calTzPreviewBtn").disabled = true; $("calTzApplyBtn").disabled = true;
+    const selectedItems = items.map(item => ({
+      resource: item.resource,
+      rules: item.rules.filter(rule => CAL_TZ_SELECTED.has(calendarRuleKey(item.resource, rule)))
+    })).filter(item => item.rules.length);
+    const pending = selectedItems.reduce((n, x) => n + x.rules.length, 0);
+    let current = 0;
+    log(`Calendar TZ update starting: ${pending} selected rule(s) across ${selectedItems.length} resource(s), using up to 4 parallel resource workers.`);
+    await runWithConcurrency(selectedItems, 4, async item => {
+      log(`▶ ${item.resource.name}: starting ${item.rules.length} calendar update(s).`);
+      for (const rule of item.rules) {
+        throwIfActionCancelled();
+        current++;
+        const date = String(rule._eventStart || rule.starttime || "").slice(0, 10) || "no date";
+        const action = makeAllDay && rule.kind === "timeoff"
+          ? `set Time Off on ${date} to ${CAL_TZ_PLAN.targetName} and All Day`
+          : `set ${rule.kind} rule on ${date} to ${CAL_TZ_PLAN.targetName}`;
+        $("calTzStatus").textContent = `Updating ${current} of ${pending}: ${item.resource.name}…`;
+        log(`  [${current}/${pending}] ${item.resource.name}: ${action}.`);
+        try {
+          if (rule.kind === "timeoff") {
+            if (makeAllDay) await makeTimeOffAllDay(item.resource, rule, target);
+            else await updateTimeOffTimeZonePreservingShape(item.resource, rule, target);
+          } else await updateCalendarRuleTree(rule, target, item.resource);
+          ok++; log(`  ✓ ${item.resource.name}: completed ${rule.kind} rule on ${date}.`);
+        } catch (e) {
+          if (isActionCancellation(e)) throw e;
+          failed++;
+          log(`  ✖ ${item.resource.name} (${rule.kind}) failed: ${e && e.message ? e.message : String(e)}`);
+          log(`    failure context: resource=${item.resource.id}; calendar=${item.resource.calendarId}; targetTZ=${target} (${CAL_TZ_PLAN.targetName}); makeAllDay=${makeAllDay}; ${calendarRuleContext(rule)}`);
+        }
+      }
+      log(`■ ${item.resource.name}: finished.`);
+    }, completed => {
+      $("calTzStatus").textContent = `Completed ${completed} of ${selectedItems.length} resource calendar(s); ${ok} rule(s) updated${failed ? `, ${failed} failed` : ""}…`;
+    });
+    log(`Calendar TZ update done: ${ok} succeeded, ${failed} failed.`);
+    notify("Calendar time zones updated", `${ok} rule(s) updated${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
+    $("calTzStatus").textContent = `${ok} updated${failed ? `, ${failed} failed` : ""}.`;
+  } catch (e) {
+    if (isActionCancellation(e)) {
+      log(`Calendar TZ update cancelled: ${ok} succeeded before cancellation, ${failed} failed.`);
+      $("calTzStatus").textContent = `Cancelled after ${ok} update(s)${failed ? `; ${failed} failed` : ""}.`;
+    } else {
+      log(`✖ Calendar TZ update stopped: ${e.message}`);
+      $("calTzStatus").textContent = "Update stopped — see log.";
+    }
+  } finally {
+    setBusy(false); $("calTzPreviewBtn").disabled = false; CAL_TZ_PLAN = null; CAL_TZ_SELECTED.clear(); endCancellableAction();
+  }
+}
+
+// ============================================================================
+//  Delete calendar rules
+// ============================================================================
+let DELETE_CAL_PLAN = null;
+let DELETE_CAL_SELECTED = new Set();
+
+function deleteCalendarRuleType(rule) {
+  if (rule.kind === "working") return "Working Hours";
+  if (rule.kind === "nonworking") return "Non-Working Hours";
+  if (rule.kind === "timeoff") return "Time Off";
+  const nodes = [rule, ...(rule._leafRules || [])];
+  if (nodes.some(node => [4, 5].includes(Number(node.subcode)))) return "Holiday / Business Closure";
+  return "Calendar Exception";
+}
+
+function deleteCalendarRuleName(rule) {
+  return rule._eventDescription || rule._innerCalendarDescription || rule._innerCalendarName ||
+    rule.description || rule.name || "—";
+}
+
+async function previewDeleteCalendarRules() {
+  try {
+    DELETE_CAL_PLAN = null;
+    DELETE_CAL_SELECTED.clear();
+    $("deleteCalApplyBtn").disabled = true;
+    if (!selected.size) { $("deleteCalStatus").textContent = "Select resources first."; return; }
+    setBusy(true);
+    $("deleteCalPreviewBtn").disabled = true;
+    $("deleteCalStatus").textContent = "Loading calendar rules…";
+    const rows = [];
+    log(`Delete Calendar Rules preview: inspecting ${selected.size} selected resource(s).`);
+    for (const id of selected) {
+      const resource = resources.find(item => item.id === id);
+      if (!resource) continue;
+      if (!resource.calendarId) {
+        log("No calendar is assigned; no rules can be deleted.", resource);
+        continue;
+      }
+      const roots = await loadCalendarRules(resource.calendarId);
+      let eligible = 0;
+      for (const root of roots) {
+        const rule = await inspectOuterCalendarRule(root, Number(resource.timeZone == null ? -999 : resource.timeZone));
+        const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid);
+        if (!innerId) continue;
+        rows.push({ key: `${resource.id}:${innerId}`, resource, rule, innerId });
+        eligible++;
+      }
+      log(`Loaded ${eligible} deletable calendar rule(s).`, resource);
+    }
+    const uniqueRows = [...new Map(rows.map(row => [row.key, row])).values()];
+    DELETE_CAL_PLAN = uniqueRows;
+    DELETE_CAL_SELECTED = new Set(uniqueRows.map(row => row.key));
+    let html = `<div class="warnbox">Deleting a calendar rule is permanent. Review the Type, date/time, time zone, capacity, and name before continuing.</div>`;
+    if (uniqueRows.length) {
+      html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="deleteCalSelectAllBtn">Select All</button><button type="button" class="ghost small" id="deleteCalClearBtn">Clear</button><span class="selcount" id="deleteCalSelectedCount"></span></div>`;
+      html += `<div class="tablewrap"><table id="deleteCalTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("type", "Type")}${sortableHeader("datetime", "Date / Time")}${sortableHeader("timezone", "Current Time Zone")}${sortableHeader("capacity", "Capacity")}${sortableHeader("reason", "Name / Reason")}</tr></thead><tbody>`;
+      for (const item of uniqueRows) {
+        const type = deleteCalendarRuleType(item.rule);
+        const dateTime = workHourRuleDateTime(item.rule);
+        const zone = calendarRuleSourceZone(item.rule);
+        const capacity = item.rule._eventEffort == null ? "—" : item.rule._eventEffort;
+        const reason = deleteCalendarRuleName(item.rule);
+        html += `<tr><td><input type="checkbox" class="delete-cal-select" data-key="${escapeHtml(item.key)}" checked /></td>` +
+          `<td data-sort-key="resource" data-sort-value="${escapeHtml(item.resource.name)}" class="wrap">${escapeHtml(item.resource.name)}</td>` +
+          `<td data-sort-key="type" data-sort-value="${escapeHtml(type)}">${escapeHtml(type)}</td>` +
+          `<td data-sort-key="datetime" data-sort-value="${escapeHtml(dateTime)}" class="wrap">${escapeHtml(dateTime)}</td>` +
+          `<td data-sort-key="timezone" data-sort-value="${escapeHtml(zone)}" class="wrap">${escapeHtml(zone)}</td>` +
+          `<td data-sort-key="capacity" data-sort-value="${escapeHtml(capacity)}">${escapeHtml(capacity)}</td>` +
+          `<td data-sort-key="reason" data-sort-value="${escapeHtml(reason)}" class="wrap">${escapeHtml(reason)}</td></tr>`;
+      }
+      html += `</tbody></table></div>`;
+    } else html += `<p class="hint">No deletable calendar rules were found.</p>`;
+    $("deleteCalPreview").innerHTML = html;
+    wireDeleteCalendarGrid();
+    wireSortablePreviewTable($("deleteCalTable"));
+    $("deleteCalStatus").textContent = uniqueRows.length ? "Preview ready." : "No calendar rules found.";
+    log(`Delete Calendar Rules preview ready: ${uniqueRows.length} rule(s).`);
+  } catch (error) {
+    DELETE_CAL_PLAN = null;
+    DELETE_CAL_SELECTED.clear();
+    $("deleteCalStatus").textContent = "Preview failed — see log.";
+    log(`Delete Calendar Rules preview failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    $("deleteCalPreviewBtn").disabled = false;
+  }
+}
+
+function wireDeleteCalendarGrid() {
+  const refresh = () => {
+    const count = DELETE_CAL_SELECTED.size;
+    const countEl = $("deleteCalSelectedCount");
+    if (countEl) countEl.textContent = `${count} Selected`;
+    $("deleteCalApplyBtn").disabled = !DELETE_CAL_PLAN || count === 0;
+  };
+  document.querySelectorAll(".delete-cal-select").forEach(cb => cb.addEventListener("change", () => {
+    if (cb.checked) DELETE_CAL_SELECTED.add(cb.dataset.key); else DELETE_CAL_SELECTED.delete(cb.dataset.key);
+    refresh();
+  }));
+  const setAll = checked => {
+    document.querySelectorAll(".delete-cal-select").forEach(cb => { cb.checked = checked; });
+    DELETE_CAL_SELECTED = new Set(checked && DELETE_CAL_PLAN ? DELETE_CAL_PLAN.map(row => row.key) : []);
+    refresh();
+  };
+  const all = $("deleteCalSelectAllBtn"), clear = $("deleteCalClearBtn");
+  if (all) all.addEventListener("click", () => setAll(true));
+  if (clear) clear.addEventListener("click", () => setAll(false));
+  refresh();
+}
+
+async function deleteSelectedCalendarRules() {
+  if (!DELETE_CAL_PLAN || !DELETE_CAL_SELECTED.size) {
+    $("deleteCalStatus").textContent = "Preview and select at least one rule first.";
+    return;
+  }
+  if (!confirmTwice($("deleteCalApplyBtn"), "Delete Selected Rules")) return;
+  const rows = DELETE_CAL_PLAN.filter(row => DELETE_CAL_SELECTED.has(row.key));
+  let succeeded = 0, failed = 0;
+  try {
+    setBusy(true);
+    $("deleteCalPreviewBtn").disabled = true;
+    $("deleteCalApplyBtn").disabled = true;
+    log(`Delete Calendar Rules starting: ${rows.length} selected rule(s).`);
+    for (let index = 0; index < rows.length; index++) {
+      const item = rows[index];
+      const type = deleteCalendarRuleType(item.rule);
+      $("deleteCalStatus").textContent = `Deleting ${index + 1} of ${rows.length}: ${item.resource.name}…`;
+      try {
+        await dvAction("msdyn_DeleteCalendar", { CalendarEventInfo: JSON.stringify({
+          CalendarId: item.resource.calendarId,
+          EntityLogicalName: "bookableresource",
+          InnerCalendarId: item.innerId,
+          UseV2: true
+        }) });
+        succeeded++;
+        log(`Deleted ${type}: ${workHourRuleDateTime(item.rule)}; inner calendar ${item.innerId}.`, item.resource);
+      } catch (error) {
+        failed++;
+        log(`Failed to delete ${type}: ${error.message}; inner calendar ${item.innerId}.`, item.resource);
+      }
+    }
+    $("deleteCalStatus").textContent = `${succeeded} deleted${failed ? `, ${failed} failed` : ""}. Preview again to refresh.`;
+    $("deleteCalPreview").innerHTML = `<p><b>${succeeded}</b> rule(s) deleted${failed ? `; <b>${failed}</b> failed` : ""}. Preview again to reload the calendars.</p>`;
+    log(`Delete Calendar Rules finished: ${succeeded} deleted, ${failed} failed.`);
+    notify("Calendar rule deletion complete", `${succeeded} deleted${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
+  } finally {
+    setBusy(false);
+    $("deleteCalPreviewBtn").disabled = false;
+    $("deleteCalApplyBtn").disabled = true;
+    DELETE_CAL_PLAN = null;
+    DELETE_CAL_SELECTED.clear();
+  }
+}
+
+// ============================================================================
+//  Export calendar rules
+// ============================================================================
+async function loadCalendarDetailsAll(calId) {
+  const id = guidValue(calId);
+  if (!id) return null;
+  return await retryCalendarExportRead(() =>
+    dvQuery(`calendars(${id})?$select=calendarid,name,description&$expand=calendar_calendar_rules`));
+}
+
+function waitMs(milliseconds) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function retryCalendarExportRead(operation, maxAttempts = 4) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try { return await operation(); }
+    catch (error) {
+      lastError = error;
+      const transient = /(?:GET\s+)?(?:408|429|500|502|503|504)|throttl|rate.?limit|timeout|temporar/i.test(String(error && error.message));
+      if (!transient || attempt === maxAttempts) throw error;
+      const delay = Math.min(8000, 750 * (2 ** (attempt - 1))) + Math.floor(Math.random() * 250);
+      await waitMs(delay);
+    }
+  }
+  throw lastError;
+}
+
+async function runWithConcurrency(items, concurrency, worker, onComplete) {
+  let nextIndex = 0;
+  let completed = 0;
+  const runner = async () => {
+    while (true) {
+      throwIfActionCancelled();
+      const index = nextIndex++;
+      if (index >= items.length) return;
+      await worker(items[index], index);
+      throwIfActionCancelled();
+      completed++;
+      if (onComplete) onComplete(completed, items[index], index);
+    }
+  };
+  const count = Math.max(1, Math.min(Number(concurrency) || 1, items.length || 1));
+  await Promise.all(Array.from({ length: count }, runner));
+}
+
+async function loadResourceRegionNames(list, concurrency = 4) {
+  const result = new Map(list.map(resource => [resource.id, []]));
+  const territoryNames = new Map(territories.map(territory => [territory.id, territory.name]));
+  const batches = [];
+  for (let i = 0; i < list.length; i += 20) {
+    batches.push(list.slice(i, i + 20));
+  }
+  await runWithConcurrency(batches, Math.min(4, concurrency), async batch => {
+    const filter = batch.map(resource => `_msdyn_resource_value eq ${resource.id}`).join(" or ");
+    let links;
     try {
-      await dvAction("msdyn_DeleteCalendar", { CalendarEventInfo: JSON.stringify({ CalendarId: calId, EntityLogicalName: "bookableresource", InnerCalendarId: ic }) });
-    } catch (e) { /* a rule may already be gone — keep going */ }
+      links = await retryCalendarExportRead(() =>
+        dvQueryAll(`msdyn_resourceterritories?$select=_msdyn_resource_value,_msdyn_territory_value&$filter=${encodeURIComponent(filter)}`));
+    } catch (error) {
+      if (isActionCancellation(error)) throw error;
+      links = [];
+    }
+    for (const link of links) {
+      const resourceId = link._msdyn_resource_value;
+      const territoryId = link._msdyn_territory_value;
+      if (!result.has(resourceId)) result.set(resourceId, []);
+      const name = territoryNames.get(territoryId) || territoryId || "";
+      if (name && !result.get(resourceId).includes(name)) result.get(resourceId).push(name);
+    }
+  });
+  return result;
+}
+
+function calendarExportKindsSelected() {
+  return {
+    working: $("exportCalWorking").checked,
+    nonworking: $("exportCalNonWorking").checked,
+    timeoff: $("exportCalTimeOff").checked,
+    excluded: $("exportCalOther").checked,
+  };
+}
+
+function csvScalar(value) {
+  if (value == null) return "";
+  return typeof value === "object" ? JSON.stringify(value) : String(value);
+}
+
+function pascalCsvHeader(value) {
+  const logicalNames = {
+    createdon: "CreatedOn", modifiedon: "ModifiedOn", createdby: "CreatedBy", modifiedby: "ModifiedBy",
+    calendarruleid: "CalendarRuleID", calendarid: "CalendarID", innercalendarid: "InnerCalendarID",
+    timezonecode: "TimeZoneCode", timecode: "TimeCode", starttime: "StartTime", endtime: "EndTime",
+    isvaried: "IsVaried", effectiveintervalstart: "EffectiveIntervalStart",
+    effectiveintervalend: "EffectiveIntervalEnd", businessunitid: "BusinessUnitID",
+    ownerid: "OwnerID", owningbusinessunit: "OwningBusinessUnit", organizationid: "OrganizationID",
+  };
+  return String(value).split(/[^A-Za-z0-9]+/).filter(Boolean).map(part => {
+    const mapped = logicalNames[part.toLowerCase()];
+    if (mapped) return mapped;
+    if (/^id$/i.test(part)) return "ID";
+    const words = part.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(" ");
+    return words.map(word => /^id$/i.test(word) ? "ID" : word.charAt(0).toUpperCase() + word.slice(1)).join("");
+  }).join("");
+}
+
+function downloadObjectCsv(filename, preferredColumns, objects) {
+  const discovered = [];
+  const seen = new Set(preferredColumns);
+  for (const object of objects) for (const key of Object.keys(object)) {
+    if (!seen.has(key)) { seen.add(key); discovered.push(key); }
+  }
+  const columns = [...preferredColumns, ...discovered.sort((a, b) => a.localeCompare(b))];
+  const headers = columns.map(pascalCsvHeader);
+  const csv = "\uFEFF" + [headers, ...objects.map(object => columns.map(column => csvScalar(object[column])))]
+    .map(row => row.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function calendarRuleExportRow(resource, regionNames, parent, node, level, kind, innerId) {
+  const type = kind === "working" ? "Working Hours"
+    : kind === "nonworking" ? "Non-Working Hours"
+    : kind === "timeoff" ? "Time Off" : deleteCalendarRuleType({ ...parent, kind });
+  const row = {
+    "Resource ID": resource.id,
+    "Resource Name": resource.name,
+    "Resource Type": RES_TYPE[resource.type] || resource.type || "",
+    "Resource Status": resource.state === 0 ? "Active" : "Inactive",
+    "Organizational Unit ID": resource.orgUnitId || "",
+    "Organizational Unit": resource.orgUnitName || "",
+    "Owning Business Unit ID": resource.businessUnitId || "",
+    "Owning Business Unit": resource.businessUnitName || "",
+    "Region / Territory": (regionNames || []).join("; "),
+    "Country": resource.country || "",
+    "Resource Time Zone Code": resource.timeZone == null ? "" : resource.timeZone,
+    "Resource Time Zone": resource.timeZoneName || "",
+    "Parent Calendar ID": resource.calendarId || "",
+    "Inner Calendar ID": innerId || "",
+    "Rule Level": level,
+    "Parent Rule ID": parent.calendarruleid || "",
+    "Calendar Rule ID": node.calendarruleid || "",
+    "Type": type,
+    "Start Time": node.starttime || "",
+    "End Time": node.endtime || "",
+    "Effort": node.effort == null ? "" : node.effort,
+    "Duration": node.duration == null ? "" : node.duration,
+    "Rank": node.rank == null ? "" : node.rank,
+    "Is Varied": node.isvaried == null ? "" : node.isvaried,
+    "Time Code": node.timecode == null ? "" : node.timecode,
+    "Subcode": node.subcode == null ? "" : node.subcode,
+    "Time Zone Code": node.timezonecode == null ? "" : node.timezonecode,
+    "Time Zone": node.timezonecode == null ? "" : timeZoneLabel(node.timezonecode),
+    "Offset": node.offset == null ? "" : node.offset,
+    "Pattern": node.pattern || "",
+    "Name": node.name || "",
+    "Description": node.description || "",
+  };
+  for (const [key, value] of Object.entries(node)) {
+    if (key === "calendar_calendar_rules") continue;
+    row[`Rule.${key}`] = csvScalar(value);
+  }
+  return row;
+}
+
+async function exportSelectedCalendarRules() {
+  const button = $("exportCalendarRulesBtn");
+  const status = $("exportCalendarStatus");
+  if (!selected.size) { status.textContent = "Select resources first."; return; }
+  const kinds = calendarExportKindsSelected();
+  if (!Object.values(kinds).some(Boolean)) { status.textContent = "Select at least one calendar entry type."; return; }
+  const chosen = [...selected].map(id => resources.find(resource => resource.id === id)).filter(Boolean);
+  const concurrency = Math.max(1, Number($("exportConcurrency").value) || 6);
+  const rowsByResource = new Array(chosen.length);
+  let failed = 0;
+  try {
+    beginCancellableAction("Calendar Rule export");
+    setBusy(true);
+    button.disabled = true;
+    status.textContent = "Loading region assignments…";
+    const regions = await loadResourceRegionNames(chosen, concurrency);
+    log(`Calendar export starting for ${chosen.length} selected resource(s) with ${Math.min(concurrency, chosen.length)} parallel worker(s).`);
+    await runWithConcurrency(chosen, concurrency, async (resource, index) => {
+      const resourceRows = [];
+      if (!resource.calendarId) {
+        log("Skipped export because no calendar is assigned.", resource);
+        rowsByResource[index] = resourceRows;
+        return;
+      }
+      try {
+        const parentCalendar = await loadCalendarDetailsAll(resource.calendarId);
+        const parents = (parentCalendar && parentCalendar.calendar_calendar_rules) || [];
+        let exportedForResource = 0;
+        for (const parent of parents) {
+          const innerId = guidValue(parent._innercalendarid_value || parent.innercalendarid);
+          const innerCalendar = innerId ? await loadCalendarDetailsAll(innerId) : null;
+          const leaves = (innerCalendar && innerCalendar.calendar_calendar_rules) || [];
+          const kind = calendarRuleKind(parent, leaves);
+          if (!kinds[kind]) continue;
+          resourceRows.push(calendarRuleExportRow(resource, regions.get(resource.id), parent, parent, "Parent", kind, innerId));
+          leaves.forEach(leaf => resourceRows.push(calendarRuleExportRow(resource, regions.get(resource.id), parent, leaf, "Inner", kind, innerId)));
+          exportedForResource += 1 + leaves.length;
+        }
+        rowsByResource[index] = resourceRows;
+        log(`Prepared ${exportedForResource} flattened calendar rule row(s) for export.`, resource);
+      } catch (error) {
+        if (isActionCancellation(error)) throw error;
+        failed++;
+        rowsByResource[index] = resourceRows;
+        log(`Calendar export failed: ${error.message}`, resource);
+      }
+    }, completed => {
+      status.textContent = `Read ${completed} of ${chosen.length} resource calendar(s)${failed ? `; ${failed} failed` : ""}…`;
+    });
+    const output = rowsByResource.flatMap(rows => rows || []);
+    if (!output.length) {
+      status.textContent = failed ? `No rows exported; ${failed} resource(s) failed.` : "No matching calendar rules found.";
+      return;
+    }
+    const preferred = ["Resource ID", "Resource Name", "Resource Type", "Resource Status",
+      "Organizational Unit ID", "Organizational Unit", "Owning Business Unit ID", "Owning Business Unit",
+      "Region / Territory", "Country", "Resource Time Zone Code", "Resource Time Zone", "Parent Calendar ID",
+      "Inner Calendar ID", "Rule Level", "Parent Rule ID", "Calendar Rule ID", "Type", "Start Time", "End Time",
+      "Effort", "Duration", "Rank", "Is Varied", "Time Code", "Subcode", "Time Zone Code", "Time Zone",
+      "Offset", "Pattern", "Name", "Description"];
+    const timestamp = new Date().toISOString().replace("T", " ").replace(/[:]/g, "-").replace(/\.\d{3}Z$/, " UTC");
+    const filename = `Exported Calendar Rules - ${timestamp}.csv`;
+    downloadObjectCsv(filename, preferred, output);
+    status.textContent = `${output.length} calendar rule row(s) exported${failed ? `; ${failed} resource(s) failed` : ""}.`;
+    log(`Calendar export complete: ${output.length} row(s), ${failed} failed resource(s).`);
+  } catch (error) {
+    if (isActionCancellation(error)) {
+      status.textContent = "Export cancelled. No CSV was downloaded.";
+      log("Calendar export cancelled. No CSV was downloaded.");
+    } else {
+      status.textContent = "Export failed — see log.";
+      log(`Calendar export stopped: ${error.message}`);
+    }
+  } finally {
+    setBusy(false);
+    button.disabled = false;
+    endCancellableAction();
+  }
+}
+
+// ============================================================================
+//  Calendar time-zone mismatch audit
+// ============================================================================
+let MISMATCH_PLAN = null;
+let MISMATCH_SELECTED = new Set();
+
+function mismatchKindsSelected() {
+  return {
+    working: $("mismatchWorking").checked,
+    nonworking: $("mismatchNonWorking").checked,
+    timeoff: $("mismatchTimeOff").checked,
+  };
+}
+
+function calendarRuleZoneCodes(rule) {
+  return [...new Set([rule, ...(rule._leafRules || [])]
+    .map(node => node.timezonecode).filter(value => value != null && Number(value) >= 0).map(Number))];
+}
+
+function mismatchRuleKey(resource, rule) {
+  return `mismatch:${calendarRuleKey(resource, rule)}`;
+}
+
+function mismatchReason(rule) {
+  return rule.kind === "timeoff"
+    ? (rule._eventDescription || "Time off")
+    : (rule.name || rule.description || "—");
+}
+
+function updateMismatchSelectionUi() {
+  const count = MISMATCH_SELECTED.size;
+  const countElement = $("mismatchSelectedCount");
+  if (countElement) countElement.textContent = `${count} Selected`;
+  $("mismatchFixBtn").disabled = !MISMATCH_PLAN || count === 0;
+  $("mismatchExportBtn").disabled = !MISMATCH_PLAN || MISMATCH_PLAN.rows.length === 0;
+}
+
+function wireMismatchGrid() {
+  document.querySelectorAll(".mismatch-rule-select").forEach(checkbox => checkbox.addEventListener("change", () => {
+    if (checkbox.checked) MISMATCH_SELECTED.add(checkbox.dataset.key);
+    else MISMATCH_SELECTED.delete(checkbox.dataset.key);
+    updateMismatchSelectionUi();
+  }));
+  const setAll = checked => {
+    document.querySelectorAll(".mismatch-rule-select").forEach(checkbox => {
+      checkbox.checked = checked;
+      if (checked) MISMATCH_SELECTED.add(checkbox.dataset.key);
+      else MISMATCH_SELECTED.delete(checkbox.dataset.key);
+    });
+    updateMismatchSelectionUi();
+  };
+  $("mismatchSelectAllBtn")?.addEventListener("click", () => setAll(true));
+  $("mismatchClearBtn")?.addEventListener("click", () => setAll(false));
+  wireSortablePreviewTable($("mismatchTable"));
+}
+
+function renderMismatchResults(rows, noticesHtml = "") {
+  let html = `<p><b>${rows.length}</b> mismatched calendar rule(s) remain across <b>${new Set(rows.map(row => row.resource.id)).size}</b> resource(s).</p>${noticesHtml}`;
+  if (rows.length) {
+    html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="mismatchSelectAllBtn">Select All</button><button type="button" class="ghost small" id="mismatchClearBtn">Clear</button><span class="selcount" id="mismatchSelectedCount">${MISMATCH_SELECTED.size} Selected</span></div>`;
+    html += `<div class="tablewrap"><table id="mismatchTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("type", "Type")}${sortableHeader("datetime", "Date / Time")}${sortableHeader("resourcezone", "Resource Time Zone")}${sortableHeader("rulezone", "Calendar Rule Time Zone")}${sortableHeader("reason", "Name / Reason")}</tr></thead><tbody>`;
+    for (const row of rows) {
+      const interval = [row.rule._eventStart, row.rule._eventEnd].filter(Boolean).join(" → ") || "Not available";
+      const type = calendarKindLabel(row.rule.kind);
+      const currentZones = row.currentCodes.length ? row.currentCodes.map(timeZoneLabel).join(" / ") : "Inherited / unspecified";
+      const reason = mismatchReason(row.rule);
+      html += `<tr><td><input type="checkbox" class="mismatch-rule-select" data-key="${escapeHtml(row.key)}" ${MISMATCH_SELECTED.has(row.key) ? "checked" : ""} aria-label="Select mismatch" /></td>` +
+        `<td data-sort-key="resource" data-sort-value="${escapeHtml(row.resource.name)}" class="wrap">${escapeHtml(row.resource.name)}</td>` +
+        `<td data-sort-key="type" data-sort-value="${escapeHtml(type)}">${escapeHtml(type)}</td>` +
+        `<td data-sort-key="datetime" data-sort-value="${escapeHtml(interval)}" class="wrap">${escapeHtml(interval)}</td>` +
+        `<td data-sort-key="resourcezone" data-sort-value="${escapeHtml(row.targetName)}" class="wrap">${escapeHtml(row.targetName)}</td>` +
+        `<td data-sort-key="rulezone" data-sort-value="${escapeHtml(currentZones)}" class="wrap">${escapeHtml(currentZones)}</td>` +
+        `<td data-sort-key="reason" data-sort-value="${escapeHtml(reason)}" class="wrap">${escapeHtml(reason)}</td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  } else html += `<p class="hint">No unresolved calendar Time Zone mismatches remain in this audit.</p>`;
+  $("mismatchPreview").innerHTML = html;
+  wireMismatchGrid();
+  updateMismatchSelectionUi();
+}
+
+async function previewCalendarTimeZoneMismatches() {
+  MISMATCH_PLAN = null;
+  MISMATCH_SELECTED.clear();
+  $("mismatchPreview").innerHTML = "";
+  $("mismatchFixBtn").disabled = true;
+  $("mismatchExportBtn").disabled = true;
+  if (!selected.size) { $("mismatchStatus").textContent = "Select resources first."; return; }
+  const kinds = mismatchKindsSelected();
+  if (!Object.values(kinds).some(Boolean)) { $("mismatchStatus").textContent = "Select at least one calendar entry type."; return; }
+  const selectedIds = [...selected];
+  const rowsByResource = new Array(selectedIds.length);
+  let failed = 0, missingResourceZone = 0, missingCalendar = 0;
+  try {
+    beginCancellableAction("Calendar Time Zone mismatch audit");
+    setBusy(true);
+    $("mismatchPreviewBtn").disabled = true;
+    $("mismatchStatus").textContent = "Comparing resource and calendar time zones…";
+    log(`Time Zone mismatch audit: inspecting ${selectedIds.length} selected resource(s) with up to 6 parallel readers.`);
+    await runWithConcurrency(selectedIds, 6, async (id, index) => {
+      const resource = resources.find(item => item.id === id);
+      const resourceRows = [];
+      rowsByResource[index] = resourceRows;
+      if (!resource) return;
+      if (resource.timeZone == null || Number(resource.timeZone) < 0) {
+        missingResourceZone++;
+        log("Skipped mismatch audit because the Bookable Resource has no valid Time Zone.", resource);
+        return;
+      }
+      if (!resource.calendarId) {
+        missingCalendar++;
+        log("Skipped mismatch audit because no calendar is assigned.", resource);
+        return;
+      }
+      try {
+        const roots = await loadCalendarRules(resource.calendarId);
+        for (const root of roots) {
+          throwIfActionCancelled();
+          const rule = await inspectOuterCalendarRule(root, Number(resource.timeZone));
+          if (!kinds[rule.kind] || !rule._needsTimeZone) continue;
+          resourceRows.push({
+            key: mismatchRuleKey(resource, rule), resource, rule,
+            targetCode: Number(resource.timeZone), targetName: timeZoneLabel(resource.timeZone),
+            currentCodes: calendarRuleZoneCodes(rule),
+          });
+        }
+        log(`Mismatch audit found ${resourceRows.length} calendar rule(s) that differ from ${resource.timeZoneName || timeZoneLabel(resource.timeZone)}.`, resource);
+      } catch (error) {
+        if (isActionCancellation(error)) throw error;
+        failed++;
+        log(`Time Zone mismatch audit failed: ${error.message}`, resource);
+      }
+    }, completed => {
+      $("mismatchStatus").textContent = `Inspected ${completed} of ${selectedIds.length} resource calendar(s)${failed ? `; ${failed} failed` : ""}…`;
+    });
+    const rows = rowsByResource.flatMap(resourceRows => resourceRows || []);
+    MISMATCH_PLAN = { rows, kinds };
+    MISMATCH_SELECTED = new Set(rows.map(row => row.key));
+    let notices = "";
+    if (missingResourceZone) notices += `<div class="warnbox">${missingResourceZone} resource(s) had no valid Bookable Resource Time Zone and could not be compared.</div>`;
+    if (missingCalendar) notices += `<div class="warnbox">${missingCalendar} resource(s) had no assigned calendar.</div>`;
+    if (failed) notices += `<div class="warnbox">${failed} resource calendar(s) could not be inspected. Review the Activity Log.</div>`;
+    renderMismatchResults(rows, notices);
+    $("mismatchStatus").textContent = rows.length ? "Audit ready." : "No mismatches found.";
+    log(`Time Zone mismatch audit complete: ${rows.length} mismatch(es), ${failed} failed resource calendar(s).`);
+  } catch (error) {
+    MISMATCH_PLAN = null; MISMATCH_SELECTED.clear();
+    if (isActionCancellation(error)) { $("mismatchStatus").textContent = "Audit cancelled."; log("Time Zone mismatch audit cancelled."); }
+    else { $("mismatchStatus").textContent = "Audit failed — see log."; log(`Time Zone mismatch audit failed: ${error.message}`); }
+  } finally {
+    setBusy(false); $("mismatchPreviewBtn").disabled = false; endCancellableAction();
+  }
+}
+
+function exportCalendarTimeZoneMismatches() {
+  if (!MISMATCH_PLAN || !MISMATCH_PLAN.rows.length) { $("mismatchStatus").textContent = "Preview mismatches first."; return; }
+  const output = MISMATCH_PLAN.rows.map(row => {
+    const rule = row.rule;
+    const innerId = guidValue(rule._innercalendarid_value || rule.innercalendarid) || "";
+    return {
+      "Resource ID": row.resource.id,
+      "Resource Name": row.resource.name,
+      "Resource Type": RES_TYPE[row.resource.type] || row.resource.type || "",
+      "Resource Status": row.resource.state === 0 ? "Active" : "Inactive",
+      "Organizational Unit": row.resource.orgUnitName || "",
+      "Business Unit": row.resource.businessUnitName || "",
+      "Country": row.resource.country || "",
+      "Resource Time Zone Code": row.targetCode,
+      "Resource Time Zone": row.targetName,
+      "Calendar Entry Type": calendarKindLabel(rule.kind),
+      "Event Start": rule._eventStart || rule.starttime || "",
+      "Event End": rule._eventEnd || rule.endtime || "",
+      "Calendar Rule Time Zone Codes": row.currentCodes.join("; "),
+      "Calendar Rule Time Zones": row.currentCodes.map(timeZoneLabel).join("; "),
+      "Parent Calendar ID": row.resource.calendarId || "",
+      "Parent Rule ID": rule.calendarruleid || "",
+      "Inner Calendar ID": innerId,
+      "Leaf Rule IDs": (rule._leafRules || []).map(leaf => leaf.calendarruleid).filter(Boolean).join("; "),
+      "Name Reason": mismatchReason(rule),
+    };
+  });
+  const preferred = ["Resource ID", "Resource Name", "Resource Type", "Resource Status", "Organizational Unit", "Business Unit", "Country", "Resource Time Zone Code", "Resource Time Zone", "Calendar Entry Type", "Event Start", "Event End", "Calendar Rule Time Zone Codes", "Calendar Rule Time Zones", "Parent Calendar ID", "Parent Rule ID", "Inner Calendar ID", "Leaf Rule IDs", "Name Reason"];
+  const timestamp = new Date().toISOString().replace("T", " ").replace(/[:]/g, "-").replace(/\.\d{3}Z$/, " UTC");
+  downloadObjectCsv(`Calendar Time Zone Mismatches - ${timestamp}.csv`, preferred, output);
+  $("mismatchStatus").textContent = `${output.length} mismatch row(s) exported.`;
+  log(`Exported ${output.length} Calendar Time Zone mismatch row(s).`);
+}
+
+async function fixCalendarTimeZoneMismatches() {
+  if (!MISMATCH_PLAN) { $("mismatchStatus").textContent = "Preview mismatches first."; return; }
+  const rows = MISMATCH_PLAN.rows.filter(row => MISMATCH_SELECTED.has(row.key));
+  if (!rows.length) { $("mismatchStatus").textContent = "Select at least one mismatch."; return; }
+  if (!confirmTwice($("mismatchFixBtn"), "Fix Selected Mismatches")) return;
+  const grouped = new Map();
+  rows.forEach(row => {
+    if (!grouped.has(row.resource.id)) grouped.set(row.resource.id, { resource: row.resource, rows: [] });
+    grouped.get(row.resource.id).rows.push(row);
+  });
+  const groups = [...grouped.values()];
+  let succeeded = 0, failed = 0;
+  const succeededKeys = new Set();
+  try {
+    beginCancellableAction("Calendar Time Zone mismatch repair");
+    setBusy(true); $("mismatchPreviewBtn").disabled = true; $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
+    log(`Mismatch repair starting: ${rows.length} rule(s) across ${groups.length} resource(s), using up to 4 parallel resource workers.`);
+    await runWithConcurrency(groups, 4, async group => {
+      for (const row of group.rows) {
+        throwIfActionCancelled();
+        const rule = row.rule;
+        try {
+          if (rule.kind === "timeoff") await updateTimeOffTimeZonePreservingShape(group.resource, rule, row.targetCode);
+          else await updateCalendarRuleTree(rule, row.targetCode, group.resource);
+          succeeded++; succeededKeys.add(row.key);
+          log(`Matched ${calendarKindLabel(rule.kind)} to ${row.targetName}; ${rule._eventStart || rule.starttime || "date unavailable"}.`, group.resource);
+        } catch (error) {
+          if (isActionCancellation(error)) throw error;
+          failed++;
+          log(`Mismatch repair failed for ${calendarKindLabel(rule.kind)}: ${error.message}; ${calendarRuleContext(rule)}`, group.resource);
+        }
+      }
+    }, completed => {
+      $("mismatchStatus").textContent = `Completed ${completed} of ${groups.length} resource calendar(s); ${succeeded} fixed${failed ? `, ${failed} failed` : ""}…`;
+    });
+    $("mismatchStatus").textContent = `${succeeded} mismatch(es) fixed${failed ? `, ${failed} failed` : ""}. Select another remaining row when ready.`;
+    log(`Mismatch repair complete: ${succeeded} fixed, ${failed} failed.`);
+    notify("Calendar Time Zone mismatches repaired", `${succeeded} rule(s) fixed${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
+  } catch (error) {
+    if (isActionCancellation(error)) {
+      $("mismatchStatus").textContent = `Cancelled after ${succeeded} fix(es)${failed ? `; ${failed} failed` : ""}.`;
+      log(`Mismatch repair cancelled: ${succeeded} fixed before cancellation, ${failed} failed.`);
+    } else {
+      $("mismatchStatus").textContent = "Repair stopped — see log.";
+      log(`Mismatch repair stopped: ${error.message}`);
+    }
+  } finally {
+    setBusy(false); endCancellableAction();
+    $("mismatchPreviewBtn").disabled = false;
+    if (MISMATCH_PLAN) {
+      MISMATCH_PLAN.rows = MISMATCH_PLAN.rows.filter(row => !succeededKeys.has(row.key));
+      MISMATCH_SELECTED.clear();
+      const notice = succeededKeys.size
+        ? `<div class="okbox">${succeededKeys.size} repaired row(s) were removed from this audit. Select another remaining row to continue without running Preview again.</div>`
+        : `<div class="warnbox">No rows were removed. Failed or unprocessed rows remain available for another attempt.</div>`;
+      renderMismatchResults(MISMATCH_PLAN.rows, notice);
+    }
   }
 }
 
 // Derive weekly groups from a source calendar's slots for one representative week.
 async function deriveCopyGroups(sourceCalId) {
-  const startDate = `${ANCHOR}T00:00:00.000Z`, endDate = `2024-01-08T00:00:00.000Z`;
+  // Keep the read-only sample in 2024 so it can load schedules created with
+  // either the legacy 2024 anchor or the new 2000 anchor.
+  const startDate = `2024-01-01T00:00:00.000Z`, endDate = `2024-01-08T00:00:00.000Z`;
   const res = await dvAction("msdyn_LoadCalendars", { LoadCalendarsInput: JSON.stringify({ StartDate: startDate, EndDate: endDate, CalendarIds: [sourceCalId] }) });
   let events = {};
   try { events = JSON.parse((res && res.CalendarEvents) || "{}"); } catch (e) { events = {}; }
@@ -986,84 +2719,459 @@ async function deriveCopyGroups(sourceCalId) {
 }
 
 // ============================================================================
+//  Work-hours baseline audit
+// ============================================================================
+let BASELINE_PLAN = null;
+let BASELINE_SELECTED = new Set();
+
+function baselineConfiguration() {
+  const days = [...document.querySelectorAll(".baseline-day:checked")].map(checkbox => checkbox.value);
+  const start = $("baselineStart").value, end = $("baselineEnd").value, date = $("baselineDate").value;
+  const toMinutes = value => {
+    const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : NaN;
+  };
+  return { days, start, end, date, startMinutes: toMinutes(start), endMinutes: toMinutes(end) };
+}
+
+function baselineDescription(config) {
+  return `${config.days.join(", ")} · ${minutesLabel(config.startMinutes)}–${minutesLabel(config.endMinutes)} · starts ${config.date}`;
+}
+
+function recurrenceDays(rule) {
+  const patterns = [rule.pattern, ...(rule._leafRules || []).map(leaf => leaf.pattern)].filter(Boolean);
+  const days = new Set();
+  for (const pattern of patterns) {
+    const match = String(pattern).match(/(?:^|;)BYDAY=([^;]+)/i);
+    if (match) match[1].split(",").map(day => day.trim().toUpperCase()).filter(Boolean).forEach(day => days.add(day));
+  }
+  return [...days];
+}
+
+function ruleMinuteRange(rule) {
+  const leaves = (rule._leafRules || []).filter(leaf => Number(leaf.timecode) === 0 && Number(leaf.subcode) !== 6);
+  const candidates = leaves.length ? leaves : [rule];
+  const ranges = candidates.map(node => {
+    const duration = Number(node.duration);
+    const offset = Number(node.offset);
+    if (Number.isFinite(offset) && Number.isFinite(duration)) return { start: offset, end: offset + duration, duration };
+    const start = node.starttime ? new Date(node.starttime) : null;
+    const end = node.endtime ? new Date(node.endtime) : null;
+    if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+    const startMinutes = start.getUTCHours() * 60 + start.getUTCMinutes();
+    let endMinutes = end.getUTCHours() * 60 + end.getUTCMinutes();
+    if (end.getUTCDate() !== start.getUTCDate() || endMinutes <= startMinutes) endMinutes += 1440;
+    return { start: startMinutes, end: endMinutes, duration: endMinutes - startMinutes };
+  }).filter(Boolean);
+  if (!ranges.length) return null;
+  return {
+    start: Math.min(...ranges.map(range => range.start)),
+    end: Math.max(...ranges.map(range => range.end)),
+    allDay: ranges.some(range => range.duration >= 1439) ||
+      (Math.min(...ranges.map(range => range.start)) === 0 && Math.max(...ranges.map(range => range.end)) >= 1439),
+  };
+}
+
+function minutesLabel(value) {
+  if (!Number.isFinite(value)) return "Unknown";
+  const normalized = ((value % 1440) + 1440) % 1440;
+  const hour = Math.floor(normalized / 60), minute = normalized % 60;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${suffix}${value >= 1440 ? " (+1 day)" : ""}`;
+}
+
+function baselineStartDate(rule) {
+  const raw = rule.starttime || (rule._leafRules || []).map(leaf => leaf.starttime).find(Boolean);
+  if (!raw) return "Unknown";
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? String(raw).slice(0, 10) : parsed.toISOString().slice(0, 10);
+}
+
+function evaluateWorkHoursBaseline(resource, rules, config) {
+  const issues = [];
+  if (rules.length === 0) issues.push("No Working Hours recurrence");
+  if (rules.length > 1) issues.push(`${rules.length} Working Hours recurrences`);
+  const daySets = rules.map(recurrenceDays);
+  const allDays = [...new Set(daySets.flat())];
+  const unexpectedDays = allDays.filter(day => !config.days.includes(day));
+  if (unexpectedDays.some(day => day === "SA" || day === "SU")) issues.push("Unexpected weekend coverage");
+  if (rules.length && (allDays.length !== config.days.length || config.days.some(day => !allDays.includes(day))))
+    issues.push("Working days differ from baseline");
+  const ranges = rules.map(ruleMinuteRange).filter(Boolean);
+  if (ranges.some(range => range.allDay)) issues.push("24-hour / all-day Working Hours");
+  if (rules.length && (ranges.length !== rules.length || ranges.some(range => range.start !== config.startMinutes || range.end !== config.endMinutes)))
+    issues.push("Hours differ from baseline");
+  const startDates = rules.map(baselineStartDate);
+  if (rules.length && startDates.some(date => date !== config.date)) issues.push("Event start date differs from baseline");
+  return {
+    key: `baseline:${resource.id}`, resource, rules, issues,
+    days: daySets.map(days => days.join(", ") || "Unknown").join(" / ") || "None",
+    hours: ranges.map(range => `${minutesLabel(range.start)}–${minutesLabel(range.end)}`).join(" / ") || "None",
+    startDates: [...new Set(startDates)].join(" / ") || "None",
+  };
+}
+
+function updateBaselineSelectionUi() {
+  const count = BASELINE_SELECTED.size;
+  const countElement = $("baselineSelectedCount");
+  if (countElement) countElement.textContent = `${count} Selected`;
+  $("baselineFixBtn").disabled = !BASELINE_PLAN || count === 0;
+  $("baselineExportBtn").disabled = !BASELINE_PLAN || BASELINE_PLAN.rows.length === 0;
+}
+
+function wireBaselineGrid() {
+  document.querySelectorAll(".baseline-select").forEach(checkbox => checkbox.addEventListener("change", () => {
+    if (checkbox.checked) BASELINE_SELECTED.add(checkbox.dataset.key); else BASELINE_SELECTED.delete(checkbox.dataset.key);
+    updateBaselineSelectionUi();
+  }));
+  const setAll = checked => {
+    document.querySelectorAll(".baseline-select").forEach(checkbox => {
+      checkbox.checked = checked;
+      if (checked) BASELINE_SELECTED.add(checkbox.dataset.key); else BASELINE_SELECTED.delete(checkbox.dataset.key);
+    });
+    updateBaselineSelectionUi();
+  };
+  $("baselineSelectAllBtn")?.addEventListener("click", () => setAll(true));
+  $("baselineClearBtn")?.addEventListener("click", () => setAll(false));
+  wireSortablePreviewTable($("baselineTable"));
+}
+
+function renderBaselineResults(rows, noticesHtml = "") {
+  const config = BASELINE_PLAN && BASELINE_PLAN.config;
+  let html = `<p><b>${rows.length}</b> resource(s) are outside the Work Hours baseline${config ? `: <b>${escapeHtml(baselineDescription(config))}</b>` : ""}.</p>${noticesHtml}`;
+  if (rows.length) {
+    html += `<div class="btnbar" style="margin:8px 0"><button type="button" class="ghost small" id="baselineSelectAllBtn">Select All</button><button type="button" class="ghost small" id="baselineClearBtn">Clear</button><span class="selcount" id="baselineSelectedCount">${BASELINE_SELECTED.size} Selected</span></div>`;
+    html += `<div class="tablewrap"><table id="baselineTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("count", "Working Rule Count")}${sortableHeader("days", "Working Days")}${sortableHeader("hours", "Hours")}${sortableHeader("startdate", "Event Start Date")}${sortableHeader("findings", "Findings")}</tr></thead><tbody>`;
+    for (const row of rows) {
+      const findings = row.issues.join("; ");
+      html += `<tr><td><input type="checkbox" class="baseline-select" data-key="${escapeHtml(row.key)}" ${BASELINE_SELECTED.has(row.key) ? "checked" : ""} aria-label="Select baseline exception" /></td>` +
+        `<td data-sort-key="resource" data-sort-value="${escapeHtml(row.resource.name)}" class="wrap">${escapeHtml(row.resource.name)}</td>` +
+        `<td data-sort-key="count" data-sort-value="${row.rules.length}">${row.rules.length}</td>` +
+        `<td data-sort-key="days" data-sort-value="${escapeHtml(row.days)}" class="wrap">${escapeHtml(row.days)}</td>` +
+        `<td data-sort-key="hours" data-sort-value="${escapeHtml(row.hours)}" class="wrap">${escapeHtml(row.hours)}</td>` +
+        `<td data-sort-key="startdate" data-sort-value="${escapeHtml(row.startDates)}" class="wrap">${escapeHtml(row.startDates)}</td>` +
+        `<td data-sort-key="findings" data-sort-value="${escapeHtml(findings)}" class="wrap">${escapeHtml(findings)}</td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  } else html += `<p class="hint">Every inspected resource matches the Work Hours baseline.</p>`;
+  $("baselinePreview").innerHTML = html;
+  wireBaselineGrid();
+  updateBaselineSelectionUi();
+}
+
+async function previewWorkHoursBaseline() {
+  BASELINE_PLAN = null; BASELINE_SELECTED.clear();
+  $("baselinePreview").innerHTML = ""; $("baselineExportBtn").disabled = true; $("baselineFixBtn").disabled = true;
+  if (!selected.size) { $("baselineStatus").textContent = "Select resources first."; return; }
+  const config = baselineConfiguration();
+  if (!config.days.length) { $("baselineStatus").textContent = "Select at least one baseline working day."; return; }
+  if (!Number.isFinite(config.startMinutes) || !Number.isFinite(config.endMinutes) || config.endMinutes <= config.startMinutes) {
+    $("baselineStatus").textContent = "Enter a baseline end time later than the start time."; return;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(config.date)) { $("baselineStatus").textContent = "Enter a valid baseline event start date."; return; }
+  const selectedIds = [...selected], rowsByResource = new Array(selectedIds.length);
+  let failed = 0, missingCalendar = 0;
+  try {
+    beginCancellableAction("Work Hours baseline audit"); setBusy(true); $("baselinePreviewBtn").disabled = true;
+    log(`Work Hours baseline audit: inspecting ${selectedIds.length} selected resource(s) against ${baselineDescription(config)} with up to 6 parallel readers.`);
+    await runWithConcurrency(selectedIds, 6, async (id, index) => {
+      const resource = resources.find(item => item.id === id);
+      if (!resource) return;
+      if (!resource.calendarId) {
+        missingCalendar++; rowsByResource[index] = evaluateWorkHoursBaseline(resource, [], config);
+        log("Baseline exception: no calendar is assigned.", resource); return;
+      }
+      try {
+        const roots = await loadCalendarRules(resource.calendarId), working = [];
+        for (const root of roots) {
+          throwIfActionCancelled();
+          const inspected = await inspectOuterCalendarRule(root, Number(resource.timeZone == null ? -999 : resource.timeZone));
+          if (inspected.kind === "working") working.push(inspected);
+        }
+        const result = evaluateWorkHoursBaseline(resource, working, config);
+        rowsByResource[index] = result.issues.length ? result : null;
+        if (result.issues.length) log(`Baseline exception: ${result.issues.join("; ")}.`, resource);
+      } catch (error) {
+        if (isActionCancellation(error)) throw error;
+        failed++; log(`Work Hours baseline audit failed: ${error.message}`, resource);
+      }
+    }, completed => { $("baselineStatus").textContent = `Inspected ${completed} of ${selectedIds.length} resource calendar(s)${failed ? `; ${failed} failed` : ""}…`; });
+    const rows = rowsByResource.filter(Boolean);
+    BASELINE_PLAN = { rows, config }; BASELINE_SELECTED = new Set(rows.map(row => row.key));
+    let notices = "";
+    if (missingCalendar) notices += `<div class="warnbox">${missingCalendar} resource(s) had no assigned calendar and were flagged.</div>`;
+    if (failed) notices += `<div class="warnbox">${failed} resource calendar(s) could not be inspected. Review the Activity Log.</div>`;
+    renderBaselineResults(rows, notices);
+    $("baselineStatus").textContent = rows.length ? "Audit ready." : "All inspected resources match the baseline.";
+    log(`Work Hours baseline audit complete: ${rows.length} exception(s), ${failed} failed resource calendar(s).`);
+  } catch (error) {
+    BASELINE_PLAN = null; BASELINE_SELECTED.clear();
+    if (isActionCancellation(error)) { $("baselineStatus").textContent = "Audit cancelled."; log("Work Hours baseline audit cancelled."); }
+    else { $("baselineStatus").textContent = "Audit failed — see log."; log(`Work Hours baseline audit failed: ${error.message}`); }
+  } finally { setBusy(false); $("baselinePreviewBtn").disabled = false; endCancellableAction(); }
+}
+
+function exportWorkHoursBaseline() {
+  if (!BASELINE_PLAN || !BASELINE_PLAN.rows.length) { $("baselineStatus").textContent = "Preview exceptions first."; return; }
+  const config = BASELINE_PLAN.config;
+  const output = BASELINE_PLAN.rows.map(row => ({
+    ResourceID: row.resource.id, ResourceName: row.resource.name, ResourceStatus: row.resource.state === 0 ? "Active" : "Inactive",
+    OrganizationalUnit: row.resource.orgUnitName || "", BusinessUnit: row.resource.businessUnitName || "", Country: row.resource.country || "",
+    ResourceTimeZone: row.resource.timeZoneName || timeZoneLabel(row.resource.timeZone), ParentCalendarID: row.resource.calendarId || "",
+    WorkingRuleCount: row.rules.length, WorkingDays: row.days, Hours: row.hours, EventStartDate: row.startDates,
+    BaselineWorkingDays: config.days.join(","), BaselineStartTime: config.start, BaselineEndTime: config.end, BaselineEventStartDate: config.date,
+    Findings: row.issues.join("; "), WorkingRuleIDs: row.rules.map(rule => rule.calendarruleid).filter(Boolean).join("; "),
+  }));
+  const preferred = ["ResourceID", "ResourceName", "ResourceStatus", "OrganizationalUnit", "BusinessUnit", "Country", "ResourceTimeZone", "ParentCalendarID", "WorkingRuleCount", "WorkingDays", "Hours", "EventStartDate", "BaselineWorkingDays", "BaselineStartTime", "BaselineEndTime", "BaselineEventStartDate", "Findings", "WorkingRuleIDs"];
+  const timestamp = new Date().toISOString().replace("T", " ").replace(/[:]/g, "-").replace(/\.\d{3}Z$/, " UTC");
+  downloadObjectCsv(`Work Hours Baseline Exceptions - ${timestamp}.csv`, preferred, output);
+  $("baselineStatus").textContent = `${output.length} exception row(s) exported.`;
+  log(`Exported ${output.length} Work Hours baseline exception row(s).`);
+}
+
+async function applyWorkHoursBaseline() {
+  if (!BASELINE_PLAN) { $("baselineStatus").textContent = "Preview exceptions first."; return; }
+  const rows = BASELINE_PLAN.rows.filter(row => BASELINE_SELECTED.has(row.key));
+  const config = BASELINE_PLAN.config;
+  if (!rows.length) { $("baselineStatus").textContent = "Select at least one baseline exception."; return; }
+  if (!confirmTwice($("baselineFixBtn"), "Apply Baseline To Selected")) return;
+  let succeeded = 0, failed = 0;
+  try {
+    beginCancellableAction("Work Hours baseline update"); setBusy(true);
+    $("baselinePreviewBtn").disabled = true; $("baselineExportBtn").disabled = true; $("baselineFixBtn").disabled = true;
+    log(`Work Hours baseline update: applying ${baselineDescription(config)} to ${rows.length} resource(s) with up to 4 parallel workers.`);
+    await runWithConcurrency(rows, 4, async row => {
+      const resource = row.resource;
+      try {
+        if (!resource.calendarId) throw new Error("No calendar is assigned.");
+        const zone = Number(resource.timeZone);
+        if (!Number.isFinite(zone) || zone < 0) throw new Error("The Bookable Resource has no valid Time Zone.");
+        await clearWorkingHoursPreservingExceptions(resource.calendarId, resource.id, zone, resource.name);
+        const rules = [{ StartTime: `${config.date}T${config.start}:00Z`, EndTime: `${config.date}T${config.end}:00Z`, Effort: 1, WorkHourType: 0 }];
+        await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: calEventInfo(resource.calendarId, resource.id, zone, config.days.join(","), rules) });
+        succeeded++;
+        BASELINE_PLAN.rows = BASELINE_PLAN.rows.filter(item => item.key !== row.key); BASELINE_SELECTED.delete(row.key);
+        log(`Applied baseline Working Hours: ${baselineDescription(config)}.`, resource);
+      } catch (error) {
+        if (isActionCancellation(error)) throw error;
+        failed++; log(`Work Hours baseline update failed: ${error.message}`, resource);
+      }
+    }, completed => { $("baselineStatus").textContent = `Completed ${completed} of ${rows.length}: ${succeeded} updated${failed ? `, ${failed} failed` : ""}…`; });
+    $("baselineStatus").textContent = `${succeeded} resource(s) updated${failed ? `, ${failed} failed` : ""}.`;
+    log(`Work Hours baseline update complete: ${succeeded} updated, ${failed} failed.`);
+    notify("Work Hours baseline applied", `${succeeded} resource(s) updated${failed ? `, ${failed} failed` : ""}.`, failed ? "warning" : "success");
+  } catch (error) {
+    if (isActionCancellation(error)) { $("baselineStatus").textContent = `Cancelled after ${succeeded} update(s).`; log("Work Hours baseline update cancelled."); }
+    else { $("baselineStatus").textContent = "Update stopped — see log."; log(`Work Hours baseline update stopped: ${error.message}`); }
+  } finally {
+    setBusy(false); $("baselinePreviewBtn").disabled = false; endCancellableAction();
+    if (BASELINE_PLAN) renderBaselineResults(BASELINE_PLAN.rows);
+  }
+}
+
+// ============================================================================
 //  Preview + apply (fields + work hours)
 // ============================================================================
 let PLAN = null;
+let WH_PREVIEW_SELECTED = new Set();
 
-async function preview() {
+function wireSortablePreviewTable(table) {
+  if (!table) return;
+  table.querySelectorAll("th[data-preview-sort]").forEach(th => th.addEventListener("click", () => {
+    const key = th.dataset.previewSort;
+    const previous = table.dataset.sortKey;
+    const direction = previous === key ? -Number(table.dataset.sortDirection || 1) : 1;
+    table.dataset.sortKey = key;
+    table.dataset.sortDirection = String(direction);
+    table.querySelectorAll("th[data-preview-sort]").forEach(header => {
+      header.textContent = header.dataset.label + (header === th ? (direction > 0 ? " ▲" : " ▼") : " ↕");
+    });
+    const body = table.tBodies[0];
+    const rows = [...body.rows];
+    rows.sort((a, b) => {
+      const value = row => key === "selected"
+        ? (row.querySelector('input[type="checkbox"]')?.checked ? "1" : "0")
+        : (row.querySelector(`[data-sort-key="${key}"]`)?.dataset.sortValue || "");
+      return value(a).localeCompare(value(b), undefined, { numeric: true, sensitivity: "base" }) * direction;
+    });
+    rows.forEach(row => body.appendChild(row));
+  }));
+}
+
+function sortableHeader(key, label) {
+  return `<th class="sortable" data-preview-sort="${key}" data-label="${escapeHtml(label)}">${escapeHtml(label)} ↕</th>`;
+}
+
+function workHourRuleDateTime(rule) {
+  if (!rule) return "No Existing Work Hours";
+  const pattern = rule.pattern || (rule._leafRules || []).map(x => x.pattern).find(Boolean) || "Occurrence";
+  const interval = [rule._eventStart, rule._eventEnd].filter(Boolean).join(" → ") || "Time unavailable";
+  return `${pattern} · ${interval}`;
+}
+
+async function inspectSelectedWorkHours() {
+  const selectedIds = [...selected];
+  const rowsByResource = new Array(selectedIds.length);
+  await runWithConcurrency(selectedIds, 6, async (id, index) => {
+    const resourceRows = [];
+    const resource = resources.find(item => item.id === id);
+    if (!resource) { rowsByResource[index] = resourceRows; return; }
+    if (!resource.calendarId) {
+      resourceRows.push({ key: `${resource.id}:none`, resource, rule: null });
+      rowsByResource[index] = resourceRows;
+      return;
+    }
+    const roots = await loadCalendarRules(resource.calendarId);
+    const inspected = [];
+    for (const root of roots) {
+      throwIfActionCancelled();
+      inspected.push(await inspectOuterCalendarRule(root, Number(resource.timeZone == null ? -999 : resource.timeZone)));
+    }
+    const working = inspected.filter(rule => rule.kind === "working");
+    if (working.length) working.forEach(rule => resourceRows.push({ key: calendarRuleKey(resource, rule), resource, rule }));
+    else resourceRows.push({ key: `${resource.id}:none`, resource, rule: null });
+    rowsByResource[index] = resourceRows;
+  }, completed => { $("whStatus").textContent = `Read ${completed} of ${selectedIds.length} resource calendar(s)…`; });
+  return rowsByResource.flatMap(rows => rows || []);
+}
+
+function selectedWorkHourResourceIds(rows) {
+  return [...new Set(rows.filter(row => WH_PREVIEW_SELECTED.has(row.key)).map(row => row.resource.id))];
+}
+
+function renderWorkHourGrid(rows) {
+  let html = `<div class="btnbar" style="margin:10px 0"><button type="button" class="ghost small" id="whRuleSelectAllBtn">Select All</button><button type="button" class="ghost small" id="whRuleClearBtn">Clear</button><span class="selcount" id="whRuleSelectedCount"></span></div>`;
+  html += `<div class="tablewrap"><table id="whPreviewTable"><thead><tr>${sortableHeader("selected", "Selected")}${sortableHeader("resource", "Resource")}${sortableHeader("type", "Type")}${sortableHeader("datetime", "Date / Time")}${sortableHeader("timezone", "Current Time Zone")}${sortableHeader("capacity", "Capacity")}</tr></thead><tbody>`;
+  for (const item of rows) {
+    const rule = item.rule;
+    const type = rule ? "Working Hours" : "No Existing Work Hours";
+    const dateTime = workHourRuleDateTime(rule);
+    const zone = rule ? calendarRuleSourceZone(rule) : (item.resource.timeZone == null ? "Inherited / unspecified" : timeZoneLabel(item.resource.timeZone));
+    const capacity = rule && rule._eventEffort != null ? rule._eventEffort : "—";
+    html += `<tr><td><input type="checkbox" class="wh-rule-select" data-key="${escapeHtml(item.key)}" checked /></td>` +
+      `<td data-sort-key="resource" data-sort-value="${escapeHtml(item.resource.name)}" class="wrap">${escapeHtml(item.resource.name)}</td>` +
+      `<td data-sort-key="type" data-sort-value="${escapeHtml(type)}">${escapeHtml(type)}</td>` +
+      `<td data-sort-key="datetime" data-sort-value="${escapeHtml(dateTime)}" class="wrap">${escapeHtml(dateTime)}</td>` +
+      `<td data-sort-key="timezone" data-sort-value="${escapeHtml(zone)}" class="wrap">${escapeHtml(zone)}</td>` +
+      `<td data-sort-key="capacity" data-sort-value="${escapeHtml(capacity)}">${escapeHtml(capacity)}</td></tr>`;
+  }
+  return html + `</tbody></table></div>`;
+}
+
+function wireWorkHourGrid(rows) {
+  const refresh = () => {
+    const ids = selectedWorkHourResourceIds(rows);
+    PLAN.whResourceIds = ids;
+    $("whRuleSelectedCount").textContent = `${WH_PREVIEW_SELECTED.size} Rule(s), ${ids.length} Resource(s) Selected`;
+    $("whApplyBtn").disabled = ids.length === 0;
+  };
+  document.querySelectorAll(".wh-rule-select").forEach(cb => cb.addEventListener("change", () => {
+    if (cb.checked) WH_PREVIEW_SELECTED.add(cb.dataset.key); else WH_PREVIEW_SELECTED.delete(cb.dataset.key);
+    refresh();
+  }));
+  const setAll = checked => {
+    document.querySelectorAll(".wh-rule-select").forEach(cb => { cb.checked = checked; });
+    WH_PREVIEW_SELECTED = new Set(checked ? rows.map(row => row.key) : []);
+    refresh();
+  };
+  $("whRuleSelectAllBtn").addEventListener("click", () => setAll(true));
+  $("whRuleClearBtn").addEventListener("click", () => setAll(false));
+  wireSortablePreviewTable($("whPreviewTable"));
+  refresh();
+}
+
+function workflowUi(mode) {
+  return mode === "workhours"
+    ? { apply: $("whApplyBtn"), status: $("whStatus"), box: $("whPreviewBox") }
+    : { apply: $("settingsApplyBtn"), status: $("settingsStatus"), box: $("settingsPreviewBox") };
+}
+
+async function preview(mode) {
+  const ui = workflowUi(mode);
   try {
     setBusy(true);
-    PLAN = null; $("applyBtn").disabled = true;
-    if (!selected.size) { setStatus("Select at least one resource."); return; }
-    const fc = collectFieldChanges();
-    const whInclude = $("whInclude").checked;
+    PLAN = null; $("settingsApplyBtn").disabled = true; $("whApplyBtn").disabled = true;
+    if (!selected.size) { ui.status.textContent = "Select at least one resource."; return; }
+    const whInclude = mode === "workhours";
+    if (whInclude) beginCancellableAction("Work Hours preview");
+    const fc = whInclude ? { patch: {}, clears: [], summary: [] } : collectFieldChanges();
     const whMode = document.querySelector('input[name="whMode"]:checked').value;
-    if (!fc.summary.length && !whInclude) { setStatus("Tick at least one setting or include work hours."); return; }
+    if (!fc.summary.length && !whInclude) { ui.status.textContent = "Tick at least one setting."; return; }
 
     // work hours summary
-    let whSummary = null, copyGroups = null;
+    let whSummary = null, copyGroups = null, whRows = null;
     if (whInclude) {
       if (whMode === "weekly") {
         const days = [...document.querySelectorAll(".dayck:checked")].map(c => c.value);
-        if (!days.length) { setStatus("Pick at least one working day."); return; }
+        if (!days.length) { ui.status.textContent = "Pick at least one working day."; return; }
         const brk = $("whBreak").checked ? { start: $("whBreakStart").value, end: $("whBreakEnd").value } : null;
         whSummary = `Weekly: ${days.join(", ")} ${$("whStart").value}–${$("whEnd").value}` +
           (brk ? ` (break ${brk.start}–${brk.end})` : "") + `, capacity ${$("whCapacity").value}, TZ ${$("whTz").options[$("whTz").selectedIndex].text}`;
       } else {
         const src = $("whSource").value;
-        if (!src) { setStatus("Choose a source resource to copy from."); return; }
+        if (!src) { ui.status.textContent = "Choose a source resource to copy from."; return; }
         const srcRes = resources.find(r => r.id === src);
-        setStatus("Reading source work hours…");
+        ui.status.textContent = "Reading source work hours…";
         copyGroups = await deriveCopyGroups(srcRes.calendarId);
         whSummary = copyGroups.length
           ? `Copy from “${srcRes.name}”: ${copyGroups.map(g => g.byday).join(" / ")} (${copyGroups.reduce((n, g) => n + g.rules.filter(r => r.WorkHourType === 0).length, 0)} working block(s))`
           : `Copy from “${srcRes.name}”: source has no work hours in the sample week — nothing to copy.`;
       }
-      if ($("whClear").checked) whSummary += " · existing work hours cleared first";
+      if ($("whClear").checked) whSummary += " · existing working hours cleared first (exceptions preserved)";
+      ui.status.textContent = "Reading selected resources’ existing work hours…";
+      whRows = await inspectSelectedWorkHours();
+      WH_PREVIEW_SELECTED = new Set(whRows.map(row => row.key));
     }
 
-    PLAN = { patch: fc.patch, clears: fc.clears, whInclude, whMode, whSummary, copyGroups };
+    PLAN = { mode, patch: fc.patch, clears: fc.clears, whInclude, whMode, whSummary, copyGroups,
+      whRows, whResourceIds: whRows ? selectedWorkHourResourceIds(whRows) : [] };
 
     // Pre-flight: Field Service requires Start & End Location to BOTH be Location Agnostic, or
     // neither. Check every selected resource against its effective (new-or-current) values.
-    const loc = checkLocationRule();
+    const loc = whInclude ? { block: false, warn: false } : checkLocationRule();
 
     // render
-    const box = $("previewBox");
+    const box = ui.box;
     let html = `<p><span class="selcount">${selected.size}</span> resource(s) will be updated.</p>`;
     if (loc.block) html += `<div class="errbox">⛔ ${escapeHtml(loc.message)}</div>`;
     else if (loc.warn) html += `<div class="warnbox">⚠ ${escapeHtml(loc.message)}</div>`;
-    addressWarnings().forEach(w => html += `<div class="warnbox">⚠ ${escapeHtml(w)}</div>`);
+    if (!whInclude) addressWarnings().forEach(w => html += `<div class="warnbox">⚠ ${escapeHtml(w)}</div>`);
     if (fc.summary.length) {
-      html += `<h3>Field changes</h3>`;
+      html += `<h3>Field Changes</h3>`;
       html += fc.summary.map(s => `<div class="changeitem"><b>${escapeHtml(s.label)}</b> → ${escapeHtml(s.value)}</div>`).join("");
     } else html += `<p class="hint">No scalar field changes.</p>`;
-    if (whInclude) html += `<h3>Work hours</h3><div class="changeitem">${escapeHtml(whSummary)}</div>`;
+    if (whInclude) html += `<h3>Work Hours</h3><div class="changeitem">${escapeHtml(whSummary)}</div>${renderWorkHourGrid(whRows)}`;
     box.innerHTML = html;
-    $("applyBtn").disabled = loc.block;
-    setStatus(loc.block ? "Fix the Location conflict before applying." : "Preview ready — review, then Apply.");
+    if (whInclude) wireWorkHourGrid(whRows);
+    ui.apply.disabled = loc.block || (whInclude && !PLAN.whResourceIds.length);
+    ui.status.textContent = loc.block ? "Fix the Location conflict before applying." : "Preview ready — review, then Apply.";
     log(`Preview: ${selected.size} resource(s); ${fc.summary.length} field change(s)${whInclude ? "; work hours included" : ""}.` +
       (loc.block ? "  ⛔ Location rule conflict — apply blocked." : loc.warn ? `  ⚠ ${loc.bad} resource(s) would breach the Location rule.` : ""));
   } catch (e) {
-    log("✖ Preview failed: " + e.message);
-    setStatus("Preview failed — see log.");
+    if (isActionCancellation(e)) { log("Work Hours preview cancelled."); ui.status.textContent = "Preview cancelled."; }
+    else { log("✖ Preview failed: " + e.message); ui.status.textContent = "Preview failed — see log."; }
   } finally {
     setBusy(false);
+    if (mode === "workhours") endCancellableAction();
   }
 }
 
-async function applyAll() {
+async function applyAll(mode) {
   if (!PLAN) return;
-  if (!confirmTwice($("applyBtn"), "Apply to selected")) return;
+  const ui = workflowUi(mode);
+  if (PLAN.mode !== mode) { ui.status.textContent = "Preview this section again first."; return; }
+  if (!confirmTwice(ui.apply, mode === "workhours" ? "Apply Work Hours" : "Apply Settings")) return;
   try {
+    beginCancellableAction(mode === "workhours" ? "Work Hours update" : "Resource Settings update");
     lockRun(true);
-    const ids = [...selected];
+    const ids = mode === "workhours" ? [...PLAN.whResourceIds] : [...selected];
     const hasFields = Object.keys(PLAN.patch).length || PLAN.clears.length;
     let ok = 0, err = 0;
-    log(`Applying to ${ids.length} resource(s)…`);
+    const concurrency = mode === "workhours" ? 4 : 6;
+    log(`Applying to ${ids.length} resource(s) with up to ${Math.min(concurrency, ids.length)} parallel worker(s)…`);
 
-    for (let i = 0; i < ids.length; i++) {
-      const id = ids[i];
+    await runWithConcurrency(ids, concurrency, async id => {
+      throwIfActionCancelled();
       const r = resources.find(x => x.id === id);
       try {
         if (hasFields) {
@@ -1072,26 +3180,34 @@ async function applyAll() {
         }
         if (PLAN.whInclude) await applyWorkHours(r);
         ok++;
-      } catch (e) { err++; log(`  ✖ ${r ? r.name : id}: ${e.message}`); }
-      if ((i + 1) % 5 === 0 || i === ids.length - 1) setStatus(`Applied ${ok}/${ids.length}${err ? ` (${err} error${err > 1 ? "s" : ""})` : ""}`);
-    }
+      } catch (e) {
+        if (isActionCancellation(e)) throw e;
+        err++; log(`  ✖ ${r ? r.name : id}: ${e.message}`);
+      }
+    }, completed => {
+      ui.status.textContent = `Completed ${completed}/${ids.length}: ${ok} applied${err ? `, ${err} error${err > 1 ? "s" : ""}` : ""}`;
+    });
     log(`Done. ${ok} succeeded, ${err} failed.`);
     notify("Update complete", `${ok} resource(s) updated${err ? `, ${err} failed` : ""}.`, err ? "warning" : "success");
     // refresh the grid so the new values show
     await loadResources();
   } catch (e) {
-    log("✖ Apply failed: " + e.message);
+    if (isActionCancellation(e)) {
+      log("Apply cancelled. Requests already completed were not rolled back.");
+      ui.status.textContent = "Cancelled. Completed changes were retained.";
+    } else log("✖ Apply failed: " + e.message);
   } finally {
     lockRun(false);
-    $("applyBtn").disabled = true; PLAN = null;
+    ui.apply.disabled = true; PLAN = null; endCancellableAction();
   }
 }
 
 async function applyWorkHours(r) {
   if (!r.calendarId) { log(`  ⚠ ${r.name}: no calendar on resource — skipped work hours.`); return; }
-  if ($("whClear").checked) await clearWorkHours(r.calendarId);
   const tz = Number($("whTz").value);
   const resId = r.id;
+  if ($("whClear").checked)
+    await clearWorkingHoursPreservingExceptions(r.calendarId, resId, tz, r.name);
   if (PLAN.whMode === "weekly") {
     const days = [...document.querySelectorAll(".dayck:checked")].map(c => c.value).join(",");
     const brk = $("whBreak").checked ? { start: $("whBreakStart").value, end: $("whBreakEnd").value } : null;
@@ -1099,10 +3215,10 @@ async function applyWorkHours(r) {
     await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: calEventInfo(r.calendarId, resId, tz, days, rules) });
   } else {
     const groups = PLAN.copyGroups || [];
-    for (const g of groups) {
+    if (!groups.length) throw new Error(`${r.name}: the source produced no working-hour pattern; no existing recurrences were changed.`);
+    for (const g of groups)
       // copied slots are in UTC → write with TimeZoneCode 92 (UTC) to preserve absolute times
       await dvAction("msdyn_SaveCalendar", { CalendarEventInfo: calEventInfo(r.calendarId, resId, 92, g.byday, g.rules) });
-    }
   }
 }
 
@@ -1139,7 +3255,7 @@ async function addSkill() {
 async function removeSkill() {
   const cid = $("charSel").value; if (!cid) { setQaStatus("Pick a characteristic."); return; }
   if (!selected.size) { setQaStatus("Select resources first."); return; }
-  if (!confirmTwice($("removeSkillBtn"), "Remove from selected")) return;
+  if (!confirmTwice($("removeSkillBtn"), "Remove From Selected")) return;
   const cName = (chars.find(c => c.id === cid) || {}).name || "skill";
   try {
     lockQa(true); let del = 0, err = 0;
@@ -1178,7 +3294,7 @@ async function addTerritory() {
 async function removeTerritory() {
   const tid = $("terrSel").value; if (!tid) { setQaStatus("Pick a territory."); return; }
   if (!selected.size) { setQaStatus("Select resources first."); return; }
-  if (!confirmTwice($("removeTerrBtn"), "Remove from selected")) return;
+  if (!confirmTwice($("removeTerrBtn"), "Remove From Selected")) return;
   const tName = (territories.find(t => t.id === tid) || {}).name || "territory";
   try {
     lockQa(true); let del = 0, err = 0;
@@ -1200,7 +3316,7 @@ async function removeTerritory() {
 async function setMobileExperience(add) {
   if (!selected.size) { setQaStatus("Select resources first."); return; }
   if (!mobileRoles.length) { setQaStatus("No “Field Service – New Mobile Experience” role in this environment."); return; }
-  if (!add && !confirmTwice($("mobRemoveBtn"), "Remove from selected")) return;
+  if (!add && !confirmTwice($("mobRemoveBtn"), "Remove From Selected")) return;
   try {
     lockQa(true);
     let ok = 0, skip = 0, err = 0, nonUser = 0;
@@ -1231,13 +3347,17 @@ async function setMobileExperience(add) {
 // Busy spinner — reference-counted so overlapping operations keep it visible until all finish.
 let _busy = 0;
 function setBusy(on) { _busy = Math.max(0, _busy + (on ? 1 : -1)); $("spin").hidden = _busy === 0; }
-function lockRun(b) { setBusy(b); $("previewBtn").disabled = b; $("applyBtn").disabled = b; $("loadBtn").disabled = b; }
+function lockRun(b) {
+  setBusy(b);
+  ["settingsPreviewBtn", "whPreviewBtn", "loadBtn"].forEach(id => $(id).disabled = b);
+  if (b) { $("settingsApplyBtn").disabled = true; $("whApplyBtn").disabled = true; }
+}
 function lockQa(b) { setBusy(b); ["addSkillBtn", "removeSkillBtn", "addTerrBtn", "removeTerrBtn", "mobAddBtn", "mobRemoveBtn"].forEach(i => $(i).disabled = b); }
 // Click-twice-to-confirm for destructive buttons (host-safe; window.confirm is unreliable in sandboxes).
 const _armed = new WeakMap();
 function confirmTwice(btn, label) {
   if (_armed.get(btn)) { clearTimeout(_armed.get(btn)); _armed.delete(btn); btn.textContent = label; return true; }
-  const orig = btn.textContent; btn.textContent = "Click again to confirm";
+  const orig = btn.textContent; btn.textContent = "Click Again To Confirm";
   _armed.set(btn, setTimeout(() => { _armed.delete(btn); btn.textContent = orig; }, 3000));
   return false;
 }
@@ -1246,11 +3366,33 @@ function confirmTwice(btn, label) {
 buildFieldRows();
 buildDayPick();
 buildTz();
+buildMultiPicker("orgUnitFilter", "All Organizational Units");
+buildMultiPicker("businessUnitFilter", "All Business Units");
+refreshThemeToggle();
+$("themeToggle").addEventListener("click", toggleTheme);
+$("cancelActionBtn").addEventListener("click", cancelCurrentAction);
+$("resetToolBtn").addEventListener("click", resetTool);
+$("exportLogBtn").addEventListener("click", exportLogsCsv);
+$("clearLogBtn").addEventListener("click", clearLogs);
 $("loadBtn").addEventListener("click", loadResources);
-$("previewBtn").addEventListener("click", preview);
-$("applyBtn").addEventListener("click", applyAll);
+$("settingsPreviewBtn").addEventListener("click", () => preview("settings"));
+$("settingsApplyBtn").addEventListener("click", () => applyAll("settings"));
+$("whPreviewBtn").addEventListener("click", () => preview("workhours"));
+$("whApplyBtn").addEventListener("click", () => applyAll("workhours"));
 $("nameFilter").addEventListener("keydown", e => { if (e.key === "Enter") loadResources(); });
-$("whInclude").addEventListener("change", () => { $("whBody").hidden = !$("whInclude").checked; });
+$("countryFilter").addEventListener("keydown", e => { if (e.key === "Enter") loadResources(); });
+$("timeZoneFilter").addEventListener("change", loadResources);
+$("stateFilter").addEventListener("change", loadResources);
+$("regionFilter").addEventListener("change", loadResources);
+document.addEventListener("click", () => document.querySelectorAll(".multi-picker.open").forEach(p => p.classList.remove("open")));
+document.querySelectorAll("#resTable th.sortable").forEach(th => th.addEventListener("click", () => {
+  const key = th.dataset.sort;
+  resourceSort = resourceSort.key === key
+    ? { key, direction: resourceSort.direction * -1 }
+    : { key, direction: 1 };
+  renderResources();
+}));
+updateSortHeaders();
 $("whBreak").addEventListener("change", () => { $("whBreakBox").hidden = !$("whBreak").checked; });
 document.querySelectorAll('input[name="whMode"]').forEach(r => r.addEventListener("change", () => {
   const m = document.querySelector('input[name="whMode"]:checked').value;
@@ -1264,6 +3406,40 @@ $("addTerrBtn").addEventListener("click", addTerritory);
 $("removeTerrBtn").addEventListener("click", removeTerritory);
 $("mobAddBtn").addEventListener("click", () => setMobileExperience(true));
 $("mobRemoveBtn").addEventListener("click", () => setMobileExperience(false));
+$("calTzPreviewBtn").addEventListener("click", previewCalendarTimeZones);
+$("calTzApplyBtn").addEventListener("click", applyCalendarTimeZones);
+$("deleteCalPreviewBtn").addEventListener("click", previewDeleteCalendarRules);
+$("deleteCalApplyBtn").addEventListener("click", deleteSelectedCalendarRules);
+$("exportCalendarRulesBtn").addEventListener("click", exportSelectedCalendarRules);
+$("mismatchPreviewBtn").addEventListener("click", previewCalendarTimeZoneMismatches);
+$("mismatchExportBtn").addEventListener("click", exportCalendarTimeZoneMismatches);
+$("mismatchFixBtn").addEventListener("click", fixCalendarTimeZoneMismatches);
+$("baselinePreviewBtn").addEventListener("click", previewWorkHoursBaseline);
+$("baselineExportBtn").addEventListener("click", exportWorkHoursBaseline);
+$("baselineFixBtn").addEventListener("click", applyWorkHoursBaseline);
+document.querySelectorAll(".baseline-day, #baselineStart, #baselineEnd, #baselineDate").forEach(control => control.addEventListener("change", () => {
+  BASELINE_PLAN = null; BASELINE_SELECTED.clear();
+  $("baselineExportBtn").disabled = true; $("baselineFixBtn").disabled = true;
+  $("baselineStatus").textContent = "Preview again after changing the baseline.";
+}));
+["mismatchWorking", "mismatchNonWorking", "mismatchTimeOff"].forEach(id => $(id).addEventListener("change", () => {
+  MISMATCH_PLAN = null; MISMATCH_SELECTED.clear();
+  $("mismatchExportBtn").disabled = true; $("mismatchFixBtn").disabled = true;
+  $("mismatchStatus").textContent = "Preview again after changing the audit scope.";
+}));
+$("calTzWorking").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("calTzNonWorking").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("calTzTimeOff").addEventListener("change", () => {
+  $("calTzAllDay").disabled = !$("calTzTimeOff").checked;
+  if (!$("calTzTimeOff").checked) $("calTzAllDay").checked = false;
+  CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true;
+});
+$("calTzAllDay").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("calTzTarget").addEventListener("change", () => { CAL_TZ_PLAN = null; $("calTzApplyBtn").disabled = true; });
+$("timeZoneFilter").addEventListener("change", () => {
+  if ($("timeZoneFilter").value && [...$("calTzTarget").options].some(o => o.value === $("timeZoneFilter").value))
+    $("calTzTarget").value = $("timeZoneFilter").value;
+});
 
 log("Ready. Load resources to begin.");
 // Populate the dropdowns (org units, characteristics, ratings, territories) up front,
