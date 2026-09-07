@@ -1,0 +1,47 @@
+name: Publish FieldServiceSettingsUpdater to npm
+
+# Publishes the Power Platform Toolbox package to npmjs.com via Trusted Publishing
+# (OIDC — no stored credential of any kind, and no 2FA prompt).
+# Trigger by publishing a GitHub release, or run it by hand from the Actions tab.
+#
+# Requires an npmjs.com Trusted Publisher configured on the package matching EXACTLY:
+#   Package             : proximo3-field-service-settings-updater
+#   Publisher           : GitHub Actions
+#   Organization or user: TheMarkChristie
+#   Repository          : field-service-settings-updater
+#   Workflow filename   : publish-npm.yml
+#   Environment         : (leave blank)
+# The workflow FILE NAME is part of the trust — renaming this file breaks publishing.
+#
+# npm mints the OIDC token from `id-token: write` and needs npm >= 11.5.1 on Node >= 22.14.0,
+# which is why this pins node-version 24. Provenance attestations are generated automatically;
+# do NOT add --provenance.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:        # also allow manual run from the Actions tab
+
+permissions:
+  id-token: write           # required for the OIDC token exchange
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      # dist/ is gitignored and regenerated from the canonical single-file source
+      # field-service-settings-updater.html. Without this step a stale (or missing) dist
+      # would be published. No `npm ci` — this package has zero dependencies.
+      - name: Build the ToolBox package
+        run: npm run build
+
+      - name: Publish
+        run: npm publish --access public
