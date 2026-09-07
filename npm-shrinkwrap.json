@@ -1,12 +1,12 @@
 {
   "name": "proximo3-field-service-settings-updater",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "proximo3-field-service-settings-updater",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "license": "MIT"
     }
   }

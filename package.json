@@ -1,6 +1,6 @@
 {
   "name": "proximo3-field-service-settings-updater",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "Field Service Resource Updater",
   "description": "Bulk-update Field Service Bookable Resource settings across many resources at once: set Start/End Location, Organizational Unit, Display on Schedule Board, Enable for Availability Search, Hourly Rate and Time Off Approval; apply work hours by weekly pattern or by copying another resource; and quick add/remove skills (characteristics) and territories for everyone selected. Preview every change before applying.",
   "main": "index.html",

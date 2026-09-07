@@ -60,6 +60,12 @@
 
     --colorStrokeFocus2:                #000000;
 
+    /* Selected grid rows. The Fluent colorNeutralBackground1Selected token is not part of this
+       house theme, so a picked row reuses the genuine Fluent 2 brand ramp stop 160 (light) /
+       30 (dark) - the same pair the User Access Explorer uses, so the whole suite shares one
+       "this row is picked" colour. Measured >= 4.5:1 against Foreground1 and Foreground2. */
+    --colorRowSelected:                 #ebf3fc;   /* brand 160 */
+
     --shadow2:  0 0 2px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.14);
     --shadow4:  0 0 2px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.14);
     --shadow8:  0 0 2px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.14);
@@ -107,6 +113,8 @@
 
     --colorStrokeFocus2:                #ffffff;
 
+    --colorRowSelected:                 #0a2e4a;   /* brand 30 */
+
     --shadow2:  0 0 2px rgba(0,0,0,.24), 0 1px 2px rgba(0,0,0,.28);
     --shadow4:  0 0 2px rgba(0,0,0,.24), 0 2px 4px rgba(0,0,0,.28);
     --shadow8:  0 0 2px rgba(0,0,0,.24), 0 4px 8px rgba(0,0,0,.28);
@@ -145,6 +153,7 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
+    padding: var(--spacingL);
     font-family: var(--fontFamilyBase);
     font-size: var(--fontSizeBase300);
     line-height: var(--lineHeightBase300);
@@ -157,42 +166,48 @@
   /* Focus: a Fluent 2 focus stroke. Never removed, only restyled. */
   :focus-visible {
     outline: 2px solid var(--colorStrokeFocus2);
-    outline-offset: 1px;
-    border-radius: var(--borderRadiusMedium);
+    outline-offset: 2px;
   }
 
-  /* --- Header -------------------------------------------------------------- */
-  header {
-    display: flex; align-items: center; gap: var(--spacingM);
-    padding: var(--spacingM) var(--spacingXL);
-    background: var(--colorNeutralBackground1);
-    color: var(--colorNeutralForeground1);
-    border-bottom: 1px solid var(--colorNeutralStroke2);
-    box-shadow: var(--shadow2);
+  /* --- Header ---------------------------------------------------------------
+     One compact line — 24px mark, title, byline, spacer, trailing meta — the same
+     shell the rest of the suite uses. It is deliberately NOT an app bar: no surface,
+     no shadow, no rule underneath, so the cards below carry all the elevation. ---- */
+  header.app {
+    display: flex; align-items: center; gap: var(--spacingS); flex-wrap: wrap;
+    margin: 0 auto var(--spacingM);
+    max-width: 1600px;              /* keeps the title on the same left edge as <main> */
   }
-  header .logo { width: 32px; height: 32px; flex: 0 0 auto; }
-  header h1 { font-size: var(--fontSizeBase400); line-height: 22px; margin: 0; font-weight: var(--fontWeightSemibold); }
-  header .author { color: var(--colorNeutralForeground3); font-size: var(--fontSizeBase200); font-style: italic; }
-  header #envlabel { color: var(--colorNeutralForeground3); font-size: var(--fontSizeBase200); margin-left: auto; }
-  header .ver {
-    color: var(--colorNeutralForeground3); font-size: var(--fontSizeBase200);
-    margin-left: var(--spacingM); padding: 2px var(--spacingS);
-    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusCircular);
+  .hicon { width: 24px; height: 24px; flex: none; }
+  header.app h1 {
+    font-size: var(--fontSizeBase400); line-height: 22px; margin: 0;
+    font-weight: var(--fontWeightSemibold); color: var(--colorNeutralForeground1);
+    white-space: nowrap;
+  }
+  .byline { color: var(--colorNeutralForeground3); font-size: var(--fontSizeBase200); white-space: nowrap; }
+  .grow { flex: 1 1 auto; }
+  /* Trailing meta: which org this is pointed at. Ellipsised rather than wrapped, so a long
+     org host never shoves the header onto a second line. */
+  .connline {
+    font-size: var(--fontSizeBase200); color: var(--colorNeutralForeground3);
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
   /* busy spinner — shows while loading / applying */
   .spinner {
-    width: 18px; height: 18px; flex: 0 0 auto; margin-left: var(--spacingM); border-radius: 50%;
-    border: 3px solid var(--colorNeutralStroke2); border-top-color: var(--colorBrandStroke1);
+    width: 16px; height: 16px; flex: none; border-radius: 50%;
+    border: 2px solid var(--colorNeutralStroke2); border-top-color: var(--colorBrandStroke1);
     animation: spin .8s linear infinite;
   }
   .spinner[hidden] { display: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  main { max-width: 1180px; margin: 0 auto; padding: var(--spacingXL); }
+  main { max-width: 1600px; margin: 0 auto; padding: 0 0 var(--spacingXL); }
   /* XrmToolBox docks the tool in its own panel, so let the 11-column resource table use the
      full width there. This is a layout rule only — it is independent of the colour tokens. */
-  body[data-host="xtb"] main { max-width: none; }
+  body[data-host="xtb"] { padding: var(--spacingM); }
+  body[data-host="xtb"] main,
+  body[data-host="xtb"] header.app { max-width: none; }
 
   /* --- Surfaces ------------------------------------------------------------ */
   .card {
@@ -208,7 +223,12 @@
     font-size: var(--fontSizeBase400); line-height: 22px;
     font-weight: var(--fontWeightSemibold);
     color: var(--colorNeutralForeground1);
-    margin: 0 0 var(--spacingM);
+    margin: 0 0 var(--spacingS);
+  }
+  /* The sentence under a card heading that says what the section is for. */
+  .card .desc {
+    color: var(--colorNeutralForeground2); font-size: var(--fontSizeBase300);
+    margin: 0 0 var(--spacingM); max-width: 90ch;
   }
   .card h3 {
     font-size: var(--fontSizeBase300); font-weight: var(--fontWeightSemibold);
@@ -252,7 +272,7 @@
 
   .row { display: flex; gap: var(--spacingL); flex-wrap: wrap; }
   .row > div { flex: 1; min-width: 200px; }
-  .hint { font-size: var(--fontSizeBase200); color: var(--colorNeutralForeground3); margin-top: var(--spacingXS); }
+  .hint { font-size: var(--fontSizeBase200); color: var(--colorNeutralForeground2); margin-top: var(--spacingXS); }
   .btnbar { display: flex; gap: var(--spacingS); align-items: center; margin-top: var(--spacingL); flex-wrap: wrap; }
 
   /* --- Buttons ------------------------------------------------------------- */
@@ -269,15 +289,20 @@
     transition: background var(--durationFaster) var(--curveEasyEase);
   }
   button:hover:not(:disabled) { background: var(--colorNeutralBackground1Hover); }
+  button:active:not(:disabled) { background: var(--colorNeutralBackground3); }
   button:disabled {
     background: var(--colorNeutralBackgroundDisabled); color: var(--colorNeutralForegroundDisabled);
     border-color: var(--colorNeutralStroke2); cursor: not-allowed;
   }
   .primary { background: var(--colorBrandBackground); border-color: var(--colorBrandBackground); color: var(--colorNeutralForegroundOnBrand); }
   .primary:hover:not(:disabled) { background: var(--colorBrandBackgroundHover); border-color: var(--colorBrandBackgroundHover); }
-  /* Literal #ffffff: white is correct on the LIGHT red token; the dark host overrides to black below. */
-  .danger  { background: var(--colorPaletteRedForeground1); border-color: var(--colorPaletteRedForeground1); color: #ffffff; }
-  .danger:hover:not(:disabled) { background: var(--colorPaletteRedForeground1); filter: brightness(.92); }
+  .primary:active:not(:disabled) { background: var(--colorBrandBackgroundPressed); border-color: var(--colorBrandBackgroundPressed); }
+  /* Destructive actions are outlined, not filled — the house convention, and it needs no
+     hard-coded ink: red-on-surface measures 5.90:1 light / 6.65:1 dark, and the red edge is
+     4.14:1 / 4.66:1 against that surface, well past the 3:1 control-boundary floor (1.4.11). */
+  .danger  { background: var(--colorNeutralBackground1); border-color: var(--colorPaletteRedForeground1); color: var(--colorPaletteRedForeground1); }
+  .danger:hover:not(:disabled) { background: var(--colorPaletteRedBackground1); }
+  .danger:active:not(:disabled) { background: var(--colorPaletteRedBackground1); filter: brightness(.94); }
   .ghost   { background: transparent; border-color: transparent; color: var(--colorNeutralForeground2); }
   .ghost:hover:not(:disabled) { background: var(--colorSubtleBackgroundHover); }
   .small   { min-height: 28px; padding: 3px var(--spacingS); font-size: var(--fontSizeBase200); }
@@ -285,29 +310,33 @@
   #status, #qaStatus { font-size: var(--fontSizeBase300); color: var(--colorNeutralForeground3); }
 
   /* --- Message bars -------------------------------------------------------- */
+  /* One bar shape, three tints. The hue lives in the border, never in the ink, and every bar
+     also states its meaning in words and carries a glyph, so colour is never the only cue. */
   .banner {
     background: var(--colorNeutralBackground3); color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorNeutralStroke2);
-    border-left: 3px solid var(--colorBrandStroke1);
+    border: 1px solid var(--colorBrandStroke1);
     border-radius: var(--borderRadiusMedium);
-    padding: var(--spacingM) var(--spacingL);
-    font-size: var(--fontSizeBase300); margin-bottom: var(--spacingL);
+    padding: var(--spacingS) var(--spacingM);
+    font-size: var(--fontSizeBase300); margin: 0 0 var(--spacingL);
   }
+  /* The lead sentence sits on its own line; later <b> runs stay inline mid-sentence. */
+  .banner > b:first-child { display: block; margin-bottom: 2px; }
   .warnbox {
     background: var(--colorPaletteYellowBackground1); color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorNeutralStroke2);
-    border-left: 3px solid var(--colorPaletteOrangeForeground1);
+    border: 1px solid var(--colorPaletteOrangeForeground1);
     border-radius: var(--borderRadiusMedium);
-    padding: var(--spacingM); font-size: var(--fontSizeBase300);
-    font-weight: var(--fontWeightSemibold); margin: var(--spacingXS) 0 var(--spacingM);
+    padding: var(--spacingS) var(--spacingM);
+    font-size: var(--fontSizeBase300); margin: var(--spacingS) 0;
   }
   .errbox {
     background: var(--colorPaletteRedBackground1); color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorPaletteRedBorder1);
-    border-left: 3px solid var(--colorPaletteRedForeground1);
+    /* RedForeground1, not RedBorder1: the tint-on-tint pair measures 1.57:1 in light, so the
+       box edge all but vanishes. Foreground1 is 5.85:1 light / 5.20:1 dark against its own
+       fill, and it matches the warn bar, which already carries its hue on OrangeForeground1. */
+    border: 1px solid var(--colorPaletteRedForeground1);
     border-radius: var(--borderRadiusMedium);
-    padding: var(--spacingM); font-size: var(--fontSizeBase300);
-    font-weight: var(--fontWeightSemibold); margin: var(--spacingXS) 0 var(--spacingM);
+    padding: var(--spacingS) var(--spacingM);
+    font-size: var(--fontSizeBase300); margin: var(--spacingS) 0;
   }
 
   /* --- Activity log -------------------------------------------------------- */
@@ -321,21 +350,31 @@
 
   /* --- Tables -------------------------------------------------------------- */
   table {
-    width: 100%; border-collapse: collapse; font-size: var(--fontSizeBase200);
+    width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--fontSizeBase300);
     /* Digits share one advance width, so figures stack in a true column. */
     font-variant-numeric: tabular-nums;
   }
-  th, td { text-align: left; padding: var(--spacingS) var(--spacingM); white-space: nowrap; }
+  th, td { text-align: left; padding: var(--spacingXS) var(--spacingM); white-space: nowrap; }
   /* Every cell centres on one baseline whatever it holds — a bare word, a pill, a checkbox.
      Without this a row containing a pill sits a pixel or two off its neighbours. */
   thead th, tbody td { vertical-align: middle; }
   th {
     font-weight: var(--fontWeightSemibold); color: var(--colorNeutralForeground2);
-    background: var(--colorNeutralBackground2); border-bottom: 1px solid var(--colorNeutralStroke1);
-    position: sticky; top: 0; z-index: 1;
+    /* Background3, not Background2 — the zebra stripe below IS Background2, so a Background2
+       header would dissolve into every even row as it scrolled underneath. */
+    background: var(--colorNeutralBackground3); border-bottom: 1px solid var(--colorNeutralStroke1);
+    position: sticky; top: 0; z-index: 2;
   }
   td { color: var(--colorNeutralForeground1); border-bottom: 1px solid var(--colorNeutralStroke2); }
-  tbody tr:hover td { background: var(--colorSubtleBackgroundHover); }
+  tbody tr:nth-child(even) { background: var(--colorNeutralBackground2); }
+  tbody tr:hover { background: var(--colorSubtleBackgroundHover); }
+  /* A ticked row is this tool's "selected" state. Driving it straight off the row checkbox
+     keeps it in step with the real selection without touching the JS, and the tick itself
+     stays the primary, non-colour cue. .sel is the suite-wide name for the same state. */
+  tbody tr.sel { background: var(--colorRowSelected) !important; color: var(--colorNeutralForeground1); }
+  tbody tr:has(.rowck:checked) { background: var(--colorRowSelected) !important; color: var(--colorNeutralForeground1); }
+  tbody tr:has(.rowck:checked) .muted,
+  tbody tr:has(.rowck:checked) .hint { color: var(--colorNeutralForeground1); opacity: .85; }
   td.wrap, th.wrap { white-space: normal; }
   /* Narrow value columns: .num goes on BOTH the th and every td of that column, so the
      heading sits over its values instead of hugging the left edge. Genuine text columns
@@ -344,13 +383,13 @@
   /* A centred cell's contents centre as a block too, so pills and glyphs share the column axis. */
   td.num > * { display: inline-flex; align-items: center; justify-content: center; }
   .tablewrap {
-    max-height: 440px; overflow: auto;
-    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusMedium);
+    max-height: 440px; overflow: auto; background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusLarge);
   }
   .toolbar { display: flex; gap: var(--spacingM); align-items: end; flex-wrap: wrap; margin-bottom: var(--spacingM); }
   .toolbar > div { min-width: 180px; }
   .selcount { font-weight: var(--fontWeightSemibold); color: var(--colorNeutralForeground1); }
-  .muted { color: var(--colorNeutralForeground3); font-weight: var(--fontWeightRegular); }
+  .muted { color: var(--colorNeutralForeground2); font-weight: var(--fontWeightRegular); }
 
   /* --- Field rows ---------------------------------------------------------- */
   .fieldgrid { display: grid; grid-template-columns: 1fr; gap: var(--spacingS); }
@@ -374,7 +413,7 @@
   .pill {
     display: inline-flex; align-items: center; gap: var(--spacingXS);
     font-size: var(--fontSizeBase200); font-weight: var(--fontWeightSemibold); line-height: 16px;
-    padding: 2px var(--spacingS); border-radius: var(--borderRadiusCircular);
+    padding: 1px var(--spacingS); border-radius: var(--borderRadiusCircular);
     background: var(--colorNeutralBackground3); color: var(--colorNeutralForeground2);
     border: 1px solid var(--colorNeutralStroke2);
   }
@@ -413,9 +452,6 @@
   /* Native select popups follow color-scheme, but pin the list explicitly too. */
   body[data-host="pptb"] select option,
   body.theme-dark select option { background: var(--colorNeutralBackground1); color: var(--colorNeutralForeground1); }
-  /* The dark red token is a light tint, so it needs dark ink to clear AA (7.5:1). */
-  body[data-host="pptb"] .danger,
-  body.theme-dark .danger { color: #000000; }
 
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
@@ -423,20 +459,22 @@
 <body>
 <script>
   /* Host detection + default theme (runs before content paints to avoid a flash).
-     Per host: PPTB → Fluent dark; XrmToolBox (WebView2) → Fluent light; web/standalone → Fluent light
-     (an OS dark preference is honoured on the web host). */
+     Per host: PPTB → Fluent dark; XrmToolBox (WebView2) → Fluent light; web/standalone → Fluent light,
+     always — the OS colour preference is deliberately NOT followed. */
   (function () {
     var P = !!window.dataverseAPI, X = !!window.XTB_CONFIG;
     var host = P ? "pptb" : X ? "xtb" : "web";
     document.body.dataset.host = host;
+    // Dark is for Power Platform ToolBox ONLY. The web host deliberately does NOT
+    // follow prefers-color-scheme: a web resource sits inside a model-driven app's
+    // light chrome, so honouring the OS preference makes the tool clash with the
+    // app hosting it. XrmToolBox is light for the same reason.
     if (host === "pptb") document.body.classList.add("theme-dark");
-    else if (host === "web" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-      document.body.classList.add("theme-dark");
   })();
 </script>
-<header>
+<header class="app">
   <!-- Tool mark. The literal #EE163B / #fff are brand artwork, not theme colours — they stay fixed in both themes. -->
-  <svg class="logo" viewBox="0 0 80 80" aria-hidden="true">
+  <svg class="hicon" viewBox="0 0 80 80" aria-hidden="true">
     <rect x="2" y="2" width="76" height="76" rx="14" fill="#EE163B"/>
     <g fill="#fff">
       <circle cx="40" cy="40" r="25"/>
@@ -453,10 +491,10 @@
     <g fill="#fff"><circle cx="40" cy="35" r="7"/><path d="M30 52 a10 10 0 0 1 20 0 Z"/></g>
   </svg>
   <h1>Field Service Resource Updater</h1>
-  <span class="author">by Mark Christie</span>
+  <span class="byline">by Mark Christie &middot; <span id="verlabel" title="Tool build / Dataverse org version">v&hellip;</span></span>
   <span id="spin" class="spinner" role="status" aria-label="Working" title="Working…" hidden></span>
-  <span id="envlabel">resolving environment…</span>
-  <span class="ver" id="verlabel" title="Tool build / Dataverse org version">v…</span>
+  <span class="grow"></span>
+  <span id="envlabel" class="connline">resolving environment&hellip;</span>
 </header>
 
 <main>
@@ -518,8 +556,8 @@
   <!-- ============================== 2. FIELD SETTINGS ============================== -->
   <div class="card">
     <h2>2 · Settings to apply</h2>
-    <p class="hint" style="margin-top:0">Tick a setting to include it in the bulk update (changing a control ticks it for you). Unticked settings are not changed.</p>
-    <p class="hint" style="margin-top:0">⚠ <b>Start &amp; End Location are linked:</b> if either is set to <i>Location Agnostic</i>, Field Service requires the other to be <i>Location Agnostic</i> too. <i>Resource Address</i> needs a geocoded address on the related record; <i>Organizational Unit Address</i> needs the org unit to have an address. The preview checks all of this per resource (see the Address column).</p>
+    <p class="desc">Tick a setting to include it in the bulk update (changing a control ticks it for you). Unticked settings are not changed.</p>
+    <p class="desc">⚠ <b>Start &amp; End Location are linked:</b> if either is set to <i>Location Agnostic</i>, Field Service requires the other to be <i>Location Agnostic</i> too. <i>Resource Address</i> needs a geocoded address on the related record; <i>Organizational Unit Address</i> needs the org unit to have an address. The preview checks all of this per resource (see the Address column).</p>
     <div class="fieldgrid" id="fieldGrid"><!-- field rows injected --></div>
   </div>
 
@@ -594,7 +632,7 @@
   <!-- ============================== 5. SKILLS & TERRITORIES ============================== -->
   <div class="card">
     <h2>5 · Quick actions — skills &amp; territories</h2>
-    <p class="hint" style="margin-top:0">These act immediately on the resources selected above. Remove asks you to click twice to confirm.</p>
+    <p class="desc">These act immediately on the resources selected above. Remove asks you to click twice to confirm.</p>
 
     <fieldset>
       <legend>Skill (characteristic)</legend>
@@ -655,7 +693,7 @@
    Hosts: PPTB (window.dataverseAPI) · XrmToolBox WebView2 (window.XTB_CONFIG) ·
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;

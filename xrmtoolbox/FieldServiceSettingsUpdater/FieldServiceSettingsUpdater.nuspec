@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>MarkChristie.FieldServiceSettingsUpdater</id>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <title>Field Service Resource Updater</title>
     <authors>Mark Christie</authors>
     <owners>Mark Christie</owners>
@@ -12,7 +12,7 @@
     <license type="expression">MIT</license>
     <description>Bulk-update Field Service Bookable Resource settings across many resources at once: Start/End Location, Organizational Unit, Display on Schedule Board, Enable for Availability Search, Hourly Rate and Time Off Approval; set work hours by weekly pattern or by copying another resource's calendar; and quick add/remove skills (characteristics) and territories for everyone selected. Preview every change before applying.</description>
     <summary>Bulk-edit Bookable Resource settings, work hours, skills and territories across many Field Service resources.</summary>
-    <releaseNotes>1.0.2 — The interface has been rebuilt in the Fluent 2 design language, so the tool now looks like a modern model-driven app: light in XrmToolBox, dark in Power Platform ToolBox. This is a visual change only — nothing about how the tool works has changed. 1.0.1 — Add "Field Service – New Mobile Experience" per-user quick action (assign/remove the security role on selected User resources). 1.0.0 — Initial release.</releaseNotes>
+    <releaseNotes>1.0.3 — The interface now matches the other tools in the suite: one compact header, and the same cards, tables and spacing throughout. The tool also no longer switches to a dark theme when it is running inside Dynamics 365 as a web resource — it stays light, like the app around it. This is a visual change only — nothing about how the tool works has changed. 1.0.2 — The interface has been rebuilt in the Fluent 2 design language, so the tool now looks like a modern model-driven app: light in XrmToolBox, dark in Power Platform ToolBox. This is a visual change only — nothing about how the tool works has changed. 1.0.1 — Add "Field Service – New Mobile Experience" per-user quick action (assign/remove the security role on selected User resources). 1.0.0 — Initial release.</releaseNotes>
     <tags>XrmToolBox Plugin Dataverse Dynamics365 FieldService BookableResource Scheduling WorkHours Characteristics Territory BulkUpdate</tags>
     <dependencies>
       <dependency id="XrmToolBox" version="1.2025.7.71" />
