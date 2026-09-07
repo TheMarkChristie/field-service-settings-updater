@@ -7,9 +7,9 @@ The entire tool is a single self-contained HTML file, [`field-service-settings-u
 Host detection (top of the file) sets `document.body.dataset.host` and the default theme:
 
 ```js
-const PPTB = !!window.dataverseAPI;   // Power Platform ToolBox  → dark theme
-const XTB  = !!window.XTB_CONFIG;     // XrmToolBox WebView2      → Windows 95 theme
-// else: D365 web resource / standalone → light theme
+const PPTB = !!window.dataverseAPI;   // Power Platform ToolBox  → Fluent 2 dark
+const XTB  = !!window.XTB_CONFIG;     // XrmToolBox WebView2      → Fluent 2 light
+// else: D365 web resource / standalone → Fluent 2 light
 ```
 
 ## Data access layer
@@ -52,4 +52,4 @@ Work hours are calendar rules edited via the Field Service work-hour calendar AP
 
 ## Accessibility
 
-WCAG 2.1 AA across all three themes: real semantics (`<button>`, `<label for>`, `<table>`, `fieldset`/`legend`), visible focus in every theme, `aria-live` status/log regions, AA contrast (dark, light and the Win95 palettes), and `prefers-reduced-motion` honoured. Destructive removes use a host-safe click-twice-to-confirm (no reliance on `window.confirm`, which is unreliable in sandboxes).
+WCAG 2.1 AA in both themes: real semantics (`<button>`, `<label for>`, `<table>`, `fieldset`/`legend`), visible focus in every theme, `aria-live` status/log regions, AA contrast (every Fluent 2 light and dark token pair), and `prefers-reduced-motion` honoured. Destructive removes use a host-safe click-twice-to-confirm (no reliance on `window.confirm`, which is unreliable in sandboxes).

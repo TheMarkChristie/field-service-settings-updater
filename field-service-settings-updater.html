@@ -5,132 +5,417 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Field Service Resource Updater</title>
 <style>
-  :root {
-    color-scheme: light dark;
-    --red: #EE163B; --red-btn: #D4123A; --charcoal: #2B2B2B; --ink: #1c1c1c;
-    --line: #e3e3e3; --bg: #f5f6f8; --ok: #1a7f37; --warn: #b35900; --err: #c4314b;
+  /* ==========================================================================
+     Fluent 2 theme — the house look, so the tool reads like a modern
+     model-driven app in every host.
+
+       data-host="web"   D365 web resource / standalone  -> Fluent LIGHT
+       data-host="xtb"   XrmToolBox (WebView2 plugin)    -> Fluent LIGHT
+       data-host="pptb"  Power Platform ToolBox          -> Fluent DARK
+
+     Token VALUES are taken verbatim from @fluentui/react-theme (webLightTheme /
+     webDarkTheme), and the names match the Fluent token names. Every
+     foreground/background pair used for text clears WCAG 2.1 AA in both themes.
+     ========================================================================== */
+
+  /* --- Light: the base. Applies to web + XrmToolBox. ---------------------- */
+  :root,
+  body[data-host="web"],
+  body[data-host="xtb"] {
+    color-scheme: light;
+
+    --colorNeutralBackground1:          #ffffff;
+    --colorNeutralBackground1Hover:     #f5f5f5;
+    --colorNeutralBackground2:          #fafafa;
+    --colorNeutralBackground3:          #f5f5f5;
+    --colorNeutralBackground4:          #f0f0f0;
+    --colorNeutralBackgroundDisabled:   #f0f0f0;
+    --colorSubtleBackgroundHover:       #f5f5f5;
+
+    --colorNeutralForeground1:          #242424;  /* 15.5:1 on bg1 */
+    --colorNeutralForeground2:          #424242;  /* 10.1:1        */
+    --colorNeutralForeground3:          #616161;  /*  6.2:1        */
+    --colorNeutralForegroundDisabled:   #bdbdbd;
+    --colorNeutralForegroundOnBrand:    #ffffff;
+
+    --colorNeutralStroke1:              #d1d1d1;
+    --colorNeutralStroke2:              #e0e0e0;
+    --colorNeutralStrokeAccessible:     #616161;
+
+    --colorBrandBackground:             #0f6cbd;  /* white on it: 5.4:1 */
+    --colorBrandBackgroundHover:        #115ea3;
+    --colorBrandBackgroundPressed:      #0c3b5e;
+    --colorBrandForeground1:            #0f6cbd;
+    --colorBrandForegroundLink:         #115ea3;
+    --colorBrandStroke1:                #0f6cbd;
+
+    --colorPaletteRedForeground1:       #bc2f32;  /*  5.9:1 */
+    --colorPaletteRedBackground1:       #fdf6f6;
+    --colorPaletteRedBorder1:           #f1bbbc;
+    --colorPaletteGreenForeground1:     #0e700e;  /*  6.3:1 */
+    --colorPaletteGreenBackground1:     #f1faf1;
+    --colorPaletteGreenBorder1:         #9fd89f;
+    --colorPaletteOrangeForeground1:    #c43501;  /*  5.4:1 */
+    --colorPaletteYellowBackground1:    #fffef5;
+
+    --colorStrokeFocus2:                #000000;
+
+    --shadow2:  0 0 2px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.14);
+    --shadow4:  0 0 2px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.14);
+    --shadow8:  0 0 2px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.14);
   }
+
+  /* --- Dark: Power Platform ToolBox (and the web host when the OS asks for
+         dark — the boot script adds .theme-dark for that). Colours only. --- */
+  body[data-host="pptb"],
+  body.theme-dark {
+    color-scheme: dark;                 /* native controls render dark */
+
+    --colorNeutralBackground1:          #292929;
+    --colorNeutralBackground1Hover:     #3d3d3d;
+    --colorNeutralBackground2:          #1f1f1f;
+    --colorNeutralBackground3:          #141414;
+    --colorNeutralBackground4:          #0a0a0a;
+    --colorNeutralBackgroundDisabled:   #141414;
+    --colorSubtleBackgroundHover:       #383838;
+
+    --colorNeutralForeground1:          #ffffff;  /* 14.6:1 on bg1 */
+    --colorNeutralForeground2:          #d6d6d6;  /* 10.0:1        */
+    --colorNeutralForeground3:          #adadad;  /*  6.5:1        */
+    --colorNeutralForegroundDisabled:   #5c5c5c;
+    --colorNeutralForegroundOnBrand:    #ffffff;
+
+    --colorNeutralStroke1:              #666666;
+    --colorNeutralStroke2:              #525252;
+    --colorNeutralStrokeAccessible:     #adadad;
+
+    --colorBrandBackground:             #115ea3;  /* white on it: 6.7:1 */
+    --colorBrandBackgroundHover:        #0f6cbd;
+    --colorBrandBackgroundPressed:      #0c3b5e;
+    --colorBrandForeground1:            #479ef5;
+    --colorBrandForegroundLink:         #479ef5;
+    --colorBrandStroke1:                #479ef5;
+
+    --colorPaletteRedForeground1:       #e37d80;
+    --colorPaletteRedBackground1:       #3f1011;
+    --colorPaletteRedBorder1:           #d13438;
+    --colorPaletteGreenForeground1:     #54b054;
+    --colorPaletteGreenBackground1:     #052505;
+    --colorPaletteGreenBorder1:         #107c10;
+    --colorPaletteOrangeForeground1:    #e9835e;
+    --colorPaletteYellowBackground1:    #4c4400;
+
+    --colorStrokeFocus2:                #ffffff;
+
+    --shadow2:  0 0 2px rgba(0,0,0,.24), 0 1px 2px rgba(0,0,0,.28);
+    --shadow4:  0 0 2px rgba(0,0,0,.24), 0 2px 4px rgba(0,0,0,.28);
+    --shadow8:  0 0 2px rgba(0,0,0,.24), 0 4px 8px rgba(0,0,0,.28);
+  }
+
+  /* --- Shape, type, spacing: identical in both themes. -------------------- */
+  :root {
+    --borderRadiusSmall:    2px;
+    --borderRadiusMedium:   4px;
+    --borderRadiusLarge:    6px;
+    --borderRadiusCircular: 10000px;
+
+    --fontFamilyBase: 'Segoe UI Variable Text', 'Segoe UI', 'Segoe UI Web (West European)',
+                      -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    --fontFamilyMonospace: Consolas, 'Courier New', Courier, monospace;
+
+    --fontSizeBase200: 12px;   /* caption  */
+    --fontSizeBase300: 14px;   /* body     */
+    --fontSizeBase400: 16px;   /* subtitle */
+    --lineHeightBase300: 20px;
+    --fontWeightRegular: 400;
+    --fontWeightSemibold: 600;
+
+    --spacingXS: 4px;
+    --spacingS:  8px;
+    --spacingM:  12px;
+    --spacingL:  16px;
+    --spacingXL: 24px;
+
+    --durationFaster: 100ms;
+    --durationNormal: 200ms;
+    --curveEasyEase: cubic-bezier(.33,0,.67,1);
+  }
+
+  /* --- Page --------------------------------------------------------------- */
   * { box-sizing: border-box; }
-  :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; border-radius: 4px; }
-  button:not(:disabled):hover { filter: brightness(0.92); }
-  input::placeholder { color: #8a8f98; opacity: 1; }
-  body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
-  header { background: var(--charcoal); color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  body {
+    margin: 0;
+    font-family: var(--fontFamilyBase);
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+    color: var(--colorNeutralForeground1);
+    background: var(--colorNeutralBackground2);
+    -webkit-font-smoothing: antialiased;
+  }
+  code { font-family: var(--fontFamilyMonospace); font-size: var(--fontSizeBase200); }
+
+  /* Focus: a Fluent 2 focus stroke. Never removed, only restyled. */
+  :focus-visible {
+    outline: 2px solid var(--colorStrokeFocus2);
+    outline-offset: 1px;
+    border-radius: var(--borderRadiusMedium);
+  }
+
+  /* --- Header -------------------------------------------------------------- */
+  header {
+    display: flex; align-items: center; gap: var(--spacingM);
+    padding: var(--spacingM) var(--spacingXL);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    box-shadow: var(--shadow2);
+  }
   header .logo { width: 32px; height: 32px; flex: 0 0 auto; }
-  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
-  header .author { color: #9a9a9a; font-size: 12px; font-style: italic; }
-  header #envlabel { color: #bbb; font-size: 13px; margin-left: auto; }
+  header h1 { font-size: var(--fontSizeBase400); line-height: 22px; margin: 0; font-weight: var(--fontWeightSemibold); }
+  header .author { color: var(--colorNeutralForeground3); font-size: var(--fontSizeBase200); font-style: italic; }
+  header #envlabel { color: var(--colorNeutralForeground3); font-size: var(--fontSizeBase200); margin-left: auto; }
+  header .ver {
+    color: var(--colorNeutralForeground3); font-size: var(--fontSizeBase200);
+    margin-left: var(--spacingM); padding: 2px var(--spacingS);
+    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusCircular);
+  }
+
   /* busy spinner — shows while loading / applying */
-  .spinner { width: 18px; height: 18px; flex: 0 0 auto; margin-left: 14px; border-radius: 50%;
-    border: 3px solid rgba(255,255,255,.25); border-top-color: var(--red); animation: spin .8s linear infinite; }
+  .spinner {
+    width: 18px; height: 18px; flex: 0 0 auto; margin-left: var(--spacingM); border-radius: 50%;
+    border: 3px solid var(--colorNeutralStroke2); border-top-color: var(--colorBrandStroke1);
+    animation: spin .8s linear infinite;
+  }
   .spinner[hidden] { display: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-top-color: #fff; } }
-  body[data-host="xtb"] .spinner { border-color: #808080; border-top-color: #000080; }
-  header .ver { color: #8a8a8a; font-size: 12px; margin-left: 14px; padding: 2px 8px; border: 1px solid #4a4a4a; border-radius: 20px; }
-  main { max-width: 1180px; margin: 0 auto; padding: 24px; }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-bottom: 18px; }
-  .card h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #666; margin: 0 0 14px; }
-  .card h3 { font-size: 13px; margin: 18px 0 8px; color: var(--charcoal); }
-  label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; }
-  label.inline { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; margin: 0; }
-  input[type=text], input[type=number], input[type=time], select {
-    width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px; font-size: 13px; font-family: inherit; background: #fff; color: var(--ink);
+
+  main { max-width: 1180px; margin: 0 auto; padding: var(--spacingXL); }
+  /* XrmToolBox docks the tool in its own panel, so let the 11-column resource table use the
+     full width there. This is a layout rule only — it is independent of the colour tokens. */
+  body[data-host="xtb"] main { max-width: none; }
+
+  /* --- Surfaces ------------------------------------------------------------ */
+  .card {
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusLarge);
+    box-shadow: var(--shadow2);
+    padding: var(--spacingL);
+    margin-bottom: var(--spacingL);
   }
-  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .card h2 {
+    display: flex; align-items: center; gap: var(--spacingS);
+    font-size: var(--fontSizeBase400); line-height: 22px;
+    font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground1);
+    margin: 0 0 var(--spacingM);
+  }
+  .card h3 {
+    font-size: var(--fontSizeBase300); font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground1); margin: var(--spacingL) 0 var(--spacingS);
+  }
+
+  /* --- Forms --------------------------------------------------------------- */
+  label {
+    display: block; font-size: var(--fontSizeBase300); font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground1); margin: var(--spacingM) 0 var(--spacingXS);
+  }
+  label.inline { display: inline-flex; align-items: center; gap: var(--spacingS); font-weight: var(--fontWeightSemibold); margin: 0; }
+  input[type=text], input[type=number], input[type=time], select {
+    width: 100%;
+    font-family: inherit; font-size: var(--fontSizeBase300);
+    color: var(--colorNeutralForeground1);
+    background: var(--colorNeutralBackground1);
+    /* StrokeAccessible, NOT Stroke1. This border IS the field's visual boundary, so it must
+       clear 3:1 (WCAG 1.4.11): StrokeAccessible is 6.19:1 light / 6.48:1 dark, while Stroke1
+       manages only 1.53:1 / 2.53:1 and fails. Fluent's own default input uses Stroke1 — we
+       deliberately diverge. Do not "correct" this back. */
+    border: 1px solid var(--colorNeutralStrokeAccessible);
+    border-radius: var(--borderRadiusMedium);
+    padding: 5px var(--spacingS);
+    min-height: 32px;
+  }
+  input[type=text]:hover, input[type=number]:hover, input[type=time]:hover, select:hover {
+    border-color: var(--colorNeutralStrokeAccessible);
+  }
+  input[type=text]:focus, input[type=number]:focus, input[type=time]:focus, select:focus {
+    border-bottom: 2px solid var(--colorBrandStroke1);
+  }
+  input[type=text]:disabled, input[type=number]:disabled, input[type=time]:disabled, select:disabled {
+    background: var(--colorNeutralBackgroundDisabled); color: var(--colorNeutralForegroundDisabled);
+  }
+  input::placeholder { color: var(--colorNeutralForeground3); opacity: 1; }
+  /* accent-color must clear 3:1 against the surface in BOTH themes (WCAG 1.4.11).
+     --colorBrandBackground is #115ea3 in dark = 2.18:1 on the card; --colorBrandStroke1 is the
+     compound-brand pair (#0f6cbd light / #479ef5 dark) = 5.4:1 / 5.2:1. */
+  input[type=checkbox], input[type=radio] { accent-color: var(--colorBrandStroke1); width: 16px; height: 16px; margin: 0; }
+
+  .row { display: flex; gap: var(--spacingL); flex-wrap: wrap; }
   .row > div { flex: 1; min-width: 200px; }
-  .hint { font-size: 12px; color: #777; margin-top: 4px; }
-  .btnbar { display: flex; gap: 10px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
-  button { padding: 10px 18px; border: 0; border-radius: 7px; font-size: 14px; font-weight: 700; cursor: pointer; }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  .primary { background: var(--charcoal); color: #fff; }
-  .danger { background: var(--red-btn); color: #fff; }
-  .ghost { background: #eee; color: #333; }
-  .small { padding: 7px 13px; font-size: 13px; }
-  #status, #qaStatus { font-size: 13px; color: #666; }
-  .banner { border-left: 4px solid var(--red); background: #fff5f6; padding: 12px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
-  .warnbox { border-left: 4px solid var(--warn); background: #fff7ea; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
-  .errbox { border-left: 4px solid var(--err); background: #fdecef; padding: 11px 13px; border-radius: 6px; font-size: 13px; margin: 4px 0 14px; font-weight: 600; }
-  body.theme-dark .warnbox { background: #2a2316; } body.theme-dark .errbox { background: #2a1820; }
-  body[data-host="xtb"] .warnbox { background: #fff0d0; border-left: 4px solid #7a4a00; border-radius: 0; color: #000; }
-  body[data-host="xtb"] .errbox { background: #ffe0e0; border-left: 4px solid #a80000; border-radius: 0; color: #000; }
-  #log { background: #1e1e1e; color: #d4d4d4; font-family: 'Cascadia Code', Consolas, monospace; font-size: 12px;
-         border-radius: 8px; padding: 12px; height: 220px; overflow: auto; white-space: pre-wrap; margin-top: 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
-  th { background: #fafafa; position: sticky; top: 0; z-index: 1; }
+  .hint { font-size: var(--fontSizeBase200); color: var(--colorNeutralForeground3); margin-top: var(--spacingXS); }
+  .btnbar { display: flex; gap: var(--spacingS); align-items: center; margin-top: var(--spacingL); flex-wrap: wrap; }
+
+  /* --- Buttons ------------------------------------------------------------- */
+  button {
+    font-family: inherit; font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold); line-height: var(--lineHeightBase300);
+    padding: 5px var(--spacingM); min-height: 32px;
+    /* StrokeAccessible, NOT Stroke1 — same 3:1 control-boundary rule as the inputs above. */
+    border: 1px solid var(--colorNeutralStrokeAccessible);
+    border-radius: var(--borderRadiusMedium);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
+    cursor: pointer;
+    transition: background var(--durationFaster) var(--curveEasyEase);
+  }
+  button:hover:not(:disabled) { background: var(--colorNeutralBackground1Hover); }
+  button:disabled {
+    background: var(--colorNeutralBackgroundDisabled); color: var(--colorNeutralForegroundDisabled);
+    border-color: var(--colorNeutralStroke2); cursor: not-allowed;
+  }
+  .primary { background: var(--colorBrandBackground); border-color: var(--colorBrandBackground); color: var(--colorNeutralForegroundOnBrand); }
+  .primary:hover:not(:disabled) { background: var(--colorBrandBackgroundHover); border-color: var(--colorBrandBackgroundHover); }
+  /* Literal #ffffff: white is correct on the LIGHT red token; the dark host overrides to black below. */
+  .danger  { background: var(--colorPaletteRedForeground1); border-color: var(--colorPaletteRedForeground1); color: #ffffff; }
+  .danger:hover:not(:disabled) { background: var(--colorPaletteRedForeground1); filter: brightness(.92); }
+  .ghost   { background: transparent; border-color: transparent; color: var(--colorNeutralForeground2); }
+  .ghost:hover:not(:disabled) { background: var(--colorSubtleBackgroundHover); }
+  .small   { min-height: 28px; padding: 3px var(--spacingS); font-size: var(--fontSizeBase200); }
+
+  #status, #qaStatus { font-size: var(--fontSizeBase300); color: var(--colorNeutralForeground3); }
+
+  /* --- Message bars -------------------------------------------------------- */
+  .banner {
+    background: var(--colorNeutralBackground3); color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-left: 3px solid var(--colorBrandStroke1);
+    border-radius: var(--borderRadiusMedium);
+    padding: var(--spacingM) var(--spacingL);
+    font-size: var(--fontSizeBase300); margin-bottom: var(--spacingL);
+  }
+  .warnbox {
+    background: var(--colorPaletteYellowBackground1); color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-left: 3px solid var(--colorPaletteOrangeForeground1);
+    border-radius: var(--borderRadiusMedium);
+    padding: var(--spacingM); font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold); margin: var(--spacingXS) 0 var(--spacingM);
+  }
+  .errbox {
+    background: var(--colorPaletteRedBackground1); color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorPaletteRedBorder1);
+    border-left: 3px solid var(--colorPaletteRedForeground1);
+    border-radius: var(--borderRadiusMedium);
+    padding: var(--spacingM); font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold); margin: var(--spacingXS) 0 var(--spacingM);
+  }
+
+  /* --- Activity log -------------------------------------------------------- */
+  #log {
+    background: var(--colorNeutralBackground3); color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusMedium);
+    font-family: var(--fontFamilyMonospace); font-size: var(--fontSizeBase200);
+    padding: var(--spacingM); height: 220px; overflow: auto; white-space: pre-wrap;
+    margin-top: var(--spacingM);
+  }
+
+  /* --- Tables -------------------------------------------------------------- */
+  table {
+    width: 100%; border-collapse: collapse; font-size: var(--fontSizeBase200);
+    /* Digits share one advance width, so figures stack in a true column. */
+    font-variant-numeric: tabular-nums;
+  }
+  th, td { text-align: left; padding: var(--spacingS) var(--spacingM); white-space: nowrap; }
+  /* Every cell centres on one baseline whatever it holds — a bare word, a pill, a checkbox.
+     Without this a row containing a pill sits a pixel or two off its neighbours. */
+  thead th, tbody td { vertical-align: middle; }
+  th {
+    font-weight: var(--fontWeightSemibold); color: var(--colorNeutralForeground2);
+    background: var(--colorNeutralBackground2); border-bottom: 1px solid var(--colorNeutralStroke1);
+    position: sticky; top: 0; z-index: 1;
+  }
+  td { color: var(--colorNeutralForeground1); border-bottom: 1px solid var(--colorNeutralStroke2); }
+  tbody tr:hover td { background: var(--colorSubtleBackgroundHover); }
   td.wrap, th.wrap { white-space: normal; }
-  .tablewrap { max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
-  .toolbar { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 12px; }
+  /* Narrow value columns: .num goes on BOTH the th and every td of that column, so the
+     heading sits over its values instead of hugging the left edge. Genuine text columns
+     (Name, Type, Org Unit, Start/End loc) stay left-aligned. */
+  th.num, td.num { text-align: center; padding-left: var(--spacingXS); padding-right: var(--spacingXS); }
+  /* A centred cell's contents centre as a block too, so pills and glyphs share the column axis. */
+  td.num > * { display: inline-flex; align-items: center; justify-content: center; }
+  .tablewrap {
+    max-height: 440px; overflow: auto;
+    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusMedium);
+  }
+  .toolbar { display: flex; gap: var(--spacingM); align-items: end; flex-wrap: wrap; margin-bottom: var(--spacingM); }
   .toolbar > div { min-width: 180px; }
-  .selcount { font-weight: 700; color: var(--charcoal); }
-  .fieldgrid { display: grid; grid-template-columns: 1fr; gap: 6px; }
-  .fieldrow { display: grid; grid-template-columns: 230px 1fr; gap: 14px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
-  .fieldrow.off { opacity: .5; }
+  .selcount { font-weight: var(--fontWeightSemibold); color: var(--colorNeutralForeground1); }
+  .muted { color: var(--colorNeutralForeground3); font-weight: var(--fontWeightRegular); }
+
+  /* --- Field rows ---------------------------------------------------------- */
+  .fieldgrid { display: grid; grid-template-columns: 1fr; gap: var(--spacingS); }
+  .fieldrow {
+    display: grid; grid-template-columns: 230px 1fr; gap: var(--spacingM); align-items: center;
+    padding: var(--spacingS) var(--spacingM);
+    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusMedium);
+    background: var(--colorNeutralBackground1);
+  }
+  /* "Not included" state. It must NOT be an opacity fade: the JS leaves these controls fully
+     enabled ("controls stay usable either way"), so the 1.4.3 disabled-control exception does not
+     apply and opacity:.5 measured 3.11:1 in light. Recess the surface instead — text stays >= AA. */
+  .fieldrow.off { background: var(--colorNeutralBackground3); }
+  .fieldrow.off > label { color: var(--colorNeutralForeground2); }
   .fieldrow .ctl { min-width: 0; }
-  .ouwrap { display: flex; gap: 8px; align-items: center; }
+  .ouwrap { display: flex; gap: var(--spacingS); align-items: center; }
   .ouwrap select { flex: 1; min-width: 0; }
   .ouwrap button { flex: 0 0 auto; white-space: nowrap; }
-  .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-  .pill.ok { background: #e6f4ea; color: var(--ok); }
-  .pill.warn { background: #fff3e0; color: var(--warn); }
-  .pill.bad { background: #fdecef; color: var(--err); }
-  body.theme-dark .pill.bad { background: #2a1820; }
-  body[data-host="xtb"] .pill.bad { background: #ffe0e0; color: #a80000; }
-  .daypick { display: flex; gap: 6px; flex-wrap: wrap; }
-  .daypick label { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; margin: 0; padding: 6px 9px; border: 1px solid var(--line); border-radius: 7px; }
-  details.box { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; background: #f7f9fc; }
-  details.box > summary { cursor: pointer; font-weight: 600; font-size: 13px; color: var(--charcoal); }
-  details.box[open] > summary { margin-bottom: 8px; }
-  .modewrap { margin-top: 8px; }
-  .changeitem { padding: 6px 0; border-top: 1px dashed #eee; font-size: 13px; }
+
+  /* --- Pills / badges ------------------------------------------------------ */
+  .pill {
+    display: inline-flex; align-items: center; gap: var(--spacingXS);
+    font-size: var(--fontSizeBase200); font-weight: var(--fontWeightSemibold); line-height: 16px;
+    padding: 2px var(--spacingS); border-radius: var(--borderRadiusCircular);
+    background: var(--colorNeutralBackground3); color: var(--colorNeutralForeground2);
+    border: 1px solid var(--colorNeutralStroke2);
+  }
+  .pill.ok   { background: var(--colorPaletteGreenBackground1); color: var(--colorPaletteGreenForeground1); border-color: var(--colorPaletteGreenBorder1); }
+  /* Orange sits on the neutral chip, not on yellow — orange-on-yellow misses AA in dark. */
+  .pill.warn { background: var(--colorNeutralBackground3); color: var(--colorPaletteOrangeForeground1); border-color: var(--colorNeutralStroke2); }
+  .pill.bad  { background: var(--colorPaletteRedBackground1); color: var(--colorPaletteRedForeground1); border-color: var(--colorPaletteRedBorder1); }
+
+  /* --- Day picker / disclosure / misc -------------------------------------- */
+  .daypick { display: flex; gap: var(--spacingS); flex-wrap: wrap; }
+  .daypick label {
+    display: inline-flex; align-items: center; gap: var(--spacingS);
+    font-weight: var(--fontWeightSemibold); margin: 0;
+    padding: 5px var(--spacingM); min-height: 32px;
+    /* Each day is a clickable chip, i.e. a control — its boundary needs the same 3:1. */
+    border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: var(--borderRadiusMedium);
+    background: var(--colorNeutralBackground1);
+  }
+  details.box {
+    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusMedium);
+    padding: var(--spacingS) var(--spacingM); margin-bottom: var(--spacingM);
+    background: var(--colorNeutralBackground2);
+  }
+  details.box > summary { cursor: pointer; font-weight: var(--fontWeightSemibold); font-size: var(--fontSizeBase300); color: var(--colorNeutralForeground1); }
+  details.box[open] > summary { margin-bottom: var(--spacingS); }
+  .modewrap { margin-top: var(--spacingS); }
+  .changeitem { padding: var(--spacingXS) 0; border-top: 1px dashed var(--colorNeutralStroke2); font-size: var(--fontSizeBase300); }
   .changeitem:first-child { border-top: 0; }
-  fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 12px; padding: 12px 14px; }
-  legend { font-weight: 700; font-size: 13px; padding: 0 6px; }
+  fieldset {
+    border: 1px solid var(--colorNeutralStroke2); border-radius: var(--borderRadiusMedium);
+    margin: 0 0 var(--spacingM); padding: var(--spacingM) var(--spacingL);
+  }
+  legend { font-weight: var(--fontWeightSemibold); font-size: var(--fontSizeBase300); color: var(--colorNeutralForeground1); padding: 0 var(--spacingXS); }
 
-  /* Dark theme — PPTB default. */
-  body.theme-dark { color-scheme: dark; --ink: #e6e6e6; --line: #3a3b42; --bg: #17181c; --ok: #4ec77a; --warn: #e3a857; --err: #ff6b81; }
-  body.theme-dark .card, body.theme-dark fieldset { background: #25262b; }
-  body.theme-dark .card h2 { color: #9aa0a6; }
-  body.theme-dark .card h3, body.theme-dark legend { color: #e6e6e6; }
-  body.theme-dark label { color: #e6e6e6; }
-  body.theme-dark input[type=text], body.theme-dark input[type=number], body.theme-dark input[type=time], body.theme-dark select {
-    background: #1e1f24; color: var(--ink); border-color: var(--line); }
-  body.theme-dark select option { background: #1e1f24; color: var(--ink); }
-  body.theme-dark .hint, body.theme-dark #status, body.theme-dark #qaStatus { color: #9aa0a6; }
-  body.theme-dark th { background: #2c2d33; }
-  body.theme-dark th, body.theme-dark td { border-color: var(--line); }
-  body.theme-dark .tablewrap, body.theme-dark .fieldrow, body.theme-dark .daypick label { border-color: var(--line); }
-  body.theme-dark .ghost { background: #3a3b42; color: #e6e6e6; }
-  body.theme-dark .banner { background: #2a1e22; }
-  body.theme-dark details.box { background: #1f2127; border-color: var(--line); }
-
-  /* Windows 95 theme — XrmToolBox WebView2 host. */
-  body[data-host="xtb"] { background: #008080; color: #000; font-family: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif; font-size: 12px; }
-  body[data-host="xtb"] main { max-width: none; }
-  body[data-host="xtb"] header { background: linear-gradient(90deg, #000080, #1084d0); color: #fff; border-bottom: 2px solid #c0c0c0; }
-  body[data-host="xtb"] header .author { color: #dfe7ff; }
-  body[data-host="xtb"] header #envlabel, body[data-host="xtb"] header .ver { color: #dfe7ff; border-color: #5a7fd0; }
-  body[data-host="xtb"] .card, body[data-host="xtb"] fieldset { background: #c0c0c0; border: 2px solid; border-color: #fff #000 #000 #fff; border-radius: 0; padding: 3px 8px 12px; }
-  body[data-host="xtb"] .card h2 { background: linear-gradient(90deg, #000080, #1084d0); color: #fff; text-transform: none; letter-spacing: 0; margin: -3px -8px 10px; padding: 3px 6px; }
-  body[data-host="xtb"] .card h3, body[data-host="xtb"] legend { color: #000; }
-  body[data-host="xtb"] label { font-weight: 700; color: #000; }
-  body[data-host="xtb"] .hint, body[data-host="xtb"] #status, body[data-host="xtb"] #qaStatus { color: #303030; }
-  body[data-host="xtb"] input[type=text], body[data-host="xtb"] input[type=number], body[data-host="xtb"] input[type=time], body[data-host="xtb"] select {
-    background: #fff; color: #000; border: 2px solid; border-color: #808080 #fff #fff #808080; border-radius: 0; }
-  body[data-host="xtb"] button { background: #c0c0c0; color: #000; border: 2px solid; border-color: #fff #000 #000 #fff; border-radius: 0; box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080; font-weight: 400; }
-  body[data-host="xtb"] button:active:not(:disabled) { border-color: #808080 #fff #fff #808080; box-shadow: inset 1px 1px 0 #000; }
-  body[data-host="xtb"] .primary { font-weight: 700; outline: 1px solid #000; outline-offset: -5px; }
-  body[data-host="xtb"] .danger { font-weight: 700; color: #a80000; }
-  body[data-host="xtb"] th { background: #c0c0c0; color: #000; border: 2px solid; border-color: #fff #808080 #808080 #fff; }
-  body[data-host="xtb"] .tablewrap, body[data-host="xtb"] .fieldrow, body[data-host="xtb"] .daypick label { border: 2px solid; border-color: #808080 #fff #fff #808080; border-radius: 0; background: #fff; }
-  body[data-host="xtb"] details.box { background: #c0c0c0; border: 2px solid; border-color: #fff #000 #000 #fff; border-radius: 0; }
-  body[data-host="xtb"] details.box > summary { color: #000; font-weight: 700; }
-  body[data-host="xtb"] .banner { background: #fffbe0; border-left: 4px solid #a80000; border-radius: 0; color: #000; }
-  body[data-host="xtb"] #log { background: #000; color: #0f0; border: 2px solid; border-color: #808080 #fff #fff #808080; border-radius: 0; font-family: 'Lucida Console', Consolas, monospace; }
-  body[data-host="xtb"] :focus-visible { outline: 1px dotted #000; outline-offset: -4px; }
-  body[data-host="xtb"] .pill.ok { background: #d6f0db; color: #006400; }
-  body[data-host="xtb"] .pill.warn { background: #fff0d0; color: #7a4a00; }
+  /* --- Dark-host touch-ups ------------------------------------------------- */
+  /* Native select popups follow color-scheme, but pin the list explicitly too. */
+  body[data-host="pptb"] select option,
+  body.theme-dark select option { background: var(--colorNeutralBackground1); color: var(--colorNeutralForeground1); }
+  /* The dark red token is a light tint, so it needs dark ink to clear AA (7.5:1). */
+  body[data-host="pptb"] .danger,
+  body.theme-dark .danger { color: #000000; }
 
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
@@ -138,7 +423,8 @@
 <body>
 <script>
   /* Host detection + default theme (runs before content paints to avoid a flash).
-     PPTB → dark by default; XrmToolBox (WebView2) → Windows 95; web/standalone → light (OS dark honoured). */
+     Per host: PPTB → Fluent dark; XrmToolBox (WebView2) → Fluent light; web/standalone → Fluent light
+     (an OS dark preference is honoured on the web host). */
   (function () {
     var P = !!window.dataverseAPI, X = !!window.XTB_CONFIG;
     var host = P ? "pptb" : X ? "xtb" : "web";
@@ -149,6 +435,7 @@
   })();
 </script>
 <header>
+  <!-- Tool mark. The literal #EE163B / #fff are brand artwork, not theme colours — they stay fixed in both themes. -->
   <svg class="logo" viewBox="0 0 80 80" aria-hidden="true">
     <rect x="2" y="2" width="76" height="76" rx="14" fill="#EE163B"/>
     <g fill="#fff">
@@ -211,19 +498,19 @@
     <div class="tablewrap">
       <table id="resTable">
         <thead><tr>
-          <th><input type="checkbox" id="selAll" title="Select all loaded" aria-label="Select all loaded resources" /></th>
+          <th class="num"><input type="checkbox" id="selAll" title="Select all loaded" aria-label="Select all loaded resources" /></th>
           <th class="wrap">Name</th>
           <th>Type</th>
-          <th title="Address / geocode on the related User, Contact or Account record">Address</th>
+          <th class="num" title="Address / geocode on the related User, Contact or Account record">Address</th>
           <th class="wrap">Org Unit</th>
           <th>Start loc</th>
           <th>End loc</th>
-          <th>Board</th>
-          <th>Avail.</th>
-          <th>Hourly</th>
-          <th>Time-off appr.</th>
+          <th class="num">Board</th>
+          <th class="num">Avail.</th>
+          <th class="num">Hourly</th>
+          <th class="num">Time-off appr.</th>
         </tr></thead>
-        <tbody><tr><td colspan="11" style="white-space:normal;color:#888;padding:18px">Load resources to begin.</td></tr></tbody>
+        <tbody><tr><td colspan="11" class="wrap muted" style="padding:18px">Load resources to begin.</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -317,7 +604,7 @@
           <select id="charSel"><option value="">— load —</option></select>
         </div>
         <div>
-          <label for="ratingSel">Rating value <span style="font-weight:400;color:#8a8f98">(optional)</span></label>
+          <label for="ratingSel">Rating value <span class="muted">(optional)</span></label>
           <select id="ratingSel"><option value="">(none)</option></select>
         </div>
         <div style="flex:0 0 auto; display:flex; align-items:end; gap:8px">
@@ -368,7 +655,7 @@
    Hosts: PPTB (window.dataverseAPI) · XrmToolBox WebView2 (window.XTB_CONFIG) ·
    D365 web resource (same-origin fetch). See docs/ARCHITECTURE.md.
    ============================================================================ */
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 const API_VER = "v9.2";
 
 const PPTB = (typeof window !== "undefined") && !!window.dataverseAPI;
@@ -738,23 +1025,25 @@ function renderResources() {
   const tb = $("resTable").querySelector("tbody");
   tb.innerHTML = "";
   if (!resources.length) {
-    tb.innerHTML = `<tr><td colspan="11" style="white-space:normal;color:#888;padding:18px">No resources match.</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="11" class="wrap muted" style="padding:18px">No resources match.</td></tr>`;
     updateSelCount(); return;
   }
   for (const r of resources) {
     const tr = document.createElement("tr");
     tr.innerHTML =
-      `<td><input type="checkbox" class="rowck" data-id="${r.id}" ${selected.has(r.id) ? "checked" : ""} aria-label="Select ${escapeHtml(r.name)}" /></td>` +
+      // Column classes MUST match the <thead> above, cell for cell, or the columns
+      // stop lining up: num on 1 (select), 4 (Address), 8-11 (Board, Avail., Hourly, Time-off).
+      `<td class="num"><input type="checkbox" class="rowck" data-id="${r.id}" ${selected.has(r.id) ? "checked" : ""} aria-label="Select ${escapeHtml(r.name)}" /></td>` +
       `<td class="wrap">${escapeHtml(r.name)}</td>` +
       `<td>${escapeHtml(RES_TYPE[r.type] || r.type || "")}</td>` +
-      `<td>${ADDR_CELL[r.addrState] || ADDR_CELL.na}</td>` +
+      `<td class="num">${ADDR_CELL[r.addrState] || ADDR_CELL.na}</td>` +
       `<td class="wrap">${escapeHtml(r.orgUnitName || "—")}</td>` +
       `<td>${escapeHtml(startLocLabel(r.startloc))}</td>` +
       `<td>${escapeHtml(startLocLabel(r.endloc))}</td>` +
-      `<td>${boolLabel(r.board)}</td>` +
-      `<td>${boolLabel(r.avail)}</td>` +
-      `<td>${r.hourly == null ? "—" : escapeHtml(r.hourly)}</td>` +
-      `<td>${boolLabel(r.timeoff)}</td>`;
+      `<td class="num">${boolLabel(r.board)}</td>` +
+      `<td class="num">${boolLabel(r.avail)}</td>` +
+      `<td class="num">${r.hourly == null ? "—" : escapeHtml(r.hourly)}</td>` +
+      `<td class="num">${boolLabel(r.timeoff)}</td>`;
     tb.appendChild(tr);
   }
   tb.querySelectorAll(".rowck").forEach(cb => cb.addEventListener("change", () => {

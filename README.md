@@ -6,9 +6,9 @@ By Mark Christie.
 
 One self-contained HTML app runs in three hosts:
 
-- **Power Platform ToolBox (PPTB)** — dark theme, via `window.dataverseAPI`.
-- **XrmToolBox** — Windows 95 theme, hosted in a WebView2 plugin.
-- **Dynamics 365 web resource** — light theme, same-origin `fetch`.
+- **Power Platform ToolBox (PPTB)** — Fluent 2 dark theme, via `window.dataverseAPI`.
+- **XrmToolBox** — Fluent 2 light theme, hosted in a WebView2 plugin.
+- **Dynamics 365 web resource** — Fluent 2 light theme, same-origin `fetch`.
 
 ## What it does
 
