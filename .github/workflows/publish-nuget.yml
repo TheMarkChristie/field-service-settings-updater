@@ -1,0 +1,80 @@
+name: Publish FieldServiceSettingsUpdater to NuGet
+
+# Publishes the XrmToolBox plugin to nuget.org via Trusted Publishing (OIDC — no stored API key).
+# Trigger by pushing a version tag, e.g.:  git tag v1.0.2 && git push origin v1.0.2
+#
+# Requires a nuget.org Trusted Publishing policy matching EXACTLY:
+#   Package Owner   : TheMarkChristie
+#   CI/CD Provider  : GitHub Actions
+#   Repository Owner: TheMarkChristie
+#   Repository      : field-service-settings-updater
+#   Workflow File   : publish-nuget.yml
+#   Glob Patterns   : MarkChristie.*
+# The workflow FILE NAME is part of the trust — renaming this file breaks the policy.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:        # also allow manual run from the Actions tab
+
+permissions:
+  id-token: write           # required for the OIDC token exchange
+  contents: read
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup nuget.exe
+        uses: nuget/setup-nuget@v2
+
+      - name: Build (net48, Release) — the csproj target also copies the HTML into app/
+        run: dotnet build xrmtoolbox/FieldServiceSettingsUpdater/FieldServiceSettingsUpdater.csproj -c Release
+
+      - name: Pack the XrmToolBox plugin
+        run: nuget pack xrmtoolbox/FieldServiceSettingsUpdater/FieldServiceSettingsUpdater.nuspec -OutputDirectory artifacts
+
+      - name: Check the package carries what the Tool Library needs
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $pkg = (Get-ChildItem "$env:GITHUB_WORKSPACE/artifacts/*.nupkg" | Select-Object -First 1).FullName
+          if (-not $pkg) { throw "no .nupkg found in artifacts" }
+          $z = [IO.Compression.ZipFile]::OpenRead($pkg)
+          $names = $z.Entries.FullName
+          $z.Dispose()
+          # The payload must NOT be a generic index.html: every plugin dll installs flat into
+          # Plugins\, so all WebView2 tools share ONE Plugins\app folder and a generic name is
+          # silently overwritten by whichever tool installs last.
+          foreach ($need in @('Plugins/FieldServiceSettingsUpdater.dll',
+                              'Plugins/app/field-service-settings-updater.html')) {
+            if ($names -notcontains $need) { throw "missing from nupkg: $need" }
+            Write-Host "ok $need"
+          }
+          if ($names -contains 'Plugins/app/index.html') {
+            throw "package contains a generic Plugins/app/index.html - it would collide with other tools"
+          }
+
+      - name: NuGet login (Trusted Publishing -> short-lived API key)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: TheMarkChristie
+
+      - name: Push to nuget.org
+        # pwsh does NOT expand globs for native commands, so passing "artifacts/*.nupkg"
+        # straight to dotnet reaches it literally and fails with "File does not exist".
+        # Resolve the path in PowerShell first, then pass the real filename.
+        run: |
+          $pkg = (Get-ChildItem "$env:GITHUB_WORKSPACE/artifacts/*.nupkg" | Select-Object -First 1).FullName
+          if (-not $pkg) { throw "no .nupkg found in artifacts" }
+          Write-Host "pushing $pkg"
+          dotnet nuget push $pkg `
+            --source https://api.nuget.org/v3/index.json `
+            --api-key ${{ steps.login.outputs.NUGET_API_KEY }} `
+            --skip-duplicate
